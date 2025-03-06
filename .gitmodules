@@ -1,3 +1,18 @@
 [submodule "ext/imgui"]
 	path = ext/imgui
 	url = https://github.com/annajcy/imgui.git
+[submodule "ext/glad"]
+	path = ext/glad
+	url = https://github.com/annajcy/glad.git
+[submodule "ext/glfw"]
+	path = ext/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "ext/assimp"]
+	path = ext/assimp
+	url = https://github.com/assimp/assimp.git
+[submodule "ext/glm"]
+	path = ext/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "ext/stb_image"]
+	path = ext/stb_image
+	url = https://github.com/annajcy/stb_image.git
