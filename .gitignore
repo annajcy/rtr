@@ -13,6 +13,8 @@ build/
 cmake-build-debug/
 cmake-build-release/
 
+ext/
+
 # 忽略 CMake 生成的缓存文件
 CMakeFiles/
 CMakeCache.txt
