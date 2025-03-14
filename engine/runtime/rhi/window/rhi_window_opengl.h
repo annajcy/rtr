@@ -148,7 +148,6 @@ inline constexpr Mouse_button_action gl_to_rhi_mouse_button_action_map(unsigned 
     }
 }
 
-
 class RHI_window_OpenGL : public RHI_window {
 
 protected:
