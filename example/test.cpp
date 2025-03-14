@@ -1,4 +1,5 @@
-#include "engine/base.h"
+#include "engine/global/base.h"
+#include "engine/runtime/rhi/device/rhi_device.h"
 
 using namespace std;
 
@@ -25,8 +26,8 @@ void main()
 // Vertex data for a triangle
 float vertices[] = {
     -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f,  0.5f, 0.0f
+    0.5f, -0.5f, 0.0f,
+    0.0f,  0.5f, 0.0f
 };
     
 
@@ -92,6 +93,7 @@ int main() {
 
     // Main loop
     while (!glfwWindowShouldClose(window)) {
+
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
