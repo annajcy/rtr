@@ -4,22 +4,22 @@
 
 namespace rtr {
 
-enum Buffer_type {
+enum class Buffer_type {
     VERTEX,
     INDEX,
 };
 
-enum Buffer_usage {
+enum class Buffer_usage {
     STATIC,
     DYNAMIC
 };
 
-enum Buffer_iterate_type {
+enum class Buffer_iterate_type {
     PER_VERTEX,
     PER_INSTANCE,
 };
 
-enum Buffer_attribute_type {
+enum class Buffer_attribute_type {
     FLOAT,
     INT,
     UINT,
@@ -28,10 +28,10 @@ enum Buffer_attribute_type {
 
 inline constexpr unsigned int get_buffer_attribute_size(Buffer_attribute_type type) {
     switch (type) {
-    case FLOAT: return 4;
-    case INT: return 4;
-    case UINT: return 4;
-    case BOOL: return 1;
+    case Buffer_attribute_type::FLOAT: return 4;
+    case Buffer_attribute_type::INT: return 4;
+    case Buffer_attribute_type::UINT: return 4;
+    case Buffer_attribute_type::BOOL: return 1;
     default: return 0;
     }
 }

@@ -2,24 +2,26 @@
 
 #include "engine/global/base.h" 
 #include "engine/runtime/rhi/device/rhi_device.h"
-
 #include "engine/runtime/rhi/buffer/rhi_buffer_opengl.h"
 #include "engine/runtime/rhi/geometry/rhi_geometry_opengl.h"
+#include "engine/runtime/rhi/window/rhi_window_opengl.h"
 
 namespace rtr {
     
 
 class RHI_device_OpenGL : public RHI_device {
 public:
-    RHI_device_OpenGL() : RHI_device(API_type::OPENGL) { init(); }
+    RHI_device_OpenGL(const RHI_device_descriptor& device_descriptor) : RHI_device(API_type::OPENGL, device_descriptor) { init(); }
     virtual ~RHI_device_OpenGL() override { destroy(); }
 
     virtual void init() override {
 
-    }
+        m_window = std::make_shared<RHI_window_OpenGL>(
+            m_device_descriptor.m_width,
+            m_device_descriptor.m_height,
+            m_device_descriptor.m_title
+        );
 
-    virtual void destroy() override {
-        
     }
 
     virtual std::shared_ptr<RHI_vertex_buffer> create_vertex_buffer(

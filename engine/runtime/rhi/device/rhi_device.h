@@ -3,25 +3,41 @@
 #include "engine/global/base.h" 
 #include "engine/runtime/rhi/buffer/rhi_buffer.h"
 #include "engine/runtime/rhi/geometry/rhi_geometry.h"
+#include "engine/runtime/rhi/window/rhi_window.h"
 
 namespace rtr {
     
-enum API_type {
+enum class API_type {
     OPENGL,
     DIRECTX,
     VULKAN
+};
+
+struct RHI_device_descriptor {
+    unsigned int m_width{800};
+    unsigned int m_height{600};
+    std::string m_title = "RTR Engine";
 };
 
 class RHI_device {
 
 protected:
     API_type m_api_type{};
+    RHI_device_descriptor m_device_descriptor{};
+    std::shared_ptr<RHI_window> m_window{};
+
 public:
     
-    RHI_device(API_type api_type) : m_api_type(api_type) {}
+    RHI_device(
+        API_type api_type, 
+        const RHI_device_descriptor& device_descriptor
+    ) : m_api_type(api_type), 
+        m_device_descriptor(device_descriptor) {}
+
     virtual ~RHI_device() = default;
 
     const API_type& api_type() { return m_api_type; }
+    const std::shared_ptr<RHI_window>& window() { return m_window; }
 
     virtual void init() = 0;
     virtual void destroy() = 0;
@@ -42,7 +58,7 @@ public:
     ) = 0;
 
     virtual std::shared_ptr<RHI_geometry> create_geometry() = 0;
-    
+
     
 };
 
