@@ -1,12 +1,19 @@
 #pragma once
 
 #include "engine/global/base.h" 
+
 #include "engine/runtime/rhi/device/rhi_device.h"
+
 #include "engine/runtime/rhi/buffer/rhi_buffer_opengl.h"
 #include "engine/runtime/rhi/geometry/rhi_geometry_opengl.h"
+
 #include "engine/runtime/rhi/window/rhi_window_opengl.h"
+
 #include "engine/runtime/rhi/shader/rhi_shader_code_opengl.h"
 #include "engine/runtime/rhi/shader/rhi_shader_program_opengl.h"
+
+#include "engine/runtime/rhi/state/rhi_binding_state_opengl.h"
+#include "engine/runtime/rhi/state/rhi_pipeline_state_opengl.h"
 
 namespace rtr {
     
@@ -23,6 +30,8 @@ public:
             m_device_descriptor.m_height,
             m_device_descriptor.m_title
         );
+
+        m_pipeline_state = std::make_shared<RHI_pipeline_state_OpenGL>();
 
     }
 

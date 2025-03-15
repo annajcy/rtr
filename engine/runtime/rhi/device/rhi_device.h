@@ -6,6 +6,9 @@
 #include "engine/runtime/rhi/window/rhi_window.h"
 #include "engine/runtime/rhi/shader/rhi_shader_code.h"
 #include "engine/runtime/rhi/shader/rhi_shader_program.h"
+#include "engine/runtime/rhi/texture/rhi_texture.h"
+#include "engine/runtime/rhi/state/rhi_pipeline_state.h"
+#include "engine/runtime/rhi/state/rhi_binding_state.h"
 
 namespace rtr {
     
@@ -26,7 +29,10 @@ class RHI_device {
 protected:
     API_type m_api_type{};
     RHI_device_descriptor m_device_descriptor{};
+
     std::shared_ptr<RHI_window> m_window{};
+    std::shared_ptr<RHI_pipeline_state> m_pipeline_state{};
+    std::shared_ptr<RHI_binding_state> m_binding_state{};
 
 public:
     

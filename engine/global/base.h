@@ -22,6 +22,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include "stb_image.h"
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -31,5 +33,9 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
+#include <cassert>
 
 

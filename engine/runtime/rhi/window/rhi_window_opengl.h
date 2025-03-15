@@ -166,6 +166,14 @@ public:
         destroy();
     }
 
+    void set_viewport(int x, int y, int width, int height) override {
+        glViewport(x, y, width, height);
+    }
+
+    void deactivate() override {
+        glfwSetWindowShouldClose(m_window, true);
+    }
+
     void init() override {
         glfwInit();
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -193,6 +201,8 @@ public:
         glfwSetCursorPosCallback(m_window, mouse_move_callback);
         glfwSetScrollCallback(m_window, mouse_scroll_callback);
         glfwSetKeyCallback(m_window, key_callback);
+
+        set_viewport(0, 0, m_width, m_height);
 
     }
 

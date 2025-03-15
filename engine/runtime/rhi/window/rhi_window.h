@@ -150,11 +150,22 @@ protected:
     unsigned int m_height{};
     std::string m_title{};
 
-    Window_resize_event m_window_resize_event{};
+    Window_resize_event m_window_resize_event{[&](unsigned int width, unsigned int height) {
+        std::cout << "Viewport resize" << std::endl;
+		this->set_viewport(0, 0, width, height);
+    }};
+
+    Key_event m_key_event{[&](Key_code key_code, Key_action key_action, unsigned int repeat_count) {
+        if (key_code == Key_code::ESCAPE && key_action == Key_action::PRESS) {
+            std::cout << "Window close" << std::endl;
+            this->deactivate();
+        }
+    }};
+
     Mouse_button_event m_mouse_button_event{};
     Mouse_move_event m_mouse_move_event{};
     Mouse_scroll_event m_mouse_scroll_event{};
-    Key_event m_key_event{};
+    
 
     Window_resize_event& window_resize_event() { return m_window_resize_event; }
     Mouse_button_event& mouse_button_event() { return m_mouse_button_event; }
@@ -178,6 +189,9 @@ public:
     virtual void poll_events() = 0;
     virtual void swap_buffers() = 0;
     virtual bool is_active() = 0;
+
+    virtual void set_viewport(int x, int y, int width, int height) = 0;
+    virtual void deactivate() = 0;
 
     void update() {
         poll_events();
