@@ -4,6 +4,8 @@
 #include "engine/runtime/rhi/buffer/rhi_buffer.h"
 #include "engine/runtime/rhi/geometry/rhi_geometry.h"
 #include "engine/runtime/rhi/window/rhi_window.h"
+#include "engine/runtime/rhi/shader/rhi_shader_code.h"
+#include "engine/runtime/rhi/shader/rhi_shader_program.h"
 
 namespace rtr {
     
@@ -58,6 +60,15 @@ public:
     ) = 0;
 
     virtual std::shared_ptr<RHI_geometry> create_geometry() = 0;
+
+    virtual std::shared_ptr<RHI_shader_code> create_shader_code(
+        Shader_type type,
+        const std::string& code
+    ) = 0;
+
+    virtual std::shared_ptr<RHI_shader_program> create_shader_program(
+        const std::vector<std::shared_ptr<RHI_shader_code>>& shaders
+    ) = 0;
 
     
 };

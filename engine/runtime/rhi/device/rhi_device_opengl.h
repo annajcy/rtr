@@ -5,6 +5,8 @@
 #include "engine/runtime/rhi/buffer/rhi_buffer_opengl.h"
 #include "engine/runtime/rhi/geometry/rhi_geometry_opengl.h"
 #include "engine/runtime/rhi/window/rhi_window_opengl.h"
+#include "engine/runtime/rhi/shader/rhi_shader_code_opengl.h"
+#include "engine/runtime/rhi/shader/rhi_shader_program_opengl.h"
 
 namespace rtr {
     
@@ -54,6 +56,14 @@ public:
 
     virtual std::shared_ptr<RHI_geometry> create_geometry() override {
         return std::make_shared<RHI_geometry_OpenGL>();
+    }
+
+    virtual std::shared_ptr<RHI_shader_code> create_shader_code(Shader_type type, const std::string& code) override {
+        return std::make_shared<RHI_shader_code_OpenGL>(type, code);
+    }
+
+    virtual std::shared_ptr<RHI_shader_program> create_shader_program(const std::vector<std::shared_ptr<RHI_shader_code>>& shaders) override {
+        return std::make_shared<RHI_shader_program_OpenGL>(shaders);
     }
 
     virtual void check_error() override {

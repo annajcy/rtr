@@ -38,6 +38,13 @@ public:
         unbind();
     }
 
+    void remove_vertex_buffer(const std::shared_ptr<RHI_vertex_buffer>& buffer) {
+        auto it = std::find(m_vertex_buffers.begin(), m_vertex_buffers.end(), buffer);
+        if (it != m_vertex_buffers.end()) {
+            m_vertex_buffers.erase(it);
+        }
+    }
+
     void add_vertex_buffer(const std::shared_ptr<RHI_vertex_buffer>& buffer) {
         m_vertex_buffers.push_back(buffer);
     }

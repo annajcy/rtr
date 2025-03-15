@@ -30,6 +30,13 @@ protected:
 public:
     RHI_shader_code_OpenGL(Shader_type type, const std::string & code) : RHI_shader_code(type, code) {
         init();
+
+        if (!compile()) {
+            std::cout << "ERROR::SHADER::COMPILE_FAILED" << std::endl;
+            destroy();
+        } else {
+            std::cout << "INFO::SHADER::COMPILE_SUCCESS" << std::endl;
+        }
     }
 
     virtual ~RHI_shader_code_OpenGL() override {
@@ -64,6 +71,10 @@ public:
         } else {
             std::cout << "Shader compiled successfully" << " --" << gl_shader_type(m_type) << " " << m_code_id << std::endl;
         }
+    }
+
+    unsigned int code_id() const {
+        return m_code_id;
     }
 
 
