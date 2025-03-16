@@ -63,7 +63,6 @@ protected:
     Texture_format m_internal_format{};
     Texture_format m_external_format{};
     Texture_buffer_type m_buffer_type{};
-    unsigned int m_slot{};
     
 public:
     RHI_texture(
@@ -79,6 +78,7 @@ public:
     virtual ~RHI_texture() = default;
     virtual void init() = 0;
     virtual void destroy() = 0;
+
     virtual void bind(unsigned int slot) = 0;
     virtual void unbind() = 0;
     virtual void set_data() = 0;

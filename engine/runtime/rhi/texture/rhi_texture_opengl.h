@@ -2,6 +2,8 @@
 #include "engine/global/base.h"
 #include "engine/runtime/rhi/texture/rhi_texture.h"
 
+#define MAX_TEXTURE_SLOTS 32
+
 namespace rtr {
 
 inline constexpr unsigned int gl_texture_type(Texture_type type) {
@@ -124,10 +126,103 @@ inline constexpr unsigned int gl_texture_filter_target(Texture_filter_target tar
     }
 }
 
-class RHI_texture_2D_OpenGL : public RHI_texture_2D {
-
+// 新增抽象基类
+class RHI_texture_OpenGL {
 protected:
     unsigned int m_texture_id{};
+    unsigned int m_slot{};
+    unsigned int m_gl_type{};
+
+public:
+
+    RHI_texture_OpenGL(unsigned int gl_type) : m_gl_type(gl_type) {}
+    virtual ~RHI_texture_OpenGL() = default;
+
+    void gl_init() {
+        glGenTextures(1, &m_texture_id);
+    }
+
+    void gl_destroy() {
+        if (m_texture_id) {
+            glDeleteTextures(1, &m_texture_id);
+        }
+    }
+
+    void gl_bind(unsigned int slot) {
+        if (!m_texture_id) {
+            std::cout << "invalid texture id" << std::endl;
+            return;
+        }
+
+        if (slot >= MAX_TEXTURE_SLOTS) {
+            std::cout << "invalid texture slot" << std::endl;
+            return;
+        }
+
+        if (slot != m_slot) {
+            m_slot = slot;
+        }
+
+        glActiveTexture(GL_TEXTURE0 + slot);
+        glBindTexture(m_gl_type, m_texture_id);
+    }
+
+    void gl_unbind() {
+        glBindTexture(m_gl_type, 0);
+    }
+
+    void gl_set_wrap(Texture_wrap wrap, Texture_warp_target target) {
+        if (!m_texture_id) {
+            std::cout << "invalid texture id" << std::endl;
+            return;
+        }
+
+        gl_bind(0);
+        glTexParameteri(
+            m_gl_type,
+            gl_texture_warp_target(target),
+            gl_texture_wrap(wrap)
+        );
+
+        gl_unbind();
+    }
+
+    void gl_set_filter(Texture_filter filter, Texture_filter_target target) {
+        if (!m_texture_id) {
+            std::cout << "invalid texture id" << std::endl;
+            return;
+        }
+
+        gl_bind(0);
+        glTexParameteri(
+            m_gl_type,
+            gl_texture_filter_target(target),
+            gl_texture_filter(filter)
+        );
+        gl_unbind();
+    }
+
+    void gl_generate_mipmap() {
+        if (!m_texture_id) {
+            std::cout << "invalid texture id" << std::endl;
+            return;
+        }
+
+        gl_bind(0);
+        glGenerateMipmap(m_gl_type);
+        gl_unbind();
+
+    }
+
+    unsigned int texture_id() const { return m_texture_id; }
+    unsigned int slot() const { return m_slot; }
+    unsigned int gl_type() const { return m_gl_type; }
+
+};
+
+// 修改现有实现
+class RHI_texture_2D_OpenGL : public RHI_texture_2D, public RHI_texture_OpenGL {
+    
 
 public:
     RHI_texture_2D_OpenGL(
@@ -137,7 +232,8 @@ public:
         int width,
         int height,
         unsigned char* data
-    ) : RHI_texture_2D(internal_format, external_format, buffer_type, width, height, data) {
+    ) : RHI_texture_2D(internal_format, external_format, buffer_type, width, height, data), 
+        RHI_texture_OpenGL(GL_TEXTURE_2D) {
         init();
         set_data();
     }
@@ -146,13 +242,42 @@ public:
         int width,
         int height,
         unsigned char* data
-    ) : RHI_texture_2D(width, height, data) {
+    ) : RHI_texture_2D(width, height, data),
+        RHI_texture_OpenGL(GL_TEXTURE_2D) {
         init();
         set_data();
     }
 
     virtual ~RHI_texture_2D_OpenGL() {
         destroy();
+    }
+
+    virtual void init() override {
+        gl_init();
+    }
+
+    virtual void destroy() override {
+        gl_destroy();
+    }
+
+    virtual void bind(unsigned int slot) override {
+        gl_bind(slot);
+    }
+
+    virtual void unbind() override {
+        gl_unbind();
+    }
+
+    virtual void set_wrap(Texture_wrap wrap, Texture_warp_target target) override {
+        gl_set_wrap(wrap, target);
+    }
+
+    virtual void set_filter(Texture_filter filter, Texture_filter_target target) override {
+        gl_set_filter(filter, target);
+    }
+
+    virtual void generate_mipmap() override {
+        gl_generate_mipmap();
     }
     
     virtual void set_data() override {
@@ -185,87 +310,12 @@ public:
         unbind();
     }
 
-    virtual void init() override {
-        glGenTextures(1, &m_texture_id);
-    }
-
-    virtual void destroy() override {
-        if (m_texture_id) {
-            glDeleteTextures(1, &m_texture_id);
-        }
-    }
-
-    virtual void bind(unsigned int slot) override {
-        if (!m_texture_id) {
-            std::cout << "invalid texture id" << std::endl;
-            return;
-        }
-
-        if (slot >= 32) {
-            std::cout << "invalid texture slot" << std::endl;
-            return;
-        }
-
-        if (slot != m_slot) {
-            m_slot = slot;
-        }
-
-        glActiveTexture(GL_TEXTURE0 + slot);
-        glBindTexture(gl_texture_type(m_type), m_texture_id);
-    }
-
-    virtual void unbind() override {
-        glBindTexture(gl_texture_type(m_type), 0);
-    }
-
-    virtual void set_wrap(Texture_wrap wrap, Texture_warp_target target) override {
-        if (!m_texture_id) {
-            std::cout << "invalid texture id" << std::endl;
-            return;
-        }
-        bind(0);
-        glTexParameteri(
-            gl_texture_type(m_type),
-            gl_texture_warp_target(target),
-            gl_texture_wrap(wrap)
-        );
-        unbind();
-    }
-
-    virtual void set_filter(Texture_filter filter, Texture_filter_target target) override {
-        if (!m_texture_id) {
-            std::cout << "invalid texture id" << std::endl;
-            return;
-        }
-
-        bind(0);
-        glTexParameteri(
-            gl_texture_type(m_type),
-            gl_texture_filter_target(target),
-            gl_texture_filter(filter)
-        );
-        unbind();
-    }
-
-    virtual void generate_mipmap() override {
-        if (!m_texture_id) {
-            std::cout << "invalid texture id" << std::endl;
-            return;
-        }
-
-        bind(0);
-        glGenerateMipmap(gl_texture_type(m_type));
-        unbind();
-
-    }
-
-    unsigned int texture_id() const { return m_texture_id; }
+    
 
 };
 
-class RHI_texture_cube_map_OpenGL : public RHI_texture_cube_map {
-protected:
-    unsigned int m_texture_id{};   
+// 立方体贴图同理
+class RHI_texture_cube_map_OpenGL : public RHI_texture_cube_map, public RHI_texture_OpenGL {
 
 public:
     RHI_texture_cube_map_OpenGL(
@@ -273,14 +323,16 @@ public:
         Texture_format external_format,
         Texture_buffer_type buffer_type,
         std::unordered_map<Texture_cube_map_face, Face_data> face_data
-    ) : RHI_texture_cube_map(internal_format, external_format, buffer_type, face_data) {
+    ) : RHI_texture_cube_map(internal_format, external_format, buffer_type, face_data),
+        RHI_texture_OpenGL(GL_TEXTURE_CUBE_MAP) {
         init();
         set_data();
     }
 
     RHI_texture_cube_map_OpenGL(
         std::unordered_map<Texture_cube_map_face, Face_data> face_data
-    ) : RHI_texture_cube_map(face_data) {
+    ) : RHI_texture_cube_map(face_data),
+        RHI_texture_OpenGL(GL_TEXTURE_CUBE_MAP) {
         init();
         set_data();
     }
@@ -290,77 +342,31 @@ public:
     }
 
     virtual void init() override {
-        glGenTextures(1, &m_texture_id);
+        gl_init();
     }
 
     virtual void destroy() override {
-        if (m_texture_id) {
-            glDeleteTextures(1, &m_texture_id);
-        }
+        gl_destroy();
     }
 
     virtual void bind(unsigned int slot) override {
-        if (!m_texture_id) {
-            std::cout << "invalid texture id" << std::endl;
-            return;
-        }
-
-        if (slot >= 32) {
-            std::cout << "invalid texture slot" << std::endl;
-            return;
-        }
-
-        if (slot != m_slot) {
-            m_slot = slot;
-        }
-
-        glActiveTexture(GL_TEXTURE0 + slot);
-        glBindTexture(gl_texture_type(m_type), m_texture_id);
+        gl_bind(slot);
     }
 
     virtual void unbind() override {
-        glBindTexture(gl_texture_type(m_type), 0);
+        gl_unbind();
     }
 
     virtual void set_wrap(Texture_wrap wrap, Texture_warp_target target) override {
-        if (!m_texture_id) {
-            std::cout << "invalid texture id" << std::endl;
-            return;
-        }
-        bind(0);
-        glTexParameteri(
-            gl_texture_type(m_type),
-            gl_texture_warp_target(target),
-            gl_texture_wrap(wrap)
-        );
-        unbind();
+        gl_set_wrap(wrap, target);
     }
 
     virtual void set_filter(Texture_filter filter, Texture_filter_target target) override {
-        if (!m_texture_id) {
-            std::cout << "invalid texture id" << std::endl;
-            return;
-        }
-
-        bind(0);
-        glTexParameteri(
-            gl_texture_type(m_type),
-            gl_texture_filter_target(target),
-            gl_texture_filter(filter)
-        );
-        unbind();
+        gl_set_filter(filter, target);
     }
 
     virtual void generate_mipmap() override {
-        if (!m_texture_id) {
-            std::cout << "invalid texture id" << std::endl;
-            return;
-        }
-
-        bind(0);
-        glGenerateMipmap(gl_texture_type(m_type));
-        unbind();
-
+        gl_generate_mipmap();
     }
 
     virtual void set_data() override {
@@ -385,8 +391,6 @@ public:
         }
         unbind();
     }
-
-    unsigned int texture_id() const { return m_texture_id; }
 
 };
 
