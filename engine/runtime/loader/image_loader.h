@@ -3,7 +3,7 @@
 
 namespace rtr {
 
-enum class Loader_type {
+enum class Image_loader_type {
     STB_IMAGE
 };
 
@@ -66,9 +66,9 @@ public:
 
 class Image_loader {
 protected:
-    Loader_type m_loader_type{};
+    Image_loader_type m_type{};
 public:
-    Image_loader(Loader_type loader_type) : m_loader_type(loader_type) {}
+    Image_loader(Image_loader_type type) : m_type(type) {}
     virtual ~Image_loader() = default;
 
     virtual std::shared_ptr<Image> load_from_path(

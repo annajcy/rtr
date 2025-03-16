@@ -62,7 +62,7 @@ public:
 
 class Image_loader_stb : public Image_loader {
 public:
-    Image_loader_stb() = default;
+    Image_loader_stb() : Image_loader(Image_loader_type::STB_IMAGE) {}
     virtual ~Image_loader_stb() = default;
     virtual std::shared_ptr<Image> load_from_path(
         Image_format format,
