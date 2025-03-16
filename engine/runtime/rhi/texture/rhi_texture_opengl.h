@@ -223,7 +223,6 @@ public:
 // 修改现有实现
 class RHI_texture_2D_OpenGL : public RHI_texture_2D, public RHI_texture_OpenGL {
     
-
 public:
     RHI_texture_2D_OpenGL(
         Texture_format internal_format,

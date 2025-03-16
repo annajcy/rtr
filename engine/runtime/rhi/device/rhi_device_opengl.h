@@ -15,6 +15,9 @@
 #include "engine/runtime/rhi/state/rhi_binding_state_opengl.h"
 #include "engine/runtime/rhi/state/rhi_pipeline_state_opengl.h"
 
+#include "engine/runtime/rhi/texture/rhi_texture_opengl.h"
+#include "engine/runtime/rhi/frame_buffer/rhi_frame_buffer_opengl.h"
+
 namespace rtr {
     
 
@@ -33,6 +36,28 @@ public:
 
         m_pipeline_state = std::make_shared<RHI_pipeline_state_OpenGL>();
 
+    }
+
+    virtual void destroy() override { }
+
+    virtual void check_error() override {
+        GLenum error_code = glGetError();
+        std::string error;
+        if (error_code != GL_NO_ERROR) {
+            switch (error_code)
+            {
+                case GL_INVALID_ENUM: error = "INVALID_ENUM"; break;
+                case GL_INVALID_VALUE:  error = "INVALID_VALUE"; break;
+                case GL_INVALID_OPERATION: error = "INVALID_OPERATION"; break;
+                case GL_OUT_OF_MEMORY: error = "OUT OF MEMORY"; break;
+                default:
+                    error = "UNKNOWN";
+                    break;
+            }
+            std::cout << error << std::endl;
+
+            assert(false);
+        }
     }
 
     virtual std::shared_ptr<RHI_vertex_buffer> create_vertex_buffer(
@@ -63,6 +88,7 @@ public:
         );
     }
 
+
     virtual std::shared_ptr<RHI_geometry> create_geometry() override {
         return std::make_shared<RHI_geometry_OpenGL>();
     }
@@ -75,25 +101,108 @@ public:
         return std::make_shared<RHI_shader_program_OpenGL>(shaders);
     }
 
-    virtual void check_error() override {
-        GLenum error_code = glGetError();
-        std::string error;
-        if (error_code != GL_NO_ERROR) {
-            switch (error_code)
-            {
-                case GL_INVALID_ENUM: error = "INVALID_ENUM"; break;
-                case GL_INVALID_VALUE:  error = "INVALID_VALUE"; break;
-                case GL_INVALID_OPERATION: error = "INVALID_OPERATION"; break;
-                case GL_OUT_OF_MEMORY: error = "OUT OF MEMORY"; break;
-                default:
-                    error = "UNKNOWN";
-                    break;
-            }
-            std::cout << error << std::endl;
-
-            assert(false);
-        }
+    virtual std::shared_ptr<RHI_texture_2D> create_texture_2D(
+        Texture_format internal_format,
+        Texture_format external_format,
+        Texture_buffer_type buffer_type,
+        int width,
+        int height,
+        unsigned char* data
+    ) override {
+        return std::make_shared<RHI_texture_2D_OpenGL>(
+            internal_format,
+            external_format,
+            buffer_type,
+            width,
+            height,
+            data
+        );
     }
+
+    virtual std::shared_ptr<RHI_texture_2D> create_texture_2D(
+        int width,
+        int height,
+        unsigned char* data
+    ) override {
+        return std::make_shared<RHI_texture_2D_OpenGL>(
+            width,
+            height,
+            data
+        );
+    }
+
+    virtual std::shared_ptr<RHI_texture_cube_map> create_texture_cube_map(
+        Texture_format internal_format,
+        Texture_format external_format,
+        Texture_buffer_type buffer_type,
+        std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> face_data
+    ) override {
+        return std::make_shared<RHI_texture_cube_map_OpenGL>(
+            internal_format,
+            external_format,
+            buffer_type,
+            face_data
+        );
+    }
+
+    virtual std::shared_ptr<RHI_texture_cube_map> create_texture_cube_map(
+        std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> face_data
+    ) override {
+        return std::make_shared<RHI_texture_cube_map_OpenGL>(
+            face_data
+        );
+    }
+
+    virtual std::shared_ptr<RHI_texture_2D> create_color_attachment(
+        int width,
+        int height
+    ) override {
+        return std::make_shared<RHI_texture_2D_OpenGL>(
+            width,
+            height,
+            nullptr
+        );
+    }
+
+    virtual std::shared_ptr<RHI_texture_2D> create_depth_attachment(
+        int width,
+        int height
+    ) override {
+        return std::make_shared<RHI_texture_2D_OpenGL>(
+            Texture_format::DEPTH_STENCIL_24_8,
+            Texture_format::DEPTH_STENCIL,
+            Texture_buffer_type::UNSIGNED_INT_24_8,
+            width,
+            height,
+            nullptr
+        );
+    }
+
+    virtual std::shared_ptr<RHI_frame_buffer> create_frame_buffer(
+        int width,
+        int height,
+        int color_attachment_count
+    ) override {
+        auto frame_buffer = std::make_shared<RHI_frame_buffer_OpenGL>(
+            width,
+            height
+        );
+
+        for (int i = 0; i < color_attachment_count; i++) {
+            frame_buffer->add_color_attachment(create_color_attachment(width, height));
+        }
+
+        frame_buffer->depth_attachment() = create_depth_attachment(width, height);
+        frame_buffer->attach();
+        if (!frame_buffer->is_valid()) {
+            std::cout << "Frame buffer is not valid" << std::endl;
+            return nullptr;
+        } else {
+            std::cout << "Frame buffer is valid" << std::endl;
+        }
+        return frame_buffer;
+    }
+
     
 };
 

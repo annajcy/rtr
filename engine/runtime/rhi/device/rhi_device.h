@@ -76,6 +76,55 @@ public:
         const std::vector<std::shared_ptr<RHI_shader_code>>& shaders
     ) = 0;
 
+    virtual std::shared_ptr<RHI_texture_2D> create_texture_2D(
+        Texture_format internal_format,
+        Texture_format external_format,
+        Texture_buffer_type buffer_type,
+        int width,
+        int height,
+        unsigned char* data
+    ) = 0;
+
+    virtual std::shared_ptr<RHI_texture_2D> create_texture_2D(
+        int width,
+        int height,
+        unsigned char* data
+    ) = 0;
+
+    virtual std::shared_ptr<RHI_texture_cube_map> create_texture_cube_map(
+        Texture_format internal_format,
+        Texture_format external_format,
+        Texture_buffer_type buffer_type,
+        std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> face_textures
+    ) = 0;
+
+    virtual std::shared_ptr<RHI_texture_cube_map> create_texture_cube_map(
+        std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> face_textures
+    ) = 0;
+
+    virtual std::shared_ptr<RHI_texture_2D> create_color_attachment(
+        int width,
+        int height
+    ) = 0;
+
+    virtual std::shared_ptr<RHI_texture_2D> create_depth_attachment(
+        int width,
+        int height
+    ) = 0;
+
+    virtual std::shared_ptr<RHI_frame_buffer> create_frame_buffer(
+        int width,
+        int height,
+        int color_attachment_count
+    ) = 0;
+
+
+
+
+
+
+
+
     
 };
 
