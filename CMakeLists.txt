@@ -36,9 +36,9 @@ include_directories(
 
 file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/engine/*.cpp)
 
-add_executable(rtr ${SOURCES} example/test.cpp)
+add_executable(rhi_triangle ${SOURCES} example/rhi/triangle.cpp)
 
-target_link_libraries(rtr 
+target_link_libraries(rhi_triangle 
 glfw
 glad
 assimp

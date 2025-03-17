@@ -20,6 +20,27 @@ inline constexpr unsigned int gl_shader_type(Shader_type type) {
             return GL_TESS_CONTROL_SHADER;
         case Shader_type::TESSELATION_EVALUATION:
             return GL_TESS_EVALUATION_SHADER;
+        default:
+            return 0;
+    }
+}
+
+inline constexpr std::string gl_shader_type_str(Shader_type type) {
+    switch (type) {
+        case Shader_type::VERTEX:
+            return "GL_VERTEX_SHADER";
+        case Shader_type::FRAGMENT:
+            return "GL_FRAGMENT_SHADER";
+        case Shader_type::GEOMETRY:
+            return "GL_GEOMETRY_SHADER";
+        case Shader_type::COMPUTE:
+            return "GL_COMPUTE_SHADER";
+        case Shader_type::TESSELATION_CONTROL:
+            return "GL_TESS_CONTROL_SHADER";
+        case Shader_type::TESSELATION_EVALUATION:
+            return "GL_TESS_EVALUATION_SHADER";
+        default:
+            return "";
     }
 }
 
@@ -66,11 +87,12 @@ public:
         glGetShaderiv(m_code_id, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(m_code_id, LOG_STR_LEN, nullptr, info_log);
-            std::cerr << "Shader compiled failed" << " --" << gl_shader_type(m_type) << " " <<  m_code_id << std::endl;
+            std::cerr << "Shader compiled failed" << " --" << gl_shader_type_str(m_type) << " " <<  m_code_id << std::endl;
             std::cerr << info_log << std::endl;
         } else {
-            std::cout << "Shader compiled successfully" << " --" << gl_shader_type(m_type) << " " << m_code_id << std::endl;
+            std::cout << "Shader compiled successfully" << " --" << gl_shader_type_str(m_type) << " " << m_code_id << std::endl;
         }
+        return success;
     }
 
     unsigned int code_id() const {

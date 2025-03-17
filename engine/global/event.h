@@ -1,7 +1,5 @@
 #pragma once
 
-#include "engine/global/base.h"
-
 namespace rtr {
 
 template <typename ...Args>

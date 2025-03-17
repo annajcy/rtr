@@ -151,7 +151,7 @@ protected:
     std::string m_title{};
 
     Window_resize_event m_window_resize_event{[&](unsigned int width, unsigned int height) {
-        std::cout << "Viewport resize" << std::endl;
+        std::cout << "Viewport resized to: " << width << " " << height << std::endl;
 		this->set_viewport(0, 0, width, height);
     }};
 

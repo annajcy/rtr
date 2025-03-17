@@ -20,8 +20,12 @@ protected:
     unsigned int m_vao{};
 
 public:
-    RHI_geometry_OpenGL() : RHI_geometry() { 
+    RHI_geometry_OpenGL(
+        const std::unordered_map<unsigned int, std::shared_ptr<RHI_vertex_buffer>> &vertex_buffers, 
+        const std::shared_ptr<RHI_element_buffer>& element_buffer
+    ) : RHI_geometry(vertex_buffers, element_buffer) { 
         init(); 
+        bind_buffers();
     }
 
     virtual ~RHI_geometry_OpenGL() override { 
@@ -53,21 +57,21 @@ public:
     }
 
     virtual void draw() override {
-        auto gl_index_buffer = std::dynamic_pointer_cast<RHI_element_buffer_OpenGL>(m_index_buffer);
+        auto gl_element_buffer = std::dynamic_pointer_cast<RHI_element_buffer_OpenGL>(m_element_buffer);
 
-        if (gl_index_buffer) {
+        if (gl_element_buffer) {
             bind();
-            glDrawElements(GL_TRIANGLES, gl_index_buffer->data_count(), GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, gl_element_buffer->data_count(), GL_UNSIGNED_INT, 0);
             unbind();
         }
     }
 
     virtual void instanced_draw(unsigned int instance_count) override {
-        auto gl_index_buffer = std::dynamic_pointer_cast<RHI_element_buffer_OpenGL>(m_index_buffer);
+        auto gl_element_buffer = std::dynamic_pointer_cast<RHI_element_buffer_OpenGL>(m_element_buffer);
 
-        if (gl_index_buffer) {
+        if (gl_element_buffer) {
             bind();
-            glDrawElementsInstanced(GL_TRIANGLES, gl_index_buffer->data_count(), GL_UNSIGNED_INT, 0, instance_count);
+            glDrawElementsInstanced(GL_TRIANGLES, gl_element_buffer->data_count(), GL_UNSIGNED_INT, 0, instance_count);
             unbind();
         }
     }

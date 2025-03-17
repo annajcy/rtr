@@ -15,21 +15,18 @@ protected:
 
 public:
 
-    RHI_shader_program_OpenGL(const std::vector<std::shared_ptr<RHI_shader_code>> & shaders) : RHI_shader_program(shaders) { 
+    RHI_shader_program_OpenGL(const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shaders) : 
+    RHI_shader_program(shaders) { 
         
         init();
 
-        for (auto& shader : shaders) {
+        for (auto& [type, shader] : shaders) {
             attach_shader_code(shader);
         }
 
         if (!link()) {
-            std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED" << std::endl;
             destroy();
-        } else {
-            std::cout << "INFO::SHADER::PROGRAM::LINKING_SUCCESS" << std::endl;
         }
-
     }
 
     virtual void init() override {
@@ -38,7 +35,7 @@ public:
 
     virtual void destroy() override {
 
-        for (auto& shader : m_shaders) {
+        for (auto& [type, shader] : m_shaders) {
             detach_shader_code(shader);
         }
 
@@ -53,6 +50,10 @@ public:
 
     virtual void unbind() override {
         glUseProgram(0);
+    }
+
+    unsigned int program_id() const {
+        return m_program_id;
     }
 
     virtual void attach_shader_code(const std::shared_ptr<RHI_shader_code>& shader) override {

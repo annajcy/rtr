@@ -37,10 +37,13 @@ public:
         glGenBuffers(1, &m_vbo);
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
         if (this->data() == nullptr) {
+            glBufferData(GL_ARRAY_BUFFER, this->size(), nullptr, gl_usage(this->usage()));
             m_is_data_loaded = false;
+            std::cout << "WARNING::RHI_VERTEX_BUFFER::DATA_IS_NULL: " << m_vbo << std::endl;
         } else {
             glBufferData(GL_ARRAY_BUFFER, this->size(), this->data(), gl_usage(this->usage()));
             m_is_data_loaded = true;
+            std::cout << "INFO::RHI_VERTEX_BUFFER::DATA_IS_NOT_NULL: " << m_vbo << std::endl;
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
@@ -62,9 +65,12 @@ public:
 
     virtual void update_buffer() override {
         if (this->data() == nullptr) {
+            if (m_is_data_loaded) {
+                glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+                glBufferData(GL_ARRAY_BUFFER, this->size(), nullptr, gl_usage(this->usage()));
+            }
             m_is_data_loaded = false;
-        }
-        else {
+        } else {
             glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
             glBufferSubData(GL_ARRAY_BUFFER, 0, this->size(), this->data());
             m_is_data_loaded = true;
@@ -93,6 +99,15 @@ public:
     virtual void init() override {
         glGenBuffers(1, &m_ebo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
+        if (this->data() == nullptr) {
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->size(), nullptr, gl_usage(this->usage()));
+            m_is_data_loaded = false;
+            std::cout << "WARNING::RHI_ELEMENT_BUFFER::DATA_IS_NULL: " << m_ebo << std::endl;
+        } else {
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->size(), this->data(), gl_usage(this->usage()));
+            m_is_data_loaded = true;
+            std::cout << "INFO::RHI_ELEMENT_BUFFER::DATA_IS_NOT_NULL: " << m_ebo << std::endl;
+        }
     }
 
     virtual void bind() override {
@@ -109,6 +124,22 @@ public:
             m_ebo = 0;
         }
     }
+
+    virtual void update_buffer() override {
+        if (this->data() == nullptr) {
+            if (m_is_data_loaded) {
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->size(), nullptr, gl_usage(this->usage()));
+            }
+            m_is_data_loaded = false;
+        }
+        else {
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
+            glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, this->size(), this->data());
+            m_is_data_loaded = true;
+        }
+    }
+
     unsigned int ebo() const { return m_ebo; }
 };
 

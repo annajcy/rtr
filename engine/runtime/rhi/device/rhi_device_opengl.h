@@ -12,7 +12,6 @@
 #include "engine/runtime/rhi/shader/rhi_shader_code_opengl.h"
 #include "engine/runtime/rhi/shader/rhi_shader_program_opengl.h"
 
-#include "engine/runtime/rhi/state/rhi_binding_state_opengl.h"
 #include "engine/runtime/rhi/state/rhi_pipeline_state_opengl.h"
 
 #include "engine/runtime/rhi/texture/rhi_texture_opengl.h"
@@ -23,19 +22,20 @@ namespace rtr {
 
 class RHI_device_OpenGL : public RHI_device {
 public:
+
     RHI_device_OpenGL(const RHI_device_descriptor& device_descriptor) : RHI_device(API_type::OPENGL, device_descriptor) { init(); }
     virtual ~RHI_device_OpenGL() override { destroy(); }
 
     virtual void init() override {
 
         m_window = std::make_shared<RHI_window_OpenGL>(
-            m_device_descriptor.m_width,
-            m_device_descriptor.m_height,
-            m_device_descriptor.m_title
+            m_device_descriptor.width,
+            m_device_descriptor.height,
+            m_device_descriptor.title
         );
 
+        m_binding_state = std::make_shared<RHI_binding_state>();
         m_pipeline_state = std::make_shared<RHI_pipeline_state_OpenGL>();
-
     }
 
     virtual void destroy() override { }
@@ -88,16 +88,26 @@ public:
         );
     }
 
-
-    virtual std::shared_ptr<RHI_geometry> create_geometry() override {
-        return std::make_shared<RHI_geometry_OpenGL>();
+    virtual std::shared_ptr<RHI_geometry> create_geometry(
+        const std::unordered_map<unsigned int, std::shared_ptr<RHI_vertex_buffer>>& vertex_buffers,
+        const std::shared_ptr<RHI_element_buffer>& element_buffer
+    ) override {
+        return std::make_shared<RHI_geometry_OpenGL>(
+            vertex_buffers,
+            element_buffer
+        );
     }
 
-    virtual std::shared_ptr<RHI_shader_code> create_shader_code(Shader_type type, const std::string& code) override {
+    virtual std::shared_ptr<RHI_shader_code> create_shader_code(
+        Shader_type type, 
+        const std::string& code
+    ) override {
         return std::make_shared<RHI_shader_code_OpenGL>(type, code);
     }
 
-    virtual std::shared_ptr<RHI_shader_program> create_shader_program(const std::vector<std::shared_ptr<RHI_shader_code>>& shaders) override {
+    virtual std::shared_ptr<RHI_shader_program> create_shader_program(
+        const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shaders
+    ) override {
         return std::make_shared<RHI_shader_program_OpenGL>(shaders);
     }
 
@@ -201,6 +211,10 @@ public:
             std::cout << "Frame buffer is valid" << std::endl;
         }
         return frame_buffer;
+    }
+
+    virtual void clear() override {
+        glClear(m_pipeline_state->clear_mask());
     }
 
     

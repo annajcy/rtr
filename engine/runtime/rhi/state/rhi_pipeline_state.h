@@ -259,13 +259,13 @@ struct Cull_state {
 };
 
 struct Clear_state {
-    bool color{false};
-    bool depth{false};
-    bool stencil{false};
+    bool color{true};
+    bool depth{true};
+    bool stencil{true};
 
     float depth_clear_value{1.0f};
     unsigned int stencil_clear_value{0x00};
-    glm::vec4 color_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
+    glm::vec4 color_clear_value{0.0f, 0.0f, 0.0f, 1.0f};
 
     static Clear_state enabled() {
         return {
@@ -279,7 +279,7 @@ struct Clear_state {
     }
 };
 
-enum class State_global_profile {
+enum class Pipeline_state_profile {
     UNSPECIFIED,
     OPAQUE,
     TRANSLUCENT,
@@ -289,7 +289,7 @@ enum class State_global_profile {
 class RHI_pipeline_state {
 
 protected:
-    State_global_profile m_profile{State_global_profile::UNSPECIFIED};
+    Pipeline_state_profile m_profile{Pipeline_state_profile::UNSPECIFIED};
     Depth_state m_depth_state{};
     Polygon_offset_state m_polygon_offset_state{};
     Stencil_state m_stencil_state{};
@@ -301,30 +301,35 @@ protected:
 public:
 
     RHI_pipeline_state() = default;
-    RHI_pipeline_state(State_global_profile profile) : m_profile(profile) {}
+    RHI_pipeline_state(Pipeline_state_profile profile) : m_profile(profile) {}
     virtual ~RHI_pipeline_state() = default;
+
+    void set_profile(Pipeline_state_profile profile) {
+        m_profile = profile;
+        init();
+    }
     
     void init() {
 
-        if (m_profile == State_global_profile::UNSPECIFIED) {
+        if (m_profile == Pipeline_state_profile::UNSPECIFIED) {
             return;
         }
 
-        if (m_profile == State_global_profile::OPAQUE) {
+        if (m_profile == Pipeline_state_profile::OPAQUE) {
             m_depth_state = Depth_state::opaque();
             m_polygon_offset_state = Polygon_offset_state::disabled();
             m_stencil_state = Stencil_state::opaque();
             m_blend_state = Blend_state::opaque();
             m_cull_state = Cull_state::back();
             m_clear_state = Clear_state::enabled();
-        } else if (m_profile == State_global_profile::TRANSLUCENT) {
+        } else if (m_profile == Pipeline_state_profile::TRANSLUCENT) {
             m_depth_state = Depth_state::translucent();
             m_polygon_offset_state = Polygon_offset_state::disabled();
             m_stencil_state = Stencil_state::opaque();
             m_blend_state = Blend_state::translucent();
             m_cull_state = Cull_state::back();
             m_clear_state = Clear_state::enabled();
-        } else if (m_profile == State_global_profile::EDGE) {
+        } else if (m_profile == Pipeline_state_profile::EDGE) {
             m_depth_state = Depth_state::opaque();
             m_polygon_offset_state = Polygon_offset_state::enabled();
             m_stencil_state = Stencil_state::edge();
@@ -332,6 +337,7 @@ public:
             m_cull_state = Cull_state::back();
             m_clear_state = Clear_state::enabled();
         }
+        apply();
     }
     
     void apply() {
@@ -350,13 +356,13 @@ public:
     virtual void apply_stencil_state() = 0;
     virtual void apply_clear_state() = 0;
 
-    State_global_profile& profile() { return m_profile; }
+    Pipeline_state_profile& profile() { return m_profile; }
     Blend_state& blend_state() { return m_blend_state; }
     Cull_state& cull_state() { return m_cull_state; }
     Depth_state& depth_test_state() { return m_depth_state; }
     Polygon_offset_state& polygon_offset_state() { return m_polygon_offset_state; }
     Stencil_state& stencil_state() { return m_stencil_state; }
-    Clear_state& clear_buffers() { return m_clear_state; }
+    Clear_state& clear_states() { return m_clear_state; }
 
     unsigned int clear_mask() { return m_clear_mask; }
 

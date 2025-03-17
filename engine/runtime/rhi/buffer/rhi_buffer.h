@@ -93,7 +93,13 @@ public:
         unsigned int unit_count,
         unsigned int data_count,
         void* data
-    ) : RHI_buffer(Buffer_type::VERTEX, usage, attribute_type, unit_count, data_count, data) { }
+    ) : RHI_buffer(
+        Buffer_type::VERTEX, 
+        usage, 
+        attribute_type, 
+        unit_count, 
+        data_count, 
+        data) { }
 
     virtual ~RHI_vertex_buffer() override = default;
     virtual void init() override = 0;
@@ -110,7 +116,12 @@ public:
         Buffer_usage usage,
         unsigned int data_count,
         void* data
-    ) : RHI_buffer(Buffer_type::INDEX, usage, Buffer_attribute_type::UINT, 1, data_count, data) { }
+    ) : RHI_buffer(
+        Buffer_type::INDEX, usage, 
+        Buffer_attribute_type::UINT, 
+        1, 
+        data_count, 
+        data) { }
 
     virtual ~RHI_element_buffer() override = default;
     virtual void init() override = 0;

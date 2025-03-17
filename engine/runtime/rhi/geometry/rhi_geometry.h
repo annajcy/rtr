@@ -6,11 +6,16 @@ namespace rtr {
 
 class RHI_geometry {
 protected:
-    std::vector<std::shared_ptr<RHI_vertex_buffer>> m_vertex_buffers{};
-    std::shared_ptr<RHI_element_buffer> m_index_buffer{};
+    std::shared_ptr<RHI_element_buffer> m_element_buffer{};
+    std::unordered_map<unsigned int, std::shared_ptr<RHI_vertex_buffer>> m_vertex_buffers{};
 
 public:
-    RHI_geometry() = default;
+    RHI_geometry(
+        const std::unordered_map<unsigned int, std::shared_ptr<RHI_vertex_buffer>> &vertex_buffers, 
+        const std::shared_ptr<RHI_element_buffer>& element_buffer
+    ) : m_vertex_buffers(vertex_buffers) , 
+        m_element_buffer(element_buffer) { }
+
     virtual ~RHI_geometry() = default;
     virtual void init() = 0;
     virtual void bind() = 0;
@@ -24,42 +29,22 @@ public:
         
         bind();
 
-        int location = 0;
-        for (auto& vbo : m_vertex_buffers) {
+        for (auto& [location, vbo] : m_vertex_buffers) {
             vbo->bind();
-            bind_vertex_buffer(vbo, location ++);
+            bind_vertex_buffer(vbo, location);
             vbo->unbind();
         }
 
-        if (m_index_buffer) {
-            m_index_buffer->bind();
+        if (m_element_buffer) {
+            m_element_buffer->bind();
+        } else {
+            std::cout << "No element buffer" << std::endl;
+            assert(false);
         }
 
         unbind();
     }
 
-    void remove_vertex_buffer(const std::shared_ptr<RHI_vertex_buffer>& buffer) {
-        auto it = std::find(m_vertex_buffers.begin(), m_vertex_buffers.end(), buffer);
-        if (it != m_vertex_buffers.end()) {
-            m_vertex_buffers.erase(it);
-        }
-    }
-
-    void add_vertex_buffer(const std::shared_ptr<RHI_vertex_buffer>& buffer) {
-        m_vertex_buffers.push_back(buffer);
-    }
-
-    void add_vertex_buffers(const std::vector<std::shared_ptr<RHI_vertex_buffer>>& buffers) {
-        m_vertex_buffers.insert(m_vertex_buffers.end(), buffers.begin(), buffers.end());
-    }
-
-    void set_vertex_buffers(const std::vector<std::shared_ptr<RHI_vertex_buffer>>& buffers) {
-        m_vertex_buffers = buffers;
-    }
-
-    void set_index_buffer(const std::shared_ptr<RHI_element_buffer>& buffer) {
-        m_index_buffer = buffer;
-    }
 
 };
 

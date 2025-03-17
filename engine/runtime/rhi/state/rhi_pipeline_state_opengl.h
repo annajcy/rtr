@@ -96,14 +96,11 @@ inline constexpr unsigned int gl_stencil_function(Stencil_function function) {
 class RHI_pipeline_state_OpenGL : public RHI_pipeline_state {
 
 public:
-    RHI_pipeline_state_OpenGL() : RHI_pipeline_state() { 
-        init(); 
-        apply();
-    }
-    RHI_pipeline_state_OpenGL(State_global_profile global_profile) : RHI_pipeline_state(global_profile) { 
-        init(); 
-        apply();
-    }
+    RHI_pipeline_state_OpenGL() : RHI_pipeline_state() { init(); }
+    
+    RHI_pipeline_state_OpenGL(Pipeline_state_profile global_profile) : 
+    RHI_pipeline_state(global_profile) 
+    { init(); }
 
     ~RHI_pipeline_state_OpenGL() override = default;
 

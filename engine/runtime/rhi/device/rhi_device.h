@@ -19,9 +19,9 @@ enum class API_type {
 };
 
 struct RHI_device_descriptor {
-    unsigned int m_width{800};
-    unsigned int m_height{600};
-    std::string m_title = "RTR Engine";
+    unsigned int width{800};
+    unsigned int height{600};
+    std::string title = "RTR Engine";
 };
 
 class RHI_device {
@@ -34,6 +34,7 @@ protected:
     std::shared_ptr<RHI_pipeline_state> m_pipeline_state{};
     std::shared_ptr<RHI_binding_state> m_binding_state{};
 
+
 public:
     
     RHI_device(
@@ -45,7 +46,10 @@ public:
     virtual ~RHI_device() = default;
 
     const API_type& api_type() { return m_api_type; }
-    const std::shared_ptr<RHI_window>& window() { return m_window; }
+    std::shared_ptr<RHI_window>& window() { return m_window; }
+    std::shared_ptr<RHI_pipeline_state>& pipeline_state() { return m_pipeline_state; }
+    std::shared_ptr<RHI_binding_state>& binding_state() { return m_binding_state; }
+    const RHI_device_descriptor& device_descriptor() { return m_device_descriptor; }
 
     virtual void init() = 0;
     virtual void destroy() = 0;
@@ -65,7 +69,10 @@ public:
         void* data
     ) = 0;
 
-    virtual std::shared_ptr<RHI_geometry> create_geometry() = 0;
+    virtual std::shared_ptr<RHI_geometry> create_geometry(
+        const std::unordered_map<unsigned int, std::shared_ptr<RHI_vertex_buffer>>& vertex_buffers,
+        const std::shared_ptr<RHI_element_buffer>& element_buffer
+    ) = 0;
 
     virtual std::shared_ptr<RHI_shader_code> create_shader_code(
         Shader_type type,
@@ -73,7 +80,7 @@ public:
     ) = 0;
 
     virtual std::shared_ptr<RHI_shader_program> create_shader_program(
-        const std::vector<std::shared_ptr<RHI_shader_code>>& shaders
+        const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shaders
     ) = 0;
 
     virtual std::shared_ptr<RHI_texture_2D> create_texture_2D(
@@ -118,12 +125,23 @@ public:
         int color_attachment_count
     ) = 0;
 
+    void draw() {
+        m_pipeline_state->apply();
 
+        m_binding_state->bind();
+        m_binding_state->geometry()->draw();
+        m_binding_state->unbind();
+    }
 
+    void instanced_draw(int instance_count) {
+        m_pipeline_state->apply();
 
+        m_binding_state->bind();
+        m_binding_state->geometry()->instanced_draw(instance_count);
+        m_binding_state->unbind();
+    }
 
-
-
+    virtual void clear() = 0;
 
     
 };
