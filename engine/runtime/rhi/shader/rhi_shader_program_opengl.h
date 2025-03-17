@@ -101,46 +101,46 @@ public:
 
         switch (type) {
             case Uniform_type::FLOAT:
-                glUniform1f(location, *(float*)data);
+                glUniform1f(location, *static_cast<const float*>(data));
                 break;
             case Uniform_type::INT:
-                glUniform1i(location, *(int*)data);
+                glUniform1i(location, *static_cast<const int*>(data));
                 break;
             case Uniform_type::BOOL:
-                glUniform1i(location, *(bool*)data);
+                glUniform1i(location, *static_cast<const bool*>(data) ? 1 : 0);
                 break;
             case Uniform_type::VEC2:
-                glUniform2fv(location, 1, (float*)data);
+                glUniform2fv(location, 1, static_cast<const float*>(data));
                 break;
             case Uniform_type::VEC3:
-                glUniform3fv(location, 1, (float*)data);
+                glUniform3fv(location, 1, static_cast<const float*>(data));
                 break;
             case Uniform_type::VEC4:
-                glUniform4fv(location, 1, (float*)data);
+                glUniform4fv(location, 1, static_cast<const float*>(data));
                 break;
             case Uniform_type::IVEC2:
-                glUniform2iv(location, 1, (int*)data);
+                glUniform2iv(location, 1, static_cast<const int*>(data));
                 break;
             case Uniform_type::IVEC3:
-                glUniform3iv(location, 1, (int*)data);
+                glUniform3iv(location, 1, static_cast<const int*>(data));
                 break;
             case Uniform_type::IVEC4:
-                glUniform4iv(location, 1, (int*)data);
+                glUniform4iv(location, 1, static_cast<const int*>(data));
                 break;
             case Uniform_type::MAT2:
-                glUniformMatrix2fv(location, 1, GL_FALSE, (float*)data);
+                glUniformMatrix2fv(location, 1, GL_FALSE, static_cast<const float*>(data));
                 break;
             case Uniform_type::MAT3:
-                glUniformMatrix3fv(location, 1, GL_FALSE, (float*)data);
+                glUniformMatrix3fv(location, 1, GL_FALSE, static_cast<const float*>(data));
                 break;
             case Uniform_type::MAT4:
-                glUniformMatrix4fv(location, 1, GL_FALSE, (float*)data);
+                glUniformMatrix4fv(location, 1, GL_FALSE, static_cast<const float*>(data));
                 break;
             case Uniform_type::SAMPLER_2D:
-                glUniform1i(location, *(int*)data);
+                glUniform1i(location, *static_cast<const int*>(data));
                 break;
             case Uniform_type::SAMPLER_CUBE:
-                glUniform1i(location, *(int*)data);
+                glUniform1i(location, *static_cast<const int*>(data));
                 break;
             default:
                 std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_TYPE_NOT_SUPPORTED" << std::endl;
@@ -160,49 +160,44 @@ public:
         if (location == -1) {
             std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_NOT_FOUND: " << name << std::endl;
             return;
+        } else {
+            std::cout << "INFO::SHADER::PROGRAM::UNIFORM_FOUND: " << name << " LOCATION: " << location << std::endl;
         }
+       
         switch (type) {
             case Uniform_type::FLOAT:
-                glUniform1fv(location, count, (float*)data);
+                glUniform1fv(location, count, static_cast<const float*>(data));
                 break;
             case Uniform_type::INT:
-                glUniform1iv(location, count, (int*)data);
-                break;
             case Uniform_type::BOOL:
-                glUniform1iv(location, count, (int*)data);
+                glUniform1iv(location, count, static_cast<const int*>(data));
                 break;
             case Uniform_type::VEC2:
-                glUniform2fv(location, count, (float*)data);
+                glUniform2fv(location, count, static_cast<const float*>(data));
                 break;
             case Uniform_type::VEC3:
-                glUniform3fv(location, count, (float*)data);
+                glUniform3fv(location, count, static_cast<const float*>(data));
                 break;
             case Uniform_type::VEC4:
-                glUniform4fv(location, count, (float*)data);
+                glUniform4fv(location, count, static_cast<const float*>(data));
                 break;
             case Uniform_type::IVEC2:
-                glUniform2iv(location, count, (int*)data);
+                glUniform2iv(location, count, static_cast<const int*>(data));
                 break;
             case Uniform_type::IVEC3:
-                glUniform3iv(location, count, (int*)data);
+                glUniform3iv(location, count, static_cast<const int*>(data));
                 break;
             case Uniform_type::IVEC4:
-                glUniform4iv(location, count, (int*)data);
+                glUniform4iv(location, count, static_cast<const int*>(data));
                 break;
             case Uniform_type::MAT2:
-                glUniformMatrix2fv(location, count, GL_FALSE, (float*)data);
+                glUniformMatrix2fv(location, count, GL_FALSE, static_cast<const float*>(data));
                 break;
             case Uniform_type::MAT3:
-                glUniformMatrix3fv(location, count, GL_FALSE, (float*)data);
+                glUniformMatrix3fv(location, count, GL_FALSE, static_cast<const float*>(data));
                 break;
             case Uniform_type::MAT4:
-                glUniformMatrix4fv(location, count, GL_FALSE, (float*)data);
-                break;
-            case Uniform_type::SAMPLER_2D:
-                glUniform1iv(location, count, (int*)data);
-                break;
-            case Uniform_type::SAMPLER_CUBE:
-                glUniform1iv(location, count, (int*)data);
+                glUniformMatrix4fv(location, count, GL_FALSE, static_cast<const float*>(data));
                 break;
             default:
                 std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_TYPE_NOT_SUPPORTED" << std::endl;

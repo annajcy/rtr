@@ -30,7 +30,7 @@ enum class Texture_wrap {
     CLAMP_TO_BORDER,
 };
 
-enum class Texture_warp_target {
+enum class Texture_wrap_target {
     U, V, W
 };
 
@@ -82,7 +82,7 @@ public:
     virtual void bind(unsigned int slot) = 0;
     virtual void unbind() = 0;
     virtual void set_data() = 0;
-    virtual void set_wrap(Texture_wrap wrap, Texture_warp_target target) = 0;
+    virtual void set_wrap(Texture_wrap wrap, Texture_wrap_target target) = 0;
     virtual void set_filter(Texture_filter filter, Texture_filter_target target) = 0;
     virtual void generate_mipmap() = 0;
    
@@ -120,14 +120,23 @@ public:
         m_width(width),
         m_height(height),
         m_data(data) {}
-
+  
     virtual ~RHI_texture_2D() = default;
     virtual void init() = 0;
     virtual void destroy() = 0;
     virtual void bind(unsigned int slot) = 0;
     virtual void unbind() = 0;
     virtual void set_data() = 0;
+    virtual void set_filter(Texture_filter filter, Texture_filter_target target) = 0;
+    virtual void set_wrap(Texture_wrap wrap, Texture_wrap_target target) = 0;
+    virtual void generate_mipmap() = 0;
 
+    int width() const { return m_width; }
+    int height() const { return m_height; }
+    unsigned char* data() const { return m_data; }
+
+    
+    
 };
 
 class RHI_texture_cube_map : public RHI_texture {   
@@ -161,6 +170,13 @@ public:
     virtual void bind(unsigned int slot) = 0;
     virtual void unbind() = 0;
     virtual void set_data() = 0;
+    virtual void set_filter(Texture_filter filter, Texture_filter_target target) = 0;
+    virtual void set_wrap(Texture_wrap wrap, Texture_wrap_target target) = 0;
+    virtual void generate_mipmap() = 0;
+
+    const std::unordered_map<Texture_cube_map_face, Face_data>& face_data() const { return m_face_data; }
+    const Face_data& face_data(Texture_cube_map_face face) const { return m_face_data.at(face); }
+
 
 };
 

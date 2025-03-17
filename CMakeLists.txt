@@ -48,6 +48,19 @@ glad
 ${OPENGL_LIBRARIES} 
 )
 
+add_executable(rhi_triangle_textured ${SOURCES} example/rhi/textured_triangle.cpp)
+
+target_link_libraries(rhi_triangle_textured 
+glfw
+glad
+assimp
+imgui
+stb_image
+glad
+${OPENGL_LIBRARIES} 
+)
+
+
 
 
 

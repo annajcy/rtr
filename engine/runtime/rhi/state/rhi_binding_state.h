@@ -15,6 +15,8 @@ protected:
     std::unordered_map<unsigned int, std::shared_ptr<RHI_texture_2D>> m_textures_2D{};
     std::unordered_map<unsigned int, std::shared_ptr<RHI_texture_cube_map>> m_textures_cube_map{};
     std::shared_ptr<RHI_frame_buffer> m_frame_buffer{};
+
+    
 public:
 
     RHI_binding_state() = default;
@@ -40,20 +42,12 @@ public:
         m_frame_buffer = frame_buffer;
     }
 
-    virtual void add_texture_2D(unsigned int location, const std::shared_ptr<RHI_texture_2D>& texture) {
-        m_textures_2D.insert({location, texture});
+    virtual void set_texture_2D(std::unordered_map<unsigned int, std::shared_ptr<RHI_texture_2D>>& textures_2D)  {
+        m_textures_2D = textures_2D;
     }
 
-    virtual void add_texture_cube_map(unsigned int location, const std::shared_ptr<RHI_texture_cube_map>& texture) {
-        m_textures_cube_map.insert({location, texture});
-    }
-
-    virtual void remove_texture_2D(unsigned int location) {
-        m_textures_2D.erase(location);
-    }
-
-    virtual void remove_texture_cube_map(unsigned int location) {
-        m_textures_cube_map.erase(location);
+    virtual void set_texture_cube_map(std::unordered_map<unsigned int, std::shared_ptr<RHI_texture_cube_map>>& textures_cube_map)  {
+        m_textures_cube_map = textures_cube_map;
     }
 
     virtual void bind() {
@@ -62,17 +56,21 @@ public:
         }
 
         m_geometry->bind();
-        m_shader_program->bind();
+        
         for (auto& [location, texture] : m_textures_2D) {
             texture->bind(location);
         }
         for (auto& [location, texture] : m_textures_cube_map) {
             texture->bind(location);
         }
+
+        m_shader_program->bind();
+        m_shader_program->update_uniforms();
+
     }
 
     virtual void unbind() {
-        
+
         m_geometry->unbind();
         m_shader_program->unbind();
 

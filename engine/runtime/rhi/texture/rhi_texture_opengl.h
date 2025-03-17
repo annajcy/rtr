@@ -102,13 +102,13 @@ inline constexpr unsigned int gl_texture_cube_map_face(Texture_cube_map_face fac
     }
 }
 
-inline constexpr unsigned int gl_texture_warp_target(Texture_warp_target target) {
+inline constexpr unsigned int gl_texture_warp_target(Texture_wrap_target target) {
     switch (target) {
-        case Texture_warp_target::U:
+        case Texture_wrap_target::U:
             return GL_TEXTURE_WRAP_S;
-        case Texture_warp_target::V:
+        case Texture_wrap_target::V:
             return GL_TEXTURE_WRAP_T;
-        case Texture_warp_target::W:
+        case Texture_wrap_target::W:
             return GL_TEXTURE_WRAP_R;
         default:
             return GL_TEXTURE_WRAP_S;
@@ -171,7 +171,7 @@ public:
         glBindTexture(m_gl_type, 0);
     }
 
-    void gl_set_wrap(Texture_wrap wrap, Texture_warp_target target) {
+    void gl_set_wrap(Texture_wrap wrap, Texture_wrap_target target) {
         if (!m_texture_id) {
             std::cout << "invalid texture id" << std::endl;
             return;
@@ -267,7 +267,7 @@ public:
         gl_unbind();
     }
 
-    virtual void set_wrap(Texture_wrap wrap, Texture_warp_target target) override {
+    virtual void set_wrap(Texture_wrap wrap, Texture_wrap_target target) override {
         gl_set_wrap(wrap, target);
     }
 
@@ -356,7 +356,7 @@ public:
         gl_unbind();
     }
 
-    virtual void set_wrap(Texture_wrap wrap, Texture_warp_target target) override {
+    virtual void set_wrap(Texture_wrap wrap, Texture_wrap_target target) override {
         gl_set_wrap(wrap, target);
     }
 
