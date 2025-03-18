@@ -86,10 +86,13 @@ public:
 };
 
 class RHI_vertex_buffer : public RHI_buffer {
+protected:
+    Buffer_iterate_type m_iterate_type{};
 public:
     RHI_vertex_buffer(
         Buffer_usage usage,
         Buffer_attribute_type attribute_type,
+        Buffer_iterate_type iterate_type,
         unsigned int unit_count,
         unsigned int data_count,
         void* data
@@ -99,7 +102,9 @@ public:
         attribute_type, 
         unit_count, 
         data_count, 
-        data) { }
+        data), 
+        m_iterate_type(iterate_type) { }
+
 
     virtual ~RHI_vertex_buffer() override = default;
     virtual void init() override = 0;
@@ -107,6 +112,8 @@ public:
     virtual void unbind() override = 0;
     virtual void destroy() override = 0;
     virtual void update_buffer() override = 0;
+
+    Buffer_iterate_type iterate_type() const { return m_iterate_type; }
 };
 
 

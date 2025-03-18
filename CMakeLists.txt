@@ -60,6 +60,18 @@ glad
 ${OPENGL_LIBRARIES} 
 )
 
+add_executable(main ${SOURCES} example/engine/main.cpp)
+
+target_link_libraries(main
+glfw
+glad
+assimp
+imgui
+stb_image
+glad
+${OPENGL_LIBRARIES} 
+)
+
 
 
 

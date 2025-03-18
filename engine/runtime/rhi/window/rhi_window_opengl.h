@@ -139,15 +139,6 @@ inline constexpr Mouse_button gl_to_rhi_mouse_button_map(unsigned int button) {
     }
 }
 
-inline constexpr Mouse_button_action gl_to_rhi_mouse_button_action_map(unsigned int action) {
-    switch (action) {
-        case GLFW_PRESS: return Mouse_button_action::PRESS;
-        case GLFW_RELEASE: return Mouse_button_action::RELEASE;
-        case GLFW_REPEAT: return Mouse_button_action::REPEAT;
-        default: return Mouse_button_action::UNKNOWN;
-    }
-}
-
 class RHI_window_OpenGL : public RHI_window {
 
 protected:
@@ -239,7 +230,7 @@ public:
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
         auto* self = static_cast<RHI_window_OpenGL*>(glfwGetWindowUserPointer(window));
         if (self) {
-            self->m_mouse_button_event.execute(gl_to_rhi_mouse_button_map(button), gl_to_rhi_mouse_button_action_map(action), mods);
+            self->m_mouse_button_event.execute(gl_to_rhi_mouse_button_map(button), gl_to_rhi_key_action_map(action), mods);
         }
     }
 

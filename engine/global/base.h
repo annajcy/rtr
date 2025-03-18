@@ -38,4 +38,7 @@
 #include <stdexcept>
 #include <cassert>
 
+constexpr float PI = 3.14159265358979323846f;
+constexpr float EPSILON = 1e-6f;
+
 

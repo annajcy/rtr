@@ -63,6 +63,7 @@ public:
     virtual std::shared_ptr<RHI_vertex_buffer> create_vertex_buffer(
         Buffer_usage usage,
         Buffer_attribute_type attribute_type,
+        Buffer_iterate_type iterate_type,
         unsigned int unit_count,
         unsigned int data_count,
         void* data
@@ -70,6 +71,7 @@ public:
         return std::make_shared<RHI_vertex_buffer_OpenGL>(
             usage,
             attribute_type,
+            iterate_type,
             unit_count,
             data_count,
             data

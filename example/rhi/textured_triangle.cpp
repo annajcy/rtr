@@ -5,6 +5,18 @@
 
 #include "engine/runtime/rhi/device/rhi_device.h"
 #include "engine/runtime/rhi/device/rhi_device_opengl.h"
+#include "engine/runtime/rhi/texture/rhi_texture.h"
+
+
+#include "engine/runtime/scene.h"
+#include "engine/runtime/camera.h"
+#include "engine/runtime/camera_control.h"
+#include "engine/runtime/input.h"
+#include "engine/runtime/light.h"
+#include "engine/runtime/geometry.h"
+#include "engine/runtime/material.h"
+#include "engine/runtime/mesh.h"
+
 
 using namespace std;
 using namespace rtr;
@@ -76,6 +88,7 @@ int main() {
     auto vertex_attribute = device->create_vertex_buffer(
         Buffer_usage::STATIC, 
         Buffer_attribute_type::FLOAT, 
+        Buffer_iterate_type::PER_VERTEX,
         3, 
         vertices.size(), 
         vertices.data()
@@ -84,6 +97,7 @@ int main() {
     auto texture_attribute = device->create_vertex_buffer(
         Buffer_usage::STATIC,
         Buffer_attribute_type::FLOAT,
+        Buffer_iterate_type::PER_VERTEX,
         2,
         texture_coords.size(),
         texture_coords.data()
@@ -151,12 +165,19 @@ int main() {
     device->binding_state()->set_shader_program(shader_program);
     device->binding_state()->set_texture_2D(textures);  
 
+    //prepare input
+    auto input = std::make_shared<Input>(device->window());
+
     while (device->window()->is_active()) {
-        device->clear();
-        
-        device->draw();
-        
         device->window()->update();
+        device->clear();
+        device->draw();
+
+        // std::cout << input->mouse_x() << " " << input->mouse_y() << std::endl;
+        // std::cout << input->mouse_dx() << " " << input->mouse_dy() << std::endl;
+        // std::cout << input->mouse_scroll_dx() << " " << input->mouse_scroll_dy() << std::endl;
+
+        input->reset_deltas();
     }
     
     return 0;

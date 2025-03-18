@@ -1,5 +1,6 @@
 #include "engine/global/base.h"
 
+#include "engine/runtime/rhi/buffer/rhi_buffer.h"
 #include "engine/runtime/rhi/device/rhi_device.h"
 #include "engine/runtime/rhi/device/rhi_device_opengl.h"
 
@@ -54,6 +55,7 @@ int main() {
     auto vertex_attribute = device->create_vertex_buffer(
         Buffer_usage::STATIC, 
         Buffer_attribute_type::FLOAT, 
+        Buffer_iterate_type::PER_VERTEX,
         3, 
         vertices.size(), 
         vertices.data()

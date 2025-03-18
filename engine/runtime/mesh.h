@@ -1,6 +1,6 @@
+#pragma once
 #include "engine/global/base.h"
 
-int main() {
-    
-    return 0;
+namespace rtr {
+
 }

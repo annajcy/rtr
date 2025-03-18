@@ -131,15 +131,9 @@ enum class Mouse_button {
     UNKNOWN = 0xFF
 };
 
-enum class Mouse_button_action {
-    PRESS = 0,
-    RELEASE = 1,
-    REPEAT = 2,
-    UNKNOWN = 0xFF
-};
 
 using Window_resize_event = Event<unsigned int, unsigned int>;
-using Mouse_button_event = Event<Mouse_button, Mouse_button_action, unsigned int>;
+using Mouse_button_event = Event<Mouse_button, Key_action, unsigned int>;
 using Mouse_move_event = Event<double, double>;
 using Mouse_scroll_event = Event<double, double>;
 using Key_event = Event<Key_code, Key_action, unsigned int>;
@@ -167,11 +161,7 @@ protected:
     Mouse_scroll_event m_mouse_scroll_event{};
     
 
-    Window_resize_event& window_resize_event() { return m_window_resize_event; }
-    Mouse_button_event& mouse_button_event() { return m_mouse_button_event; }
-    Mouse_move_event& mouse_move_event() { return m_mouse_move_event; }
-    Mouse_scroll_event& mouse_scroll_event() { return m_mouse_scroll_event; }
-    Key_event& key_event() { return m_key_event; }
+    
 
 public:
 
@@ -201,6 +191,12 @@ public:
     const unsigned int& width() { return m_width; }
     const unsigned int& height() { return m_height; }
     const std::string& title() { return m_title; }
+
+    Window_resize_event& window_resize_event() { return m_window_resize_event; }
+    Mouse_button_event& mouse_button_event() { return m_mouse_button_event; }
+    Mouse_move_event& mouse_move_event() { return m_mouse_move_event; }
+    Mouse_scroll_event& mouse_scroll_event() { return m_mouse_scroll_event; }
+    Key_event& key_event() { return m_key_event; }
 
 };
 

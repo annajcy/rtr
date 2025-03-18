@@ -52,8 +52,10 @@ public:
     }
 
     virtual void bind_vertex_buffer(const std::shared_ptr<RHI_vertex_buffer>& vbo, unsigned int location) override {
+        auto gl_vbo = std::dynamic_pointer_cast<RHI_vertex_buffer_OpenGL>(vbo);
         glEnableVertexAttribArray(location);
         glVertexAttribPointer(location, vbo->unit_count(), gl_atribute_type(vbo->attribute_type()), GL_FALSE, vbo->unit_size(), (void*)0);
+        glVertexAttribDivisor(location, vbo->iterate_type() == Buffer_iterate_type::PER_INSTANCE ? 1 : 0);
     }
 
     virtual void draw() override {

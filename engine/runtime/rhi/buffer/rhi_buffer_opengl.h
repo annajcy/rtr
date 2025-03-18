@@ -22,13 +22,15 @@ protected:
     bool m_is_data_loaded{false};
 
 public:
+
     RHI_vertex_buffer_OpenGL(
         Buffer_usage usage,
         Buffer_attribute_type attribute_type,
+        Buffer_iterate_type iterate_type,
         unsigned int unit_count,
         unsigned int data_count,
         void* data
-    ) : RHI_vertex_buffer(usage, attribute_type, unit_count, data_count, data) {
+    ) : RHI_vertex_buffer(usage, attribute_type, iterate_type ,unit_count, data_count, data) {
         init();
     }
 
