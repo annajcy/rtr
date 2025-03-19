@@ -325,7 +325,7 @@ public:
         } else if (m_profile == Pipeline_state_profile::TRANSLUCENT) {
             m_depth_state = Depth_state::translucent();
             m_polygon_offset_state = Polygon_offset_state::disabled();
-            m_stencil_state = Stencil_state::opaque();
+            m_stencil_state = Stencil_state::disabled();
             m_blend_state = Blend_state::translucent();
             m_cull_state = Cull_state::back();
             m_clear_state = Clear_state::enabled();

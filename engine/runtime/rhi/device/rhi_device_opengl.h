@@ -216,9 +216,10 @@ public:
     }
 
     virtual void clear() override {
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_STENCIL_TEST);
         glClear(m_pipeline_state->clear_mask());
     }
-
     
 };
 

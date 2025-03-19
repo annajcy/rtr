@@ -13,12 +13,12 @@ enum class Uniform_type {
     UNKNOWN,
 };
 
-struct Uniform_entry {
+struct RHI_uniform_entry {
     Uniform_type type;
     void* data;
 };
 
-struct Uniform_array_entry {
+struct RHI_uniform_array_entry {
     Uniform_type type;
     void* data;
     unsigned int count;
@@ -29,8 +29,8 @@ class RHI_shader_program {
 protected:
     std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>> m_shaders{};
 
-    std::unordered_map<std::string, Uniform_entry> m_uniforms{};
-    std::unordered_map<std::string, Uniform_array_entry> m_uniform_arrays{};
+    std::unordered_map<std::string, RHI_uniform_entry> m_uniforms{};
+    std::unordered_map<std::string, RHI_uniform_array_entry> m_uniform_arrays{};
 
 public:
     RHI_shader_program(const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shaders) : m_shaders(shaders) { }
@@ -50,16 +50,16 @@ public:
     const std::shared_ptr<RHI_shader_code>& shader(Shader_type type) const { return m_shaders.at(type); }
     bool has_shader(Shader_type type) const { return m_shaders.find(type) != m_shaders.end(); }
 
-    void set_uniforms(const std::unordered_map<std::string, Uniform_entry>& uniforms) { m_uniforms = uniforms; }
-    void set_uniform_arrays(const std::unordered_map<std::string, Uniform_array_entry>& uniform_arrays) { m_uniform_arrays = uniform_arrays; }
+    void set_uniforms(const std::unordered_map<std::string, RHI_uniform_entry>& uniforms) { m_uniforms = uniforms; }
+    void set_uniform_arrays(const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays) { m_uniform_arrays = uniform_arrays; }
 
-    const std::unordered_map<std::string, Uniform_entry>& uniforms() const { return m_uniforms; }
-    const std::unordered_map<std::string, Uniform_array_entry>& uniform_arrays() const { return m_uniform_arrays; }
+    const std::unordered_map<std::string, RHI_uniform_entry>& uniforms() const { return m_uniforms; }
+    const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays() const { return m_uniform_arrays; }
     bool has_uniform(const std::string& name) const { return m_uniforms.find(name) != m_uniforms.end(); }
     bool has_uniform_array(const std::string& name) const { return m_uniform_arrays.find(name)!= m_uniform_arrays.end(); }
 
-    Uniform_entry& uniform(const std::string& name) { return m_uniforms.at(name); }
-    Uniform_array_entry& uniform_array(const std::string& name) { return m_uniform_arrays.at(name); }
+    RHI_uniform_entry& uniform(const std::string& name) { return m_uniforms.at(name); }
+    RHI_uniform_array_entry& uniform_array(const std::string& name) { return m_uniform_arrays.at(name); }
     
     void update_uniforms() {  
         for (auto& [name, uniform] : m_uniforms) {

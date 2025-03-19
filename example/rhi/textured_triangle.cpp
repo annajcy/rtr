@@ -135,7 +135,7 @@ int main() {
 
     int texture_location = 3;
 
-    std::unordered_map<std::string, Uniform_entry> uniforms = {
+    std::unordered_map<std::string, RHI_uniform_entry> uniforms = {
         {"texture_sampler", {Uniform_type::SAMPLER_2D, &texture_location}}
     };
 
