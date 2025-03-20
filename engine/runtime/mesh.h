@@ -5,7 +5,6 @@
 #include "engine/runtime/node.h"
 #include "engine/runtime/shader.h"
 #include "engine/runtime/texture.h"
-#include <memory>
 
 namespace rtr {
 

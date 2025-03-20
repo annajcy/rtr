@@ -2,8 +2,6 @@
 #include "engine/global/base.h"
 #include "engine/global/guid.h"
 #include "engine/runtime/shader.h"
-#include "glm/fwd.hpp"
-#include <memory>
 
 namespace rtr {
 

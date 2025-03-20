@@ -3,16 +3,6 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-#define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/string_cast.hpp"
-
-#include "glm/gtx/quaternion.hpp"
-#include "glm/gtx/matrix_decompose.hpp"
-#include "glm/gtx/euler_angles.hpp"
 
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
@@ -42,9 +32,7 @@
 #include "engine/global/guid.h"
 #include "engine/global/logger.h"
 #include "engine/global/singleton.h"
+#include "engine/global/math.h"
 
-
-constexpr float PI = 3.14159265358979323846f;
-constexpr float EPSILON = 1e-6f;
 
 

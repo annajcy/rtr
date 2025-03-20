@@ -2,6 +2,7 @@
 #include "engine/global/base.h"
 #include "engine/runtime/geometry.h"
 #include "engine/runtime/node.h"
+#include <memory>
 
 namespace rtr {
 
@@ -77,11 +78,11 @@ public:
 
 };
 
-class Ambient_Light : public Light {
+class Ambient_light : public Light {
 public:
-    Ambient_Light() :
+    Ambient_light() :
     Light(Light_type::AMBIENT) {}
-    ~Ambient_Light() = default;
+    ~Ambient_light() = default;
 };
 
 class Area_light : public Light {
@@ -94,6 +95,88 @@ public:
     
     ~Area_light() = default;
     std::shared_ptr<Geometry>& geometry() { return m_geometry; }
+};
+
+class Light_setting
+{
+private:
+    std::shared_ptr<Light> m_main_light{};
+    std::vector<std::shared_ptr<Directional_light>> m_directional_lights{}; // 定向光源
+    std::vector<std::shared_ptr<Ambient_light>> m_ambient_lights{};         // 环境光源
+    std::vector<std::shared_ptr<Spot_light>> m_spot_lights{};               // 聚光灯
+    std::vector<std::shared_ptr<Point_light>> m_point_lights{};             // 点光源
+
+public:
+    Light_setting() = default;
+    Light_setting(const std::vector<std::shared_ptr<Light>>& lights) {
+        for (auto& light : lights) {
+            add(light);
+        }
+    }
+
+    // 获取主光源
+    std::shared_ptr<Light>& main_light() {
+        return m_main_light;
+    }
+
+    // 获取光源列表
+    const std::vector<std::shared_ptr<Directional_light>>& directional_lights() {
+        return m_directional_lights;
+    }
+
+    const std::vector<std::shared_ptr<Ambient_light>> ambient_lights() {
+        return m_ambient_lights;
+    }
+
+    const std::vector<std::shared_ptr<Spot_light>> spot_lights() {
+        return m_spot_lights;
+    }
+
+    const std::vector<std::shared_ptr<Point_light>> point_lights() {
+        return m_point_lights;
+    }
+
+    // 添加光源
+    void add(const std::shared_ptr<Light>& light) {
+        switch (light->type()) {
+            case Light_type::DIRECTIONAL:
+                m_directional_lights.push_back(std::dynamic_pointer_cast<Directional_light>(light));
+                break;
+            case Light_type::AMBIENT:
+                m_ambient_lights.push_back(std::dynamic_pointer_cast<Ambient_light>(light));
+                break;
+            case Light_type::SPOT:
+                m_spot_lights.push_back(std::dynamic_pointer_cast<Spot_light>(light));
+                break;
+            case Light_type::POINT:
+                m_point_lights.push_back(std::dynamic_pointer_cast<Point_light>(light));
+                break;
+            default:
+                break;
+        }
+    }
+
+    // 移除光源
+    void erase(const std::shared_ptr<Light>& light) {
+        switch (light->type()) {
+            case Light_type::DIRECTIONAL:
+                m_directional_lights.erase(std::remove(m_directional_lights.begin(), m_directional_lights.end(), light), m_directional_lights.end());
+                break;
+            case Light_type::AMBIENT:
+                m_ambient_lights.erase(std::remove(m_ambient_lights.begin(), m_ambient_lights.end(), light), m_ambient_lights.end());
+                break;
+            case Light_type::SPOT:
+                m_spot_lights.erase(std::remove(m_spot_lights.begin(), m_spot_lights.end(), light), m_spot_lights.end());
+                break;
+            case Light_type::POINT:
+                m_point_lights.erase(std::remove(m_point_lights.begin(), m_point_lights.end(), light), m_point_lights.end());
+                break;
+            default:
+                break;
+        }
+    }
+
+    ~Light_setting() = default;
 };
 
 };

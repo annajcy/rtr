@@ -94,7 +94,7 @@ public:
 
     ~Geometry_vertex_attribute() = default;
 
-    const std::vector<T>& data() const { return m_data; }
+    std::vector<T>& data() { return m_data; }
     unsigned int data_count() const override { return m_data.size(); }
     unsigned int unit_data_count() const override  { return UNIT_DATA_COUNT; }
     unsigned int unit_count() const override { return m_data.size() / UNIT_DATA_COUNT; }
@@ -103,7 +103,7 @@ public:
     T& unit_data(unsigned int unit_index, unsigned int unit_data_index) { return m_data[unit_index * UNIT_DATA_COUNT + unit_data_index]; }
     const T& unit_data(unsigned int unit_index, unsigned int unit_data_index) const { return m_data[unit_index * UNIT_DATA_COUNT + unit_data_index]; }
     
-    std::array<T, UNIT_DATA_COUNT> get_unit(unsigned int unit_index) {
+    std::array<T, UNIT_DATA_COUNT> get_unit(unsigned int unit_index) const {
         std::array<T, UNIT_DATA_COUNT> unit_data{};
         for (unsigned int i = 0; i < UNIT_DATA_COUNT; i++) {
             unit_data[i] = m_data[unit_index * UNIT_DATA_COUNT + i];
@@ -116,6 +116,7 @@ public:
             m_data[unit_index * UNIT_DATA_COUNT + i] = unit_data[i];
         }
     }
+
 };
 
 using Position_attribute = Geometry_vertex_attribute<float, 3>;

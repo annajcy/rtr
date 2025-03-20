@@ -2,8 +2,6 @@
 #include "engine/global/base.h"
 #include "engine/runtime/loader/image_loader.h"
 #include "engine/runtime/rhi/texture/rhi_texture.h"
-#include <memory>
-#include <vector>
 
 namespace rtr {
 
@@ -59,8 +57,12 @@ public:
         int width,
         int height,
         std::shared_ptr<Image> image
-    ) : Texture(Texture_type::TEXTURE_2D, Texture_format::SRGB_ALPHA, Texture_format::RGB_ALPHA, Texture_buffer_type::UNSIGNED_BYTE),
-        m_width(width),
+    ) : Texture(
+        Texture_type::TEXTURE_2D, 
+        Texture_format::SRGB_ALPHA, 
+        Texture_format::RGB_ALPHA, 
+        Texture_buffer_type::UNSIGNED_BYTE
+    ),  m_width(width),
         m_height(height),
         m_image(image) {}
 
@@ -117,7 +119,11 @@ protected:
 public:
     Texture_cube_map(
         std::unordered_map<Texture_cube_map_face, std::shared_ptr<Image>> face_images
-    ) : Texture(Texture_type::TEXTURE_CUBE_MAP, Texture_format::SRGB_ALPHA, Texture_format::RGB_ALPHA, Texture_buffer_type::UNSIGNED_BYTE),
+    ) : Texture(
+        Texture_type::TEXTURE_CUBE_MAP, 
+        Texture_format::SRGB_ALPHA, 
+        Texture_format::RGB_ALPHA, 
+        Texture_buffer_type::UNSIGNED_BYTE),
         m_face_images(face_images) {}
 
     std::unordered_map<Texture_cube_map_face, std::shared_ptr<Image>>& face_images() { return m_face_images; }
