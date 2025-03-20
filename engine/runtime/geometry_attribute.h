@@ -21,7 +21,7 @@ inline constexpr Buffer_attribute_type get_buffer_atrribute_type() {
     }
 }
 
-class Geometry_attribute_base {
+class Geometry_attribute_base : public GUID {
 protected:
     Buffer_usage m_usage{};
     Buffer_attribute_type m_type{}; 
@@ -29,7 +29,8 @@ public:
     Geometry_attribute_base(
         Buffer_attribute_type type, 
         Buffer_usage usage
-    ) : m_type(type), 
+    ) : GUID(), 
+        m_type(type), 
         m_usage(usage) {}
 
     virtual ~Geometry_attribute_base() = default;
@@ -59,7 +60,7 @@ private:
 public:
     Geometry_element_atrribute(
         const std::vector<unsigned int>& data,
-        Buffer_usage usage
+        Buffer_usage usage = Buffer_usage::STATIC
     ) : Geometry_attribute_base(
         Buffer_attribute_type::UINT,
         usage),
@@ -83,8 +84,8 @@ private:
 public:
     Geometry_vertex_attribute(
         const std::vector<T>& data, 
-        Buffer_usage usage, 
-        Buffer_iterate_type iterate_type
+        Buffer_usage usage = Buffer_usage::STATIC, 
+        Buffer_iterate_type iterate_type = Buffer_iterate_type::PER_VERTEX
     ) : Geometry_attribute_base(
         get_buffer_atrribute_type<T>(), 
         usage),

@@ -165,53 +165,29 @@ public:
         );
     }
 
-    virtual std::shared_ptr<RHI_texture_2D> create_color_attachment(
-        int width,
-        int height
-    ) override {
-        return std::make_shared<RHI_texture_2D_OpenGL>(
-            width,
-            height,
-            nullptr
-        );
-    }
-
-    virtual std::shared_ptr<RHI_texture_2D> create_depth_attachment(
-        int width,
-        int height
-    ) override {
-        return std::make_shared<RHI_texture_2D_OpenGL>(
-            Texture_format::DEPTH_STENCIL_24_8,
-            Texture_format::DEPTH_STENCIL,
-            Texture_buffer_type::UNSIGNED_INT_24_8,
-            width,
-            height,
-            nullptr
-        );
-    }
-
     virtual std::shared_ptr<RHI_frame_buffer> create_frame_buffer(
         int width,
         int height,
-        int color_attachment_count
+        const std::vector<std::shared_ptr<RHI_texture_2D>>& color_attachments,
+        const std::shared_ptr<RHI_texture_2D>& depth_attachment
     ) override {
+
         auto frame_buffer = std::make_shared<RHI_frame_buffer_OpenGL>(
             width,
-            height
+            height,
+            color_attachments,
+            depth_attachment
         );
 
-        for (int i = 0; i < color_attachment_count; i++) {
-            frame_buffer->add_color_attachment(create_color_attachment(width, height));
-        }
-
-        frame_buffer->depth_attachment() = create_depth_attachment(width, height);
         frame_buffer->attach();
+
         if (!frame_buffer->is_valid()) {
             std::cout << "Frame buffer is not valid" << std::endl;
             return nullptr;
         } else {
             std::cout << "Frame buffer is valid" << std::endl;
         }
+    
         return frame_buffer;
     }
 

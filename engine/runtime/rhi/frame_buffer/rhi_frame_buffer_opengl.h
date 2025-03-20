@@ -11,10 +11,14 @@ protected:
     std::vector<unsigned int> m_color_attachment_ids{};
 
 public:
-    RHI_frame_buffer_OpenGL(unsigned int width, unsigned int height) : 
-    RHI_frame_buffer(width, height) {
-        init(); 
-    }
+    RHI_frame_buffer_OpenGL(
+        unsigned int width, 
+        unsigned int height,
+        const std::vector<std::shared_ptr<RHI_texture_2D>>& color_attachments,
+        std::shared_ptr<RHI_texture_2D>& depth_attachment
+    ) : RHI_frame_buffer(width, height, color_attachments, depth_attachment) {
+        init();
+    } 
 
     virtual ~RHI_frame_buffer_OpenGL() { destroy(); }
     virtual void init() override {
@@ -54,6 +58,7 @@ public:
 
     void attach() {
         bind();
+        
         for (int i = 0; i < m_color_attachments.size(); i++) {
             auto gl_color_attachment = std::dynamic_pointer_cast<RHI_texture_2D_OpenGL>(m_color_attachments[i]);
             

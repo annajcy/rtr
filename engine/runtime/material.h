@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/global/base.h"
-#include "engine/runtime/mesh.h"
 #include "engine/runtime/rhi/state/rhi_pipeline_state.h"
+#include "engine/runtime/shader.h"
 #include "engine/runtime/texture.h"
 
 namespace rtr {
@@ -56,13 +56,20 @@ enum class Material_type {
     OPAUE_PHONG,
 };
 
-class Material {
+class Material : public GUID , public ISet_shader_uniform {
 protected:
-    Pipeline_state m_pipeline_state{ Pipeline_state::opaque_pipeline_state() };
+    Pipeline_state m_pipeline_state{};
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures{};
 
 public:
-    
+    Material() : GUID(), ISet_shader_uniform(), m_pipeline_state(Pipeline_state::opaque_pipeline_state()) {}
+    Material(const Pipeline_state& pipeline_state, const std::unordered_map<std::string, std::shared_ptr<Texture>>& textures) : GUID(), m_pipeline_state(pipeline_state), m_textures(textures) {}
+    virtual ~Material() = default;
+
+    const Pipeline_state& pipeline_state() const { return m_pipeline_state; }
+    const std::unordered_map<std::string, std::shared_ptr<Texture>>& textures() const { return m_textures; }
+    std::shared_ptr<Texture> texture(const std::string& name) const { return m_textures.at(name); }
+    void set_texture(const std::string& name, std::shared_ptr<Texture> texture) { m_textures[name] = texture; }
 
 };
 

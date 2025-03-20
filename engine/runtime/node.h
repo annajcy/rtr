@@ -1,5 +1,9 @@
 #pragma once
 #include "engine/global/base.h"
+#include "engine/global/guid.h"
+#include "engine/runtime/shader.h"
+#include "glm/fwd.hpp"
+#include <memory>
 
 namespace rtr {
 
@@ -12,7 +16,7 @@ enum class Node_type {
     CAMERA
 };
 
-class Node : public std::enable_shared_from_this<Node>
+class Node : public std::enable_shared_from_this<Node>, public GUID, public ISet_shader_uniform
 {
 
 protected:
@@ -26,8 +30,22 @@ protected:
     std::weak_ptr<Node> m_parent{};
 
 public:
-    explicit Node(Node_type type) : m_type(type) {}
+    explicit Node(Node_type type) : GUID(), ISet_shader_uniform(), m_type(type) {}
     virtual ~Node() = default;
+
+    virtual void upload_uniform(std::shared_ptr<Shader>& shader) override {
+        
+        shader->add_uniform(
+            "model_matrix", 
+            std::make_shared<Uniform_entry<glm::mat4>>(model_matrix())
+        );
+
+        shader->add_uniform(
+            "normal_matrix",
+            std::make_shared<Uniform_entry<glm::mat4>>(normal_matrix())
+        );
+
+    }
 
     std::shared_ptr<Node> parent_ptr() {
         if (m_parent.expired()) {
@@ -115,6 +133,10 @@ public:
 
     glm::vec3& position() {
         return m_position;
+    }
+
+    [[nodiscard]] glm::mat4 normal_matrix() {
+        return glm::transpose(glm::inverse(model_matrix()));
     }
 
     [[nodiscard]] glm::mat4 model_matrix() {

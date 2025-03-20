@@ -38,6 +38,12 @@
 #include <stdexcept>
 #include <cassert>
 
+#include "engine/global/event.h"
+#include "engine/global/guid.h"
+#include "engine/global/logger.h"
+#include "engine/global/singleton.h"
+
+
 constexpr float PI = 3.14159265358979323846f;
 constexpr float EPSILON = 1e-6f;
 

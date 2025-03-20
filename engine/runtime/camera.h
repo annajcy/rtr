@@ -1,6 +1,9 @@
 #pragma once
 #include "engine/global/base.h"
 #include "engine/runtime/node.h"
+#include "engine/runtime/shader.h"
+#include "glm/fwd.hpp"
+#include <memory>
 
 namespace rtr {
 
@@ -17,6 +20,35 @@ public:
     m_far_bound(far_bound) {}
 
     virtual ~Camera() override = default;
+
+    virtual void upload_uniform(std::shared_ptr<Shader>& shader) override {
+        ISet_shader_uniform::upload_uniform(shader);
+
+        shader->add_uniform(
+            "view_matrix",
+            std::make_shared<Uniform_entry<glm::mat4>>(this->view_matrix())
+        );
+
+        shader->add_uniform(
+            "projection_matrix",
+            std::make_shared<Uniform_entry<glm::mat4>>(this->projection_matrix())
+        );
+
+        shader->add_uniform(
+            "camera_position",
+            std::make_shared<Uniform_entry<glm::vec3>>(this->position())
+        );
+
+        shader->add_uniform(
+            "near_bound",
+            std::make_shared<Uniform_entry<float>>(this->near_bound())
+        );
+
+        shader->add_uniform(
+            "far_bound",
+            std::make_shared<Uniform_entry<float>>(this->far_bound())
+        );
+    }
 
     float& near_bound() { return m_near_bound; }
     float& far_bound() { return m_far_bound; }

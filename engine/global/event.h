@@ -1,5 +1,12 @@
 #pragma once
 
+#include <functional>
+#include <unordered_map>
+#include <vector>
+#include <algorithm>
+#include <stdexcept>
+#include <string>
+
 namespace rtr {
 
 template <typename ...Args>
@@ -34,6 +41,48 @@ public:
         }
     }
 };
+
+template <typename...Args>
+class Event_center {
+private:
+    Event_center() = default;
+    std::unordered_map<std::string, Event<Args...>> event_map{};
+public:
+    void register_event(const std::string& event_name, Event<Args...> event) {
+        event_map[event_name] = event;
+    }
+
+    void unregister_event(const std::string& event_name) {
+        event_map.erase(event_name);
+    }
+
+    void add_action(const std::string& event_name, const std::function<void(Args...)>& action) {
+        if (event_map.contains(event_name)) {
+            event_map[event_name].add(action);
+        } else {
+            throw std::runtime_error("Event not found: " + event_name);
+        }
+    }
+
+    void remove_action(const std::string& event_name, const std::function<void(Args...)>& action) {
+        if (event_map.contains(event_name)) {
+            event_map[event_name].remove(action);
+        } else {
+            throw std::runtime_error("Event not found: " + event_name);
+        }
+
+    }
+
+    void trigger_event(const std::string& event_name, Args... args) {
+        if (event_map.contains(event_name)) {
+            event_map[event_name].execute(args...);
+        } else {
+            throw std::runtime_error("Event not found: " + event_name);
+        }
+    }
+};
+
+
     
 }
 

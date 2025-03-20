@@ -14,7 +14,16 @@ protected:
     std::shared_ptr<RHI_texture_2D> m_depth_attachment{};
 
 public:
-    RHI_frame_buffer(unsigned int width, unsigned int height) : m_width(width), m_height(height) {}
+    RHI_frame_buffer(
+        unsigned int width, 
+        unsigned int height,
+        const std::vector<std::shared_ptr<RHI_texture_2D>>& color_attachments,
+        std::shared_ptr<RHI_texture_2D>& depth_attachment
+    ) : m_width(width), 
+        m_height(height),
+        m_color_attachments(color_attachments),
+        m_depth_attachment(depth_attachment) {}
+
     virtual ~RHI_frame_buffer() = default;
 
     virtual void init() = 0;
@@ -31,18 +40,6 @@ public:
             throw std::runtime_error("Index out of range");
         }
         return m_color_attachments[index]; 
-    }
-
-    void add_color_attachments(const std::vector<std::shared_ptr<RHI_texture_2D>>& attachments) { 
-        m_color_attachments.insert(m_color_attachments.end(), attachments.begin(), attachments.end());
-    }
-
-    void add_color_attachment(const std::shared_ptr<RHI_texture_2D>& attachment) { 
-        m_color_attachments.push_back(attachment); 
-    }
-
-    void remove_color_attachment(const std::shared_ptr<RHI_texture_2D>& attachment) { 
-        m_color_attachments.erase(std::remove(m_color_attachments.begin(), m_color_attachments.end(), attachment), m_color_attachments.end()); 
     }
     
 };

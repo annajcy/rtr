@@ -2,6 +2,7 @@
 #include "engine/global/base.h"
 #include "engine/runtime/rhi/shader/rhi_shader_code.h"
 #include "engine/runtime/rhi/shader/rhi_shader_program.h"
+#include <memory>
 
 namespace rtr {
 
@@ -41,7 +42,7 @@ public:
 
 
 template <typename T>
-class Uniform_entry : Uniform_entry_base {
+class Uniform_entry : public Uniform_entry_base {
 protected:
     T m_data{};
 public:
@@ -66,7 +67,7 @@ public:
 };
 
 template <typename T>
-class Uniform_array_entry : Uniform_array_entry_base {
+class Uniform_array_entry : public Uniform_array_entry_base {
 protected:
     std::vector<T> m_data{};
 public:
@@ -81,7 +82,7 @@ public:
 };
 
 
-class Shader {
+class Shader : public GUID {
 protected:
     std::unordered_map<Shader_type, std::string> m_shader_code_map{};
     std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> m_uniform_map{};
@@ -90,14 +91,22 @@ protected:
 public:
     Shader(
         const std::unordered_map<Shader_type, std::string>& shader_code_map 
-    ) : m_shader_code_map(shader_code_map) {}
+    ) : GUID(), m_shader_code_map(shader_code_map) {}
 
     virtual ~Shader() = default;
 
     std::unordered_map<Shader_type, std::string>& shader_code_map() { return m_shader_code_map; }
     std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>& uniform_map () { return m_uniform_map; }
     std::unordered_map<std::string, std::shared_ptr<Uniform_array_entry_base>>& uniform_array_map() { return m_uniform_array_map; }
+    void add_uniform(const std::string& name, std::shared_ptr<Uniform_entry_base> entry) { m_uniform_map[name] = entry; }
+    void add_uniform_array(const std::string& name, std::shared_ptr<Uniform_array_entry_base> entry) { m_uniform_array_map[name] = entry; }
     
+};
+
+class ISet_shader_uniform {
+public:
+    virtual ~ISet_shader_uniform() = default;
+    virtual void upload_uniform(std::shared_ptr<Shader>& shader) { }
 };
 
 

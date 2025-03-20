@@ -2,8 +2,6 @@
 #include "engine/global/base.h"
 #include "engine/runtime/geometry.h"
 #include "engine/runtime/node.h"
-#include "glm/fwd.hpp"
-#include <memory>
 
 namespace rtr {
 
