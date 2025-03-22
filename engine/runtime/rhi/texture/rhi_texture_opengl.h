@@ -127,6 +127,7 @@ inline constexpr unsigned int gl_texture_filter_target(Texture_filter_target tar
 }
 
 // 新增抽象基类
+// 在 RHI_texture_OpenGL 类中添加新方法
 class RHI_texture_OpenGL {
 protected:
     unsigned int m_texture_id{};
@@ -214,15 +215,25 @@ public:
 
     }
 
+    void gl_set_border_color(const float* color) {
+        if (!m_texture_id) {
+            std::cout << "invalid texture id" << std::endl;
+            return;
+        }
+
+        gl_bind(0);
+        glTexParameterfv(m_gl_type, GL_TEXTURE_BORDER_COLOR, color);
+        gl_unbind();
+    }
+
     unsigned int texture_id() const { return m_texture_id; }
     unsigned int slot() const { return m_slot; }
     unsigned int gl_type() const { return m_gl_type; }
 
 };
 
-// 修改现有实现
+// 在 RHI_texture_2D_OpenGL 构造函数中补充设置
 class RHI_texture_2D_OpenGL : public RHI_texture_2D, public RHI_texture_OpenGL {
-    
 public:
     RHI_texture_2D_OpenGL(
         Texture_format internal_format,
@@ -230,17 +241,23 @@ public:
         Texture_buffer_type buffer_type,
         int width,
         int height,
-        unsigned char* data
+        const unsigned char* data
     ) : RHI_texture_2D(internal_format, external_format, buffer_type, width, height, data), 
         RHI_texture_OpenGL(GL_TEXTURE_2D) {
         init();
         set_data();
+        
+        // 深度附件需要设置边界颜色
+        if (internal_format == Texture_format::DEPTH_STENCIL_24_8) {
+            const float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+            gl_set_border_color(borderColor);
+        }
     }
 
     RHI_texture_2D_OpenGL(
         int width,
         int height,
-        unsigned char* data
+        const unsigned char* data
     ) : RHI_texture_2D(width, height, data),
         RHI_texture_OpenGL(GL_TEXTURE_2D) {
         init();
@@ -267,11 +284,11 @@ public:
         gl_unbind();
     }
 
-    virtual void set_wrap(Texture_wrap wrap, Texture_wrap_target target) override {
+    virtual void set_wrap(Texture_wrap_target target, Texture_wrap wrap) override {
         gl_set_wrap(wrap, target);
     }
 
-    virtual void set_filter(Texture_filter filter, Texture_filter_target target) override {
+    virtual void set_filter(Texture_filter_target target, Texture_filter filter) override {
         gl_set_filter(filter, target);
     }
 
@@ -356,11 +373,11 @@ public:
         gl_unbind();
     }
 
-    virtual void set_wrap(Texture_wrap wrap, Texture_wrap_target target) override {
+    virtual void set_wrap(Texture_wrap_target target, Texture_wrap wrap) override {
         gl_set_wrap(wrap, target);
     }
 
-    virtual void set_filter(Texture_filter filter, Texture_filter_target target) override {
+    virtual void set_filter(Texture_filter_target target, Texture_filter filter) override {
         gl_set_filter(filter, target);
     }
 

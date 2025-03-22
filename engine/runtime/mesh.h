@@ -26,6 +26,7 @@ public:
     std::shared_ptr<Geometry>& geometry() { return m_geometry; }
     std::shared_ptr<Material>& material() { return m_material; }
 
+
 };
 
 }

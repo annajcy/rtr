@@ -48,9 +48,6 @@ int main() {
 
     auto device = std::make_shared<RHI_device_OpenGL>(descriptor);
 
-    device->pipeline_state()->set_profile(Pipeline_state_profile::OPAQUE);
-
-    //prepare geometry
 
     auto vertex_attribute = device->create_vertex_buffer(
         Buffer_usage::STATIC, 
@@ -94,8 +91,8 @@ int main() {
 
     //prepare binding state
 
-    device->binding_state()->set_geometry(geometry);
-    device->binding_state()->set_shader_program(shader_program);
+    device->binding_state()->geometry() = geometry;
+    device->binding_state()->shader_program() = shader_program;
 
     while (device->window()->is_active()) {
         device->clear();

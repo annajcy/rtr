@@ -82,8 +82,8 @@ public:
     virtual void bind(unsigned int slot) = 0;
     virtual void unbind() = 0;
     virtual void set_data() = 0;
-    virtual void set_wrap(Texture_wrap wrap, Texture_wrap_target target) = 0;
-    virtual void set_filter(Texture_filter filter, Texture_filter_target target) = 0;
+    virtual void set_filter(Texture_filter_target target, Texture_filter filter) = 0;
+    virtual void set_wrap(Texture_wrap_target target, Texture_wrap wrap) = 0;
     virtual void generate_mipmap() = 0;
    
     Texture_type type() const { return m_type; }
@@ -97,7 +97,7 @@ class RHI_texture_2D : public RHI_texture {
 protected:
     int m_width{};
     int m_height{};
-    unsigned char* m_data{nullptr};
+    const unsigned char* m_data{nullptr};
 
 public:
     RHI_texture_2D(
@@ -106,8 +106,12 @@ public:
         Texture_buffer_type buffer_type,
         int width,
         int height,
-        unsigned char* data
-    ) : RHI_texture(Texture_type::TEXTURE_2D, internal_format, external_format, buffer_type), 
+        const unsigned char* data
+    ) : RHI_texture(
+        Texture_type::TEXTURE_2D, 
+        internal_format, 
+        external_format, 
+        buffer_type), 
         m_width(width),
         m_height(height),
         m_data(data) {}
@@ -115,8 +119,12 @@ public:
     RHI_texture_2D(
         int width,
         int height,
-        unsigned char* data
-    ) : RHI_texture(Texture_type::TEXTURE_2D, Texture_format::SRGB_ALPHA, Texture_format::RGB_ALPHA, Texture_buffer_type::UNSIGNED_BYTE),
+        const unsigned char* data
+    ) : RHI_texture(
+        Texture_type::TEXTURE_2D, 
+        Texture_format::SRGB_ALPHA, 
+        Texture_format::RGB_ALPHA, 
+        Texture_buffer_type::UNSIGNED_BYTE),
         m_width(width),
         m_height(height),
         m_data(data) {}
@@ -127,15 +135,13 @@ public:
     virtual void bind(unsigned int slot) = 0;
     virtual void unbind() = 0;
     virtual void set_data() = 0;
-    virtual void set_filter(Texture_filter filter, Texture_filter_target target) = 0;
-    virtual void set_wrap(Texture_wrap wrap, Texture_wrap_target target) = 0;
+    virtual void set_filter(Texture_filter_target target, Texture_filter filter) = 0;
+    virtual void set_wrap(Texture_wrap_target target, Texture_wrap wrap) = 0;
     virtual void generate_mipmap() = 0;
 
     int width() const { return m_width; }
     int height() const { return m_height; }
-    unsigned char* data() const { return m_data; }
-
-    
+    const unsigned char* data() const { return m_data; }
     
 };
 
@@ -144,7 +150,7 @@ public:
     struct Face_data {
         int width{};
         int height{};
-        unsigned char* data{nullptr};
+        const unsigned char* data{nullptr};
     };
     
 protected:
@@ -155,12 +161,12 @@ public:
         Texture_format internal_format,
         Texture_format external_format,
         Texture_buffer_type buffer_type,
-        std::unordered_map<Texture_cube_map_face, Face_data> face_data
+        const std::unordered_map<Texture_cube_map_face, Face_data>& face_data
     ) : RHI_texture(Texture_type::TEXTURE_CUBE_MAP, internal_format, external_format, buffer_type),
         m_face_data(face_data) {}
     
     RHI_texture_cube_map(
-        std::unordered_map<Texture_cube_map_face, Face_data> face_data
+        const std::unordered_map<Texture_cube_map_face, Face_data>& face_data
     ) : RHI_texture(Texture_type::TEXTURE_CUBE_MAP, Texture_format::SRGB_ALPHA, Texture_format::RGB_ALPHA, Texture_buffer_type::UNSIGNED_BYTE),
         m_face_data(face_data) {}
 
@@ -170,10 +176,11 @@ public:
     virtual void bind(unsigned int slot) = 0;
     virtual void unbind() = 0;
     virtual void set_data() = 0;
-    virtual void set_filter(Texture_filter filter, Texture_filter_target target) = 0;
-    virtual void set_wrap(Texture_wrap wrap, Texture_wrap_target target) = 0;
+    virtual void set_filter(Texture_filter_target target, Texture_filter filter) = 0;
+    virtual void set_wrap(Texture_wrap_target target, Texture_wrap wrap) = 0;
     virtual void generate_mipmap() = 0;
 
+    std::unordered_map<Texture_cube_map_face, Face_data>& face_data() { return m_face_data; }
     const std::unordered_map<Texture_cube_map_face, Face_data>& face_data() const { return m_face_data; }
     const Face_data& face_data(Texture_cube_map_face face) const { return m_face_data.at(face); }
 

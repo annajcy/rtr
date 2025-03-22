@@ -1,31 +1,197 @@
 #pragma once
 #include "engine/global/base.h"
-#include "engine/global/math.h"
-#include "engine/runtime/geometry_attribute.h"
-#include "glm/fwd.hpp"
-#include <array>
+#include "engine/runtime/rhi/buffer/rhi_buffer.h"
+#include "engine/runtime/rhi/device/rhi_device.h"
+#include "engine/runtime/rhi/geometry/rhi_geometry.h"
+#include <memory>
 
 namespace rtr {
 
+template<typename T>
+inline constexpr Buffer_attribute_type get_buffer_atrribute_type() {
+    if constexpr (std::is_same_v<T, float>) {
+        return Buffer_attribute_type::FLOAT;
+    } else if constexpr (std::is_same_v<T, int>) {
+        return Buffer_attribute_type::INT;
+    } else if constexpr (std::is_same_v<T, unsigned int>) {
+        return Buffer_attribute_type::UINT;  
+    } else if constexpr (std::is_same_v<T, bool>) {
+        return Buffer_attribute_type::BOOL;
+    } else {
+        static_assert(false, "Unsupported type");
+    }
+}
+
+class Attribute_base : public GUID {
+protected:
+    Buffer_usage m_usage{};
+    Buffer_attribute_type m_type{}; 
+public:
+    Attribute_base(
+        Buffer_attribute_type type, 
+        Buffer_usage usage
+    ) : GUID(), 
+        m_type(type), 
+        m_usage(usage) {}
+
+    virtual ~Attribute_base() = default;
+    virtual const void* data_ptr() const = 0;
+    virtual unsigned int data_count() const = 0;
+    
+    Buffer_attribute_type type() const { return m_type; }
+    Buffer_usage usage() const { return m_usage; }
+};
+
+class Vertex_attribute_base : public Attribute_base {
+protected:
+    Buffer_iterate_type m_iterate_type{};
+public:
+    Vertex_attribute_base(
+        Buffer_attribute_type type, 
+        Buffer_usage usage,
+        Buffer_iterate_type iterate_type
+    ) : Attribute_base(type, usage),
+        m_iterate_type(iterate_type) {}
+    virtual ~Vertex_attribute_base() = default;
+    virtual unsigned int unit_data_count() const = 0;
+    virtual unsigned int unit_count() const = 0;
+    Buffer_iterate_type iterate_type() const { return m_iterate_type; }
+
+    std::shared_ptr<RHI_vertex_buffer> create_rhi_vertex_buffer(const std::shared_ptr<RHI_device>& device) const {
+        return device->create_vertex_buffer(
+            id(),
+            usage(),
+            type(),
+            iterate_type(),
+            unit_data_count(),
+            data_count(),
+            data_ptr()
+        );
+    }
+    
+};
+
+class Element_atrribute : public Attribute_base {
+private:
+    std::vector<unsigned int> m_data{};
+public:
+    Element_atrribute(
+        const std::vector<unsigned int>& data,
+        Buffer_usage usage = Buffer_usage::STATIC
+    ) : Attribute_base(
+        Buffer_attribute_type::UINT,
+        usage),
+        m_data(data) {}
+
+    ~Element_atrribute() = default;
+    const std::vector<unsigned int>& data() const { return m_data; }
+    unsigned int data_count() const override { return m_data.size(); }
+    unsigned int& operator[](const int index) { return m_data[index]; }
+    const unsigned int& operator[](const int index) const { return m_data[index]; }
+    const void* data_ptr() const override { return reinterpret_cast<const void*>(m_data.data()); }
+
+    std::shared_ptr<RHI_element_buffer> create_rhi_element_buffer(const std::shared_ptr<RHI_device>& device) const {
+        return device->create_element_buffer(
+            id(),
+            usage(),
+            data_count(),
+            data_ptr()
+        );
+    }
+
+};
+
+template<typename T, unsigned int UNIT_DATA_COUNT>
+class Vertex_attribute : public Vertex_attribute_base {
+private:
+    
+    std::vector<T> m_data{};
+
+public:
+    Vertex_attribute(
+        const std::vector<T>& data, 
+        Buffer_usage usage = Buffer_usage::STATIC, 
+        Buffer_iterate_type iterate_type = Buffer_iterate_type::PER_VERTEX
+    ) : Vertex_attribute_base(
+        get_buffer_atrribute_type<T>(), 
+        usage, 
+        iterate_type),
+        m_data(data) {}
+
+    ~Vertex_attribute() = default;
+
+    std::vector<T>& data() { return m_data; }
+    unsigned int data_count() const override { return m_data.size(); }
+    unsigned int unit_data_count() const override  { return UNIT_DATA_COUNT; }
+    unsigned int unit_count() const override { return m_data.size() / UNIT_DATA_COUNT; }
+    const void* data_ptr() const override { return reinterpret_cast<const void*>(m_data.data()); }
+
+    T& unit_data(unsigned int unit_index, unsigned int unit_data_index) { return m_data[unit_index * UNIT_DATA_COUNT + unit_data_index]; }
+    const T& unit_data(unsigned int unit_index, unsigned int unit_data_index) const { return m_data[unit_index * UNIT_DATA_COUNT + unit_data_index]; }
+    
+    std::array<T, UNIT_DATA_COUNT> get_unit(unsigned int unit_index) const {
+        std::array<T, UNIT_DATA_COUNT> unit_data{};
+        for (unsigned int i = 0; i < UNIT_DATA_COUNT; i++) {
+            unit_data[i] = m_data[unit_index * UNIT_DATA_COUNT + i];
+        }
+        return unit_data;
+    }
+
+    void set_unit(unsigned int unit_index, const std::array<T, UNIT_DATA_COUNT>& unit_data) {
+        for (unsigned int i = 0; i < UNIT_DATA_COUNT; i++) {
+            m_data[unit_index * UNIT_DATA_COUNT + i] = unit_data[i];
+        }
+    }
+
+    void apply_unit(unsigned int unit_index, const std::function<void(std::array<T, UNIT_DATA_COUNT>&)>& func) {
+        std::array<T, UNIT_DATA_COUNT> unit_data = get_unit(unit_index);
+        func(unit_data);
+        set_unit(unit_index, unit_data);
+    }
+
+    void apply(const std::function<void(std::vector<T>&)>& func) {
+        func(m_data);
+    }
+
+};
+
+using Position_attribute = Vertex_attribute<float, 3>;
+using Normal_attribute = Vertex_attribute<float, 3>;
+using UV_attribute = Vertex_attribute<float, 2>;
+using Color_attribute = Vertex_attribute<float, 4>;
+
 class Geometry : public GUID {
 protected:
-    std::unordered_map<unsigned int, std::shared_ptr<Geometry_vertex_attribute_base>> m_vertex_attributes{};
-    std::shared_ptr<Geometry_element_atrribute> m_element_attribute{};
+    std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> m_vertex_attributes{};
+    std::shared_ptr<Element_atrribute> m_element_attribute{};
 
 public:
     Geometry(
-        std::unordered_map<unsigned int, std::shared_ptr<Geometry_vertex_attribute_base>> vertex_attributes,
-        std::shared_ptr<Geometry_element_atrribute> element_attribute
+        std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> vertex_attributes,
+        std::shared_ptr<Element_atrribute> element_attribute
     ) : GUID(), 
         m_vertex_attributes(vertex_attributes), 
         m_element_attribute(element_attribute) {}
     ~Geometry() = default;
 
-    std::unordered_map<unsigned int, std::shared_ptr<Geometry_vertex_attribute_base>> attributes() const { return m_vertex_attributes; }
-    std::shared_ptr<Geometry_element_atrribute>& element_attribute() { return m_element_attribute; }
-    std::shared_ptr<Geometry_vertex_attribute_base>& attribute(unsigned int location) { return m_vertex_attributes.at(location); }
+    std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> attributes() const { return m_vertex_attributes; }
+    std::shared_ptr<Element_atrribute>& element_attribute() { return m_element_attribute; }
+    std::shared_ptr<Vertex_attribute_base>& attribute(unsigned int location) { return m_vertex_attributes.at(location); }
 
-    static Bouding_box compute_bounding_box(Position_attribute& position_attribute) {
+    std::shared_ptr<RHI_geometry> create_rhi_geometry(const std::shared_ptr<RHI_device>& device) const {
+        std::unordered_map<unsigned int, std::shared_ptr<RHI_vertex_buffer>> rhi_vertex_buffers{};
+        for (const auto& [location, attribute] : m_vertex_attributes) {
+            rhi_vertex_buffers[location] = attribute->create_rhi_vertex_buffer(device);
+        }
+        std::shared_ptr<RHI_element_buffer> rhi_element_buffer = m_element_attribute->create_rhi_element_buffer(device);
+        return device->create_geometry(
+            id(),
+            rhi_vertex_buffers,
+            rhi_element_buffer
+        );
+    }
+
+    static Bouding_box compute_bounding_box(const Position_attribute& position_attribute) {
         Bouding_box bounding_box{};
         for (unsigned int i = 0; i < position_attribute.unit_count(); i++) {
             auto position = position_attribute.get_unit(i);
@@ -36,13 +202,13 @@ public:
         return bounding_box;
     }
 
-    static Sphere compute_bounding_sphere(Position_attribute& position_attribute) {
+    static Sphere compute_bounding_sphere(const Position_attribute& position_attribute) {
         return Sphere(compute_bounding_box(position_attribute));
     }
 
     static std::shared_ptr<Geometry> create_box(float size = 1.0f) {
         auto half_size = size * 0.5f;
-        std::unordered_map<unsigned int, std::shared_ptr<Geometry_vertex_attribute_base>> vertex_attributes = {
+        std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> vertex_attributes = {
             {0, std::make_shared<Position_attribute>(std::vector<float>{
                 // Front face
                 -half_size, -half_size, half_size, half_size, -half_size, half_size, half_size, half_size, half_size, -half_size, half_size, half_size,
@@ -106,7 +272,7 @@ public:
             })},
         };
 
-        auto element_attribute = std::make_shared<Geometry_element_atrribute>(std::vector<unsigned int>{
+        auto element_attribute = std::make_shared<Element_atrribute>(std::vector<unsigned int>{
             0, 1, 2, 2, 3, 0,   // Front face
             4, 5, 6, 6, 7, 4,   // Back face
             8, 9, 10, 10, 11, 8,  // Top face
@@ -122,7 +288,7 @@ public:
     static std::shared_ptr<Geometry> create_plane(float width, float height) {
         float half_width = width * 0.5f;
         float half_height = height * 0.5f;
-        std::unordered_map<unsigned int, std::shared_ptr<Geometry_vertex_attribute_base>> vertex_attributes = {
+        std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> vertex_attributes = {
             {0, std::make_shared<Position_attribute>(std::vector<float>{
                 -half_width, -half_height, 0.0f,
                 half_width, -half_height, 0.0f,
@@ -146,7 +312,7 @@ public:
         };
 
 
-        auto element_attribute = std::make_shared<Geometry_element_atrribute>(std::vector<unsigned int>{
+        auto element_attribute = std::make_shared<Element_atrribute>(std::vector<unsigned int>{
             0, 1, 2,
             2, 3, 0
         });
@@ -200,16 +366,18 @@ public:
                 indices.push_back(p4);
             }
 
-        std::unordered_map<unsigned int, std::shared_ptr<Geometry_vertex_attribute_base>> vertex_attributes = {
+        std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> vertex_attributes = {
             {0, std::make_shared<Position_attribute>(positions)},
             {1, std::make_shared<UV_attribute>(uvs)},
             {2, std::make_shared<Normal_attribute>(normals)}
         };
 
-        auto element_attribute = std::make_shared<Geometry_element_atrribute>(indices);
+        auto element_attribute = std::make_shared<Element_atrribute>(indices);
         return std::make_shared<Geometry>(vertex_attributes, element_attribute);
     
     }
+
+
 };
 
 };

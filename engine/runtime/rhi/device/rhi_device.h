@@ -87,16 +87,16 @@ public:
         Buffer_usage usage,
         Buffer_attribute_type attribute_type,
         Buffer_iterate_type iterate_type,
-        unsigned int unit_count,
+        unsigned int unit_data_count,
         unsigned int data_count,
-        void* data
+        const void* data
     ) {
         if (m_cache->vertex_buffer_cache.contains(id)) {
             std::cout << "Vertex buffer " << id << " already exists" << std::endl;
             return m_cache->vertex_buffer_cache[id];
         }
         else {
-            auto buffer = create_vertex_buffer(usage, attribute_type, iterate_type, unit_count, data_count, data);
+            auto buffer = create_vertex_buffer(usage, attribute_type, iterate_type, unit_data_count, data_count, data);
             m_cache->vertex_buffer_cache[id] = buffer;
             return buffer;
         }
@@ -108,14 +108,14 @@ public:
         Buffer_iterate_type iterate_type,
         unsigned int unit_count,
         unsigned int data_count,
-        void* data
+        const void* data
     ) = 0;
 
     std::shared_ptr<RHI_element_buffer> create_element_buffer(
         unsigned int id,
         Buffer_usage usage,
         unsigned int data_count,
-        void* data
+        const void* data
     ) {
         if (m_cache->element_buffer_cache.contains(id)) {
             std::cout << "Element buffer " << id << " already exists" << std::endl;
@@ -131,7 +131,7 @@ public:
     virtual std::shared_ptr<RHI_element_buffer> create_element_buffer(
         Buffer_usage usage,
         unsigned int data_count,
-        void* data
+        const void* data
     ) = 0;
 
     std::shared_ptr<RHI_geometry> create_geometry(
@@ -195,6 +195,29 @@ public:
         const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shaders
     ) = 0;
 
+    std::shared_ptr<RHI_shader_program> create_shader_program(
+        unsigned int id,
+        const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shaders,
+        const std::unordered_map<std::string, RHI_uniform_entry>& uniforms,
+        const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays
+    ) {
+        if (m_cache->shader_program_cache.contains(id)) {
+            std::cout << "Shader program " << id << " already exists" << std::endl;
+            return m_cache->shader_program_cache[id];
+        }
+        else {
+            auto shader_program = create_shader_program(shaders, uniforms, uniform_arrays);
+            m_cache->shader_program_cache[id] = shader_program;
+            return shader_program;
+        }
+    }
+
+    virtual std::shared_ptr<RHI_shader_program> create_shader_program(
+        const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shaders,
+        const std::unordered_map<std::string, RHI_uniform_entry>& uniforms,
+        const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays
+    ) = 0;
+
     std::shared_ptr<RHI_texture_2D> create_texture_2D(
         unsigned int id,
         Texture_format internal_format,
@@ -202,7 +225,7 @@ public:
         Texture_buffer_type buffer_type,
         int width,
         int height,
-        unsigned char* data
+        const unsigned char* data
     ) {
         if (m_cache->texture_2D_cache.contains(id)) {
             std::cout << "Texture 2D " << id << " already exists" << std::endl;
@@ -220,14 +243,14 @@ public:
         Texture_buffer_type buffer_type,
         int width,
         int height,
-        unsigned char* data
+        const unsigned char* data
     ) = 0;
 
     std::shared_ptr<RHI_texture_2D> create_texture_2D(
         unsigned int id,
         int width,
         int height,
-        unsigned char* data
+        const unsigned char* data
     ) {
         if (m_cache->texture_cube_map_cache.contains(id)) {
             std::cout << "Texture 2D " << id << " already exists" << std::endl;
@@ -242,7 +265,7 @@ public:
     virtual std::shared_ptr<RHI_texture_2D> create_texture_2D(
         int width,
         int height,
-        unsigned char* data
+        const unsigned char* data
     ) = 0;
 
 
@@ -251,13 +274,19 @@ public:
         Texture_format internal_format,
         Texture_format external_format,
         Texture_buffer_type buffer_type,
-        std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> face_textures
+        const std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> &face_textures
     ) {
         if (m_cache->texture_cube_map_cache.contains(id)) {
             std::cout << "Texture cube map " << id << " already exists" << std::endl;
             return m_cache->texture_cube_map_cache[id];
         } else {
-            auto texture = create_texture_cube_map(internal_format, external_format, buffer_type, face_textures);
+            auto texture = create_texture_cube_map(
+                internal_format, 
+                external_format, 
+                buffer_type, 
+                face_textures
+            );
+
             m_cache->texture_cube_map_cache[id] = texture;
             return texture;
         }
@@ -268,7 +297,7 @@ public:
         Texture_format internal_format,
         Texture_format external_format,
         Texture_buffer_type buffer_type,
-        std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> face_textures
+        const std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> &face_textures
     ) = 0;
 
     std::shared_ptr<RHI_texture_cube_map> create_texture_cube_map(
@@ -286,7 +315,7 @@ public:
     }
 
     virtual std::shared_ptr<RHI_texture_cube_map> create_texture_cube_map(
-        std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> face_textures
+        const std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> &face_textures
     ) = 0;
 
   

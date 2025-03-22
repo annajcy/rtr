@@ -27,10 +27,15 @@ public:
         Buffer_usage usage,
         Buffer_attribute_type attribute_type,
         Buffer_iterate_type iterate_type,
-        unsigned int unit_count,
+        unsigned int unit_data_count,
         unsigned int data_count,
-        void* data
-    ) : RHI_vertex_buffer(usage, attribute_type, iterate_type ,unit_count, data_count, data) {
+        const void* data
+    ) : RHI_vertex_buffer(usage, 
+        attribute_type, 
+        iterate_type ,
+        unit_data_count, 
+        data_count, 
+        data) {
         init();
     }
 
@@ -91,8 +96,11 @@ public:
     RHI_element_buffer_OpenGL(
         Buffer_usage usage,
         unsigned int data_count,
-        void* data
-    ) : RHI_element_buffer(usage, data_count, data) {
+        const void* data
+    ) : RHI_element_buffer(
+        usage, 
+        data_count, 
+        data) {
         init();
     }
 

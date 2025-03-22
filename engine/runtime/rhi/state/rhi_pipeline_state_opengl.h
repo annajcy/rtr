@@ -97,10 +97,6 @@ class RHI_pipeline_state_OpenGL : public RHI_pipeline_state {
 
 public:
     RHI_pipeline_state_OpenGL() : RHI_pipeline_state() { init(); }
-    
-    RHI_pipeline_state_OpenGL(Pipeline_state_profile global_profile) : 
-    RHI_pipeline_state(global_profile) 
-    { init(); }
 
     ~RHI_pipeline_state_OpenGL() override = default;
 

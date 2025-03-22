@@ -29,6 +29,31 @@ public:
         }
     }
 
+    RHI_shader_program_OpenGL(
+        const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shaders,
+        const std::unordered_map<std::string, RHI_uniform_entry>& uniforms,
+        const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays) :
+        RHI_shader_program(shaders, uniforms, uniform_arrays) {
+        init();
+
+        for (auto& [type, shader] : shaders) {
+            attach_shader_code(shader);
+        }
+
+        if (!link()) {
+            destroy();
+        }
+
+        for (auto& [name, entry] : uniforms) {
+            set_uniform(name, entry.type, entry.data);
+        }
+
+        for (auto& [name, entry] : uniform_arrays) {
+            set_uniform_array(name, entry.type, entry.data, entry.count);
+        }
+    }
+    
+
     virtual void init() override {
         m_program_id = glCreateProgram();
     }

@@ -30,26 +30,6 @@ public:
         m_frame_buffer = nullptr;
     }
 
-    virtual void set_geometry(const std::shared_ptr<RHI_geometry>& geometry) {
-        m_geometry = geometry;
-    }
-
-    virtual void set_shader_program(const std::shared_ptr<RHI_shader_program>& shader_program) {
-        m_shader_program = shader_program;
-    }
-
-    virtual void set_frame_buffer(const std::shared_ptr<RHI_frame_buffer>& frame_buffer) {
-        m_frame_buffer = frame_buffer;
-    }
-
-    virtual void set_texture_2D(std::unordered_map<unsigned int, std::shared_ptr<RHI_texture_2D>>& textures_2D)  {
-        m_textures_2D = textures_2D;
-    }
-
-    virtual void set_texture_cube_map(std::unordered_map<unsigned int, std::shared_ptr<RHI_texture_cube_map>>& textures_cube_map)  {
-        m_textures_cube_map = textures_cube_map;
-    }
-
     virtual void bind() {
         if (m_frame_buffer) {
             m_frame_buffer->bind();

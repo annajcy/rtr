@@ -15,12 +15,12 @@ enum class Uniform_type {
 
 struct RHI_uniform_entry {
     Uniform_type type;
-    void* data;
+    const void* data;
 };
 
 struct RHI_uniform_array_entry {
     Uniform_type type;
-    void* data;
+    const void* data;
     unsigned int count;
 };
 
@@ -34,6 +34,13 @@ protected:
 
 public:
     RHI_shader_program(const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shaders) : m_shaders(shaders) { }
+    RHI_shader_program(
+        const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shaders, 
+        const std::unordered_map<std::string, RHI_uniform_entry>& uniforms, 
+        const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays) : 
+        m_shaders(shaders), 
+        m_uniforms(uniforms), 
+        m_uniform_arrays(uniform_arrays) {}
     virtual ~RHI_shader_program() = default;
 
     virtual void init() = 0;

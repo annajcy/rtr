@@ -2,7 +2,9 @@
 #include "engine/global/base.h"
 #include "engine/runtime/geometry.h"
 #include "engine/runtime/node.h"
+#include "engine/runtime/shader.h"
 #include <memory>
+#include <unordered_map>
 
 namespace rtr {
 
@@ -16,6 +18,7 @@ enum class Light_type {
 
 class Light : public Node {
 protected:
+    bool m_is_main{false};
     glm::vec3 m_color{};
     float m_intensity{};
     Light_type m_type{};
@@ -26,6 +29,9 @@ public:
     Light_type type() const { return m_type; }
     glm::vec3& color() { return m_color; }
     float intensity() { return m_intensity; }
+
+    bool& is_main() { return m_is_main; }
+    [[nodiscard]] bool is_main() const { return m_is_main; }
 };
 
 class Point_light : public Light {
@@ -97,95 +103,66 @@ public:
     std::shared_ptr<Geometry>& geometry() { return m_geometry; }
 };
 
-class Light_setting
-{
-private:
-    std::shared_ptr<Light> m_main_light{};
-    std::vector<std::shared_ptr<Directional_light>> m_directional_lights{}; // 定向光源
-    std::vector<std::shared_ptr<Ambient_light>> m_ambient_lights{};         // 环境光源
-    std::vector<std::shared_ptr<Spot_light>> m_spot_lights{};               // 聚光灯
-    std::vector<std::shared_ptr<Point_light>> m_point_lights{};             // 点光源
+class Light_setting : public ISet_shader_uniform {
+protected:
+    std::unordered_map<unsigned int, std::shared_ptr<Light>> m_light_map{};
+    unsigned int m_main_light_id{0};
+
+    void update_main_light(unsigned int new_id) {
+        if (auto old_light = m_light_map.find(m_main_light_id); old_light != m_light_map.end()) {
+            old_light->second->is_main() = false;
+        }
+        if (auto new_light = m_light_map.find(new_id); new_light != m_light_map.end()) {
+            new_light->second->is_main() = true;
+            m_main_light_id = new_id;
+        }
+    }
 
 public:
-    Light_setting() = default;
-    Light_setting(const std::vector<std::shared_ptr<Light>>& lights) {
-        for (auto& light : lights) {
-            add(light);
-        }
-    }
-
-    // 获取主光源
-    std::shared_ptr<Light>& main_light() {
-        return m_main_light;
-    }
-
-    // 获取光源列表
-    const std::vector<std::shared_ptr<Directional_light>>& directional_lights() {
-        return m_directional_lights;
-    }
-
-    const std::vector<std::shared_ptr<Ambient_light>> ambient_lights() {
-        return m_ambient_lights;
-    }
-
-    const std::vector<std::shared_ptr<Spot_light>> spot_lights() {
-        return m_spot_lights;
-    }
-
-    const std::vector<std::shared_ptr<Point_light>> point_lights() {
-        return m_point_lights;
-    }
-
-    // 添加光源
-    void add(const std::shared_ptr<Light>& light) {
-        switch (light->type()) {
-            case Light_type::DIRECTIONAL:
-                m_directional_lights.push_back(std::dynamic_pointer_cast<Directional_light>(light));
-                break;
-            case Light_type::AMBIENT:
-                m_ambient_lights.push_back(std::dynamic_pointer_cast<Ambient_light>(light));
-                break;
-            case Light_type::SPOT:
-                m_spot_lights.push_back(std::dynamic_pointer_cast<Spot_light>(light));
-                break;
-            case Light_type::POINT:
-                m_point_lights.push_back(std::dynamic_pointer_cast<Point_light>(light));
-                break;
-            default:
-                break;
-        }
-    }
-
-    // 移除光源
-    void erase(const std::shared_ptr<Light>& light) {
-        switch (light->type()) {
-            case Light_type::DIRECTIONAL:
-                m_directional_lights.erase(std::remove(m_directional_lights.begin(), m_directional_lights.end(), light), m_directional_lights.end());
-                break;
-            case Light_type::AMBIENT:
-                m_ambient_lights.erase(std::remove(m_ambient_lights.begin(), m_ambient_lights.end(), light), m_ambient_lights.end());
-                break;
-            case Light_type::SPOT:
-                m_spot_lights.erase(std::remove(m_spot_lights.begin(), m_spot_lights.end(), light), m_spot_lights.end());
-                break;
-            case Light_type::POINT:
-                m_point_lights.erase(std::remove(m_point_lights.begin(), m_point_lights.end(), light), m_point_lights.end());
-                break;
-            default:
-                break;
-        }
-    }
-
-    // 清空光源
-    void clear() {
-        m_directional_lights.clear();
-        m_ambient_lights.clear();
-        m_spot_lights.clear();
-        m_point_lights.clear();
-        m_main_light = nullptr;
-    }
-
+    Light_setting() : ISet_shader_uniform() {}
     ~Light_setting() = default;
+    void add_light(const std::shared_ptr<Light>& light) {
+        if (light->is_main()) {
+            update_main_light(light->id());
+        }
+        m_light_map.try_emplace(light->id(), light);
+    }
+
+    void remove_light(unsigned int id) {
+        if (auto it = m_light_map.find(id); it != m_light_map.end()) {
+            if (id == m_main_light_id) {
+                m_main_light_id = 0; // 需要手动设置新的主光源
+            }
+            m_light_map.erase(it);
+        }
+    }
+
+    std::shared_ptr<Light> main_light() const { 
+        return m_light_map.count(m_main_light_id) ? m_light_map.at(m_main_light_id) : nullptr;
+    }
+
+    void set_main_light(std::shared_ptr<Light>& light) {
+        if (m_light_map.contains(light->id())) {
+            update_main_light(light->id());
+        }
+    }
+
+    void set_main_light(unsigned int id) { 
+        if (m_light_map.contains(id)) {
+            update_main_light(id);
+        } else {
+            std::cout << "Light ID:" << id << " not exist\n";
+        }
+    }
+
+    void clear_lights() {
+        m_light_map.clear();
+        m_main_light_id = 0;
+    }
+
+    [[nodiscard]] unsigned int main_light_id() const { return m_main_light_id; }
+    [[nodiscard]] std::shared_ptr<Light> light(unsigned int id) const { return m_light_map.at(id); }
+    std::unordered_map<unsigned int, std::shared_ptr<Light>>& light_map() { return m_light_map; }
 };
 
 };

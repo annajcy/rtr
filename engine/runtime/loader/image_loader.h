@@ -60,7 +60,7 @@ public:
     Image_format format() const { return m_format; }
     std::string path() const { return m_path; }
     bool flip_y() const { return m_flip_y; }
-    unsigned char* data() const { return m_data; }
+    const unsigned char* data() const { return m_data; }
 
 };
 

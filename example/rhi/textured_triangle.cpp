@@ -10,7 +10,6 @@
 
 #include "engine/runtime/scene.h"
 #include "engine/runtime/camera.h"
-#include "engine/runtime/camera_control.h"
 #include "engine/runtime/input.h"
 #include "engine/runtime/light.h"
 #include "engine/runtime/geometry.h"
@@ -80,9 +79,6 @@ int main() {
     descriptor.title = "RTR Engine";
 
     auto device = std::make_shared<RHI_device_OpenGL>(descriptor);
-
-    device->pipeline_state()->set_profile(Pipeline_state_profile::OPAQUE);
-
     //prepare geometry
 
     auto vertex_attribute = device->create_vertex_buffer(
@@ -149,10 +145,12 @@ int main() {
         image->data()
     );
 
-    texture->set_filter(Texture_filter::LINEAR, Texture_filter_target::MIN);
-    texture->set_filter(Texture_filter::LINEAR_MIPMAP_LINEAR, Texture_filter_target::MAG);
-    texture->set_wrap(Texture_wrap::CLAMP_TO_EDGE, Texture_wrap_target::U);
-    texture->set_wrap(Texture_wrap::CLAMP_TO_EDGE, Texture_wrap_target::V);
+    // texture->set_filter(Texture_filter::LINEAR, Texture_filter_target::MIN);
+    // texture->set_filter(Texture_filter::LINEAR_MIPMAP_LINEAR, Texture_filter_target::MAG);
+    // texture->set_wrap(Texture_wrap::CLAMP_TO_EDGE, Texture_wrap_target::U);
+    // texture->set_wrap(Texture_wrap::CLAMP_TO_EDGE, Texture_wrap_target::V);
+
+
     texture->generate_mipmap();
 
     //prepare binding state
@@ -161,9 +159,9 @@ int main() {
         {3, texture}
     };
 
-    device->binding_state()->set_geometry(geometry);
-    device->binding_state()->set_shader_program(shader_program);
-    device->binding_state()->set_texture_2D(textures);  
+    device->binding_state()->geometry() = geometry;
+    device->binding_state()->shader_program() = shader_program;
+    device->binding_state()->textures_2D() = textures;  
 
     //prepare input
     auto input = std::make_shared<Input>(device->window());

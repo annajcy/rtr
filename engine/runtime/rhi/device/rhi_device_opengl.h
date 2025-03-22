@@ -64,15 +64,15 @@ public:
         Buffer_usage usage,
         Buffer_attribute_type attribute_type,
         Buffer_iterate_type iterate_type,
-        unsigned int unit_count,
+        unsigned int unit_data_count,
         unsigned int data_count,
-        void* data
+        const void* data
     ) override {
         return std::make_shared<RHI_vertex_buffer_OpenGL>(
             usage,
             attribute_type,
             iterate_type,
-            unit_count,
+            unit_data_count,
             data_count,
             data
         );
@@ -81,7 +81,7 @@ public:
     virtual std::shared_ptr<RHI_element_buffer> create_element_buffer(
         Buffer_usage usage,
         unsigned int data_count,
-        void* data
+        const void* data
     ) override {
         return std::make_shared<RHI_element_buffer_OpenGL>(
             usage,
@@ -113,13 +113,21 @@ public:
         return std::make_shared<RHI_shader_program_OpenGL>(shaders);
     }
 
+    virtual std::shared_ptr<RHI_shader_program> create_shader_program(
+        const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shaders,
+        const std::unordered_map<std::string, RHI_uniform_entry>& uniforms,
+        const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays
+    ) override {
+        return std::make_shared<RHI_shader_program_OpenGL>(shaders, uniforms, uniform_arrays);
+    }
+
     virtual std::shared_ptr<RHI_texture_2D> create_texture_2D(
         Texture_format internal_format,
         Texture_format external_format,
         Texture_buffer_type buffer_type,
         int width,
         int height,
-        unsigned char* data
+        const unsigned char* data
     ) override {
         return std::make_shared<RHI_texture_2D_OpenGL>(
             internal_format,
@@ -134,7 +142,7 @@ public:
     virtual std::shared_ptr<RHI_texture_2D> create_texture_2D(
         int width,
         int height,
-        unsigned char* data
+        const unsigned char* data
     ) override {
         return std::make_shared<RHI_texture_2D_OpenGL>(
             width,
@@ -147,7 +155,7 @@ public:
         Texture_format internal_format,
         Texture_format external_format,
         Texture_buffer_type buffer_type,
-        std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> face_data
+        const std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data>& face_data
     ) override {
         return std::make_shared<RHI_texture_cube_map_OpenGL>(
             internal_format,
@@ -158,7 +166,7 @@ public:
     }
 
     virtual std::shared_ptr<RHI_texture_cube_map> create_texture_cube_map(
-        std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> face_data
+        const std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data>& face_data
     ) override {
         return std::make_shared<RHI_texture_cube_map_OpenGL>(
             face_data
