@@ -1,8 +1,11 @@
 #pragma once
+
 #include "engine/global/base.h"
 #include "engine/runtime/rhi/state/rhi_pipeline_state.h"
 #include "engine/runtime/shader.h"
 #include "engine/runtime/texture.h"
+#include <memory>
+#include <unordered_map>
 
 namespace rtr {
 
@@ -62,15 +65,32 @@ protected:
     Material_type m_type{};
     Pipeline_state m_pipeline_state{};
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures{};
+    std::shared_ptr<Shader> m_shader{};
 
 public:
-    Material(Material_type type) : GUID(), ISet_shader_uniform(), m_type(type) {}
+    Material(
+        Material_type type, 
+        Pipeline_state pipeline_state, 
+        std::unordered_map<std::string, std::shared_ptr<Texture>> textures, 
+        std::shared_ptr<Shader> shader) : 
+        GUID(), 
+        ISet_shader_uniform(), 
+        m_type(type), 
+        m_pipeline_state(pipeline_state), 
+        m_textures(textures), 
+        m_shader(shader) {}
     virtual ~Material() = default;
 
     const Pipeline_state& pipeline_state() const { return m_pipeline_state; }
     const std::unordered_map<std::string, std::shared_ptr<Texture>>& textures() const { return m_textures; }
     std::shared_ptr<Texture> texture(const std::string& name) const { return m_textures.at(name); }
     void set_texture(const std::string& name, std::shared_ptr<Texture> texture) { m_textures[name] = texture; }
+
+    std::shared_ptr<Shader>& shader() { return m_shader; }
+
+    bool is_translucent() const {
+        return m_pipeline_state.blend_state.enable == true;
+    }
 
 };
 
@@ -82,7 +102,23 @@ protected:
     glm::vec3 m_specular{};
     float m_shininess{};
 public:
-    Phong_material() : Material(Material_type::PHONG), m_ambient(glm::one<glm::vec3>()), m_diffuse(glm::one<glm::vec3>()), m_specular(glm::one<glm::vec3>()), m_shininess(1.0f) {}
+    Phong_material(
+        Pipeline_state pipeline_state,
+        std::unordered_map<std::string, std::shared_ptr<Texture>> textures,
+        std::shared_ptr<Shader> shader,
+        glm::vec3 ambient,
+        glm::vec3 diffuse,
+        glm::vec3 specular,
+        float shininess
+    ) : Material (
+        Material_type::PHONG,
+        pipeline_state,
+        textures,
+        shader
+    ) , m_ambient(ambient), 
+        m_diffuse(diffuse), 
+        m_specular(specular), 
+        m_shininess(shininess) {}
 
     ~Phong_material() = default;
     const glm::vec3& ambient() const { return m_ambient; }
@@ -94,6 +130,7 @@ public:
     glm::vec3& diffuse() { return m_diffuse; }
     glm::vec3& specular() { return m_specular; }
     float& shininess() { return m_shininess; }
+
 
     void upload_uniform(std::shared_ptr<Shader>& shader) override {
         shader->add_uniform("material.ambient", std::make_shared<Uniform_entry<glm::vec3>>(m_ambient));

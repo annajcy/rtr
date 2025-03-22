@@ -12,10 +12,10 @@ protected:
 
 public:
     RHI_frame_buffer_OpenGL(
-        unsigned int width, 
-        unsigned int height,
+        int width, 
+        int height,
         const std::vector<std::shared_ptr<RHI_texture_2D>>& color_attachments,
-        std::shared_ptr<RHI_texture_2D>& depth_attachment
+        const std::shared_ptr<RHI_texture_2D>& depth_attachment
     ) : RHI_frame_buffer(width, height, color_attachments, depth_attachment) {
         init();
     } 

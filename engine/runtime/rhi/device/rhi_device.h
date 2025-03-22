@@ -289,46 +289,7 @@ public:
         std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> face_textures
     ) = 0;
 
-    std::shared_ptr<RHI_texture_2D> create_color_attachment(
-        unsigned int id,
-        int width,
-        int height
-    ) {
-        if (m_cache->texture_2D_cache.contains(id)) {
-            std::cout << "Color attachment " << id << " already exists" << std::endl;
-            return m_cache->texture_2D_cache[id];
-        } else {
-            auto texture = create_color_attachment(width, height);
-            m_cache->texture_2D_cache[id] = texture;
-            return texture;
-        }
-    }
-
-    virtual std::shared_ptr<RHI_texture_2D> create_color_attachment(
-        int width,
-        int height
-    ) = 0;
-
-    std::shared_ptr<RHI_texture_2D> create_depth_attachment(
-        unsigned int id,
-        int width,
-        int height
-    ) {
-        if (m_cache->texture_2D_cache.contains(id)) {
-            std::cout << "Depth attachment " << id << " already exists" << std::endl;
-            return m_cache->texture_2D_cache[id];
-        } else {
-            auto texture = create_depth_attachment(width, height);
-            m_cache->texture_2D_cache[id] = texture;
-            return texture;
-        }
-    }
-
-    virtual std::shared_ptr<RHI_texture_2D> create_depth_attachment(
-        int width,
-        int height
-    ) = 0;
-
+  
     std::shared_ptr<RHI_frame_buffer> create_frame_buffer(
         unsigned int id,
         int width,

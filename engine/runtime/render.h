@@ -3,10 +3,13 @@
 #include "engine/runtime/camera.h"
 #include "engine/runtime/frame_buffer.h"
 #include "engine/runtime/light.h"
+#include "engine/runtime/material.h"
 #include "engine/runtime/mesh.h"
+#include "engine/runtime/node.h"
 #include "engine/runtime/rhi/device/rhi_device.h"
 #include "engine/runtime/rhi/device/rhi_device_opengl.h"
 #include "engine/runtime/scene.h"
+#include <memory>
 
 namespace rtr {
 
@@ -24,6 +27,7 @@ protected:
     std::shared_ptr<Camera> m_camera{};
     std::shared_ptr<Light_setting> m_light_setting{};
     std::shared_ptr<Frame_buffer> m_frame_buffer{};
+    std::shared_ptr<Material> m_override_material{};
 
     std::vector<Mesh> m_opaque_meshes{};
     std::vector<Mesh> m_transparent_meshes{};
@@ -40,10 +44,46 @@ public:
 
     }
 
-    virtual ~Renderer() = default;
-    virtual void render() {
+    std::shared_ptr<Scene>& scene() { return m_scene; }
+    std::shared_ptr<Camera>& camera() { return m_camera; }
+    std::shared_ptr<Light_setting>& light_setting() { return m_light_setting; }
+    std::shared_ptr<Frame_buffer>& frame_buffer() { return m_frame_buffer; }
+    std::shared_ptr<Material>& override_material() { return m_override_material; }
+
+
+    ~Renderer() = default;
+    void render() {
 
     }
+
+    void parse_scene() {
+        m_opaque_meshes.clear();
+        m_transparent_meshes.clear();
+
+        for (auto& child : m_scene->children()) {
+            if (child == nullptr) {
+                continue;
+            }
+
+            if (child->type() == Node_type::MESH) {
+                auto mesh = std::dynamic_pointer_cast<Mesh>(child);
+            } else if (child->type() == Node_type::CAMERA) {
+                auto camera = std::dynamic_pointer_cast<Camera>(child);
+            } else if (child->type() == Node_type::LIGHT) {
+                auto light = std::dynamic_pointer_cast<Light>(child);
+            }
+
+            
+        }
+
+
+    }
+
+    void render_mesh(const std::shared_ptr<Mesh>& mesh) {
+
+    }
+
+
 };
 
 }

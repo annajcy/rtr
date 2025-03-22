@@ -183,7 +183,7 @@ struct Blend_state {
 
     static Blend_state opaque() {
         return {
-            true,
+            false,
             Blend_factor::ONE,
             Blend_factor::ZERO,
             Blend_factor::ONE,

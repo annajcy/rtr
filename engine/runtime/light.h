@@ -1,4 +1,4 @@
-#pragma once
+
 #include "engine/global/base.h"
 #include "engine/runtime/geometry.h"
 #include "engine/runtime/node.h"
@@ -174,6 +174,15 @@ public:
             default:
                 break;
         }
+    }
+
+    // 清空光源
+    void clear() {
+        m_directional_lights.clear();
+        m_ambient_lights.clear();
+        m_spot_lights.clear();
+        m_point_lights.clear();
+        m_main_light = nullptr;
     }
 
     ~Light_setting() = default;

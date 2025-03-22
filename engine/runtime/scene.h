@@ -12,7 +12,10 @@ private:
     std::shared_ptr<Mesh> m_sky_box{};
 
 public:
-    Scene(std::shared_ptr<Mesh>& skybox) : Node(Node_type::SCENE), m_sky_box(skybox) {}
+    Scene(std::shared_ptr<Mesh>& skybox) : Node(Node_type::SCENE), m_sky_box(skybox) {
+        add_child(m_sky_box);
+    }
+    
     ~Scene() = default;
     
 };

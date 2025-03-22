@@ -6,9 +6,8 @@
 namespace rtr {
 
 enum class Node_type {
-    GROUP,
+    NODE,
     MESH,
-    INSTANCED_MESH,
     SCENE,
     LIGHT,
     CAMERA
@@ -28,7 +27,7 @@ protected:
     std::weak_ptr<Node> m_parent{};
 
 public:
-    explicit Node(Node_type type) : GUID(), ISet_shader_uniform(), m_type(type) {}
+    explicit Node(Node_type type = Node_type::NODE) : GUID(), ISet_shader_uniform(), m_type(type) {}
     virtual ~Node() = default;
 
     virtual void upload_uniform(std::shared_ptr<Shader>& shader) override {
@@ -216,11 +215,5 @@ public:
     }
 
 };
-
-class Group : public Node {
-public:
-    Group() : Node(Node_type::GROUP) {}
-};
-
 
 };
