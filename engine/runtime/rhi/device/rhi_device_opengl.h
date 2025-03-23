@@ -16,6 +16,7 @@
 
 #include "engine/runtime/rhi/texture/rhi_texture_opengl.h"
 #include "engine/runtime/rhi/frame_buffer/rhi_frame_buffer_opengl.h"
+#include <memory>
 
 namespace rtr {
     
@@ -36,9 +37,17 @@ public:
 
         m_binding_state = std::make_shared<RHI_binding_state>();
         m_pipeline_state = std::make_shared<RHI_pipeline_state_OpenGL>();
+
+        m_cache = std::make_shared<RHI_device_cache>();
     }
 
-    virtual void destroy() override { }
+    virtual void destroy() override {
+        m_cache->clear();
+        m_window.reset();
+        m_binding_state.reset();
+        m_pipeline_state.reset();
+        m_cache.reset();
+    }
 
     virtual void check_error() override {
         GLenum error_code = glGetError();

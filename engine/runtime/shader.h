@@ -1,8 +1,10 @@
 #pragma once
 #include "engine/global/base.h"
+#include "engine/runtime/loader/text_loader.h"
 #include "engine/runtime/rhi/device/rhi_device.h"
 #include "engine/runtime/rhi/shader/rhi_shader_code.h"
 #include "engine/runtime/rhi/shader/rhi_shader_program.h"
+#include "engine/runtime/texture.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -27,6 +29,8 @@ inline constexpr Uniform_type get_uniform_type() {
         return Uniform_type::MAT3;
     } else if constexpr (std::is_same_v<T, glm::mat4>) {
         return Uniform_type::MAT4;
+    } else if constexpr (std::is_same_v<T, Texture>) {
+        return Uniform_type::SAMPLER;
     } else {
         return Uniform_type::UNKNOWN;
     }
@@ -39,7 +43,7 @@ protected:
 public:
     Uniform_entry_base(Uniform_type type) : m_type(type) {}
     virtual ~Uniform_entry_base() = default;
-    virtual void* data_ptr() = 0;
+    virtual const void* data_ptr() const = 0;
     Uniform_type type() const { return m_type; }
 };
 
@@ -49,12 +53,12 @@ class Uniform_entry : public Uniform_entry_base {
 protected:
     T m_data{};
 public:
-    Uniform_entry(T data) : 
+    Uniform_entry(const T& data) : 
     Uniform_entry_base(get_uniform_type<T>()), 
     m_data(data) {}
 
     T& data() { return m_data; }
-    void* data_ptr() override { return static_cast<void *>(&m_data); }
+    const void* data_ptr() const override { return static_cast<const void *>(&m_data); }
 };
 
 class Uniform_array_entry_base {
@@ -64,7 +68,7 @@ protected:
 public:
     Uniform_array_entry_base(Uniform_type type, unsigned int count) : m_type(type) {}
     virtual ~Uniform_array_entry_base() = default;
-    virtual void* data_ptr() = 0;
+    virtual const void* data_ptr() const = 0;
     virtual unsigned int count() const = 0;
     Uniform_type type() const { return m_type; }
 };
@@ -79,7 +83,7 @@ public:
     m_data(data) {}
 
     std::vector<T>& data() { return m_data; }
-    void* data_ptr() override { return static_cast<void *>(m_data.data()); }
+    const void* data_ptr() const override { return static_cast<const void *>(m_data.data()); }
     unsigned int count() const override { return m_data.size(); }
 
 };

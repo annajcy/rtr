@@ -46,6 +46,17 @@ public:
 public:
     RHI_device_cache() = default;
     ~RHI_device_cache() = default;
+
+    void clear() {
+        vertex_buffer_cache.clear();
+        element_buffer_cache.clear();
+        geometry_cache.clear();
+        texture_2D_cache.clear();
+        texture_cube_map_cache.clear();
+        frame_buffer_cache.clear();
+        shader_code_cache.clear();
+        shader_program_cache.clear();
+    }
     
 };
 
@@ -58,7 +69,7 @@ protected:
     std::shared_ptr<RHI_window> m_window{};
     std::shared_ptr<RHI_pipeline_state> m_pipeline_state{};
     std::shared_ptr<RHI_binding_state> m_binding_state{};
-    std::shared_ptr<RHI_device_cache> m_cache;
+    std::shared_ptr<RHI_device_cache> m_cache{};
 
 
 public:

@@ -13,8 +13,13 @@
 #include "engine/runtime/input.h"
 #include "engine/runtime/light.h"
 #include "engine/runtime/geometry.h"
-#include "engine/runtime/material.h"
+
 #include "engine/runtime/mesh.h"
+
+#include "engine/runtime/material/material.h"
+#include "engine/runtime/material/depth_material.h"
+#include "engine/runtime/material/phong_material.h"
+
 
 
 using namespace std;
@@ -132,7 +137,7 @@ int main() {
     int texture_location = 3;
 
     std::unordered_map<std::string, RHI_uniform_entry> uniforms = {
-        {"texture_sampler", {Uniform_type::SAMPLER_2D, &texture_location}}
+        {"texture_sampler", {Uniform_type::SAMPLER, &texture_location}}
     };
 
     auto shader_program = device->create_shader_program(shaders);

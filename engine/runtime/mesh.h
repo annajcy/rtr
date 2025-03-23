@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/global/base.h"
 #include "engine/runtime/geometry.h"
-#include "engine/runtime/material.h"
+#include "engine/runtime/material/material.h"
 #include "engine/runtime/node.h"
 #include "engine/runtime/shader.h"
 #include "engine/runtime/texture.h"

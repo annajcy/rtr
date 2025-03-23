@@ -4,6 +4,7 @@
 namespace rtr {
 
 class Text_loader {
+public:
 
     static std::string load_from_file(const std::string &filename) {
         std::ifstream file{};

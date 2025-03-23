@@ -161,10 +161,7 @@ public:
             case Uniform_type::MAT4:
                 glUniformMatrix4fv(location, 1, GL_FALSE, static_cast<const float*>(data));
                 break;
-            case Uniform_type::SAMPLER_2D:
-                glUniform1i(location, *static_cast<const int*>(data));
-                break;
-            case Uniform_type::SAMPLER_CUBE:
+            case Uniform_type::SAMPLER:
                 glUniform1i(location, *static_cast<const int*>(data));
                 break;
             default:

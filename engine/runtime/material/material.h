@@ -7,6 +7,7 @@
 #include "engine/runtime/texture.h"
 #include "glm/fwd.hpp"
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -76,19 +77,22 @@ public:
     std::vector<glm::mat4>& instance_transforms() { return m_instance_transforms; }
 };
 
-class Material : public GUID ,public ISet_shader_uniform {
+class Material : public GUID , public ISet_shader_uniform {
+public:
+    using Binded_texture = std::pair<unsigned int, std::shared_ptr<Texture>>;
 protected:
     Material_type m_type{};
     Pipeline_state m_pipeline_state{};
-    std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures{};
+
+    std::unordered_map<std::string, Binded_texture> m_textures{};
     std::shared_ptr<Shader> m_shader{};
 
 public:
     Material(
         Material_type type, 
-        Pipeline_state pipeline_state, 
-        std::unordered_map<std::string, std::shared_ptr<Texture>> textures, 
-        std::shared_ptr<Shader> shader) : 
+        const Pipeline_state &pipeline_state, 
+        const std::unordered_map<std::string, Binded_texture>& textures, 
+        const std::shared_ptr<Shader>& shader) : 
         GUID(), 
         ISet_shader_uniform(), 
         m_type(type), 
@@ -98,10 +102,10 @@ public:
     virtual ~Material() = default;
 
     const Pipeline_state& pipeline_state() const { return m_pipeline_state; }
-    const std::unordered_map<std::string, std::shared_ptr<Texture>>& textures() const { return m_textures; }
-    std::shared_ptr<Texture> texture(const std::string& name) const { return m_textures.at(name); }
-    void set_texture(const std::string& name, std::shared_ptr<Texture> texture) { m_textures[name] = texture; }
-
+    Pipeline_state& pipeline_state() { return m_pipeline_state; }
+    const std::unordered_map<std::string, Binded_texture>& textures() const { return m_textures; }
+    std::unordered_map<std::string, Binded_texture>& textures() { return m_textures; }
+    const std::shared_ptr<Shader>& shader() const { return m_shader; }
     std::shared_ptr<Shader>& shader() { return m_shader; }
 
     bool is_translucent() const {
@@ -117,122 +121,34 @@ public:
         device->pipeline_state()->clear_state() = m_pipeline_state.clear_state;
     }
 
+    void upload_uniform(std::shared_ptr<Shader>& shader) override {
+        for (auto& [name, binded_texture] : m_textures) {
+            auto &[id, _] = binded_texture;
+            shader->add_uniform(
+                name,
+                std::make_shared<Uniform_entry<int>>(id)
+            );
+        }
+    }
+
 };
 
 class Instanced_material : public Material, public Instanced_Material_base {
 public:
     Instanced_material(
         Material_type type,
-        Pipeline_state pipeline_state,
-        std::unordered_map<std::string, std::shared_ptr<Texture>> textures,
-        std::shared_ptr<Shader> shader,
+        const Pipeline_state& pipeline_state,
+        const std::unordered_map<std::string, Binded_texture>& textures,
+        const std::shared_ptr<Shader>& shader,
         const std::vector<glm::mat4>& instance_tranforms
     ) : Material(type, pipeline_state, textures, shader), Instanced_Material_base(instance_tranforms) {}
     virtual ~Instanced_material() = default;
 
     void upload_uniform(std::shared_ptr<Shader>& shader) override {
+        Material::upload_uniform(shader);
         shader->add_uniform("instance_transforms", std::make_shared<Uniform_entry<std::vector<glm::mat4>>>(m_instance_transforms));
     }
     
-};
-
-class Phong_material_base : public ISet_shader_uniform {
-protected:
-    glm::vec3 m_ambient{};
-    glm::vec3 m_diffuse{};
-    glm::vec3 m_specular{};
-    float m_shininess{};
-public:
-    Phong_material_base(
-        glm::vec3 ambient,
-        glm::vec3 diffuse,
-        glm::vec3 specular,
-        float shininess
-    ) : m_ambient(ambient),
-        m_diffuse(diffuse),
-        m_specular(specular),
-        m_shininess(shininess) {}
-
-    ~Phong_material_base() = default;
-    const glm::vec3& ambient() const { return m_ambient; }
-    const glm::vec3& diffuse() const { return m_diffuse; }
-    const glm::vec3& specular() const { return m_specular; }
-    float shininess() const { return m_shininess; }
-    glm::vec3& ambient() { return m_ambient; }
-    glm::vec3& diffuse() { return m_diffuse; }
-    glm::vec3& specular() { return m_specular; }
-    float& shininess() { return m_shininess; }
-    void upload_uniform(std::shared_ptr<Shader>& shader) {
-        shader->add_uniform("material.ambient", std::make_shared<Uniform_entry<glm::vec3>>(m_ambient));
-        shader->add_uniform("material.diffuse", std::make_shared<Uniform_entry<glm::vec3>>(m_diffuse));
-        shader->add_uniform("material.specular", std::make_shared<Uniform_entry<glm::vec3>>(m_specular));
-        shader->add_uniform("material.shininess", std::make_shared<Uniform_entry<float>>(m_shininess));
-    }
-};
-
-
-class Phong_material : public Material, public Phong_material_base {
-
-public:
-    Phong_material(
-        Pipeline_state pipeline_state,
-        std::unordered_map<std::string, std::shared_ptr<Texture>> textures,
-        std::shared_ptr<Shader> shader,
-        glm::vec3 ambient,
-        glm::vec3 diffuse,
-        glm::vec3 specular,
-        float shininess
-    ) : Material (
-        Material_type::PHONG,
-        pipeline_state,
-        textures,
-        shader
-    ) , Phong_material_base(
-        ambient,
-        diffuse,
-        specular,
-        shininess
-    ) {}
-
-    virtual ~Phong_material() = default;
-
-    void upload_uniform(std::shared_ptr<Shader>& shader) override {
-        Phong_material_base::upload_uniform(shader);
-    }
-};
-
-
-class Instanced_phong_material : public Instanced_material , public Phong_material_base {
-public:
-    Instanced_phong_material(
-        Pipeline_state pipeline_state,
-        std::unordered_map<std::string, std::shared_ptr<Texture>> textures,
-        std::shared_ptr<Shader> shader,
-        glm::vec3 ambient,
-        glm::vec3 diffuse,
-        glm::vec3 specular,
-        float shininess,
-        const std::vector<glm::mat4>& instance_tranforms
-    ) : Instanced_material(
-        Material_type::PHONG,
-        pipeline_state,
-        textures,
-        shader,
-        instance_tranforms
-    ), Phong_material_base(
-        ambient,
-        diffuse,
-        specular,
-        shininess
-    ) {}
-
-    ~Instanced_phong_material() = default;
-
-    void upload_uniform(std::shared_ptr<Shader>& shader) override {
-        Instanced_material::upload_uniform(shader);
-        Phong_material_base::upload_uniform(shader);
-    }
-
 };
 
 }

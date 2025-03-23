@@ -48,7 +48,7 @@ public:
 
         shader->add_uniform(
             "camera_position",
-            std::make_shared<Uniform_entry<glm::vec3>>(this->position())
+            std::make_shared<Uniform_entry<glm::vec3>>(this->world_node().position())
         );
 
         shader->add_uniform(
@@ -281,76 +281,75 @@ public:
 
 class Camera_setting : public ISet_shader_uniform {
 protected:
-    std::unordered_map<unsigned int, std::shared_ptr<Camera>> m_camera_map{};
-    unsigned int m_main_camera_id{0};
-
-    void update_main_camera(unsigned int new_id) {
-        if (auto old_cam = m_camera_map.find(m_main_camera_id); 
-            old_cam != m_camera_map.end()) {
-            old_cam->second->is_main() = false;
-        }
-        if (auto new_cam = m_camera_map.find(new_id);
-            new_cam != m_camera_map.end()) {
-            new_cam->second->is_main() = true;
-            m_main_camera_id = new_id;
-        }
-    }
+    std::vector<std::shared_ptr<Camera>> m_cameras{};
+    int m_main_camera_index{-1};
 
 public:
     Camera_setting() : ISet_shader_uniform() {}
     ~Camera_setting() = default;
 
     void add_camera(const std::shared_ptr<Camera>& camera) {
+        m_cameras.push_back(camera);
         if (camera->is_main()) {
-            update_main_camera(camera->id());
+            m_main_camera_index = m_cameras.size() - 1;
         }
-        m_camera_map.try_emplace(camera->id(), camera);
     }
 
     void remove_camera(unsigned int id) {
-        if (auto it = m_camera_map.find(id); it != m_camera_map.end()) {
-            if (id == m_main_camera_id) {
-                m_main_camera_id = 0; // 需要手动设置新的主相机
-            }
-            m_camera_map.erase(it);
+        if (id < m_cameras.size()) {
+            m_cameras.erase(m_cameras.begin() + id);
         }
+
+        if (id == m_main_camera_index) {
+            m_main_camera_index = -1;
+        } else if (id < m_main_camera_index) {
+            m_main_camera_index--;
+        }
+    
     }
 
     void clear_cameras() {
-        m_camera_map.clear();
-        m_main_camera_id = 0;
+        m_cameras.clear();
+        m_main_camera_index = -1;
     }
 
     std::shared_ptr<Camera> main_camera() const { 
-        return m_camera_map.count(m_main_camera_id) 
-            ? m_camera_map.at(m_main_camera_id) 
-            : nullptr;
+        if (m_main_camera_index >= 0) {
+            return m_cameras[m_main_camera_index];
+        } else {
+            return nullptr;
+        }
     }
 
     void set_main_camera(std::shared_ptr<Camera>& camera) {
-        if (m_camera_map.contains(camera->id())) {
-            update_main_camera(camera->id());
+        camera->is_main() = true;
+        main_camera()->is_main() = false;
+        for (int i = 0; i < m_cameras.size(); i++) {
+            if (m_cameras[i] == camera) {
+                m_main_camera_index = i;
+                break;
+            }
         }
+        if (m_main_camera_index == -1) {
+            add_camera(camera);
+        }
+
     }
 
     void set_main_camera(unsigned int id) {
-        if (m_camera_map.contains(id)) {
-            update_main_camera(id);
+        if (id < m_cameras.size()) {
+            m_cameras[id]->is_main() = true;
+            main_camera()->is_main() = false;
+            m_main_camera_index = id;
         } else {
-            std::cout << "Camera ID:" << id << " not exist\n";
+            m_main_camera_index = -1;
         }
     }
 
-    [[nodiscard]] unsigned int main_camera_id() const { 
-        return m_main_camera_id; 
-    }
-    
-    [[nodiscard]] std::shared_ptr<Camera> camera(unsigned int id) const { 
-        return m_camera_map.count(id) ? m_camera_map.at(id) : nullptr;
-    }
-    
-    const std::unordered_map<unsigned int, std::shared_ptr<Camera>>& camera_map() const { 
-        return m_camera_map; 
+    void upload_uniform(std::shared_ptr<Shader>& shader) override {
+        if (auto camera = main_camera(); camera) {
+            camera->upload_uniform(shader);
+        }
     }
 };
 

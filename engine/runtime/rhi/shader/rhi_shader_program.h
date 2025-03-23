@@ -9,7 +9,7 @@ enum class Uniform_type {
     VEC2, VEC3, VEC4,
     IVEC2, IVEC3, IVEC4,
     MAT2, MAT3, MAT4,
-    SAMPLER_2D, SAMPLER_CUBE,
+    SAMPLER,
     UNKNOWN,
 };
 

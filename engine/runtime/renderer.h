@@ -4,13 +4,14 @@
 #include "engine/runtime/frame_buffer.h"
 #include "engine/runtime/geometry.h"
 #include "engine/runtime/light.h"
-#include "engine/runtime/material.h"
+#include "engine/runtime/material/material.h"
 #include "engine/runtime/mesh.h"
 #include "engine/runtime/node.h"
 #include "engine/runtime/rhi/device/rhi_device.h"
 #include "engine/runtime/rhi/device/rhi_device_opengl.h"
 #include "engine/runtime/rhi/texture/rhi_texture.h"
 #include "engine/runtime/scene.h"
+#include "engine/runtime/texture.h"
 #include "glm/fwd.hpp"
 #include <array>
 #include <cstddef>
@@ -63,27 +64,13 @@ public:
 
     void render() {
         parse_scene();
-        sort_meshes();
 
-        if (m_frame_buffer == nullptr) {
-            std::cout << "frame buffer is nullptr, use screen" << std::endl;
-            return;
-        } else {
-            m_device->binding_state()->frame_buffer() = m_frame_buffer->create_rhi_frame_buffer(m_device);
-            m_device->binding_state()->frame_buffer()->bind();
-        }
-
-        
         for (auto& mesh : m_opaque_meshes) {
             render_mesh(mesh);
         }
 
         for (auto& mesh : m_transparent_meshes) {
             render_mesh(mesh);
-        }
-
-        if (m_frame_buffer != nullptr) {
-            m_device->binding_state()->frame_buffer()->unbind();
         }
 
     }
@@ -95,22 +82,6 @@ public:
         }
 
         parse_node(m_scene);
-
-    }
-
-    void sort_meshes() {
-
-        //TODO: sort meshes by material
-
-        // std::sort(m_opaque_meshes.begin(), m_opaque_meshes.end(), [](const std::shared_ptr<Mesh>& a, const std::shared_ptr<Mesh>& b) {
-
-        //     return true;
-        // });
-
-        // std::sort(m_transparent_meshes.begin(), m_transparent_meshes.end(), [](const std::shared_ptr<Mesh>& a, const std::shared_ptr<Mesh>& b) {
-
-        //     return true;
-        // });
 
     }
 
@@ -126,22 +97,42 @@ public:
         material->upload_uniform(material->shader());
         m_light_setting->upload_uniform(material->shader());
         m_camera_setting->upload_uniform(material->shader());
-        
+
 
         if (m_override_material != nullptr) {
             material = m_override_material;
         }
 
         m_device->binding_state()->geometry() = geometry->create_rhi_geometry(m_device);
-        m_device->binding_state()->geometry()->bind();
-
         m_device->binding_state()->shader_program() = material->shader()->create_rhi_shader_program(m_device);
         
+        for (auto& [_, binded_texture] : material->textures()) {
+            auto [id, texture] = binded_texture;
+            if (texture->type() == Texture_type::TEXTURE_2D) {
+                auto texture_2d = std::dynamic_pointer_cast<Texture_2D>(texture);
+                m_device->binding_state()->textures_2D()[id] = texture_2d->create_rhi_texture_2D(m_device);
+            } else if (texture->type() == Texture_type::TEXTURE_CUBE_MAP) {
+                auto cube_map = std::dynamic_pointer_cast<Texture_cube_map>(texture);
+                m_device->binding_state()->textures_cube_map()[id] = cube_map->create_rhi_texture_cube_map(m_device);
+            }
+            
+        }
 
-        
-       
+        if (m_frame_buffer)
+            m_device->binding_state()->frame_buffer() = m_frame_buffer->create_rhi_frame_buffer(m_device);
 
+        material->update_pipeline_state(m_device);
+        m_device->pipeline_state()->apply();
 
+        m_device->binding_state()->bind();
+
+        if (auto instanced_material = std::dynamic_pointer_cast<Instanced_Material_base>(material)) {
+            m_device->instanced_draw(instanced_material->instance_count());
+        } else {
+            m_device->draw();
+        }
+
+        m_device->binding_state()->unbind();
 
     }
 

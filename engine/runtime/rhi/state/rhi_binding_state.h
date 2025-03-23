@@ -16,7 +16,6 @@ protected:
     std::unordered_map<unsigned int, std::shared_ptr<RHI_texture_cube_map>> m_textures_cube_map{};
     std::shared_ptr<RHI_frame_buffer> m_frame_buffer{};
 
-    
 public:
 
     RHI_binding_state() = default;
@@ -57,6 +56,7 @@ public:
         for (auto& [location, texture] : m_textures_2D) {
             texture->unbind();
         }
+
         for (auto& [location, texture] : m_textures_cube_map) {
             texture->unbind();
         }
