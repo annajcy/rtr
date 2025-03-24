@@ -37,6 +37,7 @@ int main() {
 
     auto skybox_geometry = Geometry::create_box(100.0f);
     auto skybox_material = std::make_shared<Material> (
+        Material_type::SKYBOX,
         Pipeline_state::opaque_pipeline_state(),
         std::unordered_map<std::string, Binded_texture> {
             {"main_tex", Binded_texture{0,
@@ -105,7 +106,7 @@ int main() {
 
 	camera->position() = glm::vec3(0.0f, 0.0f, 5.0f);
 	camera->look_at_point(glm::vec3(0.0f, 0.0f, 0.0f));
-	auto camera_control = std::make_shared<Trackball_camera_control>(input, camera);
+	auto camera_control = std::make_shared<Trackball_camera_control>(camera, input);
 
     scene->add_child(camera);
 

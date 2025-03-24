@@ -61,7 +61,8 @@ enum class Material_type {
     EDGE,
     TRANSLUCENT_PHONG,
     OPAUE_PHONG,
-    PHONG
+    PHONG,
+    SKYBOX
 };
 
 class Instanced_Material_base {
