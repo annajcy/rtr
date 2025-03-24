@@ -2,6 +2,7 @@
 
 #include "engine/global/base.h" 
 #include "engine/global/event.h"
+#include <memory>
 
 namespace rtr {
 
@@ -159,10 +160,9 @@ protected:
     Mouse_button_event m_mouse_button_event{};
     Mouse_move_event m_mouse_move_event{};
     Mouse_scroll_event m_mouse_scroll_event{};
-    
 
+    Event<RHI_window*> m_frame_end_event{};
     
-
 public:
 
     RHI_window(
@@ -188,6 +188,10 @@ public:
         swap_buffers();
     }
 
+    void on_frame_end() {
+        m_frame_end_event.execute(this);
+    }
+
     const unsigned int& width() { return m_width; }
     const unsigned int& height() { return m_height; }
     const std::string& title() { return m_title; }
@@ -197,6 +201,8 @@ public:
     Mouse_move_event& mouse_move_event() { return m_mouse_move_event; }
     Mouse_scroll_event& mouse_scroll_event() { return m_mouse_scroll_event; }
     Key_event& key_event() { return m_key_event; }
+
+    Event<RHI_window*>& frame_end_event() { return m_frame_end_event; }
 
 };
 

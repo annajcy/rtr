@@ -30,11 +30,11 @@ public:
     
     Light_type type() const { return m_type; }
     glm::vec3& color() { return m_color; }
-    float intensity() { return m_intensity; }
-
-    bool& is_main() { return m_is_main; }
+    [[nodiscard]] float intensity() const { return m_intensity; }
+    float& intensity() { return m_intensity; }
     [[nodiscard]] bool is_main() const { return m_is_main; }
-
+    bool& is_main() { return m_is_main; }
+    
     virtual void upload_uniform(std::shared_ptr<Shader>& shader, int index) {
         std::string prefix = "lights[" + std::to_string(index) + "].";
         shader->add_uniform(prefix + "type", std::make_shared<Uniform_entry<int>>(static_cast<int>(m_type)));

@@ -66,6 +66,14 @@ public:
         }
     }
 
+    void clear() {
+        m_geometry = nullptr;
+        m_shader_program = nullptr;
+        m_frame_buffer = nullptr;
+        m_textures_2D.clear();
+        m_textures_cube_map.clear();
+    }
+
     virtual bool is_valid() {
         return m_geometry && m_shader_program;
     }

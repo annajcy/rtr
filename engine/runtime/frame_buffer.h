@@ -38,11 +38,11 @@ public:
             rhi_color_attachments.push_back(attachment->create_rhi_texture_2D(device));
         }
         auto rhi_depth_attachment = m_depth_attachment->create_rhi_texture_2D(device);
-        return std::make_shared<RHI_frame_buffer>(
-            device,
+        return device->create_frame_buffer(
+            width(),
+            height(),
             rhi_color_attachments,
-            rhi_depth_attachment
-        );
+            rhi_depth_attachment);
     }
 
 };

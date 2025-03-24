@@ -79,7 +79,7 @@ public:
 
 class Material : public GUID , public ISet_shader_uniform {
 public:
-    using Binded_texture = std::pair<unsigned int, std::shared_ptr<Texture>>;
+    
 protected:
     Material_type m_type{};
     Pipeline_state m_pipeline_state{};

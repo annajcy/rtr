@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/global/base.h"
 #include "engine/runtime/rhi/window/rhi_window.h"
+#include <memory>
 
 namespace rtr {
 
@@ -44,6 +45,10 @@ public:
 
         window->mouse_button_event().add([&](Mouse_button button, Key_action action, int mod) {
             this->update_mouse_button(button, action);
+        });
+
+        window->frame_end_event().add([&](RHI_window* window){
+            this->reset_deltas();
         });
     }
 

@@ -6,7 +6,7 @@ in vec2 uv;
 in vec3 normal;
 
 uniform float time;
-uniform sampler2D main_sampler;
+uniform sampler2D main_tex;
 
 uniform vec3 camera_position;
 
@@ -103,7 +103,7 @@ vec3 calculate_lighting(Light light, Material mat, vec3 normal, vec3 view_dir, v
 }
 
 void main() {
-    vec3 object_color = texture(main_sampler, uv).rgb;
+    vec3 object_color = texture(main_tex, uv).rgb;
     vec3 N = normalize(normal);
     vec3 V = normalize(camera_position - world_position);
 

@@ -176,11 +176,11 @@ int main() {
         device->clear();
         device->draw();
 
-        // std::cout << input->mouse_x() << " " << input->mouse_y() << std::endl;
-        // std::cout << input->mouse_dx() << " " << input->mouse_dy() << std::endl;
-        // std::cout << input->mouse_scroll_dx() << " " << input->mouse_scroll_dy() << std::endl;
+        std::cout << input->mouse_x() << " " << input->mouse_y() << std::endl;
+        std::cout << input->mouse_dx() << " " << input->mouse_dy() << std::endl;
+        std::cout << input->mouse_scroll_dx() << " " << input->mouse_scroll_dy() << std::endl;
 
-        input->reset_deltas();
+        device->window()->on_frame_end();
     }
     
     return 0;

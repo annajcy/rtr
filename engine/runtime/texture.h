@@ -60,9 +60,29 @@ public:
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wrap_map,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filter_map,
         bool is_generate_mipmap,
-        int width,
-        int height,
         const std::shared_ptr<Image>& image
+    ) : Texture(
+        type, 
+        internal_format, 
+        external_format, 
+        buffer_type,
+        wrap_map,
+        filter_map,
+        is_generate_mipmap),
+        m_width(image->width()),
+        m_height(image->height()),
+        m_image(image) {}
+
+    Texture_2D(
+        Texture_type type,
+        Texture_format internal_format,
+        Texture_format external_format,
+        Texture_buffer_type buffer_type,
+        const std::unordered_map<Texture_wrap_target, Texture_wrap>& wrap_map,
+        const std::unordered_map<Texture_filter_target, Texture_filter>& filter_map,
+        bool is_generate_mipmap,
+        int width,
+        int height
     ) : Texture(
         type, 
         internal_format, 
@@ -73,11 +93,9 @@ public:
         is_generate_mipmap),
         m_width(width),
         m_height(height),
-        m_image(image) {}
+        m_image(nullptr) {}
 
     Texture_2D(
-        int width,
-        int height,
         const std::shared_ptr<Image>& image
     ) : Texture(
         Texture_type::TEXTURE_2D, 
@@ -93,8 +111,8 @@ public:
             {Texture_filter_target::MAG, Texture_filter::LINEAR}  // 修正 MAG 过滤器类型
         },
         true),  
-        m_width(width),
-        m_height(height),
+        m_width(image->width()),
+        m_height(image->height()),
         m_image(image) {}
 
     int width() const { return m_width; }
@@ -149,8 +167,7 @@ public:
             },
             false,
             width,
-            height,
-            nullptr
+            height
         );
     }
 
@@ -185,8 +202,7 @@ public:
             },
             false,
             width,
-            height,
-            nullptr
+            height
         );
     }
  
@@ -275,5 +291,7 @@ public:
     }
 
 };
+
+using Binded_texture = std::pair<unsigned int, std::shared_ptr<Texture>>;
 
 }
