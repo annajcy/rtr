@@ -13,7 +13,7 @@ enum class Node_type {
     CAMERA
 };
 
-class Node : public std::enable_shared_from_this<Node>, public GUID, public ISet_shader_uniform
+class Node : public std::enable_shared_from_this<Node>, public GUID
 {
 
 protected:
@@ -27,19 +27,14 @@ protected:
     std::weak_ptr<Node> m_parent{};
 
 public:
-    explicit Node(Node_type type = Node_type::NODE) : GUID(), ISet_shader_uniform(), m_type(type) {}
+    explicit Node(Node_type type = Node_type::NODE) : GUID(), m_type(type) {}
     virtual ~Node() = default;
 
-    virtual void upload_uniform(std::shared_ptr<Shader>& shader) override {
+    virtual void upload_uniform(std::shared_ptr<Shader>& shader) {
         
         shader->add_uniform(
             "model_matrix", 
             std::make_shared<Uniform_entry<glm::mat4>>(model_matrix())
-        );
-
-        shader->add_uniform(
-            "normal_matrix",
-            std::make_shared<Uniform_entry<glm::mat4>>(normal_matrix())
         );
 
     }

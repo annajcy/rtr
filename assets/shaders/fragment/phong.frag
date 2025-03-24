@@ -11,9 +11,9 @@ uniform sampler2D main_tex;
 uniform vec3 camera_position;
 
 struct Material {
-    vec3 ka;
-    vec3 kd;
-    vec3 ks;
+    vec3 ambient;  // 原为 ka，需要与 C++ 代码中的 uniform 名称对应
+    vec3 diffuse;  // 原为 kd
+    vec3 specular; // 原为 ks
     float shininess;
 }; // 添加分号
 
@@ -50,19 +50,20 @@ vec3 specular_component(vec3 light_dir, vec3 normal, vec3 view_dir, vec3 light_c
 }
 
 // 环境光处理
+// 修改 ambient_light 函数
 vec3 ambient_light(Light light, Material mat, vec3 object_color) {
-    return light.color * light.intensity * mat.ka * object_color;
+    return light.color * light.intensity * mat.ambient * object_color; // ka → ambient
 }
 
-// 平行光处理
+// 修改 directional_light 函数
 vec3 directional_light(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 object_color) {
     vec3 light_dir = normalize(-light.direction);
-    vec3 diffuse = diffuse_component(light_dir, normal, light.color, object_color, mat.kd);
-    vec3 specular = specular_component(light_dir, normal, view_dir, light.color, mat.shininess, mat.ks);
-    return (diffuse + specular) * light.intensity;
+    vec3 diffuse = mat.diffuse * diffuse_component(light_dir, normal, light.color, object_color, light.intensity); // kd → diffuse
+    vec3 specular = mat.specular * specular_component(light_dir, normal, view_dir, light.color, mat.shininess, light.intensity); // ks → specular
+    return diffuse + specular;
 }
 
-// 点光源处理
+// 修改 point_light 函数
 vec3 point_light(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 world_pos) {
     vec3 light_dir = normalize(light.position - world_pos);
     float dist = length(light.position - world_pos);
@@ -70,12 +71,12 @@ vec3 point_light(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 wor
                               light.attenuation.y * dist + 
                               light.attenuation.x);
     
-    vec3 diffuse = diffuse_component(light_dir, normal, light.color, mat.kd, light.intensity);
-    vec3 specular = specular_component(light_dir, normal, view_dir, light.color, mat.shininess, light.intensity);
+    vec3 diffuse = mat.diffuse * diffuse_component(light_dir, normal, light.color, object_color, light.intensity); // kd → diffuse
+    vec3 specular = mat.specular * specular_component(light_dir, normal, view_dir, light.color, mat.shininess, light.intensity); // ks → specular
     return (diffuse + specular) * attenuation;
 }
 
-// 聚光灯处理
+// 修改 spot_light 函数
 vec3 spot_light(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 world_pos) {
     vec3 light_dir = normalize(light.position - world_pos);
     float theta = dot(light_dir, normalize(-light.direction));
@@ -87,8 +88,8 @@ vec3 spot_light(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 worl
                               light.attenuation.y * dist + 
                               light.attenuation.x);
     
-    vec3 diffuse = diffuse_component(light_dir, normal, light.color, mat.kd, light.intensity);
-    vec3 specular = specular_component(light_dir, normal, view_dir, light.color, mat.shininess, light.intensity);
+   vec3 diffuse = mat.diffuse * diffuse_component(light_dir, normal, light.color, object_color, light.intensity); // kd → diffuse
+    vec3 specular = mat.specular * specular_component(light_dir, normal, view_dir, light.color, mat.shininess, light.intensity); // ks → specular
     return (diffuse + specular) * attenuation * intensity;
 }
 
@@ -116,7 +117,9 @@ void main() {
     }
     
     if(active_lights > 0) {
-        result += calculate_lighting(lights[main_light_index], mat, N, V, world_position, object_color);
+
+        // 修正变量名拼写错误 (mat -> material)
+        result += calculate_lighting(lights[main_light_index], material, N, V, world_position, object_color);
     }
 
     frag_color = vec4(result, 1.0);

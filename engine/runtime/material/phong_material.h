@@ -3,7 +3,7 @@
 
 namespace rtr {
 
-class Phong_material_base : public ISet_shader_uniform {
+class Phong_material_base {
 protected:
     glm::vec3 m_ambient{};
     glm::vec3 m_diffuse{};
@@ -63,7 +63,7 @@ public:
 
     virtual ~Phong_material() = default;
 
-    void upload_uniform(std::shared_ptr<Shader>& shader) override {
+    virtual void upload_uniform(std::shared_ptr<Shader>& shader) {
         Material::upload_uniform(shader);
         Phong_material_base::upload_uniform(shader);
     }
@@ -96,7 +96,7 @@ public:
 
     ~Instanced_phong_material() = default;
 
-    void upload_uniform(std::shared_ptr<Shader>& shader) override {
+    void upload_uniform(std::shared_ptr<Shader>& shader) {
         Instanced_material::upload_uniform(shader);
         Phong_material_base::upload_uniform(shader);
     }

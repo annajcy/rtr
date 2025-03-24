@@ -120,7 +120,7 @@ public:
     ) override {
         int location = glGetUniformLocation(m_program_id, name.c_str());
         if (location == -1) {
-            std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_NOT_FOUND: " << name << std::endl;
+            //std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_NOT_FOUND: " << name << std::endl;
             return;
         }
 
@@ -180,10 +180,10 @@ public:
 
         int location = glGetUniformLocation(m_program_id, name.c_str());
         if (location == -1) {
-            std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_NOT_FOUND: " << name << std::endl;
+            //std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_NOT_FOUND: " << name << std::endl;
             return;
         } else {
-            std::cout << "INFO::SHADER::PROGRAM::UNIFORM_FOUND: " << name << " LOCATION: " << location << std::endl;
+            //std::cout << "INFO::SHADER::PROGRAM::UNIFORM_FOUND: " << name << " LOCATION: " << location << std::endl;
         }
        
         switch (type) {

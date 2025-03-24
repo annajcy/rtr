@@ -1,4 +1,5 @@
 #include "engine/global/base.h"
+#include "engine/runtime/camera.h"
 #include "engine/runtime/geometry.h"
 #include "engine/runtime/input.h"
 #include "engine/runtime/loader/image_loader_stb_image.h"
@@ -8,6 +9,7 @@
 #include "engine/runtime/renderer.h"
 #include "engine/runtime/rhi/device/rhi_device.h"
 #include "engine/runtime/rhi/device/rhi_device_opengl.h"
+#include "engine/runtime/rhi/shader/rhi_shader_code.h"
 #include "engine/runtime/shader.h"
 #include "engine/runtime/texture.h"
 #include <cmath>
@@ -45,9 +47,9 @@ int main() {
             }}
         },
         std::make_shared<Shader>(
-            std::unordered_map<Shader_type, std::string> {
-                {Shader_type::VERTEX, Text_loader::load_from_file("assets/shaders/vertex/skybox.vert")},
-                {Shader_type::FRAGMENT, Text_loader::load_from_file("assets/shaders/fragment/skybox_spherical.frag")}
+            std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
+                {Shader_type::VERTEX, std::make_shared<Shader_code>(Shader_type::VERTEX, Text_loader::load_from_file("assets/shaders/vertex/skybox.vert"))},
+                {Shader_type::FRAGMENT, std::make_shared<Shader_code>(Shader_type::FRAGMENT, Text_loader::load_from_file("assets/shaders/fragment/skybox_spherical.frag"))}
             }
         )
     );
@@ -61,39 +63,43 @@ int main() {
 
     //lightings
 
-    auto directional_light = std::make_shared<Directional_light>();
-    directional_light->look_at_direction(glm::vec3(1.0, -1.0, -1.0));
-	directional_light->intensity() = 0.5f;
-    directional_light->is_main() = true;
+    // auto directional_light = std::make_shared<Directional_light>();
+    // directional_light->look_at_direction(glm::vec3(1.0, -1.0, -1.0));
+	// directional_light->intensity() = 0.5f;
+    // directional_light->is_main() = true;
 
-    auto ambient_light = std::make_shared<Ambient_light>();
-	ambient_light->intensity() = 0.15f;
+    // auto ambient_light = std::make_shared<Ambient_light>();
+	// ambient_light->intensity() = 0.15f;
 	
-	auto spot_light = std::make_shared<Spot_light>();
-	spot_light->position() = glm::vec3(0.0f, 0.0f, 2.0f);
-	spot_light->look_at_direction(glm::vec3(0.0, 0.0f, -1.0f));
-	spot_light->inner_angle() = 5.0f;
-	spot_light->outer_angle() = 10.0f;
-	spot_light->color() = glm::vec3(1.0, 1.0, 0.0);
+	// auto spot_light = std::make_shared<Spot_light>();
+	// spot_light->position() = glm::vec3(0.0f, 0.0f, 2.0f);
+	// spot_light->look_at_direction(glm::vec3(0.0, 0.0f, -1.0f));
+	// spot_light->inner_angle() = 5.0f;
+	// spot_light->outer_angle() = 10.0f;
+	// spot_light->color() = glm::vec3(1.0, 1.0, 0.0);
 
-	auto point_light_1 = std::make_shared<Point_light>();
-	point_light_1->position() = glm::vec3(1.0f, 0.0f, 0.0f);
-	point_light_1->color() = glm::vec3(1.0f, 0.0f, 0.0f);
+	// auto point_light_1 = std::make_shared<Point_light>();
+	// point_light_1->position() = glm::vec3(1.0f, 0.0f, 0.0f);
+	// point_light_1->color() = glm::vec3(1.0f, 0.0f, 0.0f);
 
-	auto point_light_2 = std::make_shared<Point_light>();
-	point_light_2->position() = glm::vec3(0.0f, 1.0f, 0.0f);
-	point_light_2->color() = glm::vec3(0.0f, 1.0f, 0.0f);
+	// auto point_light_2 = std::make_shared<Point_light>();
+	// point_light_2->position() = glm::vec3(0.0f, 1.0f, 0.0f);
+	// point_light_2->color() = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	auto point_light_3 = std::make_shared<Point_light>();
-	point_light_3->position() = glm::vec3(0.0f, 0.0f, -1.0f);
-	point_light_3->color() = glm::vec3(0.0f, 0.0f, 1.0f);
+	// auto point_light_3 = std::make_shared<Point_light>();
+	// point_light_3->position() = glm::vec3(0.0f, 0.0f, -1.0f);
+	// point_light_3->color() = glm::vec3(0.0f, 0.0f, 1.0f);
 
-    scene->add_child(directional_light);
-    scene->add_child(ambient_light);
-    scene->add_child(spot_light);
-    scene->add_child(point_light_1);
-    scene->add_child(point_light_2);
-    scene->add_child(point_light_3);
+    // auto light_node = std::make_shared<Node>();
+
+    // light_node->add_child(directional_light);
+    // light_node->add_child(ambient_light);
+    // light_node->add_child(spot_light);
+    // light_node->add_child(point_light_1);
+    // light_node->add_child(point_light_2);
+    // light_node->add_child(point_light_3);
+
+    // scene->add_child(light_node);
 
     //camera
 
@@ -104,48 +110,73 @@ int main() {
 		50.0f
 	);
 
+    camera->is_main() = true;
 	camera->position() = glm::vec3(0.0f, 0.0f, 5.0f);
 	camera->look_at_point(glm::vec3(0.0f, 0.0f, 0.0f));
+
 	auto camera_control = std::make_shared<Trackball_camera_control>(camera, input);
 
     scene->add_child(camera);
 
-    //box mesh
-    auto box_geometry = Geometry::create_box(2.0f);
-    auto box_material = std::make_shared<Phong_material> (
-        Pipeline_state::opaque_pipeline_state(),
-        std::unordered_map<std::string, Binded_texture> {
-            {"main_tex", Binded_texture{0,
-                std::make_shared<Texture_2D>(image_loader->load_from_path(Image_format::RGB_ALPHA, "assets/image/default_texture.jpg"))
-            }}
-        },
-        std::make_shared<Shader>(
-            std::unordered_map<Shader_type, std::string> {
-                {Shader_type::VERTEX, Text_loader::load_from_file("assets/shaders/vertex/world_n.vert")},
-                {Shader_type::FRAGMENT, Text_loader::load_from_file("assets/shaders/fragment/phong.frag")}
-            }
-        ),
-        glm::vec3(0.2f),
-        glm::vec3(0.8f),
-        glm::vec3(0.5f),
-        32.0f
-    );
+    // auto shader =  std::make_shared<Shader>(
+    //     std::unordered_map<Shader_type, std::string> {
+    //         {Shader_type::VERTEX, Text_loader::load_from_file("assets/shaders/vertex/world_n.vert")},
+    //         {Shader_type::FRAGMENT, Text_loader::load_from_file("assets/shaders/fragment/phong.frag")}
+    //     }
+    // );
 
-    auto box_mesh = std::make_shared<Mesh>(box_geometry, box_material);
+    // auto texture = std::unordered_map<std::string, Binded_texture> {
+    //     {"main_tex", Binded_texture{0,
+    //         std::make_shared<Texture_2D>(image_loader->load_from_path(Image_format::RGB_ALPHA, "assets/image/default_texture.jpg"))
+    //     }}
+    // };
 
-    scene->add_child(box_mesh);
+    // auto phong_material = std::make_shared<Phong_material> (
+    //     Pipeline_state::opaque_pipeline_state(),
+    //     texture,
+    //     shader,
+    //     glm::vec3(0.2f),
+    //     glm::vec3(0.8f),
+    //     glm::vec3(0.5f),
+    //     32.0f
+    // );
+
+
+    // auto phong_material_tanslucent = std::make_shared<Phong_material> (
+    //     Pipeline_state::translucent_pipeline_state(),
+    //     texture,
+    //     shader,
+    //     glm::vec3(0.2f),
+    //     glm::vec3(0.8f),
+    //     glm::vec3(0.5f),
+    //     32.0f
+    // );
+
+    // //box mesh
+    // auto box_geometry = Geometry::create_box(2.0f);
+    // auto box_mesh = std::make_shared<Mesh>(box_geometry, phong_material);
+
+    // auto sphere_geometry = Geometry::create_sphere(1.0f, 32, 32);
+    // auto sphere_mesh = std::make_shared<Mesh>(sphere_geometry, phong_material_tanslucent);
+
+    // sphere_mesh->position() = glm::vec3(0.0f, 0.0f, -3.0f);
+    // sphere_mesh->scale() = glm::vec3(0.5f);
+
+    // box_mesh->add_child(sphere_mesh);
+    // scene->add_child(box_mesh);
     
+    renderer->scene() = scene;
 
     while (renderer->device()->window()->is_active()) {
         device->window()->update();
+        camera_control->update();
         device->clear();
 
-        renderer->scene() = scene;
         renderer->render();
 
-        std::cout << input->mouse_x() << " " << input->mouse_y() << std::endl;
-        std::cout << input->mouse_dx() << " " << input->mouse_dy() << std::endl;
-        std::cout << input->mouse_scroll_dx() << " " << input->mouse_scroll_dy() << std::endl;
+        // std::cout << input->mouse_x() << " " << input->mouse_y() << std::endl;
+        // std::cout << input->mouse_dx() << " " << input->mouse_dy() << std::endl;
+        // std::cout << input->mouse_scroll_dx() << " " << input->mouse_scroll_dy() << std::endl;
 
         device->window()->on_frame_end();
         

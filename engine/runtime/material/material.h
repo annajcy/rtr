@@ -78,7 +78,7 @@ public:
     std::vector<glm::mat4>& instance_transforms() { return m_instance_transforms; }
 };
 
-class Material : public GUID , public ISet_shader_uniform {
+class Material : public GUID {
 public:
     
 protected:
@@ -89,13 +89,12 @@ protected:
     std::shared_ptr<Shader> m_shader{};
 
 public:
-    Material(
+    Material( 
         Material_type type, 
         const Pipeline_state &pipeline_state, 
         const std::unordered_map<std::string, Binded_texture>& textures, 
         const std::shared_ptr<Shader>& shader) : 
-        GUID(), 
-        ISet_shader_uniform(), 
+        GUID(),  
         m_type(type), 
         m_pipeline_state(pipeline_state), 
         m_textures(textures), 
@@ -122,7 +121,7 @@ public:
         device->pipeline_state()->clear_state() = m_pipeline_state.clear_state;
     }
 
-    void upload_uniform(std::shared_ptr<Shader>& shader) override {
+    virtual void upload_uniform(std::shared_ptr<Shader>& shader) {
         for (auto& [name, binded_texture] : m_textures) {
             auto &[id, _] = binded_texture;
             shader->add_uniform(
@@ -145,7 +144,7 @@ public:
     ) : Material(type, pipeline_state, textures, shader), Instanced_Material_base(instance_tranforms) {}
     virtual ~Instanced_material() = default;
 
-    void upload_uniform(std::shared_ptr<Shader>& shader) override {
+    virtual void upload_uniform(std::shared_ptr<Shader>& shader) override {
         Material::upload_uniform(shader);
         shader->add_uniform("instance_transforms", std::make_shared<Uniform_entry<std::vector<glm::mat4>>>(m_instance_transforms));
     }

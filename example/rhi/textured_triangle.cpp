@@ -17,7 +17,6 @@
 #include "engine/runtime/mesh.h"
 
 #include "engine/runtime/material/material.h"
-#include "engine/runtime/material/depth_material.h"
 #include "engine/runtime/material/phong_material.h"
 
 

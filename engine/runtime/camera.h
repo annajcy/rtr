@@ -34,8 +34,7 @@ public:
     virtual ~Camera() override = default;
 
     virtual void upload_uniform(std::shared_ptr<Shader>& shader) override {
-        ISet_shader_uniform::upload_uniform(shader);
-
+       
         shader->add_uniform(
             "view_matrix",
             std::make_shared<Uniform_entry<glm::mat4>>(this->view_matrix())
@@ -202,7 +201,7 @@ public:
 
         if (m_input->mouse_button(Mouse_button::LEFT) != Key_action::RELEASE) {
             yaw(m_input->mouse_dx() * m_rotate_speed);
-            pitch(m_input->mouse_dx() * m_rotate_speed);
+            pitch(m_input->mouse_dy() * m_rotate_speed);
         } else if (m_input->mouse_button(Mouse_button::MIDDLE)!= Key_action::RELEASE) {
             m_camera->translate(m_camera->up(), m_input->mouse_dy() * m_move_speed);
             m_camera->translate(m_camera->right(), m_input->mouse_dx() * m_move_speed);
@@ -279,13 +278,13 @@ public:
 };
 
 
-class Camera_setting : public ISet_shader_uniform {
+class Camera_setting  {
 protected:
     std::vector<std::shared_ptr<Camera>> m_cameras{};
     int m_main_camera_index{-1};
 
 public:
-    Camera_setting() : ISet_shader_uniform() {}
+    Camera_setting() {}
     ~Camera_setting() = default;
 
     void add_camera(const std::shared_ptr<Camera>& camera) {
@@ -346,7 +345,7 @@ public:
         }
     }
 
-    void upload_uniform(std::shared_ptr<Shader>& shader) override {
+    void upload_uniform(std::shared_ptr<Shader>& shader) {
         if (auto camera = main_camera(); camera) {
             camera->upload_uniform(shader);
         }

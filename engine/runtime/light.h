@@ -50,7 +50,7 @@ public:
     Light(Light_type::DIRECTIONAL) {}
     ~Directional_light() = default;
 
-    virtual void upload_uniform(std::shared_ptr<Shader>& shader, int index) override {
+    virtual void upload_uniform(std::shared_ptr<Shader>& shader, int index) {
         Light::upload_uniform(shader, index);
         std::string prefix = "lights[" + std::to_string(index) + "].";
         
@@ -141,14 +141,14 @@ public:
     std::shared_ptr<Geometry>& geometry() { return m_geometry; }
 };
 
-class Light_setting : public ISet_shader_uniform {
+class Light_setting  {
 protected:
     std::vector<std::shared_ptr<Light>> m_lights{};
     int m_main_light_index{-1};
 
 
 public:
-    Light_setting() : ISet_shader_uniform() {}
+    Light_setting() {}
     ~Light_setting() = default;
     void add_light(const std::shared_ptr<Light>& light) {
         m_lights.push_back(light);
@@ -192,7 +192,7 @@ public:
         m_main_light_index = -1;
     }
 
-    void upload_uniform(std::shared_ptr<Shader>& shader) override {
+    void upload_uniform(std::shared_ptr<Shader>& shader) {
         
         shader->add_uniform(
             "active_lights", 

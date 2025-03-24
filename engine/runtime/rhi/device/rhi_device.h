@@ -103,7 +103,7 @@ public:
         const void* data
     ) {
         if (m_cache->vertex_buffer_cache.contains(id)) {
-            std::cout << "Vertex buffer " << id << " already exists" << std::endl;
+            //std::cout << "Vertex buffer " << id << " already exists" << std::endl;
             return m_cache->vertex_buffer_cache[id];
         }
         else {
@@ -129,7 +129,7 @@ public:
         const void* data
     ) {
         if (m_cache->element_buffer_cache.contains(id)) {
-            std::cout << "Element buffer " << id << " already exists" << std::endl;
+            //std::cout << "Element buffer " << id << " already exists" << std::endl;
             return m_cache->element_buffer_cache[id];
         }
         else {
@@ -151,7 +151,7 @@ public:
         const std::shared_ptr<RHI_element_buffer>& element_buffer
     ) {
         if (m_cache->geometry_cache.contains(id)) {
-            std::cout << "Geometry " << id << " already exists" << std::endl;
+            //std::cout << "Geometry " << id << " already exists" << std::endl;
             return m_cache->geometry_cache[id];
         }
         else {
@@ -172,7 +172,7 @@ public:
         const std::string& code
     ) {
         if (m_cache->shader_code_cache.contains(id)) {
-            std::cout << "Shader code " << id << " already exists" << std::endl;
+            //std::cout << "Shader code " << id << " already exists" << std::endl;
             return m_cache->shader_code_cache[id];
         }
         else {
@@ -192,7 +192,7 @@ public:
         const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shaders
     ) {
         if (m_cache->shader_program_cache.contains(id)) {
-            std::cout << "Shader program " << id << " already exists" << std::endl;
+            //std::cout << "Shader program " << id << " already exists" << std::endl;
             return m_cache->shader_program_cache[id];
         }
         else {
@@ -213,7 +213,7 @@ public:
         const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays
     ) {
         if (m_cache->shader_program_cache.contains(id)) {
-            std::cout << "Shader program " << id << " already exists" << std::endl;
+            //std::cout << "Shader program " << id << " already exists" << std::endl;
             return m_cache->shader_program_cache[id];
         }
         else {
@@ -239,7 +239,7 @@ public:
         const unsigned char* data
     ) {
         if (m_cache->texture_2D_cache.contains(id)) {
-            std::cout << "Texture 2D " << id << " already exists" << std::endl;
+            //std::cout << "Texture 2D " << id << " already exists" << std::endl;
             return m_cache->texture_2D_cache[id];
         } else {
             auto texture = create_texture_2D(internal_format, external_format, buffer_type, width, height, data);
@@ -264,7 +264,7 @@ public:
         const unsigned char* data
     ) {
         if (m_cache->texture_cube_map_cache.contains(id)) {
-            std::cout << "Texture 2D " << id << " already exists" << std::endl;
+            //std::cout << "Texture 2D " << id << " already exists" << std::endl;
             return m_cache->texture_2D_cache[id];
         } else {
             auto texture = create_texture_2D(width, height, data);
@@ -288,7 +288,7 @@ public:
         const std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> &face_textures
     ) {
         if (m_cache->texture_cube_map_cache.contains(id)) {
-            std::cout << "Texture cube map " << id << " already exists" << std::endl;
+            //std::cout << "Texture cube map " << id << " already exists" << std::endl;
             return m_cache->texture_cube_map_cache[id];
         } else {
             auto texture = create_texture_cube_map(
@@ -316,7 +316,7 @@ public:
         std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> face_textures
     ) {
         if (m_cache->texture_cube_map_cache.contains(id)) {
-            std::cout << "Texture cube map " << id << " already exists" << std::endl;
+            //std::cout << "Texture cube map " << id << " already exists" << std::endl;
             return m_cache->texture_cube_map_cache[id];
         } else {
             auto texture = create_texture_cube_map(face_textures);
@@ -338,7 +338,7 @@ public:
         const std::shared_ptr<RHI_texture_2D>& depth_attachment
     ) {
         if (m_cache->frame_buffer_cache.contains(id)) {
-            std::cout << "Frame buffer " << id << " already exists" << std::endl;
+            //std::cout << "Frame buffer " << id << " already exists" << std::endl;
             return m_cache->frame_buffer_cache[id];
         } else {
             auto frame_buffer = create_frame_buffer(width, height, color_attachments, depth_attachment);

@@ -78,6 +78,7 @@ public:
             material = m_override_material;
         }
         
+        mesh->upload_uniform(material->shader());
         material->upload_uniform(material->shader());
         m_light_setting.upload_uniform(material->shader());
         m_camera_setting.upload_uniform(material->shader());
@@ -138,7 +139,7 @@ public:
             m_light_setting.add_light(light);
         } 
 
-        for (auto& child : m_scene->children()) {
+        for (auto& child : node->children()) {
             parse_node(child);
         }
     }

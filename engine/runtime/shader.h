@@ -88,21 +88,36 @@ public:
 
 };
 
+class Shader_code : public GUID {
+protected:
+    Shader_type m_type{};
+    std::string m_code{};
+public:
+    Shader_code(Shader_type type, const std::string& code) : GUID(), m_type(type), m_code(code) {}
+    virtual ~Shader_code() = default;
+    std::string& code() { return m_code; }
+    Shader_type type() const { return m_type; }
+
+    std::shared_ptr<RHI_shader_code> create_rhi_shader_code(const std::shared_ptr<RHI_device>& device) {
+        return device->create_shader_code(id(), m_type, m_code);
+    }
+};
+
 
 class Shader : public GUID {
 protected:
-    std::unordered_map<Shader_type, std::string> m_shader_code_map{};
+    std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> m_shader_code_map{};
     std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> m_uniform_map{};
     std::unordered_map<std::string, std::shared_ptr<Uniform_array_entry_base>> m_uniform_array_map{};
 
 public:
     Shader(
-        const std::unordered_map<Shader_type, std::string>& shader_code_map 
+        const std::unordered_map<Shader_type, std::shared_ptr<Shader_code>>& shader_code_map 
     ) : GUID(), m_shader_code_map(shader_code_map) {}
 
     virtual ~Shader() = default;
 
-    std::unordered_map<Shader_type, std::string>& shader_code_map() { return m_shader_code_map; }
+    std::unordered_map<Shader_type, std::shared_ptr<Shader_code>>& shader_code_map() { return m_shader_code_map; }
     std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>& uniform_map () { return m_uniform_map; }
     std::unordered_map<std::string, std::shared_ptr<Uniform_array_entry_base>>& uniform_array_map() { return m_uniform_array_map; }
     void add_uniform(const std::string& name, std::shared_ptr<Uniform_entry_base> entry) { m_uniform_map[name] = entry; }
@@ -111,7 +126,7 @@ public:
     std::shared_ptr<RHI_shader_program> create_rhi_shader_program(const std::shared_ptr<RHI_device>& device) {
         std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>> shader_code_map{};
         for (auto& [type, code] : m_shader_code_map) {
-            shader_code_map[type] = device->create_shader_code(type, code);
+            shader_code_map[type] = code->create_rhi_shader_code(device);
         }
 
         std::unordered_map<std::string, RHI_uniform_entry> uniform_map{};
@@ -124,15 +139,9 @@ public:
             uniform_array_map[name] = {entry->type(), entry->data_ptr(), entry->count()};
         }
 
-        return device->create_shader_program(shader_code_map, uniform_map, uniform_array_map);
+        return device->create_shader_program(id(), shader_code_map, uniform_map, uniform_array_map);
     } 
     
-};
-
-class ISet_shader_uniform {
-public:
-    virtual ~ISet_shader_uniform() = default;
-    virtual void upload_uniform(std::shared_ptr<Shader>& shader) { }
 };
 
 

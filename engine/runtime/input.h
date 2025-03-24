@@ -55,14 +55,23 @@ public:
     ~Input() = default;
 
     [[nodiscard]] Key_action key_mod(Key_mod mod) const {
+        if (m_key_mods.find(mod) == m_key_mods.end()) {
+            return Key_action::RELEASE;
+        }
         return m_key_mods.at(mod);
     }
 
     [[nodiscard]] Key_action key(Key_code key) const {
+        if (m_keys.find(key) == m_keys.end()) {
+            return Key_action::RELEASE;
+        }
         return m_keys.at(key);
     }
 
     [[nodiscard]] Key_action mouse_button(Mouse_button button) const {
+        if (m_mouse_buttons.find(button) == m_mouse_buttons.end()) {
+            return Key_action::RELEASE;
+        }
         return m_mouse_buttons.at(button);
     }
 
