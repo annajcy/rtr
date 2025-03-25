@@ -1,21 +1,14 @@
 #pragma once
 #include "engine/global/base.h"
 #include "engine/global/guid.h"
-#include "engine/runtime/shader.h"
+
+#include "engine/runtime/enum.h"
+
+#include "shader.h"
 
 namespace rtr {
 
-enum class Node_type {
-    NODE,
-    MESH,
-    SCENE,
-    LIGHT,
-    CAMERA
-};
-
-class Node : public std::enable_shared_from_this<Node>, public GUID
-{
-
+class Node : public std::enable_shared_from_this<Node>, public GUID {
 protected:
     Node_type m_type{};
 
@@ -29,15 +22,6 @@ protected:
 public:
     explicit Node(Node_type type = Node_type::NODE) : GUID(), m_type(type) {}
     virtual ~Node() = default;
-
-    virtual void upload_uniform(std::shared_ptr<Shader>& shader) {
-        
-        shader->add_uniform(
-            "model_matrix", 
-            std::make_shared<Uniform_entry<glm::mat4>>(model_matrix())
-        );
-
-    }
 
     std::shared_ptr<Node> parent_ptr() {
         if (m_parent.expired()) {

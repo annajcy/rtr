@@ -1,22 +1,14 @@
-
+#pragma once
 #include "engine/global/base.h"
-#include "engine/runtime/geometry.h"
-#include "engine/runtime/node.h"
-#include "engine/runtime/shader.h"
-#include <memory>
-#include <unordered_map>
-#include <vector>
+#include "engine/runtime/enum.h"
+
+#include "geometry.h"
+#include "node.h"
+#include "shader.h"
+
 
 namespace rtr {
 
-enum class Light_type {
-    AMBIENT,
-    DIRECTIONAL,
-    POINT,
-    SPOT,
-    AREA,
-    UNKNOWN
-};
 
 class Light : public Node {
 protected:
@@ -35,12 +27,6 @@ public:
     [[nodiscard]] bool is_main() const { return m_is_main; }
     bool& is_main() { return m_is_main; }
     
-    virtual void upload_uniform(std::shared_ptr<Shader>& shader, int index) {
-        std::string prefix = "lights[" + std::to_string(index) + "].";
-        shader->add_uniform(prefix + "type", std::make_shared<Uniform_entry<int>>(static_cast<int>(m_type)));
-        shader->add_uniform(prefix + "color", std::make_shared<Uniform_entry<glm::vec3>>(m_color));
-        shader->add_uniform(prefix + "intensity", std::make_shared<Uniform_entry<float>>(m_intensity));
-    }
 };
 
 class Directional_light : public Light {
@@ -50,13 +36,6 @@ public:
     Light(Light_type::DIRECTIONAL) {}
     ~Directional_light() = default;
 
-    virtual void upload_uniform(std::shared_ptr<Shader>& shader, int index) {
-        Light::upload_uniform(shader, index);
-        std::string prefix = "lights[" + std::to_string(index) + "].";
-        
-        shader->add_uniform(prefix + "direction", 
-            std::make_shared<Uniform_entry<glm::vec3>>(glm::normalize(world_node().front())));
-    }
 
 };
 
@@ -90,14 +69,6 @@ public:
     [[nodiscard]] float k2() const { return m_k2; }
     [[nodiscard]] float kc() const { return m_kc; }
 
-    virtual void upload_uniform(std::shared_ptr<Shader>& shader, int index) override {
-        Light::upload_uniform(shader, index);
-        std::string prefix = "lights[" + std::to_string(index) + "].";
-        
-        shader->add_uniform(prefix + "position", std::make_shared<Uniform_entry<glm::vec3>>(world_node().position()));
-        shader->add_uniform(prefix + "attenuation", 
-            std::make_shared<Uniform_entry<glm::vec3>>(glm::vec3(m_kc, m_k1, m_k2)));
-    }
 
 };
 
@@ -115,17 +86,6 @@ public:
     [[nodiscard]] float inner_angle() const { return m_inner_angle; }
     [[nodiscard]] float outer_angle() const { return m_outer_angle; }
 
-    virtual void upload_uniform(std::shared_ptr<Shader>& shader, int index) override {
-        Point_light::upload_uniform(shader, index);
-        std::string prefix = "lights[" + std::to_string(index) + "].";
-        
-        shader->add_uniform(prefix + "direction", 
-            std::make_shared<Uniform_entry<glm::vec3>>(glm::normalize(world_node().front())));
-        shader->add_uniform(prefix + "inner_angle", 
-            std::make_shared<Uniform_entry<float>>(glm::radians(m_inner_angle)));
-        shader->add_uniform(prefix + "outer_angle", 
-            std::make_shared<Uniform_entry<float>>(glm::radians(m_outer_angle)));
-    }
 
 };
 
@@ -145,7 +105,6 @@ class Light_setting  {
 protected:
     std::vector<std::shared_ptr<Light>> m_lights{};
     int m_main_light_index{-1};
-
 
 public:
     Light_setting() {}
@@ -192,26 +151,6 @@ public:
         m_main_light_index = -1;
     }
 
-    void upload_uniform(std::shared_ptr<Shader>& shader) {
-        
-        shader->add_uniform(
-            "active_lights", 
-            std::make_shared<Uniform_entry<int>>(static_cast<int>(m_lights.size()))
-        );
-
-        shader->add_uniform(
-            "main_light_index", 
-            std::make_shared<Uniform_entry<int>>(m_main_light_index)
-        );
-        
-       
-        int index = 0;
-        for (auto& light : m_lights) {
-            if (index >= 16) break;
-            light->upload_uniform(shader, index++);
-        }
-        
-    }
 };
 
 };

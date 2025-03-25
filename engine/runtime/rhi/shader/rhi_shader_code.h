@@ -1,17 +1,10 @@
 #pragma once
 #include "engine/global/base.h"
+#include "engine/runtime/enum.h"
 
 namespace rtr {
 
-enum class Shader_type {
-    VERTEX,
-    FRAGMENT,
-    GEOMETRY,
-    COMPUTE,
-    TESSELATION_CONTROL,
-    TESSELATION_EVALUATION,
-    UNKNOWN,
-};
+
 
 class RHI_shader_code
 {

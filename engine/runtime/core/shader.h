@@ -1,13 +1,7 @@
 #pragma once
 #include "engine/global/base.h"
-#include "engine/runtime/loader/text_loader.h"
-#include "engine/runtime/rhi/device/rhi_device.h"
-#include "engine/runtime/rhi/shader/rhi_shader_code.h"
-#include "engine/runtime/rhi/shader/rhi_shader_program.h"
-#include "engine/runtime/texture.h"
-#include <memory>
-#include <string>
-#include <unordered_map>
+#include "texture.h"
+
 
 namespace rtr {
 
@@ -122,26 +116,6 @@ public:
     std::unordered_map<std::string, std::shared_ptr<Uniform_array_entry_base>>& uniform_array_map() { return m_uniform_array_map; }
     void add_uniform(const std::string& name, std::shared_ptr<Uniform_entry_base> entry) { m_uniform_map[name] = entry; }
     void add_uniform_array(const std::string& name, std::shared_ptr<Uniform_array_entry_base> entry) { m_uniform_array_map[name] = entry; }
-
-    std::shared_ptr<RHI_shader_program> create_rhi_shader_program(const std::shared_ptr<RHI_device>& device) {
-        std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>> shader_code_map{};
-        for (auto& [type, code] : m_shader_code_map) {
-            shader_code_map[type] = code->create_rhi_shader_code(device);
-        }
-
-        std::unordered_map<std::string, RHI_uniform_entry> uniform_map{};
-        for (auto& [name, entry] : m_uniform_map) {
-            uniform_map[name] = {entry->type(), entry->data_ptr()};
-        }
-
-        std::unordered_map<std::string, RHI_uniform_array_entry> uniform_array_map{};
-        for (auto& [name, entry] : m_uniform_array_map) {
-            uniform_array_map[name] = {entry->type(), entry->data_ptr(), entry->count()};
-        }
-
-        return device->create_shader_program(id(), shader_code_map, uniform_map, uniform_array_map);
-    } 
-    
 };
 
 

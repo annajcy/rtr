@@ -1,61 +1,10 @@
 #pragma once
 #include "engine/global/base.h"
+#include "engine/runtime/enum.h"
 
 namespace rtr {
 
-enum class Texture_buffer_type {
-    UNSIGNED_BYTE,
-    UNSIGNED_INT,
-    UNSIGNED_INT_24_8,
-};
 
-enum class Texture_type {
-    TEXTURE_2D,
-    TEXTURE_CUBE_MAP
-};
-
-enum class Texture_format {
-    RGB,
-    RGB_ALPHA,
-    DEPTH_STENCIL,
-    DEPTH_STENCIL_24_8,
-    SRGB_ALPHA,
-    SRGB
-};
-
-enum class Texture_wrap {
-    REPEAT,
-    MIRRORED_REPEAT,
-    CLAMP_TO_EDGE,
-    CLAMP_TO_BORDER,
-};
-
-enum class Texture_wrap_target {
-    U, V, W
-};
-
-enum class Texture_filter {
-    NEAREST,
-    LINEAR,
-    NEAREST_MIPMAP_NEAREST,
-    LINEAR_MIPMAP_NEAREST,
-    NEAREST_MIPMAP_LINEAR,
-    LINEAR_MIPMAP_LINEAR,
-};
-
-enum class Texture_filter_target {
-    MIN,
-    MAG,
-};
-
-enum class Texture_cube_map_face {
-    POSITIVE_X,
-    NEGATIVE_X,
-    POSITIVE_Y,
-    NEGATIVE_Y,
-    NEGATIVE_Z,
-    POSITIVE_Z,
-};
 
 class RHI_texture {
 protected:

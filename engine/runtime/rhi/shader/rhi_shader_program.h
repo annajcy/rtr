@@ -1,17 +1,9 @@
 #pragma once
 #include "engine/global/base.h"
 #include "engine/runtime/rhi/shader/rhi_shader_code.h"
+#include "engine/runtime/enum.h"
 
 namespace rtr {
-
-enum class Uniform_type {
-    FLOAT, INT, BOOL,
-    VEC2, VEC3, VEC4,
-    IVEC2, IVEC3, IVEC4,
-    MAT2, MAT3, MAT4,
-    SAMPLER,
-    UNKNOWN,
-};
 
 struct RHI_uniform_entry {
     Uniform_type type;

@@ -1,17 +1,10 @@
 #pragma once
 #include "engine/global/base.h"
+#include "engine/runtime/enum.h"
 #include "engine/runtime/rhi/window/rhi_window.h"
-#include <memory>
+
 
 namespace rtr {
-
-enum class Key_mod {
-    SHIFT,
-    CTRL,
-    ALT,
-    SUPER
-};
-
 
 class Input {
 

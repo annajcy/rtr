@@ -251,45 +251,6 @@ public:
     const std::unordered_map<Texture_cube_map_face, std::shared_ptr<Image>>& face_images() const { return m_face_images; }
     virtual ~Texture_cube_map() = default;
 
-    std::shared_ptr<RHI_texture_cube_map> create_rhi_texture_cube_map(const std::shared_ptr<RHI_device>& device) {
-
-        if (face_images().size() != 6) {
-            throw std::runtime_error("Texture_cube_map must have 6 face images");
-        }
-
-        std::unordered_map<Texture_cube_map_face, RHI_texture_cube_map::Face_data> face_data{};
-
-        for (auto& [face, image] : face_images()) {
-            face_data[face] = {
-                image->width(),
-                image->height(),
-                image->data()
-            };
-        }
-
-        auto tex = device->create_texture_cube_map(
-            id(),
-            internal_format(),
-            external_format(),
-            buffer_type(),
-            face_data
-        );
-
-        for (auto& [target, wrap] : m_wrap_map) {
-            tex->set_wrap(target, wrap);
-        }
-
-        for (auto& [target, filter] : m_filter_map) {
-            tex->set_filter(target, filter);
-        }
-
-        if (is_generate_mipmap) {
-            tex->generate_mipmap();
-        }
-
-        return tex;
-    }
-
 };
 
 using Binded_texture = std::pair<unsigned int, std::shared_ptr<Texture>>;

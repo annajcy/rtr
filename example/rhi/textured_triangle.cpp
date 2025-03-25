@@ -8,18 +8,15 @@
 #include "engine/runtime/rhi/texture/rhi_texture.h"
 
 
-#include "engine/runtime/scene.h"
-#include "engine/runtime/camera.h"
-#include "engine/runtime/input.h"
-#include "engine/runtime/light.h"
-#include "engine/runtime/geometry.h"
+#include "engine/runtime/core/scene.h"
+#include "engine/runtime/core/camera.h"
+#include "engine/runtime/core/input.h"
+#include "engine/runtime/core/light.h"
+#include "engine/runtime/core/geometry.h"
 
-#include "engine/runtime/mesh.h"
+#include "engine/runtime/core/mesh.h"
 
-#include "engine/runtime/material/material.h"
-#include "engine/runtime/material/phong_material.h"
-
-
+#include "engine/runtime/core/material.h"
 
 using namespace std;
 using namespace rtr;
@@ -171,7 +168,7 @@ int main() {
     auto input = std::make_shared<Input>(device->window());
 
     while (device->window()->is_active()) {
-        device->window()->update();
+        device->window()->on_frame_begin();
         device->clear();
         device->draw();
 

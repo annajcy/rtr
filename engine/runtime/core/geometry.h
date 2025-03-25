@@ -1,9 +1,7 @@
 #pragma once
 #include "engine/global/base.h"
-#include "engine/runtime/rhi/buffer/rhi_buffer.h"
-#include "engine/runtime/rhi/device/rhi_device.h"
-#include "engine/runtime/rhi/geometry/rhi_geometry.h"
-#include <memory>
+#include "engine/global/guid.h"
+#include "engine/runtime/enum.h"
 
 namespace rtr {
 
@@ -56,18 +54,6 @@ public:
     virtual unsigned int unit_data_count() const = 0;
     virtual unsigned int unit_count() const = 0;
     Buffer_iterate_type iterate_type() const { return m_iterate_type; }
-
-    std::shared_ptr<RHI_vertex_buffer> create_rhi_vertex_buffer(const std::shared_ptr<RHI_device>& device) const {
-        return device->create_vertex_buffer(
-            id(),
-            usage(),
-            type(),
-            iterate_type(),
-            unit_data_count(),
-            data_count(),
-            data_ptr()
-        );
-    }
     
 };
 
@@ -89,22 +75,11 @@ public:
     unsigned int& operator[](const int index) { return m_data[index]; }
     const unsigned int& operator[](const int index) const { return m_data[index]; }
     const void* data_ptr() const override { return reinterpret_cast<const void*>(m_data.data()); }
-
-    std::shared_ptr<RHI_element_buffer> create_rhi_element_buffer(const std::shared_ptr<RHI_device>& device) const {
-        return device->create_element_buffer(
-            id(),
-            usage(),
-            data_count(),
-            data_ptr()
-        );
-    }
-
 };
 
 template<typename T, unsigned int UNIT_DATA_COUNT>
 class Vertex_attribute : public Vertex_attribute_base {
 private:
-    
     std::vector<T> m_data{};
 
 public:
@@ -177,19 +152,6 @@ public:
     std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> attributes() const { return m_vertex_attributes; }
     std::shared_ptr<Element_atrribute>& element_attribute() { return m_element_attribute; }
     std::shared_ptr<Vertex_attribute_base>& attribute(unsigned int location) { return m_vertex_attributes.at(location); }
-
-    std::shared_ptr<RHI_geometry> create_rhi_geometry(const std::shared_ptr<RHI_device>& device) const {
-        std::unordered_map<unsigned int, std::shared_ptr<RHI_vertex_buffer>> rhi_vertex_buffers{};
-        for (const auto& [location, attribute] : m_vertex_attributes) {
-            rhi_vertex_buffers[location] = attribute->create_rhi_vertex_buffer(device);
-        }
-        std::shared_ptr<RHI_element_buffer> rhi_element_buffer = m_element_attribute->create_rhi_element_buffer(device);
-        return device->create_geometry(
-            id(),
-            rhi_vertex_buffers,
-            rhi_element_buffer
-        );
-    }
 
     static Bouding_box compute_bounding_box(const Position_attribute& position_attribute) {
         Bouding_box bounding_box{};

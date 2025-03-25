@@ -92,7 +92,6 @@ inline constexpr unsigned int gl_stencil_function(Stencil_function function) {
 }
 
 
-
 class RHI_pipeline_state_OpenGL : public RHI_pipeline_state {
 
 public:
@@ -101,17 +100,17 @@ public:
     ~RHI_pipeline_state_OpenGL() override = default;
 
     virtual void apply_blend_state() override {
-        if (m_blend_state.enable) {
+        if (blend_state.enable) {
             glEnable(GL_BLEND);
             glBlendFuncSeparate(
-                gl_blend_factor(m_blend_state.src_color_factor),
-                gl_blend_factor(m_blend_state.dst_color_factor),
-                gl_blend_factor(m_blend_state.src_alpha_factor),
-                gl_blend_factor(m_blend_state.dst_alpha_factor)
+                gl_blend_factor(blend_state.src_color_factor),
+                gl_blend_factor(blend_state.dst_color_factor),
+                gl_blend_factor(blend_state.src_alpha_factor),
+                gl_blend_factor(blend_state.dst_alpha_factor)
             );
             glBlendEquationSeparate(
-                gl_blend_operation(m_blend_state.color_operation),
-                gl_blend_operation(m_blend_state.alpha_operation)
+                gl_blend_operation(blend_state.color_operation),
+                gl_blend_operation(blend_state.alpha_operation)
             );
         } else {
             glDisable(GL_BLEND);
@@ -119,66 +118,66 @@ public:
     }
 
     virtual void apply_cull_state() override {
-        if (m_cull_state.enable) {
+        if (cull_state.enable) {
             glEnable(GL_CULL_FACE);
-            glCullFace(gl_cull_mode(m_cull_state.mode));
-            glFrontFace(gl_front_face(m_cull_state.front_face));
+            glCullFace(gl_cull_mode(cull_state.mode));
+            glFrontFace(gl_front_face(cull_state.front_face));
         } else {
             glDisable(GL_CULL_FACE);
         }
     }
 
     virtual void apply_depth_state() override {
-        if (m_depth_state.test_enable) {
+        if (depth_state.test_enable) {
             glEnable(GL_DEPTH_TEST);
-            glDepthFunc(gl_depth_function(m_depth_state.function));
-            glDepthMask((m_depth_state.write_enable ? GL_TRUE : GL_FALSE));
+            glDepthFunc(gl_depth_function(depth_state.function));
+            glDepthMask((depth_state.write_enable ? GL_TRUE : GL_FALSE));
         } else {
             glDisable(GL_DEPTH_TEST);
         }
     }
 
     virtual void apply_polygon_offset_state() override {
-        if (m_polygon_offset_state.point_enabled) {
+        if (polygon_offset_state.point_enabled) {
             glEnable(GL_POLYGON_OFFSET_POINT);
         } else {
             glDisable(GL_POLYGON_OFFSET_POINT);
         }
 
-        if (m_polygon_offset_state.line_enabled) {
+        if (polygon_offset_state.line_enabled) {
             glEnable(GL_POLYGON_OFFSET_LINE);
         } else {
             glDisable(GL_POLYGON_OFFSET_LINE);
         }
 
-        if (m_polygon_offset_state.fill_enabled) {
+        if (polygon_offset_state.fill_enabled) {
             glEnable(GL_POLYGON_OFFSET_FILL);
         } else {
             glDisable(GL_POLYGON_OFFSET_FILL);
         }
 
-        if (m_polygon_offset_state.point_enabled || m_polygon_offset_state.line_enabled || m_polygon_offset_state.fill_enabled) {
-            glPolygonOffset(m_polygon_offset_state.factor, m_polygon_offset_state.units);
+        if (polygon_offset_state.point_enabled || polygon_offset_state.line_enabled || polygon_offset_state.fill_enabled) {
+            glPolygonOffset(polygon_offset_state.factor, polygon_offset_state.units);
         }
             
     }
 
     virtual void apply_stencil_state() override {
-        if (m_stencil_state.enable) {
+        if (stencil_state.enable) {
             glEnable(GL_STENCIL_TEST);
-            glStencilMask(m_stencil_state.mask);
+            glStencilMask(stencil_state.mask);
             
             // 设置模板函数和操作
             glStencilFunc(
-                gl_stencil_function(m_stencil_state.function),
-                m_stencil_state.reference,
-                m_stencil_state.function_mask
+                gl_stencil_function(stencil_state.function),
+                stencil_state.reference,
+                stencil_state.function_mask
             );
             
             glStencilOp(
-                gl_stencil_operation(m_stencil_state.stencil_fail),
-                gl_stencil_operation(m_stencil_state.depth_fail),
-                gl_stencil_operation(m_stencil_state.depth_pass)
+                gl_stencil_operation(stencil_state.stencil_fail),
+                gl_stencil_operation(stencil_state.depth_fail),
+                gl_stencil_operation(stencil_state.depth_pass)
             );
             
         } else {
@@ -188,19 +187,19 @@ public:
 
     virtual void apply_clear_state() override {
         m_clear_mask = 0;
-        if (m_clear_state.color) m_clear_mask |= GL_COLOR_BUFFER_BIT;
-        if (m_clear_state.depth) m_clear_mask |= GL_DEPTH_BUFFER_BIT;
-        if (m_clear_state.stencil) m_clear_mask |= GL_STENCIL_BUFFER_BIT;
+        if (clear_state.color) m_clear_mask |= GL_COLOR_BUFFER_BIT;
+        if (clear_state.depth) m_clear_mask |= GL_DEPTH_BUFFER_BIT;
+        if (clear_state.stencil) m_clear_mask |= GL_STENCIL_BUFFER_BIT;
 
         glClearColor(
-            m_clear_state.color_clear_value.r,
-            m_clear_state.color_clear_value.g,
-            m_clear_state.color_clear_value.b,
-            m_clear_state.color_clear_value.a
+            clear_state.color_clear_value.r,
+            clear_state.color_clear_value.g,
+            clear_state.color_clear_value.b,
+            clear_state.color_clear_value.a
         );
 
-        glClearDepth(m_clear_state.depth_clear_value);
-        glClearStencil(m_clear_state.stencil_clear_value);
+        glClearDepth(clear_state.depth_clear_value);
+        glClearStencil(clear_state.stencil_clear_value);
 
     }
 

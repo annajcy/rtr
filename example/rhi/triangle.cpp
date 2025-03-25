@@ -98,7 +98,7 @@ int main() {
         device->clear();
         device->draw();
         device->check_error();
-        device->window()->update();
+        device->window()->on_frame_begin();
     }
     
     return 0;

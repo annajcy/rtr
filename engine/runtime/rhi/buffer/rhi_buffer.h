@@ -1,30 +1,9 @@
 #pragma once
 
 #include "engine/global/base.h" 
+#include "engine/runtime/enum.h"
 
 namespace rtr {
-
-enum class Buffer_type {
-    VERTEX,
-    INDEX,
-};
-
-enum class Buffer_usage {
-    STATIC,
-    DYNAMIC
-};
-
-enum class Buffer_iterate_type {
-    PER_VERTEX,
-    PER_INSTANCE,
-};
-
-enum class Buffer_attribute_type {
-    FLOAT,
-    INT,
-    UINT,
-    BOOL,
-};
 
 inline constexpr unsigned int get_buffer_attribute_size(Buffer_attribute_type type) {
     switch (type) {

@@ -1,10 +1,7 @@
 #pragma once
 #include "engine/global/base.h"
-#include "engine/runtime/rhi/device/rhi_device.h"
-#include "engine/runtime/rhi/frame_buffer/rhi_frame_buffer.h"
-#include "engine/runtime/texture.h"
-#include <memory>
-#include <vector>
+#include "texture.h"
+
 namespace rtr {
 
 class Frame_buffer : public GUID  {
@@ -31,19 +28,6 @@ public:
 
     int width() const { return m_width; }
     int height() const { return m_height; }
-
-    std::shared_ptr<RHI_frame_buffer> create_rhi_frame_buffer(const std::shared_ptr<RHI_device>& device) {
-        std::vector<std::shared_ptr<RHI_texture_2D>> rhi_color_attachments{};
-        for (auto& attachment : m_color_attachments) {
-            rhi_color_attachments.push_back(attachment->create_rhi_texture_2D(device));
-        }
-        auto rhi_depth_attachment = m_depth_attachment->create_rhi_texture_2D(device);
-        return device->create_frame_buffer(
-            width(),
-            height(),
-            rhi_color_attachments,
-            rhi_depth_attachment);
-    }
 
 };
 

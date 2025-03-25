@@ -1,12 +1,8 @@
 #pragma once
 #include "engine/global/base.h"
-#include "engine/runtime/node.h"
-#include "engine/runtime/shader.h"
-#include "engine/runtime/input.h"
-#include "engine/runtime/rhi/window/rhi_window.h"
-#include <memory>
-#include <unordered_map>
-#include <vector>
+#include "node.h"
+#include "shader.h"
+#include "input.h"
 
 namespace rtr {
 
@@ -32,34 +28,6 @@ public:
     }
 
     virtual ~Camera() override = default;
-
-    virtual void upload_uniform(std::shared_ptr<Shader>& shader) override {
-       
-        shader->add_uniform(
-            "view_matrix",
-            std::make_shared<Uniform_entry<glm::mat4>>(this->view_matrix())
-        );
-
-        shader->add_uniform(
-            "projection_matrix",
-            std::make_shared<Uniform_entry<glm::mat4>>(this->projection_matrix())
-        );
-
-        shader->add_uniform(
-            "camera_position",
-            std::make_shared<Uniform_entry<glm::vec3>>(this->world_node().position())
-        );
-
-        shader->add_uniform(
-            "near_bound",
-            std::make_shared<Uniform_entry<float>>(this->near_bound())
-        );
-
-        shader->add_uniform(
-            "far_bound",
-            std::make_shared<Uniform_entry<float>>(this->far_bound())
-        );
-    }
 
     float& near_bound() { return m_near_bound; }
     float& far_bound() { return m_far_bound; }
@@ -202,7 +170,7 @@ public:
         if (m_input->mouse_button(Mouse_button::LEFT) != Key_action::RELEASE) {
             yaw(m_input->mouse_dx() * m_rotate_speed);
             pitch(m_input->mouse_dy() * m_rotate_speed);
-        } else if (m_input->mouse_button(Mouse_button::MIDDLE)!= Key_action::RELEASE) {
+        } else if (m_input->mouse_button(Mouse_button::MIDDLE) != Key_action::RELEASE) {
             m_camera->translate(m_camera->up(), m_input->mouse_dy() * m_move_speed);
             m_camera->translate(m_camera->right(), m_input->mouse_dx() * m_move_speed);
         }
@@ -345,11 +313,6 @@ public:
         }
     }
 
-    void upload_uniform(std::shared_ptr<Shader>& shader) {
-        if (auto camera = main_camera(); camera) {
-            camera->upload_uniform(shader);
-        }
-    }
 };
 
 }

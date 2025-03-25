@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/global/base.h" 
+#include "engine/runtime/enum.h"
 #include "engine/runtime/rhi/buffer/rhi_buffer.h"
 #include "engine/runtime/rhi/geometry/rhi_geometry.h"
 #include "engine/runtime/rhi/window/rhi_window.h"
@@ -9,17 +10,11 @@
 #include "engine/runtime/rhi/texture/rhi_texture.h"
 #include "engine/runtime/rhi/state/rhi_pipeline_state.h"
 #include "engine/runtime/rhi/state/rhi_binding_state.h"
-#include <memory>
-#include <unordered_map>
-#include <vector>
+
 
 namespace rtr {
     
-enum class API_type {
-    OPENGL,
-    DIRECTX,
-    VULKAN
-};
+
 
 struct RHI_device_descriptor {
     unsigned int width{800};
