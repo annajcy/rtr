@@ -1,4 +1,5 @@
 #pragma once
+
 #include "node.h"
 
 namespace rtr {

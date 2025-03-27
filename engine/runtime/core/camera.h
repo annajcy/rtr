@@ -1,7 +1,5 @@
 #pragma once
-#include "engine/global/base.h"
 #include "node.h"
-#include "shader.h"
 #include "input.h"
 
 namespace rtr {

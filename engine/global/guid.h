@@ -14,13 +14,13 @@ public:
 
 class GUID {
 private:
-    unsigned int m_id{};
+    unsigned int m_guid{};
 public:
-    GUID() : m_id(GUID_generator::generate_GUID()) {}
-    GUID(unsigned int id) : m_id(id) {}
-    unsigned int id() const { return m_id; }
+    GUID() : m_guid(GUID_generator::generate_GUID()) {}
+    GUID(unsigned int guid) : m_guid(guid) {}
+    unsigned int guid() const { return m_guid; }
     bool operator==(const GUID& other) const {
-        return m_id == other.m_id;
+        return m_guid == other.m_guid;
     }
 };
 

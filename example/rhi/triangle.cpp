@@ -1,8 +1,6 @@
 #include "engine/global/base.h"
-
-#include "engine/runtime/rhi/buffer/rhi_buffer.h"
-#include "engine/runtime/rhi/device/rhi_device.h"
-#include "engine/runtime/rhi/device/rhi_device_opengl.h"
+#include "engine/runtime/rhi/rhi_device.h"
+#include "engine/runtime/rhi/opengl/rhi_device_opengl.h"
 
 using namespace std;
 using namespace rtr;
@@ -40,66 +38,66 @@ std::vector<unsigned int> indices = {
 
 int main() {
     
-    RHI_device_descriptor descriptor{};
+    // RHI_device_descriptor descriptor{};
 
-    descriptor.width = 800;
-    descriptor.height = 600;
-    descriptor.title = "RTR Engine";
+    // descriptor.width = 800;
+    // descriptor.height = 600;
+    // descriptor.title = "RTR Engine";
 
-    auto device = std::make_shared<RHI_device_OpenGL>(descriptor);
+    // auto device = std::make_shared<RHI_device_OpenGL>(descriptor);
 
 
-    auto vertex_attribute = device->create_vertex_buffer(
-        Buffer_usage::STATIC, 
-        Buffer_attribute_type::FLOAT, 
-        Buffer_iterate_type::PER_VERTEX,
-        3, 
-        vertices.size(), 
-        vertices.data()
-    );
+    // auto vertex_attribute = device->create_vertex_buffer(
+    //     Buffer_usage::STATIC, 
+    //     Buffer_attribute_type::FLOAT, 
+    //     Buffer_iterate_type::PER_VERTEX,
+    //     3, 
+    //     vertices.size(), 
+    //     vertices.data()
+    // );
 
-    auto element_buffer = device->create_element_buffer(
-        Buffer_usage::STATIC,
-        indices.size(),
-        indices.data()
-    );
+    // auto element_buffer = device->create_element_buffer(
+    //     Buffer_usage::STATIC,
+    //     indices.size(),
+    //     indices.data()
+    // );
     
-    std::unordered_map<unsigned int, std::shared_ptr<RHI_vertex_buffer>> vertex_buffers = {
-        {0, vertex_attribute}
-    };
+    // std::unordered_map<unsigned int, std::shared_ptr<RHI_vertex_buffer>> vertex_buffers = {
+    //     {0, vertex_attribute}
+    // };
 
-    auto geometry = device->create_geometry(vertex_buffers, element_buffer);
+    // auto geometry = device->create_geometry(vertex_buffers, element_buffer);
 
-    //prepare shaders
+    // //prepare shaders
 
-    auto vertex_shader = device->create_shader_code(
-        Shader_type::VERTEX,
-        vertexShaderSource
-    );
+    // auto vertex_shader = device->create_shader_code(
+    //     Shader_type::VERTEX,
+    //     vertexShaderSource
+    // );
 
-    auto fragment_shader = device->create_shader_code(
-        Shader_type::FRAGMENT,
-        fragmentShaderSource
-    );
+    // auto fragment_shader = device->create_shader_code(
+    //     Shader_type::FRAGMENT,
+    //     fragmentShaderSource
+    // );
 
-    std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>> shaders = {
-        {Shader_type::VERTEX, vertex_shader},
-        {Shader_type::FRAGMENT, fragment_shader}
-    };
+    // std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>> shaders = {
+    //     {Shader_type::VERTEX, vertex_shader},
+    //     {Shader_type::FRAGMENT, fragment_shader}
+    // };
 
-    auto shader_program = device->create_shader_program(shaders);
+    // auto shader_program = device->create_shader_program(shaders);
 
-    //prepare binding state
+    // //prepare binding state
 
-    device->binding_state()->geometry() = geometry;
-    device->binding_state()->shader_program() = shader_program;
+    // device->binding_state()->geometry() = geometry;
+    // device->binding_state()->shader_program() = shader_program;
 
-    while (device->window()->is_active()) {
-        device->clear();
-        device->draw();
-        device->check_error();
-        device->window()->on_frame_begin();
-    }
+    // while (device->window()->is_active()) {
+    //     device->clear();
+    //     device->draw();
+    //     device->check_error();
+    //     device->window()->on_frame_begin();
+    // }
     
     return 0;
 }

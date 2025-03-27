@@ -16,6 +16,7 @@ protected:
     glm::vec3 m_color{};
     float m_intensity{};
     Light_type m_type{};
+
 public:
     Light(Light_type type) : Node(Node_type::LIGHT) , m_type(type) {}
     virtual ~Light() = default;
@@ -69,7 +70,6 @@ public:
     [[nodiscard]] float k2() const { return m_k2; }
     [[nodiscard]] float kc() const { return m_kc; }
 
-
 };
 
 class Spot_light : public Point_light {
@@ -85,7 +85,6 @@ public:
     float& outer_angle() { return m_outer_angle; }
     [[nodiscard]] float inner_angle() const { return m_inner_angle; }
     [[nodiscard]] float outer_angle() const { return m_outer_angle; }
-
 
 };
 

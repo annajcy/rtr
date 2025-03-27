@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/global/base.h"
+
 #include "camera.h"
 #include "frame_buffer.h"
 #include "geometry.h"
@@ -7,9 +8,7 @@
 #include "material.h"
 #include "mesh.h"
 #include "node.h"
-
 #include "scene.h"
-#include "texture.h"
 
 
 namespace rtr {
@@ -19,8 +18,6 @@ protected:
 
     std::shared_ptr<Camera_setting> m_camera_setting{};
     std::shared_ptr<Light_setting> m_light_setting{};
-
-    std::shared_ptr<RHI_device> m_device{};
     std::shared_ptr<Scene> m_scene{};
     
     std::shared_ptr<Frame_buffer> m_frame_buffer{};
@@ -30,12 +27,9 @@ protected:
     std::vector<std::shared_ptr<Mesh>> m_transparent_meshes{};
 
 public:
-    Renderer(const std::shared_ptr<RHI_device>& backend) : 
-    m_device(backend),
+    Renderer() :
     m_light_setting(std::make_shared<Light_setting>()),
     m_camera_setting(std::make_shared<Camera_setting>()) {}
-
-    std::shared_ptr<RHI_device>& device() { return m_device; }
     std::shared_ptr<Scene>& scene() { return m_scene; }
     std::shared_ptr<Frame_buffer>& frame_buffer() { return m_frame_buffer; }
     std::shared_ptr<Material>& override_material() { return m_override_material; }
@@ -84,45 +78,6 @@ public:
 
         material->upload_uniform(mesh, m_camera_setting, m_light_setting);
         
-
-        //std::cout << "render mesh " << mesh->id() << std::endl;
-        
-        // mesh->upload_uniform(material->shader());
-        // material->upload_uniform(material->shader());
-        // m_light_setting.upload_uniform(material->shader());
-        // m_camera_setting.upload_uniform(material->shader());
-
-        // m_device->binding_state()->geometry() = geometry->create_rhi_geometry(m_device);
-        // m_device->binding_state()->shader_program() = material->shader()->create_rhi_shader_program(m_device);
-        
-        // for (auto& [_, binded_texture] : material->textures()) {
-        //     auto [id, texture] = binded_texture;
-        //     if (texture->type() == Texture_type::TEXTURE_2D) {
-        //         auto texture_2d = std::dynamic_pointer_cast<Texture_2D>(texture);
-        //         m_device->binding_state()->textures_2D()[id] = texture_2d->create_rhi_texture_2D(m_device);
-        //     } else if (texture->type() == Texture_type::TEXTURE_CUBE_MAP) {
-        //         auto cube_map = std::dynamic_pointer_cast<Texture_cube_map>(texture);
-        //         m_device->binding_state()->textures_cube_map()[id] = cube_map->create_rhi_texture_cube_map(m_device);
-        //     }
-            
-        // }
-
-        // if (m_frame_buffer)
-        //     m_device->binding_state()->frame_buffer() = m_frame_buffer->create_rhi_frame_buffer(m_device);
-
-        // material->update_pipeline_state(m_device);
-        // m_device->pipeline_state()->apply();
-
-        // m_device->binding_state()->bind();
-
-        // if (auto instanced_material = std::dynamic_pointer_cast<Instanced_Material_base>(material)) {
-        //     m_device->instanced_draw(instanced_material->instance_count());
-        // } else {
-        //     m_device->draw();
-        // }
-
-        // m_device->binding_state()->unbind();
-        // m_device->binding_state()->clear();
 
     }
 

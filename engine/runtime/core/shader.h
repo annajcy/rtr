@@ -91,10 +91,6 @@ public:
     virtual ~Shader_code() = default;
     std::string& code() { return m_code; }
     Shader_type type() const { return m_type; }
-
-    std::shared_ptr<RHI_shader_code> create_rhi_shader_code(const std::shared_ptr<RHI_device>& device) {
-        return device->create_shader_code(id(), m_type, m_code);
-    }
 };
 
 

@@ -1,10 +1,7 @@
 #pragma once
 #include "engine/global/base.h"
-#include "engine/runtime/loader/image_loader.h"
-#include "engine/runtime/rhi/device/rhi_device.h"
-#include "engine/runtime/rhi/texture/rhi_texture.h"
-#include <memory>
-#include <unordered_map>
+#include "engine/runtime/enum.h"
+#include "engine/runtime/resource/loader/image_loader.h"
 
 namespace rtr {
 
@@ -121,33 +118,6 @@ public:
     const std::shared_ptr<Image>& image() const { return m_image; }
     virtual ~Texture_2D() = default;
 
-    std::shared_ptr<RHI_texture_2D> create_rhi_texture_2D(const std::shared_ptr<RHI_device>& device) {
-        auto tex = device->create_texture_2D(
-            id(),
-            internal_format(),
-            external_format(),
-            buffer_type(),
-            width(),
-            height(),
-            image()->data()
-        );
-
-        for (auto& [target, wrap] : m_wrap_map) {
-            tex->set_wrap(target, wrap);
-        }
-
-        for (auto& [target, filter] : m_filter_map) {
-            tex->set_filter(target, filter);
-        }
-
-        if (is_generate_mipmap) {
-            tex->generate_mipmap();
-        }
-
-        return tex;
-    }
-
-
     static std::shared_ptr<Texture_2D> create_color_attachment(
         int width,
         int height
@@ -210,10 +180,10 @@ public:
 
 class Texture_cube_map : public Texture {
 protected:
-    std::unordered_map<Texture_cube_map_face, std::shared_ptr<Image>> m_face_images{};
+    std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>> m_face_images{};
 public:
     Texture_cube_map(
-        const std::unordered_map<Texture_cube_map_face, std::shared_ptr<Image>>& face_images
+        const std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>& face_images
     ) : Texture(
         Texture_type::TEXTURE_CUBE_MAP, 
         Texture_format::SRGB_ALPHA, 
@@ -232,7 +202,7 @@ public:
         m_face_images(face_images) {}
 
     Texture_cube_map(
-        const std::unordered_map<Texture_cube_map_face, std::shared_ptr<Image>>& face_images,
+        const std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>& face_images,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wrap_map,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filter_map,
         const bool is_generate_mipmap
@@ -247,8 +217,8 @@ public:
         
         m_face_images(face_images) {}
 
-    std::unordered_map<Texture_cube_map_face, std::shared_ptr<Image>>& face_images() { return m_face_images; }
-    const std::unordered_map<Texture_cube_map_face, std::shared_ptr<Image>>& face_images() const { return m_face_images; }
+    std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>& face_images() { return m_face_images; }
+    const std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>& face_images() const { return m_face_images; }
     virtual ~Texture_cube_map() = default;
 
 };

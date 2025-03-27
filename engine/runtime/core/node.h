@@ -1,10 +1,8 @@
 #pragma once
+
 #include "engine/global/base.h"
 #include "engine/global/guid.h"
-
 #include "engine/runtime/enum.h"
-
-#include "shader.h"
 
 namespace rtr {
 
