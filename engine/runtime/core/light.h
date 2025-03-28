@@ -2,9 +2,9 @@
 #include "engine/global/base.h"
 #include "engine/runtime/enum.h"
 
-#include "geometry.h"
-#include "node.h"
-#include "shader.h"
+#include "engine/runtime/core/geometry.h"
+#include "engine/runtime/core/node.h"
+#include "engine/runtime/core/shader.h"
 
 
 namespace rtr {

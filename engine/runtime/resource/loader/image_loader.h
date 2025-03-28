@@ -1,8 +1,6 @@
 #pragma once
 #include "engine/global/base.h"
 #include "engine/runtime/resource/resource_base.h"
-#include "engine/runtime/resource/loader/image_loader.h"
-
 
 namespace rtr {
 

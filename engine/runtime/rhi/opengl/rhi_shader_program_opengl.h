@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/global/base.h"
+#include "engine/runtime/rhi/rhi_resource.h"
 #include "engine/runtime/rhi/rhi_shader_program.h"
 
 #define LOG_STR_LEN 1024
@@ -22,12 +23,12 @@ public:
         m_program_id = glCreateProgram();
 
         for (auto& [type, shader] : shaders) {
-            attach_shader_code(shader);
+            attach_code(shader);
         }
 
         if (!link()) {
             for (auto& [type, code] : m_codes) {
-                detach_shader_code(code);
+                detach_code(code);
             }
     
             if (m_program_id) {
@@ -45,13 +46,16 @@ public:
     }
 
     virtual ~RHI_shader_program_OpenGL() {
+        
         for (auto& [type, shader] : m_codes) {
-            detach_shader_code(shader);
+            detach_code(shader);
         }
 
         if (m_program_id) {
             glDeleteProgram(m_program_id);
         }
+
+        RHI_shader_program::~RHI_shader_program();
     }
 
     virtual void bind() override {
@@ -66,12 +70,12 @@ public:
         return m_program_id;
     }
 
-    virtual void attach_shader_code(unsigned int code) override {
-        glAttachShader(m_program_id, code);
+    virtual void attach_code(unsigned int code) override {
+        glAttachShader(m_program_id, RHI_resource_manager::native_handle_uint(code));
     }
 
-    virtual void detach_shader_code(unsigned int code) override {
-        glDetachShader(m_program_id, code);
+    virtual void detach_code(unsigned int code) override {
+        glDetachShader(m_program_id, RHI_resource_manager::native_handle_uint(code));
     }
 
     virtual bool link() override {
@@ -99,7 +103,6 @@ public:
     ) override {
         int location = glGetUniformLocation(m_program_id, name.c_str());
         if (location == -1) {
-            //std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_NOT_FOUND: " << name << std::endl;
             return;
         }
 
@@ -207,8 +210,8 @@ public:
 
     }
 
-    virtual unsigned int id() override {
-        return m_program_id;
+    virtual const void* native_handle() const override {
+        return (void*)&m_program_id;
     }
     
 };

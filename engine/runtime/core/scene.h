@@ -1,6 +1,6 @@
 #pragma once
 
-#include "node.h"
+#include "engine/runtime/core/node.h"
 
 namespace rtr {
 

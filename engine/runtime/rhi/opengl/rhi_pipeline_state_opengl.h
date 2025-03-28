@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/global/base.h"
-#include "engine/runtime/rhi/opengl/gl_cast.h"
+#include "engine/runtime/rhi/opengl/rhi_cast_opengl.h"
 #include "engine/runtime/rhi/rhi_pipeline_state.h"
 
 namespace rtr {
@@ -8,7 +8,7 @@ namespace rtr {
 class RHI_pipeline_state_OpenGL : public RHI_pipeline_state {
 
 public:
-    RHI_pipeline_state_OpenGL() : RHI_pipeline_state() { init(); }
+    RHI_pipeline_state_OpenGL() : RHI_pipeline_state() { apply(); }
 
     ~RHI_pipeline_state_OpenGL() override = default;
 
@@ -96,24 +96,6 @@ public:
         } else {
             glDisable(GL_STENCIL_TEST);
         }
-    }
-
-    virtual void apply_clear_state() override {
-        m_clear_mask = 0;
-        if (clear_state.color) m_clear_mask |= GL_COLOR_BUFFER_BIT;
-        if (clear_state.depth) m_clear_mask |= GL_DEPTH_BUFFER_BIT;
-        if (clear_state.stencil) m_clear_mask |= GL_STENCIL_BUFFER_BIT;
-
-        glClearColor(
-            clear_state.color_clear_value.r,
-            clear_state.color_clear_value.g,
-            clear_state.color_clear_value.b,
-            clear_state.color_clear_value.a
-        );
-
-        glClearDepth(clear_state.depth_clear_value);
-        glClearStencil(clear_state.stencil_clear_value);
-
     }
 
 };

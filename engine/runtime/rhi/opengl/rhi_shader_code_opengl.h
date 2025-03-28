@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/global/base.h"
-#include "engine/runtime/rhi/opengl/gl_cast.h"
+#include "engine/runtime/rhi/opengl/rhi_cast_opengl.h"
 #include "engine/runtime/rhi/rhi_shader_code.h"
 
 #define LOG_STR_LEN 1024
@@ -29,6 +29,8 @@ public:
         if (m_code_id) {
             glDeleteShader(m_code_id);
         }
+        
+        RHI_shader_code::~RHI_shader_code();
     }
 
     virtual bool compile() override {
@@ -50,8 +52,9 @@ public:
         return success;
     }
 
-    virtual unsigned int id() override {
-        return m_code_id;
+
+    virtual const void* native_handle() const override {
+        return (void*)&m_code_id;
     }
 
 };

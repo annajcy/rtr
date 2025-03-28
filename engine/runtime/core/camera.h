@@ -1,6 +1,7 @@
 #pragma once
-#include "node.h"
-#include "input.h"
+
+#include "engine/runtime/core/input.h"
+#include "engine/runtime/core/node.h"
 
 namespace rtr {
 

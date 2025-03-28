@@ -4,16 +4,7 @@
 #include "engine/runtime/rhi/rhi_device.h"
 #include "engine/runtime/rhi/opengl/rhi_device_opengl.h"
 
-
-#include "engine/runtime/core/scene.h"
-#include "engine/runtime/core/camera.h"
-#include "engine/runtime/core/input.h"
-#include "engine/runtime/core/light.h"
-#include "engine/runtime/core/geometry.h"
-
-#include "engine/runtime/core/mesh.h"
-
-#include "engine/runtime/core/material.h"
+#include "engine/runtime/core/renderer.h"
 
 using namespace std;
 using namespace rtr;

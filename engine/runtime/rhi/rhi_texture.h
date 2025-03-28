@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/global/base.h"
 #include "engine/runtime/enum.h"
+#include "engine/runtime/rhi/rhi_resource.h"
 
 namespace rtr {
 
@@ -12,7 +13,7 @@ struct Image_data {
     Texture_format external_format{ Texture_format::RGB_ALPHA };
 };
 
-class RHI_texture  {
+class RHI_texture : public RHI_resource  {
 protected:
     int m_width{};
     int m_height{};
@@ -29,14 +30,19 @@ public:
         Texture_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters
-    ) : m_type(type), 
-        m_internal_format(internal_format) {}
+    ) : RHI_resource(RHI_resource_type::TEXTURE),
+        m_type(type), 
+        m_internal_format(internal_format) {
+            RHI_resource_manager::add_resource(this);
+        }
 
-    virtual ~RHI_texture() = default;
+    virtual ~RHI_texture() {
+        RHI_resource_manager::remove_resource(guid());
+    }
+    
     virtual void set_filter(Texture_filter_target target, Texture_filter filter) = 0;
     virtual void set_wrap(Texture_wrap_target target, Texture_wrap wrap) = 0;
     virtual void generate_mipmap() = 0;
-    virtual unsigned int id() = 0;
     virtual void bind(unsigned int location) = 0;
    
     Texture_type type() const { return m_type; }
@@ -45,7 +51,6 @@ public:
     int height() const { return m_height; }
     unsigned int mipmap_levels() const { return m_mipmap_levels; }
 };
-
 
 struct IRHI_texture_2D {
     virtual void upload_data(const Image_data& image) = 0;

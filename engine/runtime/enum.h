@@ -1,6 +1,7 @@
 #pragma once
 
 namespace rtr {
+    
 enum class Key_mod {
     SHIFT,
     CTRL,

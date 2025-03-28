@@ -33,6 +33,7 @@ public:
 
     virtual ~RHI_frame_buffer_OpenGL() { 
         glDeleteFramebuffers(1, &m_frame_buffer_id);
+        RHI_frame_buffer::~RHI_frame_buffer();
     }
 
     void attach() {
@@ -117,6 +118,12 @@ private:
         }
         std::cerr << "Framebuffer error: " << error << std::endl;
     }
+
+    virtual const void* native_handle() const override {
+        return reinterpret_cast<const void*>(&m_frame_buffer_id);
+    }
 };
+
+
 
 } // namespace rtr

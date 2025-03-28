@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/global/base.h"
 #include "engine/runtime/enum.h"
-#include "engine/runtime/rhi/opengl/gl_cast.h"
+#include "engine/runtime/rhi/opengl/rhi_cast_opengl.h"
 #include "engine/runtime/rhi/rhi_texture.h"
 
 namespace rtr {
@@ -44,14 +44,15 @@ public:
 
     virtual ~RHI_texture_2D_OpenGL() {
         glDeleteTextures(1, &m_texture_id);
+        RHI_texture::~RHI_texture();
     }
 
     void bind(unsigned int location) override {
         glBindTextureUnit(location, m_texture_id);
     }
 
-    unsigned int id() override {
-        return m_texture_id;
+    virtual const void* native_handle() const override {
+        return reinterpret_cast<const void*>(&m_texture_id);
     }
 
     void generate_mipmap() override {
@@ -123,14 +124,15 @@ public:
 
     virtual ~RHI_texture_cubemap_OpenGL() {
         glDeleteTextures(1, &m_texture_id);
+        RHI_texture::~RHI_texture();
     }
 
     void bind(unsigned int location) override {
         glBindTextureUnit(location, m_texture_id);
     }
 
-    unsigned int id() override {
-        return m_texture_id;
+    virtual const void* native_handle() const override {
+        return reinterpret_cast<const void*>(&m_texture_id);
     }
 
     void generate_mipmap() override {

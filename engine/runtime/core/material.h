@@ -3,13 +3,12 @@
 #include "engine/global/base.h"
 #include "engine/runtime/enum.h"
 #include "engine/runtime/rhi/rhi_pipeline_state.h"
-#include "engine/runtime/struct.h"
 
-#include "camera.h"
-#include "node.h"
-#include "light.h"
-#include "shader.h"
-#include "texture.h"
+#include "engine/runtime/core/camera.h"
+#include "engine/runtime/core/node.h"
+#include "engine/runtime/core/light.h"
+#include "engine/runtime/core/shader.h"
+#include "engine/runtime/core/texture.h"
 
 namespace rtr {
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/global/base.h"
-#include "texture.h"
+#include "engine/runtime/core/texture.h"
 
 namespace rtr {
 

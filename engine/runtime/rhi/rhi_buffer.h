@@ -2,7 +2,7 @@
 
 #include "engine/global/base.h" 
 #include "engine/runtime/enum.h"
-#include "engine/runtime/struct.h"
+#include "engine/runtime/rhi/rhi_resource.h"
 
 namespace rtr {
 
@@ -12,7 +12,7 @@ struct GPU_access_flags {
     bool is_buffer_discard;
 };
 
-class RHI_buffer {
+class RHI_buffer : public RHI_resource {
 protected:
     Buffer_type m_type{};
     Buffer_usage m_usage{};
@@ -24,11 +24,17 @@ public:
         Buffer_usage usage,
         unsigned int data_size,
         const void* data
-    ) : m_type(type), 
+    ) : RHI_resource(RHI_resource_type::BUFFER),
+        m_type(type), 
         m_usage(usage), 
-        m_data_size(data_size) { }
+        m_data_size(data_size) { 
+            RHI_resource_manager::add_resource(this);
+        }
 
-    virtual ~RHI_buffer() = default;
+    virtual ~RHI_buffer() {
+        RHI_resource_manager::remove_resource(guid());
+    }
+
     virtual void bind() = 0;
     virtual void unbind() = 0;
     virtual void reallocate_data(const void* data, unsigned int data_size) = 0;

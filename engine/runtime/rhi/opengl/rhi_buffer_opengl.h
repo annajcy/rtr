@@ -2,7 +2,7 @@
 
 #include "engine/global/base.h" 
 #include "engine/runtime/enum.h"
-#include "engine/runtime/rhi/opengl/gl_cast.h"
+#include "engine/runtime/rhi/opengl/rhi_cast_opengl.h"
 #include "engine/runtime/rhi/rhi_buffer.h"
 
 
@@ -28,6 +28,7 @@ public:
         if (m_buffer_id) {
             glDeleteBuffers(1, &m_buffer_id);
         }
+        RHI_buffer::~RHI_buffer();
     }
 
     void bind() override { 
@@ -62,6 +63,10 @@ public:
         }
         accessor(m_mapped_pointer);
         glUnmapBuffer(gl_buffer_type(m_type));
+    }
+
+    virtual const void* native_handle() const override {
+        return reinterpret_cast<const void*>(m_buffer_id);
     }
 };
 

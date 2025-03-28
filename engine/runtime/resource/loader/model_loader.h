@@ -2,7 +2,6 @@
 #include "engine/global/base.h"
 #include "engine/runtime/core/node.h"
 #include "engine/runtime/resource/resource_base.h"
-#include <cstddef>
 
 
 namespace rtr {

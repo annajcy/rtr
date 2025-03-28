@@ -2,10 +2,6 @@
 #include "engine/global/base.h"
 #include "engine/runtime/resource/resource_base.h"
 
-#include <climits>
-#include <memory>
-#include <string>
-
 namespace rtr {
 
 class Text : public Resource_base {

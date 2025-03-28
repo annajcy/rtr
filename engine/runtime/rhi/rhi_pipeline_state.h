@@ -1,7 +1,6 @@
 #pragma once
 #include "engine/global/base.h"
 #include "engine/runtime/enum.h"
-#include "engine/runtime/struct.h"
 
 namespace rtr {
 
@@ -195,26 +194,6 @@ struct Cull_state {
 
 };
 
-struct Clear_state {
-    bool color{true};
-    bool depth{true};
-    bool stencil{true};
-
-    float depth_clear_value{1.0f};
-    unsigned int stencil_clear_value{0x00};
-    glm::vec4 color_clear_value{0.0f, 0.0f, 0.0f, 1.0f};
-
-    static Clear_state enabled() {
-        return {
-            true,
-            true,
-            true,
-            1.0f,
-            0x00,
-            glm::vec4(0.0f, 0.0f, 0.0f, 0.0f)
-        };
-    }
-};
 
 struct Pipeline_state {
     Depth_state depth_state{};
@@ -222,16 +201,14 @@ struct Pipeline_state {
     Polygon_offset_state polygon_offset_state{};
     Stencil_state stencil_state{};
     Cull_state cull_state{};
-    Clear_state clear_state{};
-
+   
     static Pipeline_state opaque_pipeline_state() {
         return Pipeline_state{
             Depth_state::opaque(),
             Blend_state::opaque(),
             Polygon_offset_state::disabled(),
             Stencil_state::opaque(),
-            Cull_state::back(),
-            Clear_state::enabled()
+            Cull_state::back()
         };
     }
 
@@ -241,8 +218,7 @@ struct Pipeline_state {
             Blend_state::translucent(),
             Polygon_offset_state::disabled(),
             Stencil_state::disabled(),
-            Cull_state::back(),
-            Clear_state::enabled()
+            Cull_state::back()
         };
     }
 
@@ -252,25 +228,17 @@ struct Pipeline_state {
             Blend_state::opaque(),
             Polygon_offset_state::disabled(),
             Stencil_state::edge(),
-            Cull_state::back(),
-            Clear_state::enabled()
+            Cull_state::back()
         };
     }
 };
 
 class RHI_pipeline_state : public Pipeline_state {
 
-protected:
-    unsigned int m_clear_mask{};
-
 public:
 
-    RHI_pipeline_state() : Pipeline_state() {}
+    RHI_pipeline_state() : Pipeline_state() { }
     virtual ~RHI_pipeline_state() = default;
-    
-    void init() {
-        apply();
-    }
     
     void apply() {
         apply_blend_state();
@@ -278,7 +246,6 @@ public:
         apply_depth_state();
         apply_polygon_offset_state();
         apply_stencil_state();
-        apply_clear_state();
     }
 
     virtual void apply_blend_state() = 0;
@@ -286,10 +253,6 @@ public:
     virtual void apply_depth_state() = 0;
     virtual void apply_polygon_offset_state() = 0;
     virtual void apply_stencil_state() = 0;
-    virtual void apply_clear_state() = 0;
-
-
-    unsigned int clear_mask() { return m_clear_mask; }
 
 };
 
