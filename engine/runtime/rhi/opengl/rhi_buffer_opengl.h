@@ -8,8 +8,8 @@
 
 namespace rtr {
 
-
 class RHI_buffer_OpenGL : public RHI_buffer {
+protected:
     unsigned int m_buffer_id{0};
     
 public:
@@ -28,8 +28,9 @@ public:
         if (m_buffer_id) {
             glDeleteBuffers(1, &m_buffer_id);
         }
-        RHI_buffer::~RHI_buffer();
     }
+
+    unsigned int buffer_id() const { return m_buffer_id; }
 
     void bind() override { 
         glBindBuffer(gl_buffer_type(m_type), m_buffer_id); 
@@ -37,8 +38,6 @@ public:
     void unbind() override { 
         glBindBuffer(gl_buffer_type(m_type), 0); 
     }
-
-    unsigned int id() override { return m_buffer_id; }
 
     void reallocate_data(const void* data, unsigned int data_size) override {
         m_data_size = data_size;
@@ -49,7 +48,7 @@ public:
         glBufferSubData(gl_buffer_type(m_type), offset, data_size, data);
     }
 
-    void access_gpu_buffer(std::function<void(void*)> accessor, GPU_access_flags flags) override {
+    void map_buffer(std::function<void(void*)> access_function, const RHI_buffer_access_flags& flags) override {
         GLenum access = 0;
         if(flags.is_read) access |= GL_MAP_READ_BIT;
         if(flags.is_write) access |= GL_MAP_WRITE_BIT;
@@ -58,16 +57,71 @@ public:
         bind();
         auto m_mapped_pointer = glMapBufferRange(gl_buffer_type(m_type), 0, m_data_size, access);
         if (m_mapped_pointer == nullptr) {
-            std::cout << "[RHI] glMapBufferRange failed" << std::endl;
+            std::cout << "glMapBufferRange failed" << std::endl;
             return;
         }
-        accessor(m_mapped_pointer);
+        access_function(m_mapped_pointer);
         glUnmapBuffer(gl_buffer_type(m_type));
+        unbind();
+    }
+};
+
+class RHI_vertex_buffer_OpenGL : public RHI_buffer_OpenGL, public IRHI_vertex_buffer {
+public:
+    RHI_vertex_buffer_OpenGL(
+        Buffer_usage usage,
+        Buffer_data_type attribute_type,
+        Buffer_iterate_type iterate_type,
+        unsigned int unit_data_count,
+        unsigned int data_size,
+        const void* data
+    ) : RHI_buffer_OpenGL(Buffer_type::VERTEX, usage, data_size, data),
+        IRHI_vertex_buffer(attribute_type, iterate_type, unit_data_count) {}
+
+    ~RHI_vertex_buffer_OpenGL() override {
+        RHI_buffer_OpenGL::~RHI_buffer_OpenGL();
+    }
+};
+
+class RHI_element_buffer_OpenGL : public RHI_buffer_OpenGL, public IRHI_element_buffer {
+public:
+    RHI_element_buffer_OpenGL(
+        Buffer_usage usage,
+        unsigned int data_size,
+        const void* data
+    ) : RHI_buffer_OpenGL(Buffer_type::ELEMENT, usage, data_size, data),
+        IRHI_element_buffer(data_size) {}
+
+    ~RHI_element_buffer_OpenGL() override {
+        RHI_buffer_OpenGL::~RHI_buffer_OpenGL();
+    }
+};
+
+class RHI_memory_buffer_OpenGL : public RHI_buffer_OpenGL, public IRHI_memory_buffer {
+public:
+
+    RHI_memory_buffer_OpenGL(
+        Buffer_type type,
+        Buffer_usage usage,
+        unsigned int data_size,
+        const void* data
+    ) : RHI_buffer_OpenGL(type, usage, data_size, data),
+        IRHI_memory_buffer() {
+            glGetIntegerv(gl_memory_buffer_alignment_type(Buffer_type::UNIFORM), &m_alignment);
+        }
+
+    ~RHI_memory_buffer_OpenGL() override {
+        RHI_buffer_OpenGL::~RHI_buffer_OpenGL();
     }
 
-    virtual const void* native_handle() const override {
-        return reinterpret_cast<const void*>(m_buffer_id);
+    void bind_memory(unsigned int position) override {
+        glBindBufferBase(gl_buffer_type(m_type), position, m_buffer_id);
     }
+
+    void bind_partial_memory(unsigned int position, unsigned int offset, unsigned int size) override {
+        glBindBufferRange(gl_buffer_type(m_type), position, m_buffer_id, offset, size);
+    }
+
 };
 
 };

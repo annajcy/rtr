@@ -11,6 +11,8 @@ inline constexpr unsigned int gl_usage(Buffer_usage usage) {
         return GL_STATIC_DRAW;
     case Buffer_usage::DYNAMIC:
         return GL_DYNAMIC_DRAW;
+    case Buffer_usage::STREAM:
+        return GL_STREAM_DRAW;
     default:
         return GL_STATIC_DRAW;
     }
@@ -19,19 +21,19 @@ inline constexpr unsigned int gl_usage(Buffer_usage usage) {
 inline constexpr unsigned int gl_buffer_type(Buffer_type type) {
     switch(type) {
         case Buffer_type::VERTEX: return GL_ARRAY_BUFFER;
-        case Buffer_type::INDEX: return GL_ELEMENT_ARRAY_BUFFER;
+        case Buffer_type::ELEMENT: return GL_ELEMENT_ARRAY_BUFFER;
         case Buffer_type::UNIFORM: return GL_UNIFORM_BUFFER;
         case Buffer_type::STORAGE: return GL_SHADER_STORAGE_BUFFER;
         default: return GL_ARRAY_BUFFER;
     }
 }
 
-inline constexpr unsigned int gl_atribute_type(Buffer_attribute_type type) {
+inline constexpr unsigned int gl_buffer_data_type(Buffer_data_type type) {
     switch (type) {
-    case Buffer_attribute_type::FLOAT: return GL_FLOAT;
-    case Buffer_attribute_type::INT: return GL_INT;
-    case Buffer_attribute_type::UINT: return GL_UNSIGNED_INT;
-    case Buffer_attribute_type::BOOL: return GL_BOOL;
+    case Buffer_data_type::FLOAT: return GL_FLOAT;
+    case Buffer_data_type::INT: return GL_INT;
+    case Buffer_data_type::UINT: return GL_UNSIGNED_INT;
+    case Buffer_data_type::BOOL: return GL_BOOL;
     default: return 0;
     }
 }
@@ -420,5 +422,16 @@ inline constexpr Mouse_button gl_to_rhi_mouse_button_map(unsigned int button) {
         default: return Mouse_button::UNKNOWN;
     }
 }
+
+inline unsigned int gl_memory_buffer_alignment_type(Buffer_type type) {
+    switch (type) {
+        case Buffer_type::UNIFORM:
+            return GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
+        case Buffer_type::STORAGE:
+            return GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT;
+        default:
+            return GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
+    }    
+};
 
 };

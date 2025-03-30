@@ -6,7 +6,6 @@
 #include "engine/runtime/core/material.h"
 #include "engine/runtime/core/node.h"
 
-
 namespace rtr {
 
 class Mesh : public Node {

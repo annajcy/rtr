@@ -1,6 +1,9 @@
 #pragma once
 #include "engine/global/base.h"
+#include "engine/runtime/rhi/opengl/rhi_texture_opengl.h"
 #include "engine/runtime/rhi/rhi_frame_buffer.h"
+#include "engine/runtime/rhi/rhi_texture.h"
+#include <memory>
 
 namespace rtr {
 
@@ -12,8 +15,8 @@ public:
     RHI_frame_buffer_OpenGL(
         int width, 
         int height,
-        const std::vector<unsigned int>& color_attachments,
-        unsigned int depth_attachment
+        const std::vector<RHI_texture::Ptr>& color_attachments,
+        const RHI_texture::Ptr& depth_attachment
     ) : RHI_frame_buffer(width, height, color_attachments, depth_attachment) 
     {
         int max_color_attachments{};
@@ -32,51 +35,62 @@ public:
     } 
 
     virtual ~RHI_frame_buffer_OpenGL() { 
-        glDeleteFramebuffers(1, &m_frame_buffer_id);
-        RHI_frame_buffer::~RHI_frame_buffer();
+        if (m_frame_buffer_id) {
+            glDeleteFramebuffers(1, &m_frame_buffer_id);
+        }
     }
 
     void attach() {
         // 附加颜色附件
         for (size_t i = 0; i < m_color_attachments.size(); ++i) {
-            if (glIsTexture(m_color_attachments[i])) {
+            auto color_attachment = std::dynamic_pointer_cast<RHI_texture_2D_OpenGL>(m_color_attachments[i]);
+            
+            if (!color_attachment) {
+                std::cerr << "Invalid color attachment: not a RHI_texture_2D_OpenGL" << std::endl;
+                return;
+            }
+
+            if (glIsTexture(color_attachment->texture_id())) {
                 glNamedFramebufferTexture(
                     m_frame_buffer_id,
                     GL_COLOR_ATTACHMENT0 + i,
-                    m_color_attachments[i],
+                    color_attachment->texture_id(),
                     0
                 );
             } else {
-                std::cerr << "Invalid color attachment texture ID: " 
-                          << m_color_attachments[i] << std::endl;
+                std::cerr << "Invalid color attachment texture ID: "  << std::endl;
             }
         }
 
+        auto depth_attachment = std::dynamic_pointer_cast<RHI_texture_2D_OpenGL>(m_depth_attachment);
+
         // 附加深度附件
-        if (m_depth_attachment != 0) {
-            if (glIsTexture(m_depth_attachment)) {
+        if (depth_attachment != nullptr) {
+            if (glIsTexture(depth_attachment->texture_id())) {
                 glNamedFramebufferTexture(
                     m_frame_buffer_id,
                     GL_DEPTH_ATTACHMENT,
-                    m_depth_attachment,
+                    depth_attachment->texture_id(),
                     0
                 );
             } else {
-                std::cerr << "Invalid depth attachment texture ID: " 
-                          << m_depth_attachment << std::endl;
+                std::cerr << "Invalid depth attachment texture " << std::endl;
             }
+        } else {
+            std::cerr << "Invalid depth attachment: not a RHI_texture_2D_OpenGL" << std::endl;
         }
 
         // 设置绘制目标
-        std::vector<GLenum> drawBuffers;
+        std::vector<unsigned int> draw_buffers;
         for (size_t i = 0; i < m_color_attachments.size(); ++i) {
-            drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+            draw_buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
         }
-        if (!drawBuffers.empty()) {
+
+        if (!draw_buffers.empty()) {
             glNamedFramebufferDrawBuffers(
                 m_frame_buffer_id,
-                static_cast<GLsizei>(drawBuffers.size()),
-                drawBuffers.data()
+                static_cast<int>(draw_buffers.size()),
+                draw_buffers.data()
             );
         } else {
             // 无颜色附件时，显式设置不绘制颜色
@@ -85,7 +99,7 @@ public:
     }
 
     virtual bool is_valid() override {
-        GLenum status = glCheckNamedFramebufferStatus(m_frame_buffer_id, GL_FRAMEBUFFER);
+        unsigned int status = glCheckNamedFramebufferStatus(m_frame_buffer_id, GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
             // 输出具体错误原因（如GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT）
             log_framebuffer_error(status);
@@ -102,9 +116,7 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    virtual unsigned int id() override {
-        return m_frame_buffer_id;
-    }
+    unsigned int frame_buffer_id() const { return m_frame_buffer_id; }
 
 private:
     void log_framebuffer_error(GLenum status) {
@@ -119,11 +131,7 @@ private:
         std::cerr << "Framebuffer error: " << error << std::endl;
     }
 
-    virtual const void* native_handle() const override {
-        return reinterpret_cast<const void*>(&m_frame_buffer_id);
-    }
+    
 };
-
-
 
 } // namespace rtr

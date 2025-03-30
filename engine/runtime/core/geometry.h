@@ -6,15 +6,15 @@
 namespace rtr {
 
 template<typename T>
-inline constexpr Buffer_attribute_type get_buffer_atrribute_type() {
+inline constexpr Buffer_data_type get_buffer_atrribute_type() {
     if constexpr (std::is_same_v<T, float>) {
-        return Buffer_attribute_type::FLOAT;
+        return Buffer_data_type::FLOAT;
     } else if constexpr (std::is_same_v<T, int>) {
-        return Buffer_attribute_type::INT;
+        return Buffer_data_type::INT;
     } else if constexpr (std::is_same_v<T, unsigned int>) {
-        return Buffer_attribute_type::UINT;  
+        return Buffer_data_type::UINT;  
     } else if constexpr (std::is_same_v<T, bool>) {
-        return Buffer_attribute_type::BOOL;
+        return Buffer_data_type::BOOL;
     } else {
         static_assert(false, "Unsupported type");
     }
@@ -23,10 +23,10 @@ inline constexpr Buffer_attribute_type get_buffer_atrribute_type() {
 class Attribute_base : public GUID {
 protected:
     Buffer_usage m_usage{};
-    Buffer_attribute_type m_type{}; 
+    Buffer_data_type m_type{}; 
 public:
     Attribute_base(
-        Buffer_attribute_type type, 
+        Buffer_data_type type, 
         Buffer_usage usage
     ) : GUID(), 
         m_type(type), 
@@ -36,7 +36,7 @@ public:
     virtual const void* data_ptr() const = 0;
     virtual unsigned int data_count() const = 0;
     
-    Buffer_attribute_type type() const { return m_type; }
+    Buffer_data_type type() const { return m_type; }
     Buffer_usage usage() const { return m_usage; }
 };
 
@@ -45,7 +45,7 @@ protected:
     Buffer_iterate_type m_iterate_type{};
 public:
     Vertex_attribute_base(
-        Buffer_attribute_type type, 
+        Buffer_data_type type, 
         Buffer_usage usage,
         Buffer_iterate_type iterate_type
     ) : Attribute_base(type, usage),
@@ -65,7 +65,7 @@ public:
         const std::vector<unsigned int>& data,
         Buffer_usage usage = Buffer_usage::STATIC
     ) : Attribute_base(
-        Buffer_attribute_type::UINT,
+        Buffer_data_type::UINT,
         usage),
         m_data(data) {}
 

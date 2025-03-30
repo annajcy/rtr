@@ -186,6 +186,8 @@ std::shared_ptr<Image> image{};
 
 int main() {
 
+    Renderer rd();
+
     // auto image_loader = std::make_shared<Image_loader_stb>();
     // image = image_loader->load_from_path(Image_format::RGB_ALPHA, "assets/image/default_texture.jpg");
     

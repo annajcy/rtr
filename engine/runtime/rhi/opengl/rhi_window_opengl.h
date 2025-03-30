@@ -18,8 +18,9 @@ public:
     RHI_window_OpenGL(
         unsigned int width,
         unsigned int height,
-        std::string title
-    ) : RHI_window(width, height, title) {
+        std::string title,
+        const Clear_state& clear_state
+    ) : RHI_window(width, height, title, clear_state) {
         init();
     }
 

@@ -2,11 +2,12 @@
 
 #include "engine/global/base.h" 
 #include "engine/runtime/enum.h"
+#include "engine/runtime/rhi/rhi_cast.h"
 #include "engine/runtime/rhi/rhi_resource.h"
 
 namespace rtr {
 
-struct GPU_access_flags {
+struct RHI_buffer_access_flags {
     bool is_read;
     bool is_write;
     bool is_buffer_discard;
@@ -19,6 +20,8 @@ protected:
     unsigned int m_data_size{};
 
 public:
+    using Ptr = std::shared_ptr<RHI_buffer>;
+
     RHI_buffer(
         Buffer_type type, 
         Buffer_usage usage,
@@ -27,24 +30,66 @@ public:
     ) : RHI_resource(RHI_resource_type::BUFFER),
         m_type(type), 
         m_usage(usage), 
-        m_data_size(data_size) { 
-            RHI_resource_manager::add_resource(this);
-        }
+        m_data_size(data_size) { }
 
-    virtual ~RHI_buffer() {
-        RHI_resource_manager::remove_resource(guid());
-    }
+    virtual ~RHI_buffer() {}
 
     virtual void bind() = 0;
     virtual void unbind() = 0;
     virtual void reallocate_data(const void* data, unsigned int data_size) = 0;
     virtual void subsitute_data(const void* data, unsigned int data_size, unsigned int offset) = 0;
-    virtual void access_gpu_buffer(std::function<void(void*)> accessor, GPU_access_flags flags) = 0;
-    virtual unsigned int id() = 0;
+    virtual void map_buffer(std::function<void(void*)> accessor, const RHI_buffer_access_flags& flags) = 0;
 
     unsigned int data_size() const { return m_data_size; }
     Buffer_type type() const { return m_type; }
     Buffer_usage usage() const { return m_usage; }
 };
+
+
+class IRHI_vertex_buffer { 
+protected:
+    Buffer_data_type m_data_type{};
+    Buffer_iterate_type m_iterate_type{};
+    unsigned int m_unit_data_count{};
+public:
+
+    IRHI_vertex_buffer(
+        Buffer_data_type attribute_type,
+        Buffer_iterate_type iterate_type,
+        unsigned int unit_data_count
+    ) {}
+
+    virtual ~IRHI_vertex_buffer() {}
+    unsigned int unit_data_count() const { return m_unit_data_count; }
+    unsigned int unit_data_size() const { return m_unit_data_count * sizeof_buffer_data(m_data_type); }
+    Buffer_data_type buffer_data_type() const { return m_data_type; }
+    Buffer_iterate_type iterate_type() const { return m_iterate_type; }
+
+};
+
+class IRHI_element_buffer {
+protected:
+    unsigned int m_data_count{};
+public:
+    IRHI_element_buffer(unsigned int data_count) {}
+    virtual ~IRHI_element_buffer() {}
+    unsigned int data_count() const { return m_data_count; }
+    Buffer_data_type attribute_type() const { return Buffer_data_type::UINT; }
+};
+
+
+class IRHI_memory_buffer {
+protected:
+    int m_alignment{};
+
+public:
+    IRHI_memory_buffer() {}
+    virtual ~IRHI_memory_buffer() {}
+    virtual void bind_memory(unsigned int position) = 0;
+    virtual void bind_partial_memory(unsigned int position, unsigned int offset, unsigned int size) = 0;
+    int alignment() const { return m_alignment; }
+};
+
+
 
 }; // namespace rtr

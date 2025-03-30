@@ -1,8 +1,8 @@
 #pragma once
+
 #include "engine/global/base.h"
 #include "engine/runtime/enum.h"
 #include "engine/runtime/rhi/rhi_window.h"
-
 
 namespace rtr {
 

@@ -15,13 +15,11 @@ public:
         Shader_type type, 
         const std::string& code
     ) : RHI_resource(RHI_resource_type::SHADER_CODE),
-        m_type(type) {
-        RHI_resource_manager::add_resource(this);
-    } 
+        m_type(type) {} 
 
-    virtual ~RHI_shader_code() {
-        RHI_resource_manager::remove_resource(guid());
-    }
+    using Ptr = std::shared_ptr<RHI_shader_code>;
+
+    virtual ~RHI_shader_code() {}
 
     const Shader_type& type() const { return m_type; }
     virtual bool compile() = 0;

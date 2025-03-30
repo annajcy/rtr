@@ -299,14 +299,15 @@ enum class API_type {
 
 enum class Buffer_type {
     VERTEX,
-    INDEX,
+    ELEMENT,
     UNIFORM,
     STORAGE,
 };
 
 enum class Buffer_usage {
     STATIC,
-    DYNAMIC
+    DYNAMIC,
+    STREAM,
 };
 
 enum class Buffer_iterate_type {
@@ -314,7 +315,7 @@ enum class Buffer_iterate_type {
     PER_INSTANCE,
 };
 
-enum class Buffer_attribute_type {
+enum class Buffer_data_type {
     FLOAT,
     INT,
     UINT,

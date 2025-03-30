@@ -1,7 +1,10 @@
 #pragma once
 #include "engine/global/base.h"
+#include "engine/runtime/rhi/opengl/rhi_shader_code_opengl.h"
 #include "engine/runtime/rhi/rhi_resource.h"
+#include "engine/runtime/rhi/rhi_shader_code.h"
 #include "engine/runtime/rhi/rhi_shader_program.h"
+#include <memory>
 
 #define LOG_STR_LEN 1024
 
@@ -9,20 +12,20 @@ namespace rtr {
 
 
 class RHI_shader_program_OpenGL : public RHI_shader_program { 
-
 protected:
     unsigned int m_program_id{};
 
 public:
 
     RHI_shader_program_OpenGL(
-        const std::unordered_map<Shader_type, unsigned int>& shaders,
+        const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& shader_codes,
         const std::unordered_map<std::string, RHI_uniform_entry>& uniforms,
         const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays) :
-        RHI_shader_program(shaders, uniforms, uniform_arrays) {
+        RHI_shader_program(shader_codes, uniforms, uniform_arrays) {
+
         m_program_id = glCreateProgram();
 
-        for (auto& [type, shader] : shaders) {
+        for (auto& [type, shader] : shader_codes) {
             attach_code(shader);
         }
 
@@ -70,12 +73,14 @@ public:
         return m_program_id;
     }
 
-    virtual void attach_code(unsigned int code) override {
-        glAttachShader(m_program_id, RHI_resource_manager::native_handle_uint(code));
+    virtual void attach_code(const RHI_shader_code::Ptr& code) override {
+        auto gl_code = std::dynamic_pointer_cast<RHI_shader_code_OpenGL>(code);
+        glAttachShader(m_program_id, gl_code->code_id());
     }
 
-    virtual void detach_code(unsigned int code) override {
-        glDetachShader(m_program_id, RHI_resource_manager::native_handle_uint(code));
+    virtual void detach_code(const RHI_shader_code::Ptr& code) override {
+        auto gl_code = std::dynamic_pointer_cast<RHI_shader_code_OpenGL>(code);
+        glDetachShader(m_program_id, gl_code->code_id());
     }
 
     virtual bool link() override {
@@ -102,9 +107,8 @@ public:
         const void* data
     ) override {
         int location = glGetUniformLocation(m_program_id, name.c_str());
-        if (location == -1) {
-            return;
-        }
+        if (location == -1) return;
+        
 
         switch (type) {
             case Uniform_type::FLOAT:
@@ -161,12 +165,8 @@ public:
     ) override {
 
         int location = glGetUniformLocation(m_program_id, name.c_str());
-        if (location == -1) {
-            //std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_NOT_FOUND: " << name << std::endl;
-            return;
-        } else {
-            //std::cout << "INFO::SHADER::PROGRAM::UNIFORM_FOUND: " << name << " LOCATION: " << location << std::endl;
-        }
+        if (location == -1) return;
+    
        
         switch (type) {
             case Uniform_type::FLOAT:
@@ -208,10 +208,6 @@ public:
                 break;
         }
 
-    }
-
-    virtual const void* native_handle() const override {
-        return (void*)&m_program_id;
     }
     
 };

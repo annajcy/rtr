@@ -3,6 +3,7 @@
 #include "engine/global/base.h" 
 #include "engine/global/event.h"
 #include "engine/runtime/enum.h"
+#include <memory>
 
 namespace rtr {
 
@@ -61,19 +62,19 @@ protected:
     Event<RHI_window*> m_frame_end_event{};
     Event<RHI_window*> m_frame_begin_event{};
 
-    
-    
 public:
 
     RHI_window(
         int width, 
         int height, 
         std::string title,
-        Clear_state clear_state = Clear_state::enabled()
+        Clear_state clear_state
     ) : m_width(width), 
         m_height(height), 
         m_title(title),
         m_clear_state(clear_state) {}
+
+    using Ptr = std::shared_ptr<RHI_window>;
 
     virtual ~RHI_window() = default;
     virtual void init() = 0;

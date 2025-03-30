@@ -32,13 +32,11 @@ public:
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters
     ) : RHI_resource(RHI_resource_type::TEXTURE),
         m_type(type), 
-        m_internal_format(internal_format) {
-            RHI_resource_manager::add_resource(this);
-        }
+        m_internal_format(internal_format) {}
 
-    virtual ~RHI_texture() {
-        RHI_resource_manager::remove_resource(guid());
-    }
+    using Ptr = std::shared_ptr<RHI_texture>;
+
+    virtual ~RHI_texture() {}
     
     virtual void set_filter(Texture_filter_target target, Texture_filter filter) = 0;
     virtual void set_wrap(Texture_wrap_target target, Texture_wrap wrap) = 0;
@@ -52,11 +50,17 @@ public:
     unsigned int mipmap_levels() const { return m_mipmap_levels; }
 };
 
-struct IRHI_texture_2D {
+class IRHI_texture_2D {
+public:
+    IRHI_texture_2D() {}
+    virtual ~IRHI_texture_2D() {}
     virtual void upload_data(const Image_data& image) = 0;
 };
 
-struct IRHI_texture_cubemap {
+class IRHI_texture_cubemap {
+public:
+    IRHI_texture_cubemap() {}
+    virtual ~IRHI_texture_cubemap() {}
     virtual void upload_data(const std::unordered_map<Texture_cubemap_face, Image_data>& images) = 0;
 };
 

@@ -1,6 +1,11 @@
 #include "engine/global/base.h"
+#include "engine/runtime/enum.h"
 #include "engine/runtime/rhi/rhi_device.h"
 #include "engine/runtime/rhi/opengl/rhi_device_opengl.h"
+#include "engine/runtime/rhi/rhi_geometry.h"
+#include "engine/runtime/rhi/rhi_resource.h"
+#include <iterator>
+#include <unordered_map>
 
 using namespace std;
 using namespace rtr;
@@ -37,67 +42,53 @@ std::vector<unsigned int> indices = {
 };    
 
 int main() {
-    
-    // RHI_device_descriptor descriptor{};
 
-    // descriptor.width = 800;
-    // descriptor.height = 600;
-    // descriptor.title = "RTR Engine";
+    std::cout << "Hello, RHI!" << std::endl;
 
-    // auto device = std::make_shared<RHI_device_OpenGL>(descriptor);
+    // RHI_device* device = new RHI_device_OpenGL();
 
+    // auto window = device->create_window(800, 600, "RTR Engine");
 
-    // auto vertex_attribute = device->create_vertex_buffer(
-    //     Buffer_usage::STATIC, 
-    //     Buffer_attribute_type::FLOAT, 
-    //     Buffer_iterate_type::PER_VERTEX,
-    //     3, 
-    //     vertices.size(), 
-    //     vertices.data()
-    // );
+    // auto ebo = device->create_buffer(Buffer_type::ELEMENT, Buffer_usage::STATIC, indices.size() * sizeof(unsigned int), indices.data());
+    // auto vbo = device->create_buffer(Buffer_type::VERTEX, Buffer_usage::STATIC, vertices.size() * sizeof(float), vertices.data());
 
-    // auto element_buffer = device->create_element_buffer(
-    //     Buffer_usage::STATIC,
-    //     indices.size(),
-    //     indices.data()
-    // );
-    
-    // std::unordered_map<unsigned int, std::shared_ptr<RHI_vertex_buffer>> vertex_buffers = {
-    //     {0, vertex_attribute}
-    // };
+    // std::cout << static_cast<unsigned int>(reinterpret_cast<uintptr_t>(ebo->native_handle())) << std::endl;
 
-    // auto geometry = device->create_geometry(vertex_buffers, element_buffer);
+    // auto geometry = device->create_geometry(std::unordered_map<unsigned int, Vertex_buffer_descriptor>{
+    //    {0, Vertex_buffer_descriptor{
+    //        vbo->guid(),
+    //        Buffer_data_type::FLOAT,
+    //        Buffer_iterate_type::PER_VERTEX,
+    //        3
+    //    }} 
+    // }, Element_buffer_descriptor{
+    //     ebo->guid(),
+    //     static_cast<unsigned int>(ebo->data_size() / sizeof(unsigned int))
+    // });
 
-    // //prepare shaders
+    // auto vertex_shader_code = device->create_shader_code(Shader_type::VERTEX, vertexShaderSource);
+    // auto fragment_shader_code = device->create_shader_code(Shader_type::FRAGMENT, fragmentShaderSource);
 
-    // auto vertex_shader = device->create_shader_code(
-    //     Shader_type::VERTEX,
-    //     vertexShaderSource
-    // );
+    // auto shader_program = device->create_shader_program(std::unordered_map<Shader_type, unsigned int>{
+    //     {Shader_type::VERTEX, vertex_shader_code->guid()},
+    //     {Shader_type::FRAGMENT, fragment_shader_code->guid()}
+    // },
+    // std::unordered_map<std::string, RHI_uniform_entry>{},
+    // std::unordered_map<std::string, RHI_uniform_array_entry>{});
 
-    // auto fragment_shader = device->create_shader_code(
-    //     Shader_type::FRAGMENT,
-    //     fragmentShaderSource
-    // );
+    // shader_program->bind();
+    // geometry->bind();
 
-    // std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>> shaders = {
-    //     {Shader_type::VERTEX, vertex_shader},
-    //     {Shader_type::FRAGMENT, fragment_shader}
-    // };
-
-    // auto shader_program = device->create_shader_program(shaders);
-
-    // //prepare binding state
-
-    // device->binding_state()->geometry() = geometry;
-    // device->binding_state()->shader_program() = shader_program;
-
-    // while (device->window()->is_active()) {
-    //     device->clear();
-    //     device->draw();
+    // while (window->is_active()) {
+    //     window->on_frame_begin();
+    //     geometry->draw();
     //     device->check_error();
-    //     device->window()->on_frame_begin();
+    //     window->on_frame_end();
     // }
+
+    // delete geometry;
+    // delete shader_program;
+    // delete window;
     
     return 0;
 }

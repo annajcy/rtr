@@ -1,7 +1,9 @@
 #pragma once
 
 #include "engine/global/base.h"
-#include <vector>
+#include <memory>
+#include <unordered_map>
+#include <unordered_set> // 引入 unordered_set
 
 namespace rtr {
 
@@ -14,110 +16,87 @@ enum class RHI_resource_type {
     FRAME_BUFFER
 };
 
-class RHI_resource : public GUID {
+class RHI_resource : public std::enable_shared_from_this<RHI_resource> {
 protected:
-    RHI_resource_type m_type{};
+    // 修改为 std::vector 存储依赖关系
+    std::vector<std::weak_ptr<RHI_resource>> m_dependencies;
+    std::vector<std::weak_ptr<RHI_resource>> m_reverse_dependencies;
+    RHI_resource_type m_resource_type{};
+    
 public:
+    using Ptr = std::shared_ptr<RHI_resource>;
+    
+    RHI_resource(RHI_resource_type type) : m_resource_type(type) {}
+    
+    virtual ~RHI_resource() {
+        std::vector<Ptr> dependencies;
+        for (const auto& weak_dep : m_dependencies) {
+            if (auto dep = weak_dep.lock()) {
+                dependencies.push_back(dep);
+            }
+        }
 
-    RHI_resource(RHI_resource_type type) : GUID(), m_type(type) {}
-    virtual ~RHI_resource() = default;
-    virtual const void* native_handle() const = 0;
-    virtual RHI_resource_type resource_type() const { return m_type; }
-};
+        for (auto& dep : dependencies) {
+            remove_dependency(dep);
+        }
 
-//key: GUID
+        std::vector<Ptr> reverse_dependencies;
+        for (const auto& weak_dep : m_reverse_dependencies) {
+            if (auto dep = weak_dep.lock()) {
+                reverse_dependencies.push_back(dep);
+            }
+        }
 
-class RHI_resource_manager {
-public:
-    inline static std::unordered_map<unsigned int, RHI_resource*> resource_map{};
-    inline static std::unordered_map<unsigned int, std::unordered_set<unsigned int>> dependency_map{};
-    inline static std::unordered_map<unsigned int, std::unordered_set<unsigned int>> reverse_dependency_map{};
-
-    static void add_resource(RHI_resource* resource) {
-        resource_map[resource->guid()] = resource;
-    }
-
-    static void add_resource_with_dependency(RHI_resource* resource, const std::vector<unsigned int>& dependency_ids) {
-        resource_map[resource->guid()] = resource;
-        for (auto& dependency_id : dependency_ids) {
-            add_dependency(resource->guid(), dependency_id);
+        for (auto& dep : reverse_dependencies) {
+            dep->remove_dependency(shared_from_this());
         }
     }
 
-    static void remove_resource(unsigned int id) {
-
-        if (!resource_map.contains(id)) {
-            return;
+    void add_dependency(const Ptr& resource) {
+        auto self = shared_from_this();
+        // 使用find_if和自定义比较器
+        auto pred = [&](const auto& weak) {
+            return !weak.expired() && weak.lock() == resource;
+        };
+        
+        if (std::find_if(m_dependencies.begin(), m_dependencies.end(), pred) == m_dependencies.end()) {
+            m_dependencies.push_back(resource);
         }
-
-        delete resource_map[id];
-        resource_map.erase(id);
-
-        std::unordered_set<unsigned int> dependency_ids = dependency_map[id];
-        std::unordered_set<unsigned int> reverse_dependency_ids = reverse_dependency_map[id];
-
-        for (auto& dependency_id : dependency_ids) {
-            remove_dependency(dependency_id, id);
-        }
-
-        for (auto& reverse_dependency_id : reverse_dependency_ids) {
-            remove_dependency(id, reverse_dependency_id);
-        }
-
-        dependency_map.erase(id);
-        reverse_dependency_map.erase(id);
-    }
-
-    static RHI_resource* get_resource(unsigned int id) {
-        if (!resource_map.contains(id)) {
-            return nullptr;
-        }   
-        return resource_map[id];
-    }
-
-    template<typename T>
-    static T* get_resource(unsigned int id) {
-        if (!resource_map.contains(id)) {
-            return nullptr;
-        }
-        return static_cast<T*>(resource_map[id]);
-    }
-
-    static const void* native_handle(unsigned int id) {
-        if (!resource_map.contains(id)) {
-            return nullptr;
-        }
-        return resource_map[id]->native_handle();
-    }
-
-    template<typename T>
-    static const T* native_handle(unsigned int id) {
-        if (!resource_map.contains(id)) {
-            return nullptr;
-        }
-        return reinterpret_cast<const T*>(resource_map[id]->native_handle());
-    }
-
-    static unsigned int native_handle_uint(unsigned int id) {
-        if (!resource_map.contains(id)) {
-            return 0;
-        }
-        return *(reinterpret_cast<const unsigned int*>(resource_map[id]->native_handle()));
-    }
-
-    static void add_dependency(unsigned int id, unsigned int dependency_id) {
-        dependency_map[id].insert(dependency_id);
-        reverse_dependency_map[dependency_id].insert(id);
-    }
-
-    static void remove_dependency(unsigned int id, unsigned int dependency_id) {
-        dependency_map[id].erase(dependency_id);
-        reverse_dependency_map[dependency_id].erase(id);
-        if (reverse_dependency_map[dependency_id].size() == 0) {
-            remove_resource(dependency_id);
+        
+        auto& reverse_deps = resource->m_reverse_dependencies;
+        auto self_pred = [&](const auto& weak) {
+            return !weak.expired() && weak.lock() == self;
+        };
+        
+        if (std::find_if(reverse_deps.begin(), reverse_deps.end(), self_pred) == reverse_deps.end()) {
+            reverse_deps.push_back(self);
         }
     }
-  
+
+    void remove_dependency(const Ptr& resource) {
+        // 使用find_if定位元素
+        auto pred = [&](const auto& weak) {
+            return !weak.expired() && weak.lock() == resource;
+        };
+        
+        auto it = std::find_if(m_dependencies.begin(), m_dependencies.end(), pred);
+        if (it != m_dependencies.end()) {
+            m_dependencies.erase(it);
+        }
+    
+        auto self = shared_from_this();
+        auto& reverse_deps = resource->m_reverse_dependencies;
+        auto self_pred = [&](const auto& weak) {
+            return !weak.expired() && weak.lock() == self;
+        };
+        
+        auto reverse_it = std::find_if(reverse_deps.begin(), reverse_deps.end(), self_pred);
+        if (reverse_it != reverse_deps.end()) {
+            reverse_deps.erase(reverse_it);
+        }
+    }
+
+    virtual RHI_resource_type resource_type() const { return m_resource_type; }
 };
 
 }

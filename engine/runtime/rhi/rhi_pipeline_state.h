@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/global/base.h"
 #include "engine/runtime/enum.h"
+#include <memory>
 
 namespace rtr {
 
@@ -238,6 +239,8 @@ class RHI_pipeline_state : public Pipeline_state {
 public:
 
     RHI_pipeline_state() : Pipeline_state() { }
+
+    using Ptr = std::shared_ptr<RHI_pipeline_state>;
     virtual ~RHI_pipeline_state() = default;
     
     void apply() {

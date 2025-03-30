@@ -52,11 +52,7 @@ public:
         return success;
     }
 
-
-    virtual const void* native_handle() const override {
-        return (void*)&m_code_id;
-    }
-
+    unsigned int code_id() const { return m_code_id; }
 };
 
 
