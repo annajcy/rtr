@@ -57,8 +57,6 @@ public:
         if (m_program_id) {
             glDeleteProgram(m_program_id);
         }
-
-        RHI_shader_program::~RHI_shader_program();
     }
 
     virtual void bind() override {

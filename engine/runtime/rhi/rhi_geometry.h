@@ -3,6 +3,7 @@
 #include "engine/runtime/enum.h"
 #include "engine/runtime/rhi/rhi_buffer.h"
 #include "engine/runtime/rhi/rhi_resource.h"
+#include <memory>
 
 namespace rtr {
 
@@ -18,6 +19,8 @@ public:
     ) : RHI_resource(RHI_resource_type::GEOMETRY),
         m_vertex_buffers(vertex_buffers) , 
         m_element_buffer(element_buffer) { }
+
+    using Ptr = std::shared_ptr<RHI_geometry>;
 
     virtual ~RHI_geometry() {}
 

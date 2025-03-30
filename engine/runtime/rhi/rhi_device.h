@@ -46,6 +46,7 @@ public:
 
     virtual RHI_buffer::Ptr create_element_buffer(
         Buffer_usage usage,
+        unsigned int data_count,
         unsigned int data_size,
         const void* data
     )= 0;

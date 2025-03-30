@@ -101,9 +101,7 @@ public:
         upload_data(image);
     }
 
-    virtual ~RHI_texture_2D_OpenGL() {
-        RHI_texture_OpenGL::~RHI_texture_OpenGL();
-    }
+    virtual ~RHI_texture_2D_OpenGL() {}
 
     void upload_data(const Image_data& image) override {
         glTextureSubImage2D(
@@ -144,9 +142,7 @@ public:
         upload_data(images);
     }
 
-    virtual ~RHI_texture_cubemap_OpenGL() {
-        RHI_texture_OpenGL::~RHI_texture_OpenGL();
-    }
+    virtual ~RHI_texture_cubemap_OpenGL() {}
 
     void upload_data(const std::unordered_map<Texture_cubemap_face, Image_data>& images) override {
         for (const auto& [face, image] : images) {

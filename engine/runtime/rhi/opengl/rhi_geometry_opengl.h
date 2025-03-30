@@ -3,6 +3,7 @@
 #include "engine/runtime/enum.h"
 #include "engine/runtime/rhi/opengl/rhi_buffer_opengl.h"
 #include "engine/runtime/rhi/opengl/rhi_cast_opengl.h"
+#include "engine/runtime/rhi/opengl/rhi_error_opengl.h"
 #include "engine/runtime/rhi/rhi_buffer.h"
 #include "engine/runtime/rhi/rhi_cast.h"
 #include "engine/runtime/rhi/rhi_geometry.h"
@@ -41,20 +42,27 @@ public:
     virtual void bind_vertex_buffer(unsigned int location, const RHI_buffer::Ptr &vbo) override {
         
         auto gl_vbo = std::dynamic_pointer_cast<RHI_vertex_buffer_OpenGL>(vbo);
+        
         if (!gl_vbo) {
             return;
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, gl_vbo->buffer_id()); 
-        
+
         glEnableVertexAttribArray(location);
-        glVertexAttribPointer(location, 
+        
+        glVertexAttribPointer(
+            location, 
             gl_vbo->unit_data_count(), 
             gl_buffer_data_type(gl_vbo->buffer_data_type()), 
             GL_FALSE, 
             gl_vbo->unit_data_size(), 
-            (void*)0);
+            (void*)0
+        );
+
+        gl_check_error();
         glVertexAttribDivisor(location, gl_vbo->iterate_type() == Buffer_iterate_type::PER_INSTANCE ? 1 : 0);
+        
         glBindBuffer(GL_ARRAY_BUFFER, 0);  
     }
 

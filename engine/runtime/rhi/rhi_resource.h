@@ -24,12 +24,12 @@ protected:
     RHI_resource_type m_resource_type{};
     
 public:
-    using Ptr = std::shared_ptr<RHI_resource>;
+    using Ptr_resource = std::shared_ptr<RHI_resource>;
     
     RHI_resource(RHI_resource_type type) : m_resource_type(type) {}
     
     virtual ~RHI_resource() {
-        std::vector<Ptr> dependencies;
+        std::vector<Ptr_resource> dependencies;
         for (const auto& weak_dep : m_dependencies) {
             if (auto dep = weak_dep.lock()) {
                 dependencies.push_back(dep);
@@ -40,7 +40,7 @@ public:
             remove_dependency(dep);
         }
 
-        std::vector<Ptr> reverse_dependencies;
+        std::vector<Ptr_resource> reverse_dependencies;
         for (const auto& weak_dep : m_reverse_dependencies) {
             if (auto dep = weak_dep.lock()) {
                 reverse_dependencies.push_back(dep);
@@ -52,7 +52,7 @@ public:
         }
     }
 
-    void add_dependency(const Ptr& resource) {
+    void add_dependency(const Ptr_resource& resource) {
         auto self = shared_from_this();
         // 使用find_if和自定义比较器
         auto pred = [&](const auto& weak) {
@@ -73,7 +73,7 @@ public:
         }
     }
 
-    void remove_dependency(const Ptr& resource) {
+    void remove_dependency(const Ptr_resource& resource) {
         // 使用find_if定位元素
         auto pred = [&](const auto& weak) {
             return !weak.expired() && weak.lock() == resource;

@@ -96,6 +96,7 @@ public:
     void on_frame_begin() {
         poll_events();
         swap_buffers();
+        clear();
         m_frame_begin_event.execute(this);
     }
 

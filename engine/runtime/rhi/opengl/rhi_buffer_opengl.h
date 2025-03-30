@@ -78,23 +78,20 @@ public:
     ) : RHI_buffer_OpenGL(Buffer_type::VERTEX, usage, data_size, data),
         IRHI_vertex_buffer(attribute_type, iterate_type, unit_data_count) {}
 
-    ~RHI_vertex_buffer_OpenGL() override {
-        RHI_buffer_OpenGL::~RHI_buffer_OpenGL();
-    }
+    ~RHI_vertex_buffer_OpenGL() override {}
 };
 
 class RHI_element_buffer_OpenGL : public RHI_buffer_OpenGL, public IRHI_element_buffer {
 public:
     RHI_element_buffer_OpenGL(
         Buffer_usage usage,
+        unsigned int data_count,
         unsigned int data_size,
         const void* data
     ) : RHI_buffer_OpenGL(Buffer_type::ELEMENT, usage, data_size, data),
-        IRHI_element_buffer(data_size) {}
+        IRHI_element_buffer(data_count) {}
 
-    ~RHI_element_buffer_OpenGL() override {
-        RHI_buffer_OpenGL::~RHI_buffer_OpenGL();
-    }
+    ~RHI_element_buffer_OpenGL() override {}
 };
 
 class RHI_memory_buffer_OpenGL : public RHI_buffer_OpenGL, public IRHI_memory_buffer {
@@ -110,9 +107,7 @@ public:
             glGetIntegerv(gl_memory_buffer_alignment_type(Buffer_type::UNIFORM), &m_alignment);
         }
 
-    ~RHI_memory_buffer_OpenGL() override {
-        RHI_buffer_OpenGL::~RHI_buffer_OpenGL();
-    }
+    ~RHI_memory_buffer_OpenGL() override {}
 
     void bind_memory(unsigned int position) override {
         glBindBufferBase(gl_buffer_type(m_type), position, m_buffer_id);

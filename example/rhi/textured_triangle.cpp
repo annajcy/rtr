@@ -10,7 +10,7 @@ using namespace std;
 using namespace rtr;
 
 // Vertex Shader source code
-const char* vertexShaderSource = R"(
+const char* vertex_shader_source = R"(
 #version 460 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aTexCoord;
@@ -24,7 +24,7 @@ void main()
 )";
     
 // Fragment Shader source code
-const char* fragmentShaderSource = R"(
+const char* fragment_shader_source = R"(
 #version 460 core
 out vec4 FragColor;
 in vec2 TexCoord;

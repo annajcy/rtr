@@ -36,6 +36,8 @@ public:
         m_uniforms(uniforms), 
         m_uniform_arrays(uniform_arrays) {}
 
+    using Ptr = std::shared_ptr<RHI_shader_program>;
+
     virtual ~RHI_shader_program() {}
 
     virtual void bind() = 0;

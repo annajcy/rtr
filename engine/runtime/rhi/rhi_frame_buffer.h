@@ -26,6 +26,8 @@ public:
         m_color_attachments(color_attachments),
         m_depth_attachment(depth_attachment) {}
 
+    using Ptr = std::shared_ptr<RHI_frame_buffer>;
+
     virtual ~RHI_frame_buffer() {}
 
     virtual void bind() = 0;

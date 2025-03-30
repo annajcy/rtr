@@ -54,10 +54,12 @@ protected:
 public:
 
     IRHI_vertex_buffer(
-        Buffer_data_type attribute_type,
+        Buffer_data_type data_type,
         Buffer_iterate_type iterate_type,
         unsigned int unit_data_count
-    ) {}
+    ) : m_data_type(data_type),
+        m_iterate_type(iterate_type),
+        m_unit_data_count(unit_data_count) {}
 
     virtual ~IRHI_vertex_buffer() {}
     unsigned int unit_data_count() const { return m_unit_data_count; }
@@ -71,7 +73,7 @@ class IRHI_element_buffer {
 protected:
     unsigned int m_data_count{};
 public:
-    IRHI_element_buffer(unsigned int data_count) {}
+    IRHI_element_buffer(unsigned int data_count) : m_data_count(data_count) {}
     virtual ~IRHI_element_buffer() {}
     unsigned int data_count() const { return m_data_count; }
     Buffer_data_type attribute_type() const { return Buffer_data_type::UINT; }
@@ -89,7 +91,5 @@ public:
     virtual void bind_partial_memory(unsigned int position, unsigned int offset, unsigned int size) = 0;
     int alignment() const { return m_alignment; }
 };
-
-
 
 }; // namespace rtr
