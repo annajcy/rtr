@@ -4,9 +4,6 @@
 #include "engine/runtime/rhi/opengl/rhi_device_opengl.h"
 #include "engine/runtime/rhi/rhi_geometry.h"
 #include "engine/runtime/rhi/rhi_resource.h"
-#include <iterator>
-#include <memory>
-#include <unordered_map>
 
 using namespace std;
 using namespace rtr;
@@ -37,9 +34,17 @@ std::vector<float> vertices = {
     0.0f,  0.5f, 0.0f
 };
 
+std::vector<float> tex_coords = {
+    0.0f, 0.0f,
+    1.0f, 0.0f,
+    0.5f, 1.0f
+};
+
 std::vector<unsigned int> indices = {
     0, 1, 2
 };    
+
+
 
 int main() {
 
@@ -98,4 +103,5 @@ int main() {
     
     return 0;
 }
+
 

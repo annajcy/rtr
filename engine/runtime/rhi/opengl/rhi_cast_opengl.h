@@ -182,20 +182,41 @@ inline constexpr unsigned int gl_texture_type(Texture_type type) {
     }
 }
 
-inline constexpr unsigned int gl_texture_format(Texture_format format) {
+inline constexpr unsigned int gl_texture_internal_format(Texture_internal_format format) {
     switch (format) {
-        case Texture_format::RGB:
-            return GL_RGB;
-        case Texture_format::RGB_ALPHA:
-            return GL_RGBA;
-        case Texture_format::DEPTH_STENCIL:
-            return GL_DEPTH_STENCIL;
-        case Texture_format::SRGB_ALPHA:
-            return GL_SRGB_ALPHA;
-        case Texture_format::SRGB:
-            return GL_SRGB;
-        case Texture_format::DEPTH_STENCIL_24_8:
+        case Texture_internal_format::RGB:
+            return GL_RGB8;  // 添加位数
+        case Texture_internal_format::RGB_ALPHA:
+            return GL_RGBA8;
+        case Texture_internal_format::RGB_ALPHA_16F:
+            return GL_RGBA16F;
+        case Texture_internal_format::RGB_ALPHA_32F:
+            return GL_RGBA32F;
+        case Texture_internal_format::DEPTH_STENCIL:
+            return GL_DEPTH24_STENCIL8; // 更明确的深度格式
+        case Texture_internal_format::SRGB_ALPHA:
+            return GL_SRGB8_ALPHA8;  // 添加位数
+        case Texture_internal_format::SRGB:
+            return GL_SRGB8;         // 添加位数
+        case Texture_internal_format::DEPTH_STENCIL_24_8:
             return GL_DEPTH24_STENCIL8;
+        default:
+            return GL_RGB8;  // 默认也带位数
+    }
+}
+
+inline constexpr unsigned int gl_texture_external_format(Texture_external_format format) {
+    switch (format) {
+        case Texture_external_format::RGB:
+            return GL_RGB;
+        case Texture_external_format::RGB_ALPHA:
+            return GL_RGBA;
+        case Texture_external_format::DEPTH_STENCIL:
+            return GL_DEPTH_STENCIL;
+        case Texture_external_format::SRGB_ALPHA:
+            return GL_SRGB_ALPHA;
+        case Texture_external_format::SRGB:
+            return GL_SRGB;
         default:
             return GL_RGB;
     }

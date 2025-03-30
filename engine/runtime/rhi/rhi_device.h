@@ -78,7 +78,7 @@ public:
         int width,
         int height,
         unsigned int mipmap_levels,
-        Texture_format internal_format,
+        Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
         const Image_data& image
@@ -88,7 +88,7 @@ public:
         int width,
         int height,
         unsigned int mipmap_levels,
-        Texture_format internal_format,
+        Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
         const std::unordered_map<Texture_cubemap_face, Image_data>& images
@@ -102,6 +102,9 @@ public:
     ) = 0;
 
     virtual RHI_pipeline_state::Ptr create_pipeline_state() = 0;
+    virtual RHI_pipeline_state::Ptr create_pipeline_state(const Pipeline_state& pipeline_state) = 0;
+    
+
 
 };
 

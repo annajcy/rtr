@@ -14,6 +14,7 @@
 #include "engine/runtime/rhi/opengl/rhi_texture_opengl.h"
 #include "engine/runtime/rhi/opengl/rhi_frame_buffer_opengl.h"
 #include "engine/runtime/rhi/rhi_frame_buffer.h"
+#include "engine/runtime/rhi/rhi_pipeline_state.h"
 #include <cassert>
 #include <memory>
 
@@ -126,7 +127,7 @@ public:
         int width,
         int height,
         unsigned int mipmap_levels,
-        Texture_format internal_format,
+        Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
         const Image_data& image
@@ -146,7 +147,7 @@ public:
         int width,
         int height,
         unsigned int mipmap_levels,
-        Texture_format internal_format,
+        Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
         const std::unordered_map<Texture_cubemap_face, Image_data>& images
@@ -174,6 +175,10 @@ public:
             color_attachments,
             depth_attachment
         );
+    }
+
+    virtual RHI_pipeline_state::Ptr create_pipeline_state(const Pipeline_state& pipeline_state) override {
+        return std::make_shared<RHI_pipeline_state_OpenGL>(pipeline_state);
     }
 
     virtual RHI_pipeline_state::Ptr create_pipeline_state() override {

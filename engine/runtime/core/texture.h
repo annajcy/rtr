@@ -8,8 +8,8 @@ namespace rtr {
 class Texture : public GUID {
 protected:
     Texture_type m_type{};
-    Texture_format m_internal_format{};
-    Texture_format m_external_format{};
+    Texture_internal_format m_internal_format{};
+    Texture_internal_format m_external_format{};
     Texture_buffer_type m_buffer_type{};
     std::unordered_map<Texture_wrap_target, Texture_wrap> m_wrap_map{};
     std::unordered_map<Texture_filter_target, Texture_filter> m_filter_map{};
@@ -19,8 +19,8 @@ public:
 
     Texture(
         Texture_type type,
-        Texture_format internal_format,
-        Texture_format external_format,
+        Texture_internal_format internal_format,
+        Texture_internal_format external_format,
         Texture_buffer_type buffer_type,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wrap_map,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filter_map,
@@ -35,8 +35,8 @@ public:
         is_generate_mipmap(is_generate_mipmap) {}
 
     Texture_type type() const { return m_type; }
-    Texture_format internal_format() const { return m_internal_format; }
-    Texture_format external_format() const { return m_external_format; }
+    Texture_internal_format internal_format() const { return m_internal_format; }
+    Texture_internal_format external_format() const { return m_external_format; }
     Texture_buffer_type buffer_type() const { return m_buffer_type; }
     virtual ~Texture() = default;
 
@@ -51,8 +51,8 @@ protected:
 public:
     Texture_2D(
         Texture_type type,
-        Texture_format internal_format,
-        Texture_format external_format,
+        Texture_internal_format internal_format,
+        Texture_internal_format external_format,
         Texture_buffer_type buffer_type,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wrap_map,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filter_map,
@@ -72,8 +72,8 @@ public:
 
     Texture_2D(
         Texture_type type,
-        Texture_format internal_format,
-        Texture_format external_format,
+        Texture_internal_format internal_format,
+        Texture_internal_format external_format,
         Texture_buffer_type buffer_type,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wrap_map,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filter_map,
@@ -96,8 +96,8 @@ public:
         const std::shared_ptr<Image>& image
     ) : Texture(
         Texture_type::TEXTURE_2D, 
-        Texture_format::SRGB_ALPHA, 
-        Texture_format::RGB_ALPHA, 
+        Texture_internal_format::SRGB_ALPHA, 
+        Texture_internal_format::RGB_ALPHA, 
         Texture_buffer_type::UNSIGNED_BYTE,
         std::unordered_map<Texture_wrap_target, Texture_wrap>{
             {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
@@ -124,8 +124,8 @@ public:
     ) {
         return std::make_shared<Texture_2D>(
             Texture_type::TEXTURE_2D,
-            Texture_format::RGB_ALPHA,
-            Texture_format::RGB_ALPHA,
+            Texture_internal_format::RGB_ALPHA,
+            Texture_internal_format::RGB_ALPHA,
             Texture_buffer_type::UNSIGNED_BYTE,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
@@ -159,8 +159,8 @@ public:
     ) {
         return std::make_shared<Texture_2D>(
             Texture_type::TEXTURE_2D,
-            Texture_format::DEPTH_STENCIL_24_8,
-            Texture_format::DEPTH_STENCIL,
+            Texture_internal_format::DEPTH_STENCIL_24_8,
+            Texture_internal_format::DEPTH_STENCIL,
             Texture_buffer_type::UNSIGNED_INT_24_8,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_BORDER},
@@ -186,8 +186,8 @@ public:
         const std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>& face_images
     ) : Texture(
         Texture_type::TEXTURE_CUBE_MAP, 
-        Texture_format::SRGB_ALPHA, 
-        Texture_format::RGB_ALPHA, 
+        Texture_internal_format::SRGB_ALPHA, 
+        Texture_internal_format::RGB_ALPHA, 
         Texture_buffer_type::UNSIGNED_BYTE,
         std::unordered_map<Texture_wrap_target, Texture_wrap>{   // 环绕模式建议保持 CLAMP_TO_EDGE
             {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
@@ -208,8 +208,8 @@ public:
         const bool is_generate_mipmap
     ) : Texture(
         Texture_type::TEXTURE_CUBE_MAP, 
-        Texture_format::SRGB_ALPHA, 
-        Texture_format::RGB_ALPHA, 
+        Texture_internal_format::SRGB_ALPHA, 
+        Texture_internal_format::RGB_ALPHA, 
         Texture_buffer_type::UNSIGNED_BYTE,
         wrap_map,
         filter_map,

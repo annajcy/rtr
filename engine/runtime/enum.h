@@ -163,11 +163,21 @@ enum class Texture_type {
     TEXTURE_CUBE_MAP
 };
 
-enum class Texture_format {
+enum class Texture_internal_format {
+    RGB,
+    RGB_ALPHA,
+    RGB_ALPHA_16F,
+    RGB_ALPHA_32F,
+    DEPTH_STENCIL,
+    DEPTH_STENCIL_24_8,
+    SRGB_ALPHA,
+    SRGB
+};
+
+enum class Texture_external_format {
     RGB,
     RGB_ALPHA,
     DEPTH_STENCIL,
-    DEPTH_STENCIL_24_8,
     SRGB_ALPHA,
     SRGB
 };

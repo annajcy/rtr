@@ -10,7 +10,7 @@ struct Image_data {
     int height{};
     const unsigned char* data{ nullptr };
     Texture_buffer_type buffer_type{ Texture_buffer_type::UNSIGNED_BYTE };
-    Texture_format external_format{ Texture_format::RGB_ALPHA };
+    Texture_external_format external_format{ Texture_external_format::RGB_ALPHA };
 };
 
 class RHI_texture : public RHI_resource  {
@@ -18,7 +18,7 @@ protected:
     int m_width{};
     int m_height{};
     Texture_type m_type{};
-    Texture_format m_internal_format{};
+    Texture_internal_format m_internal_format{};
     unsigned int m_mipmap_levels{};
     
 public:
@@ -27,12 +27,15 @@ public:
         int height,
         unsigned int mipmap_levels,
         Texture_type type, 
-        Texture_format internal_format,
+        Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters
     ) : RHI_resource(RHI_resource_type::TEXTURE),
         m_type(type), 
-        m_internal_format(internal_format) {}
+        m_internal_format(internal_format),
+        m_width(width),
+        m_height(height),
+        m_mipmap_levels(mipmap_levels) {}
 
     using Ptr = std::shared_ptr<RHI_texture>;
 
@@ -44,7 +47,7 @@ public:
     virtual void bind(unsigned int location) = 0;
    
     Texture_type type() const { return m_type; }
-    Texture_format internal_format() const { return m_internal_format; }
+    Texture_internal_format internal_format() const { return m_internal_format; }
     int width() const { return m_width; }
     int height() const { return m_height; }
     unsigned int mipmap_levels() const { return m_mipmap_levels; }

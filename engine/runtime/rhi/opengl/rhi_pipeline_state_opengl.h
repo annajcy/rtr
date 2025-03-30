@@ -9,6 +9,8 @@ class RHI_pipeline_state_OpenGL : public RHI_pipeline_state {
 
 public:
     RHI_pipeline_state_OpenGL() : RHI_pipeline_state() { apply(); }
+    RHI_pipeline_state_OpenGL(const Pipeline_state& pipeline_state) : 
+    RHI_pipeline_state(pipeline_state) { apply(); }
 
     ~RHI_pipeline_state_OpenGL() override = default;
 

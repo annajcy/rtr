@@ -2,6 +2,7 @@
 #include "engine/global/base.h"
 #include "engine/runtime/enum.h"
 #include "engine/runtime/rhi/opengl/rhi_cast_opengl.h"
+#include "engine/runtime/rhi/opengl/rhi_error_opengl.h"
 #include "engine/runtime/rhi/rhi_texture.h"
 
 namespace rtr {
@@ -15,7 +16,7 @@ public:
         int height,
         unsigned int mipmap_levels,
         Texture_type type,
-        Texture_format internal_format,
+        Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters
     ) : RHI_texture(
@@ -28,7 +29,14 @@ public:
         filters
     ) {
         glCreateTextures(gl_texture_type(m_type), 1, &m_texture_id);
-        glTextureStorage2D(m_texture_id, mipmap_levels, gl_texture_format(m_internal_format), m_width, m_height);
+        
+        glTextureStorage2D(
+            m_texture_id, 
+            mipmap_levels, 
+            gl_texture_internal_format(m_internal_format), 
+            m_width, 
+            m_height
+        );
 
         for (const auto& [target, wrap] : wraps) {
             set_wrap(target, wrap);
@@ -77,14 +85,12 @@ public:
 };
 
 class RHI_texture_2D_OpenGL : public RHI_texture_OpenGL, public IRHI_texture_2D {
-protected:
-    unsigned int m_texture_id{};
 public: 
     RHI_texture_2D_OpenGL(
         int width,
         int height,
         unsigned int mipmap_levels,
-        Texture_format internal_format,
+        Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
         const Image_data& image
@@ -104,12 +110,20 @@ public:
     virtual ~RHI_texture_2D_OpenGL() {}
 
     void upload_data(const Image_data& image) override {
+
+        if (image.external_format == Texture_external_format::SRGB_ALPHA || 
+            image.external_format == Texture_external_format::SRGB) {
+                glEnable(GL_FRAMEBUFFER_SRGB);
+            } else {
+                glDisable(GL_FRAMEBUFFER_SRGB);
+            }
+
         glTextureSubImage2D(
             m_texture_id, 
             0, 
             0, 0, 
             m_width, m_height,
-            gl_texture_format(image.external_format), 
+            gl_texture_external_format(image.external_format), 
             gl_texture_buffer_type(image.buffer_type), 
             image.data
         );
@@ -118,14 +132,12 @@ public:
 
 
 class RHI_texture_cubemap_OpenGL : public RHI_texture_OpenGL, public IRHI_texture_cubemap {
-protected:
-    unsigned int m_texture_id{};
 public:
     RHI_texture_cubemap_OpenGL(
         int width,
         int height,
         unsigned int mipmap_levels,
-        Texture_format internal_format,
+        Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
         const std::unordered_map<Texture_cubemap_face, Image_data>& images
@@ -151,7 +163,7 @@ public:
                 0,
                 0, 0, static_cast<unsigned int>(face),
                 m_width, m_height, 1,
-                gl_texture_format(image.external_format),
+                gl_texture_external_format(image.external_format),
                 gl_texture_buffer_type(image.buffer_type),
                 image.data
             );

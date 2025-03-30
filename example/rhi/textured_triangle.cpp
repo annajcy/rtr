@@ -1,10 +1,11 @@
 #include "engine/global/base.h"
-
-#include "engine/runtime/resource/loader/resource_loader.h"
+#include "engine/runtime/enum.h"
+#include "engine/runtime/resource/loader/image_loader.h"
 #include "engine/runtime/rhi/rhi_device.h"
 #include "engine/runtime/rhi/opengl/rhi_device_opengl.h"
-
-#include "engine/runtime/core/renderer.h"
+#include "engine/runtime/rhi/rhi_geometry.h"
+#include "engine/runtime/rhi/rhi_pipeline_state.h"
+#include "engine/runtime/rhi/rhi_resource.h"
 
 using namespace std;
 using namespace rtr;
@@ -14,11 +15,13 @@ const char* vertex_shader_source = R"(
 #version 460 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aTexCoord;
-
+uniform mat4 transform;
+    
 out vec2 TexCoord;
+    
 void main()
 {
-    gl_Position = vec4(aPos, 1.0);
+    gl_Position = transform * vec4(aPos, 1.0);
     TexCoord = aTexCoord;
 }
 )";
@@ -28,275 +31,154 @@ const char* fragment_shader_source = R"(
 #version 460 core
 out vec4 FragColor;
 in vec2 TexCoord;
-
-uniform sampler2D texture_sampler;
+uniform sampler2D ourTexture; // 缺少纹理uniform
 
 void main()
 {
-    FragColor = vec4(texture(texture_sampler, TexCoord).rgb, 1.0);
+    vec4 texColor = texture(ourTexture, TexCoord);
+    FragColor = texColor;
 }
 )";
 
-
-const char* fragmentShaderSource1 = R"(
-   #version 460 core
-out vec4 frag_color;
-
-in vec3 world_position;
-in vec2 uv;
-in vec3 normal;
-
-uniform float time;
-uniform sampler2D main_tex;
-
-uniform vec3 camera_position;
-
-struct Material {
-    vec3 ambient;  // 原为 ka，需要与 C++ 代码中的 uniform 名称对应
-    vec3 diffuse;  // 原为 kd
-    vec3 specular; // 原为 ks
-    float shininess;
-}; // 添加分号
-
-uniform Material material;
-
-#define MAX_LIGHTS 16
-uniform int active_lights;
-uniform int main_light_index;
-
-struct Light {
-    int type;        // 0=ambient, 1=directional, 2=point, 3=spot
-    vec3 color;
-    float intensity;
-    vec3 position;   // 点/聚光灯
-    vec3 direction;  // 平行/聚光灯
-    vec3 attenuation; // x=kc, y=k1, z=k2
-    float inner_angle;
-    float outer_angle;
-};
-
-uniform Light lights[MAX_LIGHTS];
-
-// 公共光照计算函数
-vec3 diffuse_component(vec3 light_dir, vec3 normal, vec3 light_color, vec3 object_color, float intensity) {
-    float diff = max(dot(normal, light_dir), 0.0);
-    return light_color * diff * object_color * intensity;
-}
-
-vec3 specular_component(vec3 light_dir, vec3 normal, vec3 view_dir, vec3 light_color, float shininess, float intensity) {
-    // 改用半角向量计算高光
-    vec3 H = normalize(light_dir + view_dir);
-    float spec = pow(max(dot(normal, H), 0.0), shininess);
-    return light_color * spec * intensity;
-}
-
-// 环境光处理
-// 修改 ambient_light 函数
-vec3 ambient_light(Light light, Material mat, vec3 object_color) {
-    return light.color * light.intensity * mat.ambient * object_color; // ka → ambient
-}
-
-// 修改 directional_light 函数
-vec3 directional_light(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 object_color) {
-    vec3 light_dir = normalize(-light.direction);
-    vec3 diffuse = mat.diffuse * diffuse_component(light_dir, normal, light.color, object_color, light.intensity); // kd → diffuse
-    vec3 specular = mat.specular * specular_component(light_dir, normal, view_dir, light.color, mat.shininess, light.intensity); // ks → specular
-    return diffuse + specular;
-}
-
-// 修改 point_light 函数
-vec3 point_light(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 world_pos, vec3 object_color) {  // 添加object_color参数
-    vec3 light_dir = normalize(light.position - world_pos);
-    float dist = length(light.position - world_pos);
-    float attenuation = 1.0 / (light.attenuation.z * dist*dist + 
-                              light.attenuation.y * dist + 
-                              light.attenuation.x);
-    
-    vec3 diffuse = mat.diffuse * diffuse_component(light_dir, normal, light.color, object_color, light.intensity);
-    vec3 specular = mat.specular * specular_component(light_dir, normal, view_dir, light.color, mat.shininess, light.intensity);
-    return (diffuse + specular) * attenuation;
-}
-
-// 修改 spot_light 函数
-vec3 spot_light(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 world_pos, vec3 object_color) {  // 添加object_color参数
-    vec3 light_dir = normalize(light.position - world_pos);
-    float theta = dot(light_dir, normalize(-light.direction));
-    float epsilon = light.inner_angle - light.outer_angle;
-    float intensity = clamp((theta - light.outer_angle) / epsilon, 0.0, 1.0);
-    
-    float dist = length(light.position - world_pos);
-    float attenuation = 1.0 / (light.attenuation.z * dist*dist + 
-                              light.attenuation.y * dist + 
-                              light.attenuation.x);
-    
-    vec3 diffuse = mat.diffuse * diffuse_component(light_dir, normal, light.color, object_color, light.intensity);
-    vec3 specular = mat.specular * specular_component(light_dir, normal, view_dir, light.color, mat.shininess, light.intensity);
-    return (diffuse + specular) * attenuation * intensity;
-}
-
-vec3 calculate_lighting(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 world_pos, vec3 object_color) {
-    switch(light.type) {
-        case 0: return ambient_light(light, mat, object_color);
-        case 1: return directional_light(light, mat, normal, view_dir, object_color);
-        case 2: return point_light(light, mat, normal, view_dir, world_pos, object_color);  // 传递object_color
-        case 3: return spot_light(light, mat, normal, view_dir, world_pos, object_color);    // 传递object_color
-    }
-    return vec3(0.0);
-}
-
-void main() {
-    vec3 object_color = texture(main_tex, uv).rgb;
-    vec3 N = normalize(normal);
-    vec3 V = normalize(camera_position - world_position);
-
-    vec3 result = vec3(0.0);
-    for (int i = 0; i < active_lights; ++i) {
-        if(i == main_light_index) {
-            continue;
-        }
-        result += calculate_lighting(lights[i], material, N, V, world_position, object_color);
-    }
-    
-    if (active_lights > 0) {
-        result += calculate_lighting(lights[main_light_index], material, N, V, world_position, object_color);
-    }
-
-    frag_color = vec4(result, 1.0);
-}
-    )";
-
-
-std::vector<float> vertices = {
-    -0.5f, -0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f,
-    0.0f,  0.5f, 0.0f
-};
-
-std::vector<float> texture_coords = {
-    0.0f, 0.0f,
-    1.0f, 0.0f,
-    0.5f, 1.0f
-};
-
-std::vector<unsigned int> indices = {
-    0, 1, 2
-};    
-
-std::shared_ptr<Image> image{};
-
 int main() {
 
-    Renderer rd();
+    std::cout << "Hello, RHI!" << std::endl;
 
-    // auto image_loader = std::make_shared<Image_loader_stb>();
-    // image = image_loader->load_from_path(Image_format::RGB_ALPHA, "assets/image/default_texture.jpg");
+    auto device = std::make_shared<RHI_device_OpenGL>();
+    auto window = device->create_window(800, 600, "RTR");
+
+    // 分离的位置数据和纹理坐标数据
+    std::vector<float> vertices = {
+        -0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
+        0.0f,  0.5f, 0.0f
+    };
     
-    // RHI_device_descriptor descriptor{};
-
-    // descriptor.width = 800;
-    // descriptor.height = 600;
-    // descriptor.title = "RTR Engine";
-
-    // auto device = std::make_shared<RHI_device_OpenGL>(descriptor);
-    // //prepare geometry
-
-    // auto vertex_attribute = device->create_vertex_buffer(
-    //     Buffer_usage::STATIC, 
-    //     Buffer_attribute_type::FLOAT, 
-    //     Buffer_iterate_type::PER_VERTEX,
-    //     3, 
-    //     vertices.size(), 
-    //     vertices.data()
-    // );
-
-    // auto texture_attribute = device->create_vertex_buffer(
-    //     Buffer_usage::STATIC,
-    //     Buffer_attribute_type::FLOAT,
-    //     Buffer_iterate_type::PER_VERTEX,
-    //     2,
-    //     texture_coords.size(),
-    //     texture_coords.data()
-    // );
-
-    // auto element_buffer = device->create_element_buffer(
-    //     Buffer_usage::STATIC,
-    //     indices.size(),
-    //     indices.data()
-    // );
+    std::vector<float> tex_coords = {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        0.5f, 1.0f
+    };
     
-    // std::unordered_map<unsigned int, std::shared_ptr<RHI_vertex_buffer>> vertex_buffers = {
-    //     {0, vertex_attribute},
-    //     {1, texture_attribute}
-    // };
+    std::vector<unsigned int> indices = {
+        0, 1, 2
+    };  
 
-    // auto geometry = device->create_geometry(vertex_buffers, element_buffer);
+    auto element = device->create_element_buffer(
+        Buffer_usage::STATIC,
+        indices.size(),
+        indices.size() * sizeof(unsigned int),
+        indices.data()
+    );
 
-    // //prepare shaders
+    // 创建位置缓冲区
+    auto position = device->create_vertex_buffer(
+        Buffer_usage::STATIC,
+        Buffer_data_type::FLOAT,
+        Buffer_iterate_type::PER_VERTEX,
+        3,  // 每个顶点3个分量
+        vertices.size() * sizeof(float),
+        vertices.data()
+    );
 
-    // auto vertex_shader = device->create_shader_code(
-    //     Shader_type::VERTEX,
-    //     vertexShaderSource
-    // );
+    // 创建独立的纹理坐标缓冲区
+    auto texCoord = device->create_vertex_buffer(
+        Buffer_usage::STATIC,
+        Buffer_data_type::FLOAT,
+        Buffer_iterate_type::PER_VERTEX,
+        2,  // 每个顶点2个分量
+        tex_coords.size() * sizeof(float),
+        tex_coords.data()
+    );
 
-    // auto fragment_shader = device->create_shader_code(
-    //     Shader_type::FRAGMENT,
-    //     fragmentShaderSource
-    // );
+    // 修改几何体绑定（需要对应修改vertex shader的location）
+    auto geometry = device->create_geometry(
+        std::unordered_map<unsigned int, RHI_buffer::Ptr>{
+            {0, position},  // location 0 绑定位置数据
+            {1, texCoord}    // location 1 绑定纹理坐标
+        },
+        element
+    );
 
-    // std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>> shaders = {
-    //     {Shader_type::VERTEX, vertex_shader},
-    //     {Shader_type::FRAGMENT, fragment_shader}
-    // };
+    auto vertex_shader_code = device->create_shader_code(Shader_type::VERTEX, vertex_shader_source);
+    auto fragment_shader_code = device->create_shader_code(Shader_type::FRAGMENT, fragment_shader_source);
 
-    // int texture_location = 3;
+    auto image_loader = std::make_shared<Image_loader>();
+    auto image = image_loader->load_from_path(
+        Image_format::RGB_ALPHA, 
+        "assets/image/default_texture.jpg"
+    );
 
-    // std::unordered_map<std::string, RHI_uniform_entry> uniforms = {
-    //     {"texture_sampler", {Uniform_type::SAMPLER, &texture_location}}
-    // };
+    auto texture = device->create_texture_2D(
+        image->width(), 
+        image->height(), 
+        4, 
+        Texture_internal_format::SRGB_ALPHA,
+        std::unordered_map<Texture_wrap_target, Texture_wrap>{
+            {Texture_wrap_target::U, Texture_wrap::REPEAT},
+            {Texture_wrap_target::V, Texture_wrap::REPEAT}
+        },
+        std::unordered_map<Texture_filter_target, Texture_filter>{
+            {Texture_filter_target::MIN, Texture_filter::LINEAR},
+            {Texture_filter_target::MAG, Texture_filter::LINEAR}
+        },
+        Image_data{
+            image->width(),
+            image->height(),
+            image->data(),
+            Texture_buffer_type::UNSIGNED_BYTE,
+            Texture_external_format::RGB_ALPHA
+        }
+    );
 
-    // auto shader_program = device->create_shader_program(shaders);
-    // shader_program->set_uniforms(uniforms);
+    texture->bind(0);
     
-    // //prepare textures
-    // auto texture = device->create_texture_2D(
-    //     image->width(),
-    //     image->height(),
-    //     image->data()
-    // );
+    int samplerLoc = 0;
+    glm::mat4 transform = glm::mat4(1.0f);
 
-    // // texture->set_filter(Texture_filter::LINEAR, Texture_filter_target::MIN);
-    // // texture->set_filter(Texture_filter::LINEAR_MIPMAP_LINEAR, Texture_filter_target::MAG);
-    // // texture->set_wrap(Texture_wrap::CLAMP_TO_EDGE, Texture_wrap_target::U);
-    // // texture->set_wrap(Texture_wrap::CLAMP_TO_EDGE, Texture_wrap_target::V);
+    auto shader_program = device->create_shader_program(
+        std::unordered_map<Shader_type, RHI_shader_code::Ptr>{
+            {Shader_type::VERTEX, vertex_shader_code},
+            {Shader_type::FRAGMENT, fragment_shader_code}
+        },  
+        std::unordered_map<std::string, RHI_uniform_entry> {
+            {"transform", RHI_uniform_entry{Uniform_type::MAT4, &transform}},
+            {"ourTexture", RHI_uniform_entry{Uniform_type::SAMPLER, &samplerLoc}}
+           
+        }, 
+        std::unordered_map<std::string, RHI_uniform_array_entry>{}
+    );
 
 
-    // texture->generate_mipmap();
+    auto pipeline_state = device->create_pipeline_state(Pipeline_state::opaque_pipeline_state());
+    pipeline_state->cull_state.enable = false;
 
-    // //prepare binding state
+    pipeline_state->apply();
 
-    // std::unordered_map<unsigned int, std::shared_ptr<RHI_texture_2D>> textures = {
-    //     {3, texture}
-    // };
+    geometry->bind();
+    shader_program->bind();
 
-    // device->binding_state()->geometry() = geometry;
-    // device->binding_state()->shader_program() = shader_program;
-    // device->binding_state()->textures_2D() = textures;  
+    while (window->is_active()) {
+        window->on_frame_begin();
 
-    // //prepare input
-    // auto input = std::make_shared<Input>(device->window());
+        // 问题4：缺少矩阵动画和uniform更新
+        static float rotation = 0.0f;
+        rotation += 0.5f;
+        transform = glm::rotate(glm::mat4(1.0f), 
+                              glm::radians(rotation), 
+                              glm::vec3(0.5f, 1.0f, 0.0f));
 
-    // while (device->window()->is_active()) {
-    //     device->window()->on_frame_begin();
-    //     device->clear();
-    //     device->draw();
+        shader_program->modify_uniform("transform", Uniform_type::MAT4, &transform);
+        shader_program->update_uniforms();
 
-    //     // std::cout << input->mouse_x() << " " << input->mouse_y() << std::endl;
-    //     // std::cout << input->mouse_dx() << " " << input->mouse_dy() << std::endl;
-    //     // std::cout << input->mouse_scroll_dx() << " " << input->mouse_scroll_dy() << std::endl;
+        //device->check_error();
+        geometry->draw();
 
-    //     device->window()->on_frame_end();
-    // }
+        window->on_frame_end();
+    }
     
     return 0;
 }
+
+
 

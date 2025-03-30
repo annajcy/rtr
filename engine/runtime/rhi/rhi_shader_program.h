@@ -10,14 +10,15 @@ namespace rtr {
 struct RHI_uniform_entry {
     Uniform_type type;
     const void* data;
+    bool need_update{true};
 };
 
 struct RHI_uniform_array_entry {
     Uniform_type type;
     const void* data;
     unsigned int count;
+    bool need_update{true};
 };
-
 
 class RHI_shader_program : public RHI_resource { 
 protected:
@@ -53,11 +54,28 @@ public:
     
     void update_uniforms() {  
         for (auto& [name, uniform] : m_uniforms) {
-            set_uniform(name, uniform.type, uniform.data);
+            if (uniform.need_update) {
+                set_uniform(name, uniform.type, uniform.data);
+                uniform.need_update = false;
+            }  
         }
 
         for (auto& [name, uniform_array] : m_uniform_arrays) {
-            set_uniform_array(name, uniform_array.type, uniform_array.data, uniform_array.count);
+            if (uniform_array.need_update) {
+                set_uniform_array(name, uniform_array.type, uniform_array.data, uniform_array.count);
+                uniform_array.need_update = false;
+            }
+                
+        }
+    }
+
+    void modify_uniform(const std::string& name, Uniform_type type, const void* data) {
+        if (m_uniforms.find(name) != m_uniforms.end()) {
+            m_uniforms[name].data = data;
+            m_uniforms[name].type = type;
+            m_uniforms[name].need_update = true;
+        } else {
+            std::cerr << "Uniform " << name << " not found." << std::endl;
         }
     }
 
