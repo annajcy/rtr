@@ -33,6 +33,12 @@ public:
     }
 
     void add_child(const std::shared_ptr<Node>& node) {
+        if (node.get() == this) {
+            throw std::invalid_argument("Cannot add self as child");
+        }
+        if (node->parent_ptr()) {
+            node->parent_ptr()->erase_child(node);
+        }
         m_children.push_back(node);
         node->m_parent = shared_from_this();
     }
@@ -126,9 +132,20 @@ public:
         transform = glm::scale(transform, m_scale);
         transform *= glm::mat4_cast(m_rotation);
         transform = glm::translate(glm::identity<glm::mat4>(), m_position) * transform;
-
+        
         return parent_matrix * transform;
 
+    }
+
+    glm::vec3 world_position() {
+        return glm::vec3(model_matrix()[3]);
+    }
+
+    glm::quat world_rotation() {
+        if (parent_ptr()) {
+            return parent_ptr()->world_rotation() * m_rotation;
+        }
+        return m_rotation;
     }
 
     Node world_node() {
@@ -175,6 +192,7 @@ public:
 
         // 更新 m_rotation
         m_rotation = rotation_quat * m_rotation;
+        m_rotation = glm::normalize(m_rotation); 
 
     }
 
@@ -188,7 +206,8 @@ public:
     }
 
     void rotate(float angle, const glm::vec3& axis) {
-        m_rotation = glm::rotate(m_rotation, glm::radians(angle), axis);
+        glm::quat rotation = glm::angleAxis(glm::radians(angle), axis);  // Convert angle-axis to quaternion
+        m_rotation = rotation * m_rotation;  // Apply rotation to current rotation
     }
 
 };

@@ -23,7 +23,7 @@ private:
     double m_mouse_scroll_dy{};
 
 public:
-    Input(const std::shared_ptr<RHI_window>& window) {
+    Input(const RHI_window::Ptr& window) {
         window->mouse_move_event().add([&](double x, double y) {
             this->update_mouse_position(x, y);
         });
@@ -46,6 +46,8 @@ public:
     }
 
     ~Input() = default;
+
+    using Ptr = std::shared_ptr<Input>;
 
     [[nodiscard]] Key_action key_mod(Key_mod mod) const {
         if (m_key_mods.find(mod) == m_key_mods.end()) {

@@ -4,28 +4,29 @@
 #include "engine/runtime/rhi/opengl/rhi_error_opengl.h"
 #include "engine/runtime/rhi/rhi_resource.h"
 #include "engine/runtime/rhi/rhi_shader_code.h"
+#include <functional>
 #include <unordered_map>
 
 namespace rtr {
 
 struct RHI_uniform_entry {
     Uniform_type type{};
-    const void* data{};
+    void* data{};
     bool need_update{};
 
     RHI_uniform_entry() {}
-    RHI_uniform_entry(Uniform_type type, const void* data) : 
+    RHI_uniform_entry(Uniform_type type, void* data) : 
     type(type), data(data), need_update(true) {}
 };
 
 struct RHI_uniform_array_entry {
     Uniform_type type{};
-    const void* data{};
+    void* data{};
     unsigned int count{};
     bool need_update{};
 
     RHI_uniform_array_entry() {}
-    RHI_uniform_array_entry(Uniform_type type, const void* data, unsigned int count) :
+    RHI_uniform_array_entry(Uniform_type type, void* data, unsigned int count) :
     type(type), data(data), count(count), need_update(true) {}
 };
 
@@ -79,14 +80,89 @@ public:
         unbind();
     }
 
-    void modify_uniform(const std::string& name, Uniform_type type, const void* data) {
+    void reassign_uniform(const std::string& name, const RHI_uniform_entry& uniform) {
         if (m_uniforms.find(name) != m_uniforms.end()) {
-            m_uniforms[name].data = data;
-            m_uniforms[name].type = type;
+            m_uniforms[name] = RHI_uniform_entry{uniform.type, uniform.data};
+        } else {
+            std::cerr << "Uniform " << name << " not found." << std::endl;
+        }
+    }
+
+    void reassign_uniform_array(const std::string& name, const RHI_uniform_array_entry& uniform_array) {
+        if (m_uniform_arrays.find(name)!= m_uniform_arrays.end()) {
+            m_uniform_arrays[name] = RHI_uniform_array_entry{uniform_array.type, uniform_array.data, uniform_array.count};
+        } else {
+            std::cerr << "Uniform array " << name << " not found." << std::endl;
+        }
+    }
+
+    template<typename T>
+    void modify_uniform(const std::string& name, std::function<void(T*)> modifier) {
+        if (!type_check<T>(m_uniforms[name].type)) {
+            std::cerr << "Uniform type mismatch." << std::endl;
+            return;
+        }
+        if (m_uniforms.find(name)!= m_uniforms.end()) {
+            modifier(reinterpret_cast<T*>(m_uniforms[name].data));
             m_uniforms[name].need_update = true;
         } else {
             std::cerr << "Uniform " << name << " not found." << std::endl;
         }
+    }
+
+    template<typename T>
+    void modify_uniform_array(const std::string& name, std::function<void(T*, unsigned int)> modifier) {
+        if (!type_check<T>(m_uniform_arrays[name].type)) {
+            std::cerr << "Uniform type mismatch." << std::endl;
+            return;
+        }
+        if (m_uniform_arrays.find(name)!= m_uniform_arrays.end()) {
+            modifier(reinterpret_cast<T*>(m_uniform_arrays[name].data), m_uniform_arrays[name].count);
+            m_uniform_arrays[name].need_update = true;
+        } else {
+            std::cerr << "Uniform array " << name << " not found." << std::endl;
+        }
+    }
+
+    template<typename T>
+    void modify_uniform_value(const std::string& name, T value) {
+        modify_uniform<T>(name, [value](T* data){
+            *data = value;
+        });
+    }
+
+    template<typename T>
+    void modify_uniform_array_value(const std::string& name, T* values, unsigned int count) {
+        modify_uniform_array<T>(name, [values, count](T* data, unsigned int size){
+            for (unsigned int i = 0; i < std::min(count, size); i++) {
+                data[i] = values[i];
+            }
+        });
+    }
+
+    template<typename T>
+    constexpr bool type_check(Uniform_type type) {
+        if (type == Uniform_type::INT) {
+            return std::is_same<T, int>::value;
+        } else if (type == Uniform_type::FLOAT) {
+            return std::is_same<T, float>::value;
+        } else if (type == Uniform_type::VEC2) {
+            return std::is_same<T, glm::vec2>::value;
+        } else if (type == Uniform_type::VEC3) {
+            return std::is_same<T, glm::vec3>::value;
+        } else if (type == Uniform_type::VEC4) {
+            return std::is_same<T, glm::vec4>::value;
+        } else if (type == Uniform_type::MAT2) {
+            return std::is_same<T, glm::mat2>::value;
+        } else if (type == Uniform_type::MAT3) {
+            return std::is_same<T, glm::mat3>::value;
+        } else if (type == Uniform_type::MAT4) {
+            return std::is_same<T, glm::mat4>::value;
+        } else if (type == Uniform_type::SAMPLER) {
+            return std::is_same<T, int>::value;
+        } else {
+            return false;
+        } 
     }
 
 };

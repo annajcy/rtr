@@ -48,9 +48,9 @@ glad
 ${OPENGL_LIBRARIES} 
 )
 
-add_executable(rhi_triangle_textured ${SOURCES} example/rhi/textured_triangle.cpp)
+add_executable(rhi_spinning_earth ${SOURCES} example/rhi/spinning_earth.cpp)
 
-target_link_libraries(rhi_triangle_textured 
+target_link_libraries(rhi_spinning_earth 
 glfw
 glad
 assimp

@@ -48,8 +48,6 @@ std::vector<unsigned int> indices = {
 
 int main() {
 
-    std::cout << "Hello, RHI!" << std::endl;
-
     auto device = std::make_shared<RHI_device_OpenGL>();
     auto window = device->create_window(800, 600, "RTR");
 

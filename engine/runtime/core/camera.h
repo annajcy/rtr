@@ -21,13 +21,8 @@ public:
 
     using Ptr = std::shared_ptr<Camera>;
 
-    bool is_main() const {
-        return m_is_main;
-    }
-
-    bool& is_main() {
-        return m_is_main;
-    }
+    bool is_main() const { return m_is_main; }
+    bool& is_main() { return m_is_main; }
 
     virtual ~Camera() override = default;
 
@@ -57,6 +52,10 @@ public:
     Camera(near_bound, far_bound),
     m_fov(fov),
     m_aspect_ratio(aspect_ratio) {}
+
+    static Camera::Ptr create(float fov, float aspect_ratio, float near_bound, float far_bound) {
+        return std::make_shared<Perspective_camera>(fov, aspect_ratio, near_bound, far_bound);
+    }
 
     ~Perspective_camera() override = default;
     float& fov() { return m_fov; }
@@ -89,6 +88,10 @@ public:
     m_top_bound(top_bound),
     m_bottom_bound(bottom_bound) {}
 
+    static Camera::Ptr create(float left_bound, float right_bound, float top_bound, float bottom_bound, float near_bound, float far_bound) {
+        return std::make_shared<Orthographic_camera>(left_bound, right_bound, top_bound, bottom_bound, near_bound, far_bound);
+    }
+
     ~Orthographic_camera() override = default;
     float& left_bound() { return m_left_bound; }
     float& right_bound() { return m_right_bound; }
@@ -115,8 +118,8 @@ public:
 
 class Camera_control {
 protected:
-    std::shared_ptr<Input> m_input{};
-    std::shared_ptr<Camera> m_camera{};
+    Input::Ptr m_input{};
+    Camera::Ptr m_camera{};
 
     float m_move_speed{0.001f};
     float m_rotate_speed{0.1f};
@@ -125,12 +128,14 @@ protected:
 public:
 
     Camera_control(
-        const std::shared_ptr<Camera>& camera, 
-        const std::shared_ptr<Input>& input
+        const Camera::Ptr& camera, 
+        const Input::Ptr& input
     ) : m_camera(camera), 
         m_input(input) {}
 
     virtual ~Camera_control() = default;
+
+    using Ptr = std::shared_ptr<Camera_control>;
 
     float& move_speed() { return m_move_speed; }
     float& rotate_speed() { return m_rotate_speed; }
@@ -143,8 +148,10 @@ public:
     virtual void pitch(float angle) = 0;
     virtual void yaw(float angle) = 0;
 
-};
+    Camera::Ptr& camera() { return m_camera; }
+    const Camera::Ptr& camera() const { return m_camera; }
 
+};
 
 class Trackball_camera_control : public Camera_control {
 
@@ -163,10 +170,18 @@ private:
 
 public:
     Trackball_camera_control(
-        const std::shared_ptr<Camera>& camera,
-        const std::shared_ptr<Input>& input
+        const Camera::Ptr& camera, 
+        const Input::Ptr& input
     ) : Camera_control(camera, input) {}
     virtual ~Trackball_camera_control() override = default;
+
+    static Camera_control::Ptr create(
+        const Camera::Ptr& camera,
+        const Input::Ptr& input
+    ) {
+        return std::make_shared<Trackball_camera_control>(camera, input);
+    }
+
     void update() override {
 
         if (m_input->mouse_button(Mouse_button::LEFT) != Key_action::RELEASE) {
@@ -197,10 +212,18 @@ private:
 
 public:
     Game_camera_control(
-        const std::shared_ptr<Camera>& camera,
-        const std::shared_ptr<Input>& input
+        const Camera::Ptr& camera, 
+        const Input::Ptr& input
     ) : Camera_control(camera, input) {}
     virtual ~Game_camera_control() override = default;
+
+    static Camera_control::Ptr create(
+        const Camera::Ptr& camera,
+        const Input::Ptr& input
+    ) {
+        return std::make_shared<Game_camera_control>(camera, input);
+    }
+
     void update() override {
 
         if (m_input->mouse_button(Mouse_button::LEFT)!= Key_action::RELEASE) {
@@ -250,14 +273,14 @@ public:
 
 class Camera_setting  {
 protected:
-    std::vector<std::shared_ptr<Camera>> m_cameras{};
+    std::vector<Camera::Ptr> m_cameras{};
     int m_main_camera_index{-1};
 
 public:
     Camera_setting() {}
     ~Camera_setting() = default;
 
-    void add_camera(const std::shared_ptr<Camera>& camera) {
+    void add_camera(const Camera::Ptr& camera) {
         m_cameras.push_back(camera);
         if (camera->is_main()) {
             m_main_camera_index = m_cameras.size() - 1;
@@ -282,7 +305,7 @@ public:
         m_main_camera_index = -1;
     }
 
-    std::shared_ptr<Camera> main_camera() const { 
+    Camera::Ptr main_camera() const { 
         if (m_main_camera_index >= 0) {
             return m_cameras[m_main_camera_index];
         } else {
@@ -290,7 +313,7 @@ public:
         }
     }
 
-    void set_main_camera(std::shared_ptr<Camera>& camera) {
+    void set_main_camera(Camera::Ptr& camera) {
         camera->is_main() = true;
         main_camera()->is_main() = false;
         for (int i = 0; i < m_cameras.size(); i++) {
