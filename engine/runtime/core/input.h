@@ -49,6 +49,10 @@ public:
 
     using Ptr = std::shared_ptr<Input>;
 
+    static Ptr create(const RHI_window::Ptr& window) {
+        return std::make_shared<Input>(window);
+    }
+
     [[nodiscard]] Key_action key_mod(Key_mod mod) const {
         if (m_key_mods.find(mod) == m_key_mods.end()) {
             return Key_action::RELEASE;

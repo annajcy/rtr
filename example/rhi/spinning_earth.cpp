@@ -60,9 +60,7 @@ void main()
 
 int main() {
 
-    auto image_loader = std::make_shared<Image_loader>();
-
-    auto device = std::make_shared<RHI_device_OpenGL>();
+    auto device = RHI_device_OpenGL::create();
     auto window = device->create_window(800, 600, "RTR");
     auto input = std::make_shared<Input>(window);
 
@@ -119,7 +117,7 @@ int main() {
         element
     );
     
-    auto image = image_loader->load_from_path(
+    auto image = Image_loader::load_from_path(
         Image_format::RGB_ALPHA, 
         "assets/image/earth.png"
     );

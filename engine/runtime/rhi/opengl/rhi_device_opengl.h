@@ -31,6 +31,10 @@ public:
         gl_check_error();
     }
 
+    static RHI_device::Ptr create() {
+        return std::make_shared<RHI_device_OpenGL>();
+    }
+
     RHI_window::Ptr create_window(
         int width,
         int height,
@@ -163,7 +167,7 @@ public:
         );
     }
 
-    virtual RHI_frame_buffer::Ptr create_frame_buffer(
+    RHI_frame_buffer::Ptr create_frame_buffer(
         int width, 
         int height,
         const std::vector<RHI_texture::Ptr>& color_attachments,
@@ -177,11 +181,11 @@ public:
         );
     }
 
-    virtual RHI_pipeline_state::Ptr create_pipeline_state(const Pipeline_state& pipeline_state) override {
+    RHI_pipeline_state::Ptr create_pipeline_state(const Pipeline_state& pipeline_state) override {
         return std::make_shared<RHI_pipeline_state_OpenGL>(pipeline_state);
     }
 
-    virtual RHI_pipeline_state::Ptr create_pipeline_state() override {
+    RHI_pipeline_state::Ptr create_pipeline_state() override {
         return std::make_shared<RHI_pipeline_state_OpenGL>();
     }
 };

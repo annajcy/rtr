@@ -21,6 +21,8 @@ public:
         Hash::from_raw_data(reinterpret_cast<const unsigned char*>(data), strlen(data))), 
         m_text(data) {}
 
+    using Ptr = std::shared_ptr<Text>;
+
     ~Text() = default;
 
     const std::string& content() const { return m_text; }
@@ -50,7 +52,7 @@ class Text_loader {
 public:
     Text_loader() = default;
     ~Text_loader() = default;
-    static std::shared_ptr<Text> load_from_path(const std::string& path) {
+    static Text::Ptr load_from_path(const std::string& path) {
         return std::make_shared<Text>(path);
     }
 
