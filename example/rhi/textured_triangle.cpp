@@ -1,4 +1,5 @@
 #include "engine/global/base.h"
+#include "engine/runtime/core/geometry.h"
 #include "engine/runtime/enum.h"
 #include "engine/runtime/resource/loader/image_loader.h"
 #include "engine/runtime/rhi/rhi_device.h"
@@ -6,6 +7,7 @@
 #include "engine/runtime/rhi/rhi_geometry.h"
 #include "engine/runtime/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/rhi/rhi_resource.h"
+#include "glm/gtc/type_ptr.hpp"
 
 using namespace std;
 using namespace rtr;
@@ -31,7 +33,7 @@ const char* fragment_shader_source = R"(
 #version 460 core
 out vec4 FragColor;
 in vec2 TexCoord;
-uniform sampler2D ourTexture; // 缺少纹理uniform
+uniform sampler2D ourTexture;
 
 void main()
 {
@@ -47,28 +49,18 @@ int main() {
     auto device = std::make_shared<RHI_device_OpenGL>();
     auto window = device->create_window(800, 600, "RTR");
 
-    // 分离的位置数据和纹理坐标数据
-    std::vector<float> vertices = {
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f,  0.5f, 0.0f
-    };
-    
-    std::vector<float> tex_coords = {
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        0.5f, 1.0f
-    };
-    
-    std::vector<unsigned int> indices = {
-        0, 1, 2
-    };  
+    auto box = Geometry::create_box();
 
+    auto box_position = box->attribute("position");
+    auto box_tex_coord = box->attribute("uv");
+    auto box_normal = box->attribute("normal");
+    auto box_indices = box->element_attribute();
+    
     auto element = device->create_element_buffer(
         Buffer_usage::STATIC,
-        indices.size(),
-        indices.size() * sizeof(unsigned int),
-        indices.data()
+        box_indices->data_count(),
+        box_indices->data_size(),
+        box_indices->data_ptr()
     );
 
     // 创建位置缓冲区
@@ -77,31 +69,39 @@ int main() {
         Buffer_data_type::FLOAT,
         Buffer_iterate_type::PER_VERTEX,
         3,  // 每个顶点3个分量
-        vertices.size() * sizeof(float),
-        vertices.data()
+        box_position->data_size(),
+        box_position->data_ptr()
     );
 
     // 创建独立的纹理坐标缓冲区
-    auto texCoord = device->create_vertex_buffer(
+    auto tex_coord = device->create_vertex_buffer(
         Buffer_usage::STATIC,
         Buffer_data_type::FLOAT,
         Buffer_iterate_type::PER_VERTEX,
         2,  // 每个顶点2个分量
-        tex_coords.size() * sizeof(float),
-        tex_coords.data()
+        box_tex_coord->data_size(),
+        box_tex_coord->data_ptr()
+    );
+
+    // 创建独立的法线缓冲区
+    auto normal = device->create_vertex_buffer(
+        Buffer_usage::STATIC,
+        Buffer_data_type::FLOAT,
+        Buffer_iterate_type::PER_VERTEX,
+        3,  // 每个顶点3个分量
+        box_normal->data_size(),
+        box_normal->data_ptr()
     );
 
     // 修改几何体绑定（需要对应修改vertex shader的location）
     auto geometry = device->create_geometry(
         std::unordered_map<unsigned int, RHI_buffer::Ptr>{
             {0, position},  // location 0 绑定位置数据
-            {1, texCoord}    // location 1 绑定纹理坐标
+            {1, tex_coord}    // location 1 绑定纹理坐标
         },
         element
     );
 
-    auto vertex_shader_code = device->create_shader_code(Shader_type::VERTEX, vertex_shader_source);
-    auto fragment_shader_code = device->create_shader_code(Shader_type::FRAGMENT, fragment_shader_source);
 
     auto image_loader = std::make_shared<Image_loader>();
     auto image = image_loader->load_from_path(
@@ -119,7 +119,7 @@ int main() {
             {Texture_wrap_target::V, Texture_wrap::REPEAT}
         },
         std::unordered_map<Texture_filter_target, Texture_filter>{
-            {Texture_filter_target::MIN, Texture_filter::LINEAR},
+            {Texture_filter_target::MIN, Texture_filter::LINEAR_MIPMAP_LINEAR},
             {Texture_filter_target::MAG, Texture_filter::LINEAR}
         },
         Image_data{
@@ -131,9 +131,13 @@ int main() {
         }
     );
 
-    texture->bind(0);
+    texture->generate_mipmap();
+    texture->bind(1);
+
+    auto vertex_shader_code = device->create_shader_code(Shader_type::VERTEX, vertex_shader_source);
+    auto fragment_shader_code = device->create_shader_code(Shader_type::FRAGMENT, fragment_shader_source);
     
-    int samplerLoc = 0;
+    int samplerLoc = 1;
     glm::mat4 transform = glm::mat4(1.0f);
 
     auto shader_program = device->create_shader_program(
@@ -142,7 +146,7 @@ int main() {
             {Shader_type::FRAGMENT, fragment_shader_code}
         },  
         std::unordered_map<std::string, RHI_uniform_entry> {
-            {"transform", RHI_uniform_entry{Uniform_type::MAT4, &transform}},
+            {"transform", RHI_uniform_entry{Uniform_type::MAT4, glm::value_ptr(transform)}},
             {"ourTexture", RHI_uniform_entry{Uniform_type::SAMPLER, &samplerLoc}}
            
         }, 
@@ -151,12 +155,8 @@ int main() {
 
 
     auto pipeline_state = device->create_pipeline_state(Pipeline_state::opaque_pipeline_state());
-    pipeline_state->cull_state.enable = false;
-
     pipeline_state->apply();
 
-    geometry->bind();
-    shader_program->bind();
 
     while (window->is_active()) {
         window->on_frame_begin();
@@ -168,11 +168,16 @@ int main() {
                               glm::radians(rotation), 
                               glm::vec3(0.5f, 1.0f, 0.0f));
 
-        shader_program->modify_uniform("transform", Uniform_type::MAT4, &transform);
+        shader_program->modify_uniform("transform", Uniform_type::MAT4, glm::value_ptr(transform));
         shader_program->update_uniforms();
 
-        //device->check_error();
+        shader_program->bind();
+        geometry->bind();
         geometry->draw();
+        geometry->unbind();
+        shader_program->unbind();
+
+        device->check_error();
 
         window->on_frame_end();
     }

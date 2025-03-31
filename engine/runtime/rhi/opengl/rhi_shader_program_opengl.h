@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/global/base.h"
+#include "engine/runtime/rhi/opengl/rhi_error_opengl.h"
 #include "engine/runtime/rhi/opengl/rhi_shader_code_opengl.h"
 #include "engine/runtime/rhi/rhi_resource.h"
 #include "engine/runtime/rhi/rhi_shader_code.h"
@@ -39,13 +40,9 @@ public:
             }
         }
 
-        for (auto& [name, entry] : uniforms) {
-            set_uniform(name, entry.type, entry.data);
-        }
+        update_uniforms();
 
-        for (auto& [name, entry] : uniform_arrays) {
-            set_uniform_array(name, entry.type, entry.data, entry.count);
-        }
+        gl_check_error();
     }
 
     virtual ~RHI_shader_program_OpenGL() {
@@ -104,9 +101,9 @@ public:
         Uniform_type type, 
         const void* data
     ) override {
+        
         int location = glGetUniformLocation(m_program_id, name.c_str());
         if (location == -1) return;
-        
 
         switch (type) {
             case Uniform_type::FLOAT:
@@ -152,6 +149,8 @@ public:
                 std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_TYPE_NOT_SUPPORTED" << std::endl;
                 break;
         }
+
+        
 
     }
 

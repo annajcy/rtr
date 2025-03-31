@@ -88,7 +88,6 @@ int main() {
         std::unordered_map<std::string, RHI_uniform_array_entry>{}
     );
 
-
     geometry->bind();
     shader_program->bind();
 

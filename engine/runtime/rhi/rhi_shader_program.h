@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/global/base.h"
 #include "engine/runtime/enum.h"
+#include "engine/runtime/rhi/opengl/rhi_error_opengl.h"
 #include "engine/runtime/rhi/rhi_resource.h"
 #include "engine/runtime/rhi/rhi_shader_code.h"
 #include <unordered_map>
@@ -8,16 +9,24 @@
 namespace rtr {
 
 struct RHI_uniform_entry {
-    Uniform_type type;
-    const void* data;
-    bool need_update{true};
+    Uniform_type type{};
+    const void* data{};
+    bool need_update{};
+
+    RHI_uniform_entry() {}
+    RHI_uniform_entry(Uniform_type type, const void* data) : 
+    type(type), data(data), need_update(true) {}
 };
 
 struct RHI_uniform_array_entry {
-    Uniform_type type;
-    const void* data;
-    unsigned int count;
-    bool need_update{true};
+    Uniform_type type{};
+    const void* data{};
+    unsigned int count{};
+    bool need_update{};
+
+    RHI_uniform_array_entry() {}
+    RHI_uniform_array_entry(Uniform_type type, const void* data, unsigned int count) :
+    type(type), data(data), count(count), need_update(true) {}
 };
 
 class RHI_shader_program : public RHI_resource { 
@@ -53,6 +62,7 @@ public:
     const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays() const { return m_uniform_arrays; }
     
     void update_uniforms() {  
+        bind();
         for (auto& [name, uniform] : m_uniforms) {
             if (uniform.need_update) {
                 set_uniform(name, uniform.type, uniform.data);
@@ -64,9 +74,9 @@ public:
             if (uniform_array.need_update) {
                 set_uniform_array(name, uniform_array.type, uniform_array.data, uniform_array.count);
                 uniform_array.need_update = false;
-            }
-                
+            }  
         }
+        unbind();
     }
 
     void modify_uniform(const std::string& name, Uniform_type type, const void* data) {

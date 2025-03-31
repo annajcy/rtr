@@ -2,6 +2,7 @@
 
 #include "engine/runtime/core/input.h"
 #include "engine/runtime/core/node.h"
+#include <memory>
 
 namespace rtr {
 
@@ -17,6 +18,8 @@ public:
     Node(Node_type::CAMERA), 
     m_near_bound(near_bound), 
     m_far_bound(far_bound) {}
+
+    using Ptr = std::shared_ptr<Camera>;
 
     bool is_main() const {
         return m_is_main;
