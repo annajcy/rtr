@@ -20,7 +20,11 @@ public:
         const RHI_shader_program::Ptr& shader_program,
         const RHI_geometry::Ptr& geometry,
         const RHI_frame_buffer::Ptr& frame_buffer
-    ) : RHI_resource(RHI_resource_type::RENDERER) {}
+    ) : RHI_resource(RHI_resource_type::RENDERER),
+        m_shader_program(shader_program),
+        m_geometry(geometry),
+        m_frame_buffer(frame_buffer) {}
+        
     using Ptr = std::shared_ptr<RHI_renderer>;
     virtual ~RHI_renderer() {}
     virtual void draw() = 0;

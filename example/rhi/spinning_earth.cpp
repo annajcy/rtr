@@ -138,7 +138,7 @@ int main() {
     );
 
     // 修改几何体绑定（需要对应修改vertex shader的location）
-    auto geometry = device->create_geometry(
+    auto box_geometry = device->create_geometry(
         std::unordered_map<unsigned int, RHI_buffer::Ptr>{
             {0, position},  // location 0 绑定位置数据
             {1, tex_coord},    // location 1 绑定纹理坐标
@@ -240,7 +240,7 @@ int main() {
         [&](){
             
             std::unordered_map<std::string, RHI_uniform_entry_base::Ptr> uniforms{
-                {"model", RHI_uniform_entry<glm::mat4>::create(&model)},
+                {"model", RHI_uniform_entry<glm::mat4>::create(model)},
                 {"view", RHI_uniform_entry<glm::mat4>::create(glm::mat4(1.0f))},
                 {"projection", RHI_uniform_entry<glm::mat4>::create(glm::mat4(1.0f))},
                 {"camera_position", RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.0f))},
@@ -273,13 +273,15 @@ int main() {
     auto pipeline_state = device->create_pipeline_state(Pipeline_state::opaque_pipeline_state());
     pipeline_state->apply();
 
-    auto renderer = device->create_renderer(shader_program, geometry, nullptr);
+    auto renderer = device->create_renderer(shader_program, box_geometry, nullptr);
 
     while (window->is_active()) {
         window->on_frame_begin();
         camera_control->update();
 
-        shader_program->modify_uniform<glm::mat4>("model", glm::rotate(model, 0.01f, glm::vec3(0.5f, 1.0f, 0.0f)));
+        model = glm::rotate(model, 0.01f, glm::vec3(0.5f, 1.0f, 0.0f));
+
+        shader_program->modify_uniform<glm::mat4>("model", model);
         shader_program->modify_uniform<glm::mat4>("view", camera->view_matrix());
         shader_program->modify_uniform<glm::mat4>("projection", camera->projection_matrix());
         shader_program->modify_uniform<glm::vec3>("camera_position", camera->position());
@@ -319,7 +321,7 @@ int main() {
         shader_program->update_uniforms();
 
         renderer->draw();
-        
+
         device->check_error();
 
         window->on_frame_end();
