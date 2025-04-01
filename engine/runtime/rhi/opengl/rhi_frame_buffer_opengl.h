@@ -108,11 +108,11 @@ public:
         return true;
     }
 
-    virtual void bind() override {
+    void bind() {
         glBindFramebuffer(GL_FRAMEBUFFER, m_frame_buffer_id);
     }
 
-    virtual void unbind() override {
+    void unbind() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 

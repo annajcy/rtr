@@ -54,7 +54,7 @@ public:
         }
     }
 
-    void bind(unsigned int location) override {
+    void bind_to_unit(unsigned int location) override {
         glBindTextureUnit(location, m_texture_id);
     }
 

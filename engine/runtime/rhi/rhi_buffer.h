@@ -34,8 +34,6 @@ public:
 
     virtual ~RHI_buffer() {}
 
-    virtual void bind() = 0;
-    virtual void unbind() = 0;
     virtual void reallocate_data(const void* data, unsigned int data_size) = 0;
     virtual void subsitute_data(const void* data, unsigned int data_size, unsigned int offset) = 0;
     virtual void map_buffer(std::function<void(void*)> accessor, const RHI_buffer_access_flags& flags) = 0;

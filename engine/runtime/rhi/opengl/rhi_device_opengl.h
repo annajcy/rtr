@@ -3,6 +3,7 @@
 #include "engine/global/base.h" 
 
 #include "engine/runtime/rhi/opengl/rhi_error_opengl.h"
+#include "engine/runtime/rhi/opengl/rhi_renderer_opengl.h"
 #include "engine/runtime/rhi/rhi_device.h"
 
 #include "engine/runtime/rhi/opengl/rhi_buffer_opengl.h"
@@ -15,6 +16,7 @@
 #include "engine/runtime/rhi/opengl/rhi_frame_buffer_opengl.h"
 #include "engine/runtime/rhi/rhi_frame_buffer.h"
 #include "engine/runtime/rhi/rhi_pipeline_state.h"
+#include "engine/runtime/rhi/rhi_renderer.h"
 #include <cassert>
 #include <memory>
 
@@ -117,13 +119,11 @@ public:
 
     RHI_shader_program::Ptr create_shader_program(
         const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& shader_codes,
-        const std::unordered_map<std::string, RHI_uniform_entry>& uniforms, 
-        const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays
+        const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms
     ) override {
         return std::make_shared<RHI_shader_program_OpenGL>(
             shader_codes,
-            uniforms,
-            uniform_arrays
+            uniforms
         );
     }
 
@@ -181,6 +181,18 @@ public:
         );
     }
 
+    RHI_renderer::Ptr create_renderer(
+        const RHI_shader_program::Ptr& shader_program,
+        const RHI_geometry::Ptr& geometry,
+        const RHI_frame_buffer::Ptr& frame_buffer
+    ) override {
+        return std::make_shared<RHI_renderer_OpenGL>(
+            shader_program,
+            geometry,
+            frame_buffer
+        );
+    }
+
     RHI_pipeline_state::Ptr create_pipeline_state(const Pipeline_state& pipeline_state) override {
         return std::make_shared<RHI_pipeline_state_OpenGL>(pipeline_state);
     }
@@ -188,6 +200,7 @@ public:
     RHI_pipeline_state::Ptr create_pipeline_state() override {
         return std::make_shared<RHI_pipeline_state_OpenGL>();
     }
+
 };
 
 

@@ -21,22 +21,6 @@ public:
         std::string title,
         const Clear_state& clear_state
     ) : RHI_window(width, height, title, clear_state) {
-        init();
-    }
-
-    ~RHI_window_OpenGL() override {
-        destroy();
-    }
-
-    void set_viewport(int x, int y, int width, int height) override {
-        glViewport(x, y, width, height);
-    }
-
-    void deactivate() override {
-        glfwSetWindowShouldClose(m_window, true);
-    }
-
-    void init() override {
         glfwInit();
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -67,17 +51,25 @@ public:
         glfwGetFramebufferSize(window(), &m_width, &m_height);
         set_viewport(0, 0, m_width, m_height);
 
+        apply_clear_state();
+    }
+
+    ~RHI_window_OpenGL() override {
+        glfwDestroyWindow(m_window);
+        glfwTerminate();
+    }
+
+    void set_viewport(int x, int y, int width, int height) override {
+        glViewport(x, y, width, height);
+    }
+
+    void deactivate() override {
+        glfwSetWindowShouldClose(m_window, true);
     }
 
     GLFWwindow* window() {
         return m_window;
     }
-
-    void destroy() override {
-        glfwDestroyWindow(m_window);
-        glfwTerminate();
-    }
-
     void poll_events() override {
         glfwPollEvents();
     }

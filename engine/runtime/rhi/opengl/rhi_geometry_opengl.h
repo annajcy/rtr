@@ -31,11 +31,11 @@ public:
         }
     }
 
-    virtual void bind() override {
+    void bind() {
         glBindVertexArray(m_vao);
     }
 
-    virtual void unbind() override {
+    void unbind() {
         glBindVertexArray(0);
     }
 
@@ -89,7 +89,7 @@ public:
         }
     }
 
-    virtual void instanced_draw(unsigned int instance_count, Draw_mode mode = Draw_mode::TRIANGLES) override {
+    virtual void draw_instanced(unsigned int instance_count, Draw_mode mode = Draw_mode::TRIANGLES) override {
         if (auto gl_element_buffer = std::dynamic_pointer_cast<RHI_element_buffer_OpenGL>(m_element_buffer)) {
             glBindVertexArray(m_vao);
             glDrawElementsInstanced(gl_draw_mode(mode), gl_element_buffer->data_count(), GL_UNSIGNED_INT, 0, instance_count);

@@ -3,167 +3,139 @@
 #include "engine/runtime/enum.h"
 #include "engine/runtime/rhi/opengl/rhi_error_opengl.h"
 #include "engine/runtime/rhi/rhi_resource.h"
+#include "engine/runtime/rhi/rhi_cast.h"
 #include "engine/runtime/rhi/rhi_shader_code.h"
 #include <functional>
 #include <unordered_map>
 
 namespace rtr {
 
-struct RHI_uniform_entry {
-    Uniform_type type{};
-    void* data{};
-    bool need_update{};
+class RHI_uniform_entry_base {
+public:
+    using Ptr = std::shared_ptr<RHI_uniform_entry_base>;
+protected:
+    Uniform_type m_type{};
+    bool m_is_need_update{};
+    bool m_is_external_reference{};
+public:
+    RHI_uniform_entry_base(Uniform_type type, bool is_external_reference) : 
+    m_type(type), m_is_need_update(true) {}
+    virtual ~RHI_uniform_entry_base() {}
+    Uniform_type type() const { return m_type; }
+    bool is_external_reference() const { return m_is_external_reference; }
+    bool is_need_update() const { return m_is_need_update; }
+    bool& is_need_update() { return m_is_need_update; }
 
-    RHI_uniform_entry() {}
-    RHI_uniform_entry(Uniform_type type, void* data) : 
-    type(type), data(data), need_update(true) {}
+    virtual const void* data_ptr() const = 0;
 };
 
-struct RHI_uniform_array_entry {
-    Uniform_type type{};
-    void* data{};
-    unsigned int count{};
-    bool need_update{};
+template<typename T>
+class RHI_uniform_entry : public RHI_uniform_entry_base {
+protected:
+    T* m_data{};
 
-    RHI_uniform_array_entry() {}
-    RHI_uniform_array_entry(Uniform_type type, void* data, unsigned int count) :
-    type(type), data(data), count(count), need_update(true) {}
+public:
+    using Ptr = std::shared_ptr<RHI_uniform_entry<T>>;
+
+    ~RHI_uniform_entry() override {
+        if (m_data != nullptr && !m_is_external_reference) {
+            delete m_data;
+        }
+    }
+
+    RHI_uniform_entry(T data) : RHI_uniform_entry_base(get_type<T>(), false), m_data(new T(data)) {}
+    RHI_uniform_entry(T* data) : RHI_uniform_entry_base(get_type<T>(), true), m_data(data) {}
+    const void* data_ptr() const override { return reinterpret_cast<const void*>(m_data); }
+    T* data_ptr_typed() { return m_data; }
+
+    const T& data() const {
+        if (m_data == nullptr) {
+            std::cout << "RHI_uniform_entry::data: m_data is nullptr" << std::endl;
+            return *m_data;
+        }
+    }
+
+    void modify(const T& data) {
+        if (m_data == nullptr) {
+            std::cout << "RHI_uniform_entry::modify: m_data is nullptr" << std::endl;
+            return;
+        }
+        *m_data = data;
+        m_is_need_update = true;
+    }
+
+    static Ptr create(T* data) {
+        return std::make_shared<RHI_uniform_entry<T>>(data);
+    }
+
+    static Ptr create(const T& data) {
+        return std::make_shared<RHI_uniform_entry<T>>(data);
+    }
+
 };
-
 class RHI_shader_program : public RHI_resource { 
 protected:
     std::unordered_map<Shader_type, RHI_shader_code::Ptr> m_codes{};
-    std::unordered_map<std::string, RHI_uniform_entry> m_uniforms{};
-    std::unordered_map<std::string, RHI_uniform_array_entry> m_uniform_arrays{};
+    std::unordered_map<std::string, RHI_uniform_entry_base::Ptr> m_uniforms{};
 
 public:
     
     RHI_shader_program(
         const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& shaders, 
-        const std::unordered_map<std::string, RHI_uniform_entry>& uniforms, 
-        const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays) : 
-        RHI_resource(RHI_resource_type::SHADER_PROGRAM),
+        const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms
+    ) : RHI_resource(RHI_resource_type::SHADER_PROGRAM),
         m_codes(shaders), 
-        m_uniforms(uniforms), 
-        m_uniform_arrays(uniform_arrays) {}
+        m_uniforms(uniforms) {}
 
     using Ptr = std::shared_ptr<RHI_shader_program>;
 
+    const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& codes() const { return m_codes; }
+    const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms() const { return m_uniforms; }
+
     virtual ~RHI_shader_program() {}
 
-    virtual void bind() = 0;
-    virtual void unbind() = 0;
     virtual void attach_code(const RHI_shader_code::Ptr& code) = 0;
     virtual void detach_code(const RHI_shader_code::Ptr& code) = 0;
     virtual bool link() = 0;
     virtual void set_uniform(const std::string& name, Uniform_type type, const void* data) = 0;
     virtual void set_uniform_array(const std::string& name, Uniform_type type, const void* data, unsigned int count) = 0;
-
-    const std::unordered_map<std::string, RHI_uniform_entry>& uniforms() const { return m_uniforms; }
-    const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays() const { return m_uniform_arrays; }
     
-    void update_uniforms() {  
-        bind();
-        for (auto& [name, uniform] : m_uniforms) {
-            if (uniform.need_update) {
-                set_uniform(name, uniform.type, uniform.data);
-                uniform.need_update = false;
-            }  
-        }
-
-        for (auto& [name, uniform_array] : m_uniform_arrays) {
-            if (uniform_array.need_update) {
-                set_uniform_array(name, uniform_array.type, uniform_array.data, uniform_array.count);
-                uniform_array.need_update = false;
-            }  
-        }
-        unbind();
-    }
-
-    void reassign_uniform(const std::string& name, const RHI_uniform_entry& uniform) {
-        if (m_uniforms.find(name) != m_uniforms.end()) {
-            m_uniforms[name] = RHI_uniform_entry{uniform.type, uniform.data};
-        } else {
-            std::cerr << "Uniform " << name << " not found." << std::endl;
-        }
-    }
-
-    void reassign_uniform_array(const std::string& name, const RHI_uniform_array_entry& uniform_array) {
-        if (m_uniform_arrays.find(name)!= m_uniform_arrays.end()) {
-            m_uniform_arrays[name] = RHI_uniform_array_entry{uniform_array.type, uniform_array.data, uniform_array.count};
-        } else {
-            std::cerr << "Uniform array " << name << " not found." << std::endl;
-        }
-    }
+    virtual void update_uniforms() = 0;
 
     template<typename T>
-    void modify_uniform(const std::string& name, std::function<void(T*)> modifier) {
-        if (!type_check<T>(m_uniforms[name].type)) {
-            std::cerr << "Uniform type mismatch." << std::endl;
-            return;
-        }
-        if (m_uniforms.find(name)!= m_uniforms.end()) {
-            modifier(reinterpret_cast<T*>(m_uniforms[name].data));
-            m_uniforms[name].need_update = true;
-        } else {
-            std::cerr << "Uniform " << name << " not found." << std::endl;
-        }
-    }
-
-    template<typename T>
-    void modify_uniform_array(const std::string& name, std::function<void(T*, unsigned int)> modifier) {
-        if (!type_check<T>(m_uniform_arrays[name].type)) {
-            std::cerr << "Uniform type mismatch." << std::endl;
-            return;
-        }
-        if (m_uniform_arrays.find(name)!= m_uniform_arrays.end()) {
-            modifier(reinterpret_cast<T*>(m_uniform_arrays[name].data), m_uniform_arrays[name].count);
-            m_uniform_arrays[name].need_update = true;
-        } else {
-            std::cerr << "Uniform array " << name << " not found." << std::endl;
-        }
-    }
-
-    template<typename T>
-    void modify_uniform_value(const std::string& name, T value) {
-        modify_uniform<T>(name, [value](T* data){
-            *data = value;
-        });
-    }
-
-    template<typename T>
-    void modify_uniform_array_value(const std::string& name, T* values, unsigned int count) {
-        modify_uniform_array<T>(name, [values, count](T* data, unsigned int size){
-            for (unsigned int i = 0; i < std::min(count, size); i++) {
-                data[i] = values[i];
+    void modify_uniform(const std::string& name, const T& data) {
+        if (auto it = m_uniforms.find(name); it != m_uniforms.end()) {
+            if (auto uniform = std::dynamic_pointer_cast<RHI_uniform_entry<T>>(it->second)) {
+                uniform->modify(data);
             }
-        });
+        } else {
+            std::cout << "RHI_shader_program::modify_uniform: uniform " << name << " not found" << std::endl;
+        }
     }
 
     template<typename T>
-    constexpr bool type_check(Uniform_type type) {
-        if (type == Uniform_type::INT) {
-            return std::is_same<T, int>::value;
-        } else if (type == Uniform_type::FLOAT) {
-            return std::is_same<T, float>::value;
-        } else if (type == Uniform_type::VEC2) {
-            return std::is_same<T, glm::vec2>::value;
-        } else if (type == Uniform_type::VEC3) {
-            return std::is_same<T, glm::vec3>::value;
-        } else if (type == Uniform_type::VEC4) {
-            return std::is_same<T, glm::vec4>::value;
-        } else if (type == Uniform_type::MAT2) {
-            return std::is_same<T, glm::mat2>::value;
-        } else if (type == Uniform_type::MAT3) {
-            return std::is_same<T, glm::mat3>::value;
-        } else if (type == Uniform_type::MAT4) {
-            return std::is_same<T, glm::mat4>::value;
-        } else if (type == Uniform_type::SAMPLER) {
-            return std::is_same<T, int>::value;
+    T get_uniform(const std::string& name) {
+        if (auto it = m_uniforms.find(name); it!= m_uniforms.end()) {
+            if (auto uniform = std::dynamic_pointer_cast<RHI_uniform_entry<T>>(it->second)) {
+                return uniform->data();
+            }
         } else {
-            return false;
-        } 
+            std::cout << "RHI_shader_program::get_uniform: uniform " << name << " not found" << std::endl;
+        }
     }
+
+    template<typename T>
+    RHI_uniform_entry<T>::Ptr get_uniform_entry(const std::string& name) {
+        if (auto it = m_uniforms.find(name); it!= m_uniforms.end()) {
+            if (auto uniform = std::dynamic_pointer_cast<RHI_uniform_entry<T>>(it->second)) {
+                return uniform;
+            }
+        } else {
+            std::cout << "RHI_shader_program::get_uniform_entry: uniform " << name << " not found" << std::endl;
+        }
+    }
+
+    
 
 };
 

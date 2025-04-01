@@ -44,7 +44,7 @@ public:
     virtual void set_filter(Texture_filter_target target, Texture_filter filter) = 0;
     virtual void set_wrap(Texture_wrap_target target, Texture_wrap wrap) = 0;
     virtual void generate_mipmap() = 0;
-    virtual void bind(unsigned int location) = 0;
+    virtual void bind_to_unit(unsigned int location) = 0;
    
     Texture_type type() const { return m_type; }
     Texture_internal_format internal_format() const { return m_internal_format; }

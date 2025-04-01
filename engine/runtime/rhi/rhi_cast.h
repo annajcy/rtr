@@ -1,6 +1,9 @@
 #pragma once
 
 #include "engine/runtime/enum.h"
+#include "glm/fwd.hpp"
+#include <type_traits>
+
 namespace rtr {
     
 inline constexpr unsigned int sizeof_buffer_data(Buffer_data_type type) {
@@ -12,6 +15,32 @@ inline constexpr unsigned int sizeof_buffer_data(Buffer_data_type type) {
     default: return 0;
     }
 }
+
+template<typename U>
+    inline constexpr Uniform_type get_type() {
+        if constexpr (std::is_same_v<U, float>) {
+            return Uniform_type::FLOAT;
+        } else if constexpr (std::is_same_v<U, int>) {
+            return Uniform_type::INT;
+        } else if constexpr (std::is_same_v<U, bool>) {
+            return Uniform_type::BOOL;
+        } else if constexpr (std::is_same_v<U, glm::vec2>) {
+            return Uniform_type::VEC2;
+        } else if constexpr (std::is_same_v<U, glm::vec3>) {
+            return Uniform_type::VEC3;
+        } else if constexpr (std::is_same_v<U, glm::vec4>) {
+            return Uniform_type::VEC4;
+        } else if constexpr (std::is_same_v<U, glm::mat2>) {
+            return Uniform_type::MAT2;
+        } else if constexpr (std::is_same_v<U, glm::mat3>) {
+            return Uniform_type::MAT3;
+        } else if constexpr (std::is_same_v<U, glm::mat4>) {
+            return Uniform_type::MAT4;
+        } else {
+            return Uniform_type::UNKNOWN;
+        }
+    }
+
     
 
 };

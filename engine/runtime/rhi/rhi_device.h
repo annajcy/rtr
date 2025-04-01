@@ -6,6 +6,7 @@
 #include "engine/runtime/rhi/rhi_frame_buffer.h"
 #include "engine/runtime/rhi/rhi_geometry.h"
 #include "engine/runtime/rhi/rhi_pipeline_state.h"
+#include "engine/runtime/rhi/rhi_renderer.h"
 #include "engine/runtime/rhi/rhi_shader_code.h"
 #include "engine/runtime/rhi/rhi_shader_program.h"
 #include "engine/runtime/rhi/rhi_texture.h"
@@ -70,8 +71,7 @@ public:
 
     virtual RHI_shader_program::Ptr create_shader_program(
         const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& shader_codes,
-        const std::unordered_map<std::string, RHI_uniform_entry>& uniforms, 
-        const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays
+        const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms
     ) = 0;
 
     virtual RHI_texture::Ptr create_texture_2D(
@@ -99,6 +99,12 @@ public:
         int height,
         const std::vector<RHI_texture::Ptr>& color_attachments,
         const RHI_texture::Ptr& depth_attachment
+    ) = 0;
+
+    virtual RHI_renderer::Ptr create_renderer(
+        const RHI_shader_program::Ptr& shader_program,
+        const RHI_geometry::Ptr& geometry,
+        const RHI_frame_buffer::Ptr& frame_buffer
     ) = 0;
 
     virtual RHI_pipeline_state::Ptr create_pipeline_state() = 0;

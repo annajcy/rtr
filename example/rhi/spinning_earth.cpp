@@ -1,6 +1,7 @@
 #include "engine/global/base.h"
 #include "engine/runtime/core/camera.h"
 #include "engine/runtime/core/geometry.h"
+#include "engine/runtime/core/light.h"
 #include "engine/runtime/enum.h"
 #include "engine/runtime/resource/loader/image_loader.h"
 #include "engine/runtime/rhi/rhi_device.h"
@@ -8,6 +9,7 @@
 #include "engine/runtime/rhi/rhi_geometry.h"
 #include "engine/runtime/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/rhi/rhi_resource.h"
+#include "engine/runtime/rhi/rhi_shader_program.h"
 #include "glm/fwd.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "engine/runtime/core/input.h"
@@ -49,6 +51,34 @@ in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
 
+uniform vec3 cameraPosition;
+
+struct Material {
+    vec3 ambient;  // 原为 ka，需要与 C++ 代码中的 uniform 名称对应
+    vec3 diffuse;  // 原为 kd
+    vec3 specular; // 原为 ks
+    float shininess;
+}; // 添加分号
+
+uniform Material material;
+
+#define MAX_LIGHTS 16
+uniform int activeLights;
+uniform int mainLightIndex;
+
+struct Light {
+    int type;        // 0=ambient, 1=directional, 2=point, 3=spot
+    vec3 color;
+    float intensity;
+    vec3 position;   // 点/聚光灯
+    vec3 direction;  // 平行/聚光灯
+    vec3 attenuation; // x=kc, y=k1, z=k2
+    float innerAngle;
+    float outerAngle;
+};
+
+uniform Light lights[MAX_LIGHTS];
+
 uniform sampler2D mainTexture;
 
 void main()
@@ -83,7 +113,7 @@ int main() {
         Buffer_usage::STATIC,
         Buffer_data_type::FLOAT,
         Buffer_iterate_type::PER_VERTEX,
-        3,  // 每个顶点3个分量
+        geo_position->unit_data_count(),  // 每个顶点3个分量
         geo_position->data_size(),
         geo_position->data_ptr()
     );
@@ -93,7 +123,7 @@ int main() {
         Buffer_usage::STATIC,
         Buffer_data_type::FLOAT,
         Buffer_iterate_type::PER_VERTEX,
-        2,  // 每个顶点2个分量
+        geo_tex_coord->unit_data_count(),  // 每个顶点2个分量
         geo_tex_coord->data_size(),
         geo_tex_coord->data_ptr()
     );
@@ -102,7 +132,7 @@ int main() {
         Buffer_usage::STATIC,
         Buffer_data_type::FLOAT,
         Buffer_iterate_type::PER_VERTEX,
-        3,  // 每个顶点3个分量
+        geo_normal->unit_data_count(),  // 每个顶点3个分量
         geo_normal->data_size(),
         geo_normal->data_ptr()
     );
@@ -145,7 +175,45 @@ int main() {
     );
 
     texture->generate_mipmap();
-    texture->bind(1);
+    texture->bind_to_unit(1);
+
+    auto directional_light = std::make_shared<Directional_light>(); 
+	directional_light->look_at_direction(glm::vec3(1.0, -1.0, -1.0));
+	directional_light->intensity() = 0.5f;
+
+	auto ambient_light = std::make_shared<Ambient_light>();
+	ambient_light->intensity() = 0.15f;
+	
+	auto spot_light = std::make_shared<Spot_light>();
+	spot_light->position() = glm::vec3(0.0f, 0.0f, 2.0f);
+	spot_light->look_at_direction(glm::vec3(0.0, 0.0f, -1.0f));
+	spot_light->inner_angle() = 5.0f;
+	spot_light->outer_angle() = 10.0f;
+	spot_light->color() = glm::vec3(1.0, 1.0, 0.0);
+
+	auto point_light_1 = std::make_shared<Point_light>();
+	point_light_1->position() = glm::vec3(1.0f, 0.0f, 0.0f);
+	point_light_1->color() = glm::vec3(1.0f, 0.0f, 0.0f);
+
+	auto point_light_2 = std::make_shared<Point_light>();
+	point_light_2->position() = glm::vec3(0.0f, 1.0f, 0.0f);
+	point_light_2->color() = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	auto point_light_3 = std::make_shared<Point_light>();
+	point_light_3->position() = glm::vec3(0.0f, 0.0f, -1.0f);
+	point_light_3->color() = glm::vec3(0.0f, 0.0f, 1.0f);
+
+    auto light_setting = std::make_shared<Light_setting>(
+        std::vector<Light::Ptr>{
+            directional_light,
+            ambient_light,
+            spot_light,
+            point_light_1,
+            point_light_2,
+            point_light_3
+        }
+    );
+
 
     auto camera = Perspective_camera::create(
         60.0f, 
@@ -161,60 +229,97 @@ int main() {
 
     auto vertex_shader_code = device->create_shader_code(Shader_type::VERTEX, vertex_shader_source);
     auto fragment_shader_code = device->create_shader_code(Shader_type::FRAGMENT, fragment_shader_source);
-    
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 view = glm::mat4(1.0f);
-    glm::mat4 projection = glm::mat4(1.0f);
 
-    glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 0.0f);
-    int main_tex_sampler_unit = 1;
+    glm::mat4 model = glm::mat4(1.0f);
 
     auto shader_program = device->create_shader_program(
         std::unordered_map<Shader_type, RHI_shader_code::Ptr>{
             {Shader_type::VERTEX, vertex_shader_code},
             {Shader_type::FRAGMENT, fragment_shader_code}
         },  
-        std::unordered_map<std::string, RHI_uniform_entry> {
-            {"model", RHI_uniform_entry{Uniform_type::MAT4, glm::value_ptr(model)}},
-            {"view", RHI_uniform_entry{Uniform_type::MAT4, glm::value_ptr(view)}},
-            {"projection", RHI_uniform_entry{Uniform_type::MAT4, glm::value_ptr(projection)}},
-            {"camera_position", RHI_uniform_entry{Uniform_type::VEC3, glm::value_ptr(camera_position)}},
-            {"mainTexture", RHI_uniform_entry{Uniform_type::SAMPLER, &main_tex_sampler_unit}}
-        }, 
-        std::unordered_map<std::string, RHI_uniform_array_entry>{}
+        [&](){
+            
+            std::unordered_map<std::string, RHI_uniform_entry_base::Ptr> uniforms{
+                {"model", RHI_uniform_entry<glm::mat4>::create(&model)},
+                {"view", RHI_uniform_entry<glm::mat4>::create(glm::mat4(1.0f))},
+                {"projection", RHI_uniform_entry<glm::mat4>::create(glm::mat4(1.0f))},
+                {"camera_position", RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.0f))},
+                {"mainTexture", RHI_uniform_entry<int>::create(1)},
+                {"activeLights", RHI_uniform_entry<int>::create(0)},
+                {"mainLightIndex", RHI_uniform_entry<int>::create(-1)},
+                {"material.ambient", RHI_uniform_entry<glm::vec3>::create(glm::vec3(1.0f))},
+                {"material.diffuse", RHI_uniform_entry<glm::vec3>::create(glm::vec3(1.0f))},
+                {"material.specular", RHI_uniform_entry<glm::vec3>::create(glm::vec3(1.0f))},
+                {"material.shininess", RHI_uniform_entry<float>::create(32.0f)}
+            };
+    
+            // 为每个可能的灯光索引预注册参数
+            for (int i = 0; i < 16; ++ i) {
+                std::string prefix = "lights[" + std::to_string(i) + "]";
+                uniforms[prefix + ".type"] = RHI_uniform_entry<int>::create(0);
+                uniforms[prefix + ".color"] = RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.0f));
+                uniforms[prefix + ".intensity"] = RHI_uniform_entry<float>::create(0.0f);
+                uniforms[prefix + ".position"] = RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.0f));
+                uniforms[prefix + ".direction"] = RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.0f));
+                uniforms[prefix + ".attenuation"] = RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.0f));
+                uniforms[prefix + ".innerAngle"] = RHI_uniform_entry<float>::create(0.0f);
+                uniforms[prefix + ".outerAngle"] = RHI_uniform_entry<float>::create(0.0f);
+            }
+
+            return uniforms;
+        }()
     );
 
     auto pipeline_state = device->create_pipeline_state(Pipeline_state::opaque_pipeline_state());
     pipeline_state->apply();
 
+    auto renderer = device->create_renderer(shader_program, geometry, nullptr);
+
     while (window->is_active()) {
         window->on_frame_begin();
         camera_control->update();
+
+        shader_program->modify_uniform<glm::mat4>("model", glm::rotate(model, 0.01f, glm::vec3(0.5f, 1.0f, 0.0f)));
+        shader_program->modify_uniform<glm::mat4>("view", camera->view_matrix());
+        shader_program->modify_uniform<glm::mat4>("projection", camera->projection_matrix());
+        shader_program->modify_uniform<glm::vec3>("camera_position", camera->position());
+        shader_program->modify_uniform<int>("activeLights", light_setting->active_light_count());
+        shader_program->modify_uniform<int>("mainLightIndex", light_setting->main_light_index());
         
-        shader_program->modify_uniform<glm::mat4>("model", [](glm::mat4* model){
-            *model = glm::rotate(*model, 0.01f, glm::vec3(0.5f, 1.0f, 0.0f));
-        });
+        // 遍历所有灯光
+        for (size_t i = 0; i < light_setting->active_light_count(); ++i) {
+            const auto& light = light_setting->lights()[i];
+            std::string prefix = "lights[" + std::to_string(i) + "]";
 
-        shader_program->modify_uniform<glm::mat4>("view", [&](glm::mat4* view){
-            *view = camera->view_matrix();
-        });
+            // 设置通用属性
+            shader_program->modify_uniform<int>((prefix + ".type").c_str(), static_cast<int>(light->type()));
+            shader_program->modify_uniform<glm::vec3>((prefix + ".color").c_str(), light->color());
+            shader_program->modify_uniform<float>((prefix + ".intensity").c_str(), light->intensity());
+            
+            // 设置方向光属性示例
+            if (auto dir_light = std::dynamic_pointer_cast<Directional_light>(light)) {
+                shader_program->modify_uniform<glm::vec3>((prefix + ".direction").c_str(), dir_light->front());
+            }
+            
+            // 设置点光源属性示例
+            if (auto point_light = std::dynamic_pointer_cast<Point_light>(light)) {
+                shader_program->modify_uniform<glm::vec3>((prefix + ".position").c_str(), point_light->position());
+                shader_program->modify_uniform<glm::vec3>((prefix + ".attenuation").c_str(), glm::vec3(point_light->kc(), point_light->k1(), point_light->k2()));
+            }
+            // 设置聚光灯属性示例
+            if (auto spot_light = std::dynamic_pointer_cast<Spot_light>(light)) {
+                shader_program->modify_uniform<glm::vec3>((prefix + ".position").c_str(), spot_light->position());
+                shader_program->modify_uniform<glm::vec3>((prefix + ".direction").c_str(), spot_light->front());
+                shader_program->modify_uniform<float>((prefix + ".innerAngle").c_str(), spot_light->inner_angle());
+                shader_program->modify_uniform<float>((prefix + ".outerAngle").c_str(), spot_light->outer_angle());
+            }
+        	
+        }
 
-        shader_program->modify_uniform<glm::mat4>("projection", [&](glm::mat4* projection){
-            *projection = camera->projection_matrix();
-        });
-
-        shader_program->modify_uniform<glm::vec3>("camera_position", [&](glm::vec3* camera_position){
-            *camera_position = camera->position();
-        });
-        
         shader_program->update_uniforms();
 
-        shader_program->bind();
-        geometry->bind();
-        geometry->draw();
-        geometry->unbind();
-        shader_program->unbind();
-
+        renderer->draw();
+        
         device->check_error();
 
         window->on_frame_end();

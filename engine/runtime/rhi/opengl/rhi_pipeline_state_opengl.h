@@ -14,7 +14,7 @@ public:
 
     ~RHI_pipeline_state_OpenGL() override = default;
 
-    virtual void apply_blend_state() override {
+    void apply_blend_state() override {
         if (blend_state.enable) {
             glEnable(GL_BLEND);
             glBlendFuncSeparate(
@@ -32,7 +32,7 @@ public:
         }
     }
 
-    virtual void apply_cull_state() override {
+    void apply_cull_state() override {
         if (cull_state.enable) {
             glEnable(GL_CULL_FACE);
             glCullFace(gl_cull_mode(cull_state.mode));
@@ -42,7 +42,7 @@ public:
         }
     }
 
-    virtual void apply_depth_state() override {
+    void apply_depth_state() override {
         if (depth_state.test_enable) {
             glEnable(GL_DEPTH_TEST);
             glDepthFunc(gl_depth_function(depth_state.function));
@@ -52,7 +52,7 @@ public:
         }
     }
 
-    virtual void apply_polygon_offset_state() override {
+    void apply_polygon_offset_state() override {
         if (polygon_offset_state.point_enabled) {
             glEnable(GL_POLYGON_OFFSET_POINT);
         } else {
@@ -77,7 +77,7 @@ public:
             
     }
 
-    virtual void apply_stencil_state() override {
+    void apply_stencil_state() override {
         if (stencil_state.enable) {
             glEnable(GL_STENCIL_TEST);
             glStencilMask(stencil_state.mask);

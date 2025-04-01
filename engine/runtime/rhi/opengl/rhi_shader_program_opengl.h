@@ -17,12 +17,12 @@ protected:
     unsigned int m_program_id{};
 
 public:
+    using Ptr = std::shared_ptr<RHI_shader_program_OpenGL>;
 
     RHI_shader_program_OpenGL(
         const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& shader_codes,
-        const std::unordered_map<std::string, RHI_uniform_entry>& uniforms,
-        const std::unordered_map<std::string, RHI_uniform_array_entry>& uniform_arrays) :
-        RHI_shader_program(shader_codes, uniforms, uniform_arrays) {
+        const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms
+    ) : RHI_shader_program(shader_codes, uniforms) {
 
         m_program_id = glCreateProgram();
 
@@ -41,8 +41,6 @@ public:
         }
 
         update_uniforms();
-
-        gl_check_error();
     }
 
     virtual ~RHI_shader_program_OpenGL() {
@@ -56,11 +54,11 @@ public:
         }
     }
 
-    virtual void bind() override {
+    void bind() {
         glUseProgram(m_program_id);
     }
 
-    virtual void unbind() override {
+    void unbind() {
         glUseProgram(0);
     }
 
@@ -68,17 +66,17 @@ public:
         return m_program_id;
     }
 
-    virtual void attach_code(const RHI_shader_code::Ptr& code) override {
+    void attach_code(const RHI_shader_code::Ptr& code) override {
         auto gl_code = std::dynamic_pointer_cast<RHI_shader_code_OpenGL>(code);
         glAttachShader(m_program_id, gl_code->code_id());
     }
 
-    virtual void detach_code(const RHI_shader_code::Ptr& code) override {
+    void detach_code(const RHI_shader_code::Ptr& code) override {
         auto gl_code = std::dynamic_pointer_cast<RHI_shader_code_OpenGL>(code);
         glDetachShader(m_program_id, gl_code->code_id());
     }
 
-    virtual bool link() override {
+    bool link() override {
         glLinkProgram(m_program_id);
         return check_link_error();
     }
@@ -96,7 +94,7 @@ public:
         return success;
     }
 
-    virtual void set_uniform(
+    void set_uniform(
         const std::string& name, 
         Uniform_type type, 
         const void* data
@@ -149,12 +147,9 @@ public:
                 std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_TYPE_NOT_SUPPORTED" << std::endl;
                 break;
         }
-
-        
-
     }
 
-    virtual void set_uniform_array(
+    void set_uniform_array(
         const std::string& name, 
         Uniform_type type, 
         const void* data, 
@@ -164,7 +159,6 @@ public:
         int location = glGetUniformLocation(m_program_id, name.c_str());
         if (location == -1) return;
     
-       
         switch (type) {
             case Uniform_type::FLOAT:
                 glUniform1fv(location, count, static_cast<const float*>(data));
@@ -205,6 +199,24 @@ public:
                 break;
         }
 
+    }
+
+    void update_uniforms() override {
+        glUseProgram(m_program_id);
+        for (auto& [name, entry] : m_uniforms) {
+            if (entry->is_need_update()) {
+                set_uniform(name, entry->type(), entry->data_ptr());
+                entry->is_need_update() = false;
+            }
+        }
+        glUseProgram(0);
+    }
+
+    static Ptr create(
+        const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& shaders,
+        const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms
+    ) {
+        return std::make_shared<RHI_shader_program_OpenGL>(shaders, uniforms);
     }
     
 };

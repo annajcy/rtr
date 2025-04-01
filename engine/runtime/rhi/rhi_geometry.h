@@ -24,14 +24,11 @@ public:
 
     virtual ~RHI_geometry() {}
 
-    virtual void bind() = 0;
-    virtual void unbind() = 0;
-
     virtual void bind_buffers() = 0;
     virtual void bind_vertex_buffer(unsigned int location, const RHI_buffer::Ptr& vbo) = 0;
 
     virtual void draw(Draw_mode mode = Draw_mode::TRIANGLES) = 0;
-    virtual void instanced_draw(unsigned int instance_count, Draw_mode mode = Draw_mode::TRIANGLES) = 0;
+    virtual void draw_instanced(unsigned int instance_count, Draw_mode mode = Draw_mode::TRIANGLES) = 0;
 
 
 };

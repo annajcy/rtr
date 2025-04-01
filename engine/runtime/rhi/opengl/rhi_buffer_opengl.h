@@ -32,10 +32,10 @@ public:
 
     unsigned int buffer_id() const { return m_buffer_id; }
 
-    void bind() override { 
+    void bind() { 
         glBindBuffer(gl_buffer_type(m_type), m_buffer_id); 
     }
-    void unbind() override { 
+    void unbind() { 
         glBindBuffer(gl_buffer_type(m_type), 0); 
     }
 

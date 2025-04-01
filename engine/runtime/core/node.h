@@ -3,10 +3,14 @@
 #include "engine/global/base.h"
 #include "engine/global/guid.h"
 #include "engine/runtime/enum.h"
+#include <memory>
 
 namespace rtr {
 
-class Node : public std::enable_shared_from_this<Node>, public GUID {
+class Node : public std::enable_shared_from_this<Node>, public GUID{ 
+public:
+    using Ptr = std::shared_ptr<Node>;
+
 protected:
     Node_type m_type{};
 
@@ -14,25 +18,25 @@ protected:
     glm::vec3 m_scale = glm::one<glm::vec3>();
     glm::quat m_rotation = glm::identity<glm::quat>();
 
-    std::vector<std::shared_ptr<Node>> m_children{};
+    std::vector<Node::Ptr> m_children{};
     std::weak_ptr<Node> m_parent{};
 
 public:
     explicit Node(Node_type type = Node_type::NODE) : GUID(), m_type(type) {}
     virtual ~Node() = default;
 
-    std::shared_ptr<Node> parent_ptr() {
+    Node::Ptr parent_ptr() {
         if (m_parent.expired()) {
             return nullptr;
         }
         return m_parent.lock();
     }
 
-    std::vector<std::shared_ptr<Node>>& children() {
+    std::vector<Node::Ptr>& children() {
         return m_children;
     }
 
-    void add_child(const std::shared_ptr<Node>& node) {
+    void add_child(const Node::Ptr& node) {
         if (node.get() == this) {
             throw std::invalid_argument("Cannot add self as child");
         }
@@ -43,7 +47,7 @@ public:
         node->m_parent = shared_from_this();
     }
 
-    void erase_child(const std::shared_ptr<Node> &node) {
+    void erase_child(const Node::Ptr &node) {
         auto it = std::find(m_children.begin(), m_children.end(), node);
         if (it != m_children.end()) {
             m_children.erase(it);

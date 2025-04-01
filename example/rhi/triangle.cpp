@@ -4,6 +4,9 @@
 #include "engine/runtime/rhi/opengl/rhi_device_opengl.h"
 #include "engine/runtime/rhi/rhi_geometry.h"
 #include "engine/runtime/rhi/rhi_resource.h"
+#include "engine/runtime/rhi/rhi_shader_program.h"
+#include "engine/runtime/rhi/rhi_window.h"
+#include "glm/fwd.hpp"
 
 using namespace std;
 using namespace rtr;
@@ -49,7 +52,9 @@ std::vector<unsigned int> indices = {
 int main() {
 
     auto device = std::make_shared<RHI_device_OpenGL>();
-    auto window = device->create_window(800, 600, "RTR");
+    Clear_state clear_state = Clear_state::enabled();
+    clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
+    auto window = device->create_window(800, 600, "RTR", clear_state);
 
     auto position = device->create_vertex_buffer(
         Buffer_usage::STATIC, 
@@ -81,19 +86,21 @@ int main() {
         std::unordered_map<Shader_type, RHI_shader_code::Ptr>{
             {Shader_type::VERTEX, vertex_shader_code},
             {Shader_type::FRAGMENT, fragment_shader_code}
-        },  
-        std::unordered_map<std::string, RHI_uniform_entry> {}, 
-        std::unordered_map<std::string, RHI_uniform_array_entry>{}
+        },
+        {}
     );
 
-    geometry->bind();
-    shader_program->bind();
+    auto renderer = device->create_renderer(
+        shader_program,
+        geometry,
+        nullptr
+    );
 
     while (window->is_active()) {
         window->on_frame_begin();
 
         device->check_error();
-        geometry->draw();
+        renderer->draw();
 
         window->on_frame_end();
     }

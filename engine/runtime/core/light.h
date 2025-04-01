@@ -5,12 +5,14 @@
 #include "engine/runtime/core/geometry.h"
 #include "engine/runtime/core/node.h"
 #include "engine/runtime/core/shader.h"
+#include <vector>
 
 
 namespace rtr {
 
-
 class Light : public Node {
+public:
+    using Ptr = std::shared_ptr<Light>;
 protected:
     bool m_is_main{false};
     glm::vec3 m_color{};
@@ -102,13 +104,15 @@ public:
 
 class Light_setting  {
 protected:
-    std::vector<std::shared_ptr<Light>> m_lights{};
+    std::vector<Light::Ptr> m_lights{};
     int m_main_light_index{-1};
 
 public:
     Light_setting() {}
+    Light_setting(const std::vector<Light::Ptr>& lights) :
+    m_lights(lights) {}
     ~Light_setting() = default;
-    void add_light(const std::shared_ptr<Light>& light) {
+    void add_light(const Light::Ptr& light) {
         m_lights.push_back(light);
         if (light->is_main()) {
             m_main_light_index = m_lights.size() - 1;
@@ -124,11 +128,11 @@ public:
         }
     }
 
-    const std::shared_ptr<Light>& main_light() const { 
+    const Light::Ptr& main_light() const { 
         return m_lights[m_main_light_index];
     }
 
-    void set_main_light(std::shared_ptr<Light>& light) {
+    void set_main_light(Light::Ptr& light) {
         m_lights[m_main_light_index]->is_main() = false;
         for (unsigned int i = 0; i < m_lights.size(); i++) {
             if (m_lights[i] == light) {
@@ -150,6 +154,10 @@ public:
         m_main_light_index = -1;
     }
 
+    [[nodiscard]] int active_light_count() const { return m_lights.size(); }
+    [[nodiscard]] int main_light_index() const { return m_main_light_index; }
+
+    std::vector<Light::Ptr>& lights() { return m_lights; }
 };
 
 };

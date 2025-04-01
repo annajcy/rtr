@@ -77,8 +77,6 @@ public:
     using Ptr = std::shared_ptr<RHI_window>;
 
     virtual ~RHI_window() = default;
-    virtual void init() = 0;
-    virtual void destroy() = 0;
     virtual void poll_events() = 0;
     virtual void swap_buffers() = 0;
     virtual bool is_active() = 0;

@@ -29,13 +29,16 @@ public:
     using Ptr = std::shared_ptr<RHI_frame_buffer>;
 
     virtual ~RHI_frame_buffer() {}
-
-    virtual void bind() = 0;
-    virtual void unbind() = 0;
     virtual bool is_valid() = 0;
 
     int width() { return m_width; }
     int height() { return m_height; }
+
+    const std::vector<RHI_texture::Ptr>& color_attachments() const { return m_color_attachments; }
+    const RHI_texture::Ptr& depth_attachment() const { return m_depth_attachment; }
+    std::vector<RHI_texture::Ptr>& color_attachments() { return m_color_attachments; }
+    RHI_texture::Ptr& depth_attachment() { return m_depth_attachment; }
+    
     
 };
 
