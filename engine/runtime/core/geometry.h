@@ -379,11 +379,11 @@ public:
 
                 positions.push_back(x);
                 positions.push_back(y);
-                positions.push_back(z);
+                positions.push_back(-z);
 
                 normals.push_back(x);
                 normals.push_back(y);
-                normals.push_back(z);
+                normals.push_back(-z);
 
                 float u = 1.0f - 1.0f * j / long_count;
                 float v = 1.0f - 1.0f * i / lat_count;

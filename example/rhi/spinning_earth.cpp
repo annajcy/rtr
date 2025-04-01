@@ -13,6 +13,7 @@
 #include "glm/fwd.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "engine/runtime/core/input.h"
+#include <iostream>
 #include <memory>
 
 using namespace std;
@@ -54,9 +55,9 @@ in vec3 FragPos;
 uniform vec3 cameraPosition;
 
 struct Material {
-    vec3 ambient;  // 原为 ka，需要与 C++ 代码中的 uniform 名称对应
-    vec3 diffuse;  // 原为 kd
-    vec3 specular; // 原为 ks
+    vec3 ka;  // 原为 ka，需要与 C++ 代码中的 uniform 名称对应
+    vec3 kd;  // 原为 kd
+    vec3 ks; // 原为 ks
     float shininess;
 }; // 添加分号
 
@@ -81,10 +82,88 @@ uniform Light lights[MAX_LIGHTS];
 
 uniform sampler2D mainTexture;
 
+vec3 diffuseComponent(vec3 lightDir, vec3 normal, vec3 lightColor, vec3 objectColor, float intensity) {
+    float diff = max(dot(normal, lightDir), 0.0);
+    return diff * lightColor * objectColor * intensity;
+}
+
+vec3 specularComponent(vec3 lightDir, vec3 normal, vec3 viewDir, vec3 lightColor, vec3 objectColor, float shininess, float intensity) {
+	vec3 H = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(normal, H), 0.0), shininess);
+    return spec * lightColor * objectColor * intensity;
+}
+
+vec3 ambientComponent(vec3 lightColor, vec3 objectColor, float intensity) {
+    return lightColor * objectColor * intensity;
+}
+
+vec3 calculateAmbientLight(Light light, Material mat, vec3 normal, vec3 cameraPos, vec3 fragPos, vec3 objectColor) {
+    return mat.ka * ambientComponent(light.color, objectColor, light.intensity);
+}
+
+vec3 calculateDirectionalLight(Light light, Material mat, vec3 normal, vec3 cameraPos, vec3 fragPos, vec3 objectColor) {
+    vec3 lightDir = normalize(-light.direction);
+    vec3 viewDir = normalize(cameraPos - fragPos);
+    vec3 ambient = mat.ka * ambientComponent(light.color, objectColor, light.intensity);
+    vec3 diffuse = mat.kd * diffuseComponent(lightDir, normal, light.color, objectColor, light.intensity);
+    vec3 specular = mat.ks * specularComponent(lightDir, normal, viewDir, light.color, objectColor, mat.shininess, light.intensity);
+    return ambient + diffuse + specular;
+}
+
+vec3 calculatePointLight(Light light, Material mat, vec3 normal, vec3 cameraPos, vec3 fragPos, vec3 objectColor) {
+    vec3 lightDir = normalize(light.position - fragPos);
+    vec3 viewDir = normalize(cameraPos - fragPos);
+    float kc = light.attenuation.x; 
+    float k1 = light.attenuation.y;
+    float k2 = light.attenuation.z;
+    float dist = length(light.position - fragPos);
+    float attenuation = 1.0 / (kc + k1 * dist + k2 * dist * dist);
+    vec3 ambient = mat.ka * ambientComponent(light.color, objectColor, light.intensity);
+    vec3 diffuse = mat.kd * diffuseComponent(lightDir, normal, light.color, objectColor, light.intensity);
+    vec3 specular = mat.ks * specularComponent(lightDir, normal, viewDir, light.color, objectColor, mat.shininess, light.intensity);
+    return ambient + (diffuse + specular) * attenuation;
+}
+
+vec3 calculateSpotLight(Light light, Material mat, vec3 normal, vec3 cameraPos, vec3 fragPos, vec3 objectColor) {
+    vec3 lightDir = normalize(light.position - fragPos);
+    vec3 viewDir = normalize(cameraPos - fragPos);
+    float kc = light.attenuation.x;
+    float k1 = light.attenuation.y;
+    float k2 = light.attenuation.z;
+    float dist = length(light.position - fragPos);
+    float attenuation = 1.0 / (kc + k1 * dist + k2 * dist * dist);
+    vec3 ambient = mat.ka * ambientComponent(light.color, objectColor, light.intensity);
+    vec3 diffuse = mat.kd * diffuseComponent(lightDir, normal, light.color, objectColor, light.intensity);
+    vec3 specular = mat.ks * specularComponent(lightDir, normal, viewDir, light.color, objectColor, mat.shininess, light.intensity);
+    float theta = dot(-lightDir, light.direction);
+    float epsilon = light.innerAngle - light.outerAngle;
+    float intensity = clamp((theta - light.outerAngle) / epsilon, 0.0, 1.0);
+    return ambient + (diffuse + specular) * attenuation * intensity;
+}
+ 
 void main()
 {
     vec4 texColor = texture(mainTexture, TexCoord);
-    FragColor = texColor;
+    vec3 objectColor = texColor.rgb;
+    vec3 N = normalize(Normal);
+
+    vec3 result = vec3(0.0);
+
+    for (int i = 0; i < activeLights; i++) {
+        Light light = lights[i];
+
+        if (light.type == 0) {
+            result += calculateAmbientLight(light, material, N, cameraPosition, FragPos, objectColor);
+        } else if (light.type == 1) {
+            result += calculateDirectionalLight(light, material, N, cameraPosition, FragPos, objectColor);
+        } else if (light.type == 2) {
+            result += calculatePointLight(light, material, N, cameraPosition, FragPos, objectColor);
+        } else if (light.type == 3) {
+            result += calculateSpotLight(light, material, N, cameraPosition, FragPos, objectColor);
+        }
+    }
+
+    FragColor = vec4(result, 1.0);
 }
 )";
 
@@ -94,67 +173,67 @@ int main() {
     auto window = device->create_window(800, 600, "RTR");
     auto input = std::make_shared<Input>(window);
 
-    auto geo = Geometry::create_sphere(0.5f);
+    auto sphere = Geometry::create_sphere();
 
-    auto geo_position = geo->attribute("position");
-    auto geo_tex_coord = geo->attribute("uv");
-    auto geo_normal = geo->attribute("normal");
-    auto geo_indices = geo->element_attribute();
+    auto sphere_position = sphere->attribute("position");
+    auto sphere_tex_coord = sphere->attribute("uv");
+    auto sphere_normal = sphere->attribute("normal");
+    auto sphere_indices = sphere->element_attribute();
     
-    auto element = device->create_element_buffer(
+    auto sphere_element_buffer = device->create_element_buffer(
         Buffer_usage::STATIC,
-        geo_indices->data_count(),
-        geo_indices->data_size(),
-        geo_indices->data_ptr()
+        sphere_indices->data_count(),
+        sphere_indices->data_size(),
+        sphere_indices->data_ptr()
     );
 
     // 创建位置缓冲区
-    auto position = device->create_vertex_buffer(
+    auto sphere_position_buffer = device->create_vertex_buffer(
         Buffer_usage::STATIC,
         Buffer_data_type::FLOAT,
         Buffer_iterate_type::PER_VERTEX,
-        geo_position->unit_data_count(),  // 每个顶点3个分量
-        geo_position->data_size(),
-        geo_position->data_ptr()
+        sphere_position->unit_data_count(),  // 每个顶点3个分量
+        sphere_position->data_size(),
+        sphere_position->data_ptr()
     );
 
     // 创建独立的纹理坐标缓冲区
-    auto tex_coord = device->create_vertex_buffer(
+    auto sphere_tex_coord_buffer = device->create_vertex_buffer(
         Buffer_usage::STATIC,
         Buffer_data_type::FLOAT,
         Buffer_iterate_type::PER_VERTEX,
-        geo_tex_coord->unit_data_count(),  // 每个顶点2个分量
-        geo_tex_coord->data_size(),
-        geo_tex_coord->data_ptr()
+        sphere_tex_coord->unit_data_count(),  // 每个顶点2个分量
+        sphere_tex_coord->data_size(),
+        sphere_tex_coord->data_ptr()
     );
     
-    auto normal = device->create_vertex_buffer(
+    auto sphere_normal_buffer = device->create_vertex_buffer(
         Buffer_usage::STATIC,
         Buffer_data_type::FLOAT,
         Buffer_iterate_type::PER_VERTEX,
-        geo_normal->unit_data_count(),  // 每个顶点3个分量
-        geo_normal->data_size(),
-        geo_normal->data_ptr()
+        sphere_normal->unit_data_count(),  // 每个顶点3个分量
+        sphere_normal->data_size(),
+        sphere_normal->data_ptr()
     );
 
     // 修改几何体绑定（需要对应修改vertex shader的location）
     auto box_geometry = device->create_geometry(
         std::unordered_map<unsigned int, RHI_buffer::Ptr>{
-            {0, position},  // location 0 绑定位置数据
-            {1, tex_coord},    // location 1 绑定纹理坐标
-            {2, normal}
+            {0, sphere_position_buffer},  // location 0 绑定位置数据
+            {1, sphere_tex_coord_buffer},    // location 1 绑定纹理坐标
+            {2, sphere_normal_buffer}
         },
-        element
+        sphere_element_buffer
     );
     
-    auto image = Image_loader::load_from_path(
+    auto earth_image = Image_loader::load_from_path(
         Image_format::RGB_ALPHA, 
         "assets/image/earth.png"
     );
 
-    auto texture = device->create_texture_2D(
-        image->width(), 
-        image->height(), 
+    auto earth_texture = device->create_texture_2D(
+        earth_image->width(), 
+        earth_image->height(), 
         4, 
         Texture_internal_format::SRGB_ALPHA,
         std::unordered_map<Texture_wrap_target, Texture_wrap>{
@@ -166,30 +245,60 @@ int main() {
             {Texture_filter_target::MAG, Texture_filter::LINEAR}
         },
         Image_data{
-            image->width(),
-            image->height(),
-            image->data(),
+            earth_image->width(),
+            earth_image->height(),
+            earth_image->data(),
             Texture_buffer_type::UNSIGNED_BYTE,
             Texture_external_format::RGB_ALPHA
         }
     );
 
-    texture->generate_mipmap();
-    texture->bind_to_unit(1);
+    auto default_image = Image_loader::load_from_path(
+        Image_format::RGB_ALPHA,
+        "assets/image/default_texture.jpg"
+    );
+
+    earth_texture->generate_mipmap();
+    earth_texture->bind_to_unit(1);
+
+    auto default_texture = device->create_texture_2D(
+        default_image->width(),
+        default_image->height(),
+        4,
+        Texture_internal_format::SRGB_ALPHA,
+        std::unordered_map<Texture_wrap_target, Texture_wrap>{
+            {Texture_wrap_target::U, Texture_wrap::REPEAT},
+            {Texture_wrap_target::V, Texture_wrap::REPEAT}
+        },
+        std::unordered_map<Texture_filter_target, Texture_filter>{
+            {Texture_filter_target::MIN, Texture_filter::LINEAR_MIPMAP_LINEAR},
+            {Texture_filter_target::MAG, Texture_filter::LINEAR}
+        },
+        Image_data{
+            default_image->width(),
+            default_image->height(),
+            default_image->data(),
+            Texture_buffer_type::UNSIGNED_BYTE,
+            Texture_external_format::RGB_ALPHA
+        }
+    );
+
+    default_texture->generate_mipmap();
+    default_texture->bind_to_unit(0);
+
 
     auto directional_light = std::make_shared<Directional_light>(); 
-	directional_light->look_at_direction(glm::vec3(1.0, -1.0, -1.0));
-	directional_light->intensity() = 0.5f;
+	directional_light->look_at_direction(glm::vec3(0.0, 0.0, -1.0));
+	directional_light->intensity() = 1.0f;
 
 	auto ambient_light = std::make_shared<Ambient_light>();
-	ambient_light->intensity() = 0.15f;
-	
+	ambient_light->intensity() = 0.5f;
+
 	auto spot_light = std::make_shared<Spot_light>();
-	spot_light->position() = glm::vec3(0.0f, 0.0f, 2.0f);
+	spot_light->position() = glm::vec3(0.0f, 0.0f, 1.0f);
 	spot_light->look_at_direction(glm::vec3(0.0, 0.0f, -1.0f));
-	spot_light->inner_angle() = 5.0f;
-	spot_light->outer_angle() = 10.0f;
-	spot_light->color() = glm::vec3(1.0, 1.0, 0.0);
+	spot_light->inner_angle() = 1.0f;
+	spot_light->outer_angle() = 2.0f;
 
 	auto point_light_1 = std::make_shared<Point_light>();
 	point_light_1->position() = glm::vec3(1.0f, 0.0f, 0.0f);
@@ -205,12 +314,12 @@ int main() {
 
     auto light_setting = std::make_shared<Light_setting>(
         std::vector<Light::Ptr>{
-            directional_light,
-            ambient_light,
-            spot_light,
+            //directional_light,
+            //ambient_light,
+             //spot_light,
             point_light_1,
-            point_light_2,
-            point_light_3
+            // point_light_2,
+            // point_light_3
         }
     );
 
@@ -247,9 +356,9 @@ int main() {
                 {"mainTexture", RHI_uniform_entry<int>::create(1)},
                 {"activeLights", RHI_uniform_entry<int>::create(0)},
                 {"mainLightIndex", RHI_uniform_entry<int>::create(-1)},
-                {"material.ambient", RHI_uniform_entry<glm::vec3>::create(glm::vec3(1.0f))},
-                {"material.diffuse", RHI_uniform_entry<glm::vec3>::create(glm::vec3(1.0f))},
-                {"material.specular", RHI_uniform_entry<glm::vec3>::create(glm::vec3(1.0f))},
+                {"material.ka", RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.2f))},
+                {"material.kd", RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.5f))},
+                {"material.ks", RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.2f))},
                 {"material.shininess", RHI_uniform_entry<float>::create(32.0f)}
             };
     
@@ -323,7 +432,6 @@ int main() {
         renderer->draw();
 
         device->check_error();
-
         window->on_frame_end();
     }
     

@@ -5,6 +5,7 @@
 #include "engine/runtime/core/geometry.h"
 #include "engine/runtime/core/node.h"
 #include "engine/runtime/core/shader.h"
+#include "glm/gtc/constants.hpp"
 #include <vector>
 
 
@@ -15,8 +16,8 @@ public:
     using Ptr = std::shared_ptr<Light>;
 protected:
     bool m_is_main{false};
-    glm::vec3 m_color{};
-    float m_intensity{};
+    glm::vec3 m_color{glm::one<glm::vec3>()};
+    float m_intensity{1.0f};
     Light_type m_type{};
 
 public:
@@ -51,9 +52,9 @@ public:
 
 class Point_light : public Light {
 protected:
-    float m_k1{};
-    float m_k2{};
-    float m_kc{}; 
+    float m_k1{1.0f};
+    float m_k2{1.0f};
+    float m_kc{1.0f}; 
 
 public:
 
