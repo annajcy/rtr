@@ -10,9 +10,11 @@
 #include "engine/runtime/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/rhi/rhi_resource.h"
 #include "engine/runtime/rhi/rhi_shader_program.h"
+#include "engine/runtime/rhi/rhi_window.h"
 #include "glm/fwd.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "engine/runtime/core/input.h"
+#include "glm/trigonometric.hpp"
 #include <iostream>
 #include <memory>
 
@@ -104,10 +106,9 @@ vec3 calculateAmbientLight(Light light, Material mat, vec3 normal, vec3 cameraPo
 vec3 calculateDirectionalLight(Light light, Material mat, vec3 normal, vec3 cameraPos, vec3 fragPos, vec3 objectColor) {
     vec3 lightDir = normalize(-light.direction);
     vec3 viewDir = normalize(cameraPos - fragPos);
-    vec3 ambient = mat.ka * ambientComponent(light.color, objectColor, light.intensity);
     vec3 diffuse = mat.kd * diffuseComponent(lightDir, normal, light.color, objectColor, light.intensity);
     vec3 specular = mat.ks * specularComponent(lightDir, normal, viewDir, light.color, objectColor, mat.shininess, light.intensity);
-    return ambient + diffuse + specular;
+    return diffuse + specular;
 }
 
 vec3 calculatePointLight(Light light, Material mat, vec3 normal, vec3 cameraPos, vec3 fragPos, vec3 objectColor) {
@@ -118,27 +119,20 @@ vec3 calculatePointLight(Light light, Material mat, vec3 normal, vec3 cameraPos,
     float k2 = light.attenuation.z;
     float dist = length(light.position - fragPos);
     float attenuation = 1.0 / (kc + k1 * dist + k2 * dist * dist);
-    vec3 ambient = mat.ka * ambientComponent(light.color, objectColor, light.intensity);
     vec3 diffuse = mat.kd * diffuseComponent(lightDir, normal, light.color, objectColor, light.intensity);
     vec3 specular = mat.ks * specularComponent(lightDir, normal, viewDir, light.color, objectColor, mat.shininess, light.intensity);
-    return ambient + (diffuse + specular) * attenuation;
+    return (diffuse + specular) * attenuation;
 }
 
 vec3 calculateSpotLight(Light light, Material mat, vec3 normal, vec3 cameraPos, vec3 fragPos, vec3 objectColor) {
     vec3 lightDir = normalize(light.position - fragPos);
+    vec3 targetDir = normalize(-light.direction);
     vec3 viewDir = normalize(cameraPos - fragPos);
-    float kc = light.attenuation.x;
-    float k1 = light.attenuation.y;
-    float k2 = light.attenuation.z;
-    float dist = length(light.position - fragPos);
-    float attenuation = 1.0 / (kc + k1 * dist + k2 * dist * dist);
-    vec3 ambient = mat.ka * ambientComponent(light.color, objectColor, light.intensity);
     vec3 diffuse = mat.kd * diffuseComponent(lightDir, normal, light.color, objectColor, light.intensity);
     vec3 specular = mat.ks * specularComponent(lightDir, normal, viewDir, light.color, objectColor, mat.shininess, light.intensity);
-    float theta = dot(-lightDir, light.direction);
-    float epsilon = light.innerAngle - light.outerAngle;
-    float intensity = clamp((theta - light.outerAngle) / epsilon, 0.0, 1.0);
-    return ambient + (diffuse + specular) * attenuation * intensity;
+    float theta = dot(targetDir, lightDir);
+    float attenuation = clamp((theta - light.outerAngle) / (light.innerAngle - light.outerAngle), 0.0, 1.0);
+    return (diffuse + specular) * attenuation;
 }
  
 void main()
@@ -170,10 +164,12 @@ void main()
 int main() {
 
     auto device = RHI_device_OpenGL::create();
-    auto window = device->create_window(800, 600, "RTR");
+    Clear_state clear_state = Clear_state::enabled();
+    clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
+    auto window = device->create_window(800, 600, "RTR", clear_state);
     auto input = std::make_shared<Input>(window);
 
-    auto sphere = Geometry::create_sphere();
+    auto sphere = Geometry::create_box();
 
     auto sphere_position = sphere->attribute("position");
     auto sphere_tex_coord = sphere->attribute("uv");
@@ -286,7 +282,6 @@ int main() {
     default_texture->generate_mipmap();
     default_texture->bind_to_unit(0);
 
-
     auto directional_light = std::make_shared<Directional_light>(); 
 	directional_light->look_at_direction(glm::vec3(0.0, 0.0, -1.0));
 	directional_light->intensity() = 1.0f;
@@ -295,34 +290,35 @@ int main() {
 	ambient_light->intensity() = 0.5f;
 
 	auto spot_light = std::make_shared<Spot_light>();
-	spot_light->position() = glm::vec3(0.0f, 0.0f, 1.0f);
+	spot_light->position() = glm::vec3(0.0f, 0.0f, 2.0f);
 	spot_light->look_at_direction(glm::vec3(0.0, 0.0f, -1.0f));
-	spot_light->inner_angle() = 1.0f;
-	spot_light->outer_angle() = 2.0f;
+	spot_light->inner_angle() = 5.0f;
+	spot_light->outer_angle() = 10.0f;
+    spot_light->intensity() = 5.0f;
+    spot_light->color() = glm::vec3(1.0, 1.0, 0.0);
 
 	auto point_light_1 = std::make_shared<Point_light>();
 	point_light_1->position() = glm::vec3(1.0f, 0.0f, 0.0f);
-	point_light_1->color() = glm::vec3(1.0f, 0.0f, 0.0f);
+    point_light_1->intensity() = 5.0f;
 
 	auto point_light_2 = std::make_shared<Point_light>();
 	point_light_2->position() = glm::vec3(0.0f, 1.0f, 0.0f);
-	point_light_2->color() = glm::vec3(0.0f, 1.0f, 0.0f);
+    point_light_2->intensity() = 5.0f;
 
 	auto point_light_3 = std::make_shared<Point_light>();
-	point_light_3->position() = glm::vec3(0.0f, 0.0f, -1.0f);
-	point_light_3->color() = glm::vec3(0.0f, 0.0f, 1.0f);
+	point_light_3->position() = glm::vec3(0.0f, 0.0f, 1.0f);
+    point_light_3->intensity() = 5.0f;
 
     auto light_setting = std::make_shared<Light_setting>(
         std::vector<Light::Ptr>{
             //directional_light,
             //ambient_light,
-             //spot_light,
-            point_light_1,
-            // point_light_2,
-            // point_light_3
+            spot_light,
+            //point_light_1,
+            //point_light_2,
+            //point_light_3
         }
     );
-
 
     auto camera = Perspective_camera::create(
         60.0f, 
@@ -421,8 +417,8 @@ int main() {
             if (auto spot_light = std::dynamic_pointer_cast<Spot_light>(light)) {
                 shader_program->modify_uniform<glm::vec3>((prefix + ".position").c_str(), spot_light->position());
                 shader_program->modify_uniform<glm::vec3>((prefix + ".direction").c_str(), spot_light->front());
-                shader_program->modify_uniform<float>((prefix + ".innerAngle").c_str(), spot_light->inner_angle());
-                shader_program->modify_uniform<float>((prefix + ".outerAngle").c_str(), spot_light->outer_angle());
+                shader_program->modify_uniform<float>((prefix + ".innerAngle").c_str(), glm::cos(glm::radians(spot_light->inner_angle())));
+                shader_program->modify_uniform<float>((prefix + ".outerAngle").c_str(), glm::cos(glm::radians(spot_light->outer_angle())));
             }
         	
         }

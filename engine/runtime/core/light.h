@@ -58,9 +58,6 @@ protected:
 
 public:
 
-    Point_light(Light_type type) :
-    Light(type) {}
-
     Point_light() : 
     Light(Light_type::POINT) {}
     ~Point_light() = default;
@@ -75,19 +72,19 @@ public:
 
 };
 
-class Spot_light : public Point_light {
+class Spot_light : public Light {
 protected:
     float m_inner_angle{30.0f};
     float m_outer_angle{40.0f};
 
 public:
     Spot_light() :
-    Point_light(Light_type::SPOT) {}
+    Light(Light_type::SPOT) {}
     ~Spot_light() = default;
     float& inner_angle() { return m_inner_angle; }
     float& outer_angle() { return m_outer_angle; }
-    [[nodiscard]] float inner_angle() const { return m_inner_angle; }
-    [[nodiscard]] float outer_angle() const { return m_outer_angle; }
+    float inner_angle() const { return m_inner_angle; }
+    float outer_angle() const { return m_outer_angle; }
 
 };
 
