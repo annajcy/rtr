@@ -112,11 +112,17 @@ public:
     void upload_data(const Image_data& image) override {
 
         if (image.external_format == Texture_external_format::SRGB_ALPHA || 
-            image.external_format == Texture_external_format::SRGB) {
-                glEnable(GL_FRAMEBUFFER_SRGB);
-            } else {
-                glDisable(GL_FRAMEBUFFER_SRGB);
-            }
+            image.external_format == Texture_external_format::SRGB
+        ) {
+            glEnable(GL_FRAMEBUFFER_SRGB);
+        } else {
+            glDisable(GL_FRAMEBUFFER_SRGB);
+        }
+
+        if (image.data == nullptr) {
+            std::cout << "[RHI_texture_2D_OpenGL] Image data is nullptr" << std::endl;
+            return;
+        }
 
         glTextureSubImage2D(
             m_texture_id, 

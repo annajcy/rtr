@@ -39,7 +39,6 @@ public:
     std::vector<RHI_texture::Ptr>& color_attachments() { return m_color_attachments; }
     RHI_texture::Ptr& depth_attachment() { return m_depth_attachment; }
     
-    
 };
 
 };

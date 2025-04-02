@@ -57,11 +57,11 @@ in vec3 FragPos;
 uniform vec3 cameraPosition;
 
 struct Material {
-    vec3 ka;  // 原为 ka，需要与 C++ 代码中的 uniform 名称对应
-    vec3 kd;  // 原为 kd
-    vec3 ks; // 原为 ks
+    vec3 ka;  
+    vec3 kd; 
+    vec3 ks; 
     float shininess;
-}; // 添加分号
+}; 
 
 uniform Material material;
 
@@ -73,8 +73,8 @@ struct Light {
     int type;        // 0=ambient, 1=directional, 2=point, 3=spot
     vec3 color;
     float intensity;
-    vec3 position;   // 点/聚光灯
-    vec3 direction;  // 平行/聚光灯
+    vec3 position;   
+    vec3 direction;  
     vec3 attenuation; // x=kc, y=k1, z=k2
     float innerAngle;
     float outerAngle;
@@ -159,17 +159,17 @@ void main()
 
     FragColor = vec4(result, 1.0);
 }
+
 )";
 
 int main() {
 
     auto device = RHI_device_OpenGL::create();
-    Clear_state clear_state = Clear_state::enabled();
-    clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
-    auto window = device->create_window(800, 600, "RTR", clear_state);
+    
+    auto window = device->create_window(800, 600, "RTR");
     auto input = std::make_shared<Input>(window);
 
-    auto sphere = Geometry::create_box();
+    auto sphere = Geometry::create_sphere(0.5);
 
     auto sphere_position = sphere->attribute("position");
     auto sphere_tex_coord = sphere->attribute("uv");
@@ -283,7 +283,7 @@ int main() {
     default_texture->bind_to_unit(0);
 
     auto directional_light = std::make_shared<Directional_light>(); 
-	directional_light->look_at_direction(glm::vec3(0.0, 0.0, -1.0));
+	directional_light->look_at_direction(glm::vec3(0.0, -1.0, 0.0));
 	directional_light->intensity() = 1.0f;
 
 	auto ambient_light = std::make_shared<Ambient_light>();
@@ -298,24 +298,27 @@ int main() {
     spot_light->color() = glm::vec3(1.0, 1.0, 0.0);
 
 	auto point_light_1 = std::make_shared<Point_light>();
-	point_light_1->position() = glm::vec3(1.0f, 0.0f, 0.0f);
+	point_light_1->position() = glm::vec3(2.0f, 0.0f, 0.0f);
     point_light_1->intensity() = 5.0f;
+    point_light_1->color() = glm::vec3(1.0, 1.0, 1.0);
 
 	auto point_light_2 = std::make_shared<Point_light>();
-	point_light_2->position() = glm::vec3(0.0f, 1.0f, 0.0f);
+	point_light_2->position() = glm::vec3(-2.0f, 1.0f, 0.0f);
     point_light_2->intensity() = 5.0f;
+    point_light_2->color() = glm::vec3(1.0, 1.0, 1.0);
 
 	auto point_light_3 = std::make_shared<Point_light>();
-	point_light_3->position() = glm::vec3(0.0f, 0.0f, 1.0f);
+	point_light_3->position() = glm::vec3(0.0f, -1.0f, 0.0f);
     point_light_3->intensity() = 5.0f;
+    point_light_3->color() = glm::vec3(0.0, 0.0, 1.0);
 
     auto light_setting = std::make_shared<Light_setting>(
         std::vector<Light::Ptr>{
             //directional_light,
             //ambient_light,
             spot_light,
-            //point_light_1,
-            //point_light_2,
+            point_light_1,
+            point_light_2,
             //point_light_3
         }
     );
@@ -378,13 +381,17 @@ int main() {
     auto pipeline_state = device->create_pipeline_state(Pipeline_state::opaque_pipeline_state());
     pipeline_state->apply();
 
-    auto renderer = device->create_renderer(shader_program, box_geometry, nullptr);
+    Clear_state clear_state = Clear_state::enabled();
+    clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
+    auto renderer = device->create_renderer(clear_state);
+    renderer->shader_program() = shader_program;
+    renderer->geometry() = box_geometry;
 
     while (window->is_active()) {
         window->on_frame_begin();
         camera_control->update();
 
-        model = glm::rotate(model, 0.01f, glm::vec3(0.5f, 1.0f, 0.0f));
+       // model = glm::rotate(model, 0.01f, glm::vec3(0.5f, 1.0f, 0.0f));
 
         shader_program->modify_uniform<glm::mat4>("model", model);
         shader_program->modify_uniform<glm::mat4>("view", camera->view_matrix());
@@ -417,8 +424,8 @@ int main() {
             if (auto spot_light = std::dynamic_pointer_cast<Spot_light>(light)) {
                 shader_program->modify_uniform<glm::vec3>((prefix + ".position").c_str(), spot_light->position());
                 shader_program->modify_uniform<glm::vec3>((prefix + ".direction").c_str(), spot_light->front());
-                shader_program->modify_uniform<float>((prefix + ".innerAngle").c_str(), glm::cos(glm::radians(spot_light->inner_angle())));
-                shader_program->modify_uniform<float>((prefix + ".outerAngle").c_str(), glm::cos(glm::radians(spot_light->outer_angle())));
+                shader_program->modify_uniform<float>((prefix + ".innerAngle").c_str(), spot_light->inner_angle_cos());
+                shader_program->modify_uniform<float>((prefix + ".outerAngle").c_str(), spot_light->outer_angle_cos());
             }
         	
         }

@@ -32,8 +32,7 @@ public:
     virtual RHI_window::Ptr create_window(
         int width,
         int height,
-        const std::string& title,
-        const Clear_state& clear_state = Clear_state::enabled()
+        const std::string& title
     ) = 0;
 
     virtual RHI_buffer::Ptr create_vertex_buffer(
@@ -101,11 +100,8 @@ public:
         const RHI_texture::Ptr& depth_attachment
     ) = 0;
 
-    virtual RHI_renderer::Ptr create_renderer(
-        const RHI_shader_program::Ptr& shader_program,
-        const RHI_geometry::Ptr& geometry,
-        const RHI_frame_buffer::Ptr& frame_buffer
-    ) = 0;
+
+    virtual RHI_renderer::Ptr create_renderer(const Clear_state& clear_state) = 0;
 
     virtual RHI_pipeline_state::Ptr create_pipeline_state() = 0;
     virtual RHI_pipeline_state::Ptr create_pipeline_state(const Pipeline_state& pipeline_state) = 0;

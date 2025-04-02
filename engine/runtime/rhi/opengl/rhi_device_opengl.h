@@ -17,6 +17,7 @@
 #include "engine/runtime/rhi/rhi_frame_buffer.h"
 #include "engine/runtime/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/rhi/rhi_renderer.h"
+#include "engine/runtime/rhi/rhi_window.h"
 #include <cassert>
 #include <memory>
 
@@ -40,14 +41,12 @@ public:
     RHI_window::Ptr create_window(
         int width,
         int height,
-        const std::string& title,
-        const Clear_state& clear_state = Clear_state::enabled()
+        const std::string& title
     ) override {
         return std::make_shared<RHI_window_OpenGL>(
             width,
             height,
-            title,
-            clear_state
+            title
         );
     }
 
@@ -181,16 +180,8 @@ public:
         );
     }
 
-    RHI_renderer::Ptr create_renderer(
-        const RHI_shader_program::Ptr& shader_program,
-        const RHI_geometry::Ptr& geometry,
-        const RHI_frame_buffer::Ptr& frame_buffer
-    ) override {
-        return std::make_shared<RHI_renderer_OpenGL>(
-            shader_program,
-            geometry,
-            frame_buffer
-        );
+    RHI_renderer::Ptr create_renderer(const Clear_state& clear_state) override {
+        return std::make_shared<RHI_renderer_OpenGL>(clear_state);
     }
 
     RHI_pipeline_state::Ptr create_pipeline_state(const Pipeline_state& pipeline_state) override {

@@ -18,9 +18,8 @@ public:
     RHI_window_OpenGL(
         unsigned int width,
         unsigned int height,
-        std::string title,
-        const Clear_state& clear_state
-    ) : RHI_window(width, height, title, clear_state) {
+        std::string title
+    ) : RHI_window(width, height, title) {
         glfwInit();
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -51,7 +50,6 @@ public:
         glfwGetFramebufferSize(window(), &m_width, &m_height);
         set_viewport(0, 0, m_width, m_height);
 
-        apply_clear_state();
     }
 
     ~RHI_window_OpenGL() override {
@@ -80,29 +78,6 @@ public:
 
     bool is_active() override {
         return !glfwWindowShouldClose(m_window);
-    }
-
-    void apply_clear_state() override {
-        glClearColor(
-            m_clear_state.color_clear_value.r,
-            m_clear_state.color_clear_value.g,
-            m_clear_state.color_clear_value.b,
-            m_clear_state.color_clear_value.a
-        );
-
-        glClearDepth(m_clear_state.depth_clear_value);
-        glClearStencil(m_clear_state.stencil_clear_value);
-    }
-
-    void clear() override {
-
-        auto clear_mask = 0;
-        if (m_clear_state.color) clear_mask |= GL_COLOR_BUFFER_BIT;
-        if (m_clear_state.depth) clear_mask |= GL_DEPTH_BUFFER_BIT;
-        if (m_clear_state.stencil) clear_mask |= GL_STENCIL_BUFFER_BIT;
-
-        glClear(clear_mask);
-        
     }
 
     static void window_resize_callback(GLFWwindow* window, int width, int height) {

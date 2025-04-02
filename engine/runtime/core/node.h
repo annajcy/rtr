@@ -14,9 +14,9 @@ public:
 protected:
     Node_type m_type{};
 
-    glm::vec3 m_position = glm::zero<glm::vec3>();
-    glm::vec3 m_scale = glm::one<glm::vec3>();
-    glm::quat m_rotation = glm::identity<glm::quat>();
+    glm::vec3 m_position{glm::zero<glm::vec3>()};
+    glm::vec3 m_scale{glm::one<glm::vec3>()};
+    glm::quat m_rotation{glm::identity<glm::quat>()};
 
     std::vector<Node::Ptr> m_children{};
     std::weak_ptr<Node> m_parent{};

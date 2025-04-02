@@ -41,7 +41,6 @@ protected:
     int m_width{};
     int m_height{};
     std::string m_title{};
-    Clear_state m_clear_state{};
 
     Window_resize_event m_window_resize_event{[&](int width, int height) {
         std::cout << "Viewport resized to: " << width << " " << height << std::endl;
@@ -67,12 +66,10 @@ public:
     RHI_window(
         int width, 
         int height, 
-        std::string title,
-        Clear_state clear_state
+        std::string title
     ) : m_width(width), 
         m_height(height), 
-        m_title(title),
-        m_clear_state(clear_state) {}
+        m_title(title) {}
 
     using Ptr = std::shared_ptr<RHI_window>;
 
@@ -83,18 +80,11 @@ public:
 
     virtual void set_viewport(int x, int y, int width, int height) = 0;
     virtual void deactivate() = 0;
-    virtual void apply_clear_state() = 0;
-    virtual void clear() = 0;
-
-    void change_clear_state(std::function<void(Clear_state&)> changer) {
-        changer(m_clear_state);
-        apply_clear_state();
-    }
+    
 
     void on_frame_begin() {
         poll_events();
         swap_buffers();
-        clear();
         m_frame_begin_event.execute(this);
     }
 

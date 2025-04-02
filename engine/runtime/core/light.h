@@ -86,6 +86,9 @@ public:
     float inner_angle() const { return m_inner_angle; }
     float outer_angle() const { return m_outer_angle; }
 
+    float inner_angle_cos() const { return glm::cos(glm::radians(m_inner_angle)); }
+    float outer_angle_cos() const { return glm::cos(glm::radians(m_outer_angle)); }
+
 };
 
 class Area_light : public Light {

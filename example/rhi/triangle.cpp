@@ -52,9 +52,7 @@ std::vector<unsigned int> indices = {
 int main() {
 
     auto device = std::make_shared<RHI_device_OpenGL>();
-    Clear_state clear_state = Clear_state::enabled();
-    clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
-    auto window = device->create_window(800, 600, "RTR", clear_state);
+    auto window = device->create_window(800, 600, "RTR");
 
     auto position = device->create_vertex_buffer(
         Buffer_usage::STATIC, 
@@ -90,11 +88,11 @@ int main() {
         {}
     );
 
-    auto renderer = device->create_renderer(
-        shader_program,
-        geometry,
-        nullptr
-    );
+    Clear_state clear_state = Clear_state::enabled();
+    clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
+    auto renderer = device->create_renderer(clear_state);
+    renderer->geometry() = geometry;
+    renderer->shader_program() = shader_program;
 
     while (window->is_active()) {
         window->on_frame_begin();

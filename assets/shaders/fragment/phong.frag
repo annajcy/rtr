@@ -1,124 +1,112 @@
 #version 460 core
-out vec4 frag_color;
+out vec4 FragColor;
 
-in vec3 world_position;
-in vec2 uv;
-in vec3 normal;
+in vec2 TexCoord;
+in vec3 Normal;
+in vec3 FragPos;
 
-uniform float time;
-uniform sampler2D main_tex;
-
-uniform vec3 camera_position;
+uniform vec3 cameraPosition;
 
 struct Material {
-    vec3 ambient;  // 原为 ka，需要与 C++ 代码中的 uniform 名称对应
-    vec3 diffuse;  // 原为 kd
-    vec3 specular; // 原为 ks
+    vec3 ka;  
+    vec3 kd; 
+    vec3 ks; 
     float shininess;
-}; // 添加分号
+}; 
 
 uniform Material material;
 
 #define MAX_LIGHTS 16
-uniform int active_lights;
-uniform int main_light_index;
+uniform int activeLights;
+uniform int mainLightIndex;
 
 struct Light {
     int type;        // 0=ambient, 1=directional, 2=point, 3=spot
     vec3 color;
     float intensity;
-    vec3 position;   // 点/聚光灯
-    vec3 direction;  // 平行/聚光灯
+    vec3 position;   
+    vec3 direction;  
     vec3 attenuation; // x=kc, y=k1, z=k2
-    float inner_angle;
-    float outer_angle;
+    float innerAngle;
+    float outerAngle;
 };
 
 uniform Light lights[MAX_LIGHTS];
 
-// 公共光照计算函数
-vec3 diffuse_component(vec3 light_dir, vec3 normal, vec3 light_color, vec3 object_color, float intensity) {
-    float diff = max(dot(normal, light_dir), 0.0);
-    return light_color * diff * object_color * intensity;
+uniform sampler2D mainTexture;
+
+vec3 diffuseComponent(vec3 lightDir, vec3 normal, vec3 lightColor, vec3 objectColor, float intensity) {
+    float diff = max(dot(normal, lightDir), 0.0);
+    return diff * lightColor * objectColor * intensity;
 }
 
-vec3 specular_component(vec3 light_dir, vec3 normal, vec3 view_dir, vec3 light_color, float shininess, float intensity) {
-    // 改用半角向量计算高光
-    vec3 H = normalize(light_dir + view_dir);
+vec3 specularComponent(vec3 lightDir, vec3 normal, vec3 viewDir, vec3 lightColor, vec3 objectColor, float shininess, float intensity) {
+	vec3 H = normalize(lightDir + viewDir);
     float spec = pow(max(dot(normal, H), 0.0), shininess);
-    return light_color * spec * intensity;
+    return spec * lightColor * objectColor * intensity;
 }
 
-// 环境光处理
-// 修改 ambient_light 函数
-vec3 ambient_light(Light light, Material mat, vec3 object_color) {
-    return light.color * light.intensity * mat.ambient * object_color; // ka → ambient
+vec3 ambientComponent(vec3 lightColor, vec3 objectColor, float intensity) {
+    return lightColor * objectColor * intensity;
 }
 
-// 修改 directional_light 函数
-vec3 directional_light(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 object_color) {
-    vec3 light_dir = normalize(-light.direction);
-    vec3 diffuse = mat.diffuse * diffuse_component(light_dir, normal, light.color, object_color, light.intensity); // kd → diffuse
-    vec3 specular = mat.specular * specular_component(light_dir, normal, view_dir, light.color, mat.shininess, light.intensity); // ks → specular
+vec3 calculateAmbientLight(Light light, Material mat, vec3 normal, vec3 cameraPos, vec3 fragPos, vec3 objectColor) {
+    return mat.ka * ambientComponent(light.color, objectColor, light.intensity);
+}
+
+vec3 calculateDirectionalLight(Light light, Material mat, vec3 normal, vec3 cameraPos, vec3 fragPos, vec3 objectColor) {
+    vec3 lightDir = normalize(-light.direction);
+    vec3 viewDir = normalize(cameraPos - fragPos);
+    vec3 diffuse = mat.kd * diffuseComponent(lightDir, normal, light.color, objectColor, light.intensity);
+    vec3 specular = mat.ks * specularComponent(lightDir, normal, viewDir, light.color, objectColor, mat.shininess, light.intensity);
     return diffuse + specular;
 }
 
-// 修改 point_light 函数
-vec3 point_light(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 world_pos, vec3 object_color) {  // 添加object_color参数
-    vec3 light_dir = normalize(light.position - world_pos);
-    float dist = length(light.position - world_pos);
-    float attenuation = 1.0 / (light.attenuation.z * dist*dist + 
-                              light.attenuation.y * dist + 
-                              light.attenuation.x);
-    
-    vec3 diffuse = mat.diffuse * diffuse_component(light_dir, normal, light.color, object_color, light.intensity);
-    vec3 specular = mat.specular * specular_component(light_dir, normal, view_dir, light.color, mat.shininess, light.intensity);
+vec3 calculatePointLight(Light light, Material mat, vec3 normal, vec3 cameraPos, vec3 fragPos, vec3 objectColor) {
+    vec3 lightDir = normalize(light.position - fragPos);
+    vec3 viewDir = normalize(cameraPos - fragPos);
+    float kc = light.attenuation.x; 
+    float k1 = light.attenuation.y;
+    float k2 = light.attenuation.z;
+    float dist = length(light.position - fragPos);
+    float attenuation = 1.0 / (kc + k1 * dist + k2 * dist * dist);
+    vec3 diffuse = mat.kd * diffuseComponent(lightDir, normal, light.color, objectColor, light.intensity);
+    vec3 specular = mat.ks * specularComponent(lightDir, normal, viewDir, light.color, objectColor, mat.shininess, light.intensity);
     return (diffuse + specular) * attenuation;
 }
 
-// 修改 spot_light 函数
-vec3 spot_light(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 world_pos, vec3 object_color) {  // 添加object_color参数
-    vec3 light_dir = normalize(light.position - world_pos);
-    float theta = dot(light_dir, normalize(-light.direction));
-    float epsilon = light.inner_angle - light.outer_angle;
-    float intensity = clamp((theta - light.outer_angle) / epsilon, 0.0, 1.0);
-    
-    float dist = length(light.position - world_pos);
-    float attenuation = 1.0 / (light.attenuation.z * dist*dist + 
-                              light.attenuation.y * dist + 
-                              light.attenuation.x);
-    
-    vec3 diffuse = mat.diffuse * diffuse_component(light_dir, normal, light.color, object_color, light.intensity);
-    vec3 specular = mat.specular * specular_component(light_dir, normal, view_dir, light.color, mat.shininess, light.intensity);
-    return (diffuse + specular) * attenuation * intensity;
+vec3 calculateSpotLight(Light light, Material mat, vec3 normal, vec3 cameraPos, vec3 fragPos, vec3 objectColor) {
+    vec3 lightDir = normalize(light.position - fragPos);
+    vec3 targetDir = normalize(-light.direction);
+    vec3 viewDir = normalize(cameraPos - fragPos);
+    vec3 diffuse = mat.kd * diffuseComponent(lightDir, normal, light.color, objectColor, light.intensity);
+    vec3 specular = mat.ks * specularComponent(lightDir, normal, viewDir, light.color, objectColor, mat.shininess, light.intensity);
+    float theta = dot(targetDir, lightDir);
+    float attenuation = clamp((theta - light.outerAngle) / (light.innerAngle - light.outerAngle), 0.0, 1.0);
+    return (diffuse + specular) * attenuation;
 }
-
-vec3 calculate_lighting(Light light, Material mat, vec3 normal, vec3 view_dir, vec3 world_pos, vec3 object_color) {
-    switch(light.type) {
-        case 0: return ambient_light(light, mat, object_color);
-        case 1: return directional_light(light, mat, normal, view_dir, object_color);
-        case 2: return point_light(light, mat, normal, view_dir, world_pos, object_color);  // 传递object_color
-        case 3: return spot_light(light, mat, normal, view_dir, world_pos, object_color);    // 传递object_color
-    }
-    return vec3(0.0);
-}
-
-void main() {
-    vec3 object_color = texture(main_tex, uv).rgb;
-    vec3 N = normalize(normal);
-    vec3 V = normalize(camera_position - world_position);
+ 
+void main()
+{
+    vec4 texColor = texture(mainTexture, TexCoord);
+    vec3 objectColor = texColor.rgb;
+    vec3 N = normalize(Normal);
 
     vec3 result = vec3(0.0);
-    for (int i = 0; i < active_lights; ++i) {
-        if(i == main_light_index) {
-            continue;
+
+    for (int i = 0; i < activeLights; i++) {
+        Light light = lights[i];
+
+        if (light.type == 0) {
+            result += calculateAmbientLight(light, material, N, cameraPosition, FragPos, objectColor);
+        } else if (light.type == 1) {
+            result += calculateDirectionalLight(light, material, N, cameraPosition, FragPos, objectColor);
+        } else if (light.type == 2) {
+            result += calculatePointLight(light, material, N, cameraPosition, FragPos, objectColor);
+        } else if (light.type == 3) {
+            result += calculateSpotLight(light, material, N, cameraPosition, FragPos, objectColor);
         }
-        result += calculate_lighting(lights[i], material, N, V, world_position, object_color);
-    }
-    
-    if (active_lights > 0) {
-        result += calculate_lighting(lights[main_light_index], material, N, V, world_position, object_color);
     }
 
-    frag_color = vec4(result, 1.0);
+    FragColor = vec4(result, 1.0);
 }

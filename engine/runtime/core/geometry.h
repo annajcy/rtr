@@ -224,6 +224,18 @@ public:
         return Sphere(compute_bounding_box(position_attribute));
     }
 
+    static Geometry::Ptr create(
+        const std::unordered_map<std::string, unsigned int>& vertex_attribute_names,
+        const std::unordered_map<unsigned int, Vertex_attribute_base::Ptr>& vertex_attributes,
+        const Element_atrribute::Ptr & element_attribute
+    ) {
+        return std::make_shared<Geometry>(
+            vertex_attribute_names,
+            vertex_attributes,
+            element_attribute
+        );
+    }
+
     static Geometry::Ptr create_box(float size = 1.0f) {
         auto half_size = size * 0.5f;
 
@@ -310,7 +322,7 @@ public:
     }
 
 
-    static Geometry::Ptr create_plane(float width, float height) {
+    static Geometry::Ptr create_plane(float width = 2.0f, float height = 2.0f) {
         float half_width = width * 0.5f;
         float half_height = height * 0.5f;
 
