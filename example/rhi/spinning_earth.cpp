@@ -314,12 +314,12 @@ int main() {
 
     auto light_setting = std::make_shared<Light_setting>(
         std::vector<Light::Ptr>{
-            //directional_light,
-            //ambient_light,
+            directional_light,
+            ambient_light,
             spot_light,
             point_light_1,
             point_light_2,
-            //point_light_3
+            point_light_3
         }
     );
 
@@ -338,8 +338,6 @@ int main() {
     auto vertex_shader_code = device->create_shader_code(Shader_type::VERTEX, vertex_shader_source);
     auto fragment_shader_code = device->create_shader_code(Shader_type::FRAGMENT, fragment_shader_source);
 
-    glm::mat4 model = glm::mat4(1.0f);
-
     auto shader_program = device->create_shader_program(
         std::unordered_map<Shader_type, RHI_shader_code::Ptr>{
             {Shader_type::VERTEX, vertex_shader_code},
@@ -348,7 +346,7 @@ int main() {
         [&](){
             
             std::unordered_map<std::string, RHI_uniform_entry_base::Ptr> uniforms{
-                {"model", RHI_uniform_entry<glm::mat4>::create(model)},
+                {"model", RHI_uniform_entry<glm::mat4>::create( glm::mat4(1.0f))},
                 {"view", RHI_uniform_entry<glm::mat4>::create(glm::mat4(1.0f))},
                 {"projection", RHI_uniform_entry<glm::mat4>::create(glm::mat4(1.0f))},
                 {"camera_position", RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.0f))},
@@ -387,11 +385,13 @@ int main() {
     renderer->shader_program() = shader_program;
     renderer->geometry() = box_geometry;
 
+    glm::mat4 model = glm::mat4(1.0f);
+
     while (window->is_active()) {
         window->on_frame_begin();
         camera_control->update();
 
-       // model = glm::rotate(model, 0.01f, glm::vec3(0.5f, 1.0f, 0.0f));
+        model = glm::rotate(model, 0.01f, glm::vec3(0.5f, 1.0f, 0.0f));
 
         shader_program->modify_uniform<glm::mat4>("model", model);
         shader_program->modify_uniform<glm::mat4>("view", camera->view_matrix());
@@ -432,6 +432,7 @@ int main() {
 
         shader_program->update_uniforms();
 
+        renderer->clear();
         renderer->draw();
 
         device->check_error();

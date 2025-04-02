@@ -98,6 +98,7 @@ int main() {
         window->on_frame_begin();
 
         device->check_error();
+        renderer->clear();
         renderer->draw();
 
         window->on_frame_end();

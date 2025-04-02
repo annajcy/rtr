@@ -271,17 +271,17 @@ inline constexpr unsigned int gl_texture_filter(Texture_filter filter) {
 
 inline constexpr unsigned int gl_texture_cube_map_face(Texture_cubemap_face face) {
     switch (face) {
-        case Texture_cubemap_face::POSITIVE_X:
+        case Texture_cubemap_face::RIGHT:
             return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-        case Texture_cubemap_face::NEGATIVE_X:
+        case Texture_cubemap_face::LEFT:
             return GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
-        case Texture_cubemap_face::POSITIVE_Y:
+        case Texture_cubemap_face::TOP:
             return GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
-        case Texture_cubemap_face::NEGATIVE_Y:
+        case Texture_cubemap_face::BOTTOM:
             return GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
-        case Texture_cubemap_face::POSITIVE_Z:
+        case Texture_cubemap_face::FRONT:
             return GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
-        case Texture_cubemap_face::NEGATIVE_Z:
+        case Texture_cubemap_face::BACK:
             return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
         default:
             return GL_TEXTURE_CUBE_MAP_POSITIVE_X;

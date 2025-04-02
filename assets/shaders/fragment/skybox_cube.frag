@@ -1,11 +1,11 @@
 #version 460 core
-out vec4 frag_color;
+out vec4 FragColor;
 
-in vec3 uvw;
+in vec3 UVW;
 
-uniform samplerCube cube_map_sampler;
+uniform samplerCube cubemapTex;
 
 void main()
 {
-	frag_color = texture(cube_map_sampler, uvw);
+	FragColor = texture(cubemapTex, UVW);
 }

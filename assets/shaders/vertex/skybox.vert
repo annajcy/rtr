@@ -1,23 +1,21 @@
 #version 460 core
-layout (location = 0) in vec3 a_pos;
+layout (location = 0) in vec3 aPos;
 
-out vec3 uvw;
+out vec3 UVW;
 
-uniform mat4 view_matrix;
-uniform mat4 projection_matrix;
+uniform mat4 view;
+uniform mat4 projection;
 
-uniform vec3 camera_position;
-
+uniform vec3 cameraPosition;
 
 void main()
 {
-	vec4 transform_position = vec4(a_pos, 1.0);
+	vec4 transformPosition = vec4(aPos, 1.0);
 
-	mat4 model_matrix = mat4(1.0);
-	model_matrix[3] = vec4(camera_position, 1.0); // 直接设置第四列
+	mat4 model = mat4(1.0);
+	model[3] = vec4(cameraPosition, 1.0); // 直接设置第四列
 
-	transform_position = model_matrix * transform_position;
-	vec4 pos = projection_matrix * view_matrix * transform_position;
+	vec4 pos = projection * view * model * vec4(aPos, 1.0);
 	gl_Position = pos.xyww;
-	uvw = a_pos;
+	UVW = aPos;
 }

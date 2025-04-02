@@ -208,12 +208,12 @@ enum class Texture_filter_target {
 };
 
 enum class Texture_cubemap_face {
-    POSITIVE_X,
-    NEGATIVE_X,
-    POSITIVE_Y,
-    NEGATIVE_Y,
-    NEGATIVE_Z,
-    POSITIVE_Z,
+    RIGHT,
+    LEFT,
+    TOP,
+    BOTTOM,
+    BACK,
+    FRONT,
 };
 
 enum class Depth_function {
