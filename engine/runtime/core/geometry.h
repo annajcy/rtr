@@ -145,6 +145,7 @@ public:
 
 using Position_attribute = Vertex_attribute<float, 3>;
 using Normal_attribute = Vertex_attribute<float, 3>;
+using Tangent_attribute = Vertex_attribute<float, 3>;
 using UV_attribute = Vertex_attribute<float, 2>;
 using Color_attribute = Vertex_attribute<float, 4>;
 
@@ -242,7 +243,8 @@ public:
         std::unordered_map<std::string, unsigned int> vertex_attribute_names = {
             {"position", 0},
             {"uv", 1},
-            {"normal", 2}
+            {"normal", 2},
+            {"tangent", 3}  
         };
 
         std::unordered_map<unsigned int, Vertex_attribute_base::Ptr> vertex_attributes = {
@@ -307,7 +309,24 @@ public:
                 -1.0f, 0.0f, 0.0f,
                 -1.0f, 0.0f, 0.0f,
             })},
+            {3, std::make_shared<Tangent_attribute>(std::vector<float>{
+                // 每个面的切线方向 (假设UV水平方向为切线方向)
+                // front face
+                1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                // back face 
+                -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+                // top face
+                1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                // bottom face
+                1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                // right face
+                0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+                // left face
+                0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f
+            })}
         };
+
+        
 
         auto element_attribute = std::make_shared<Element_atrribute>(std::vector<unsigned int>{
             0, 1, 2, 2, 3, 0,   // Front face
@@ -329,7 +348,8 @@ public:
         std::unordered_map<std::string, unsigned int> vertex_attribute_names = {
             {"position", 0},
             {"uv", 1},
-            {"normal", 2}
+            {"normal", 2},
+            {"tangent", 3} 
         };
 
         std::unordered_map<unsigned int, Vertex_attribute_base::Ptr> vertex_attributes = {
@@ -352,7 +372,14 @@ public:
                 0.0f, 0.0f, 1.0f,
                 0.0f, 0.0f, 1.0f,
                 0.0f, 0.0f, 1.0f,
+            })},
+            {3, std::make_shared<Tangent_attribute>(std::vector<float>{
+                1.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f
             })}
+            
         };
 
 
@@ -369,7 +396,8 @@ public:
         std::unordered_map<std::string, unsigned int> vertex_attribute_names = {
             {"position", 0},
             {"uv", 1},
-            {"normal", 2}
+            {"normal", 2},
+            {"tangent", 3} 
         };
 
         auto lat_delta = glm::pi<float>() / lat_count;
@@ -377,6 +405,7 @@ public:
 
         std::vector<float> positions{};
         std::vector<float> normals{};
+        std::vector<float> tangents{};
         std::vector<float> uvs{};
         std::vector<unsigned int> indices{};
 
@@ -396,6 +425,12 @@ public:
                 normals.push_back(x);
                 normals.push_back(y);
                 normals.push_back(-z);
+
+                float dx = -radius * sin(phi) * cos(theta);
+                float dz = -radius * sin(phi) * sin(theta);
+                tangents.push_back(dx);
+                tangents.push_back(0.0f);
+                tangents.push_back(dz);
 
                 float u = 1.0f - 1.0f * j / long_count;
                 float v = 1.0f - 1.0f * i / lat_count;
@@ -420,7 +455,8 @@ public:
         std::unordered_map<unsigned int, Vertex_attribute_base::Ptr> vertex_attributes = {
             {0, std::make_shared<Position_attribute>(positions)},
             {1, std::make_shared<UV_attribute>(uvs)},
-            {2, std::make_shared<Normal_attribute>(normals)}
+            {2, std::make_shared<Normal_attribute>(normals)},
+            {3, std::make_shared<Tangent_attribute>(tangents)}
         };
 
         auto element_attribute = std::make_shared<Element_atrribute>(indices);
