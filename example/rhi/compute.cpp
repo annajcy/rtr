@@ -69,9 +69,9 @@ int main() {
         {}
     );
 
-    auto memory_binder = device->create_memory_binder();
-    memory_binder->bind_memory(uniform_buffer, 0);
-    memory_binder->bind_memory(storage_buffer, 1);
+    auto memory_binder = device->create_memory_buffer_binder();
+    memory_binder->bind_memory_buffer(uniform_buffer, 0);
+    memory_binder->bind_memory_buffer(storage_buffer, 1);
 
     // 设置计算任务
     auto compute_task = device->create_compute_task(compute_program);

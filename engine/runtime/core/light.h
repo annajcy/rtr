@@ -40,7 +40,6 @@ public:
     Light(Light_type::DIRECTIONAL) {}
     ~Directional_light() = default;
 
-
 };
 
 class Ambient_light : public Light {
