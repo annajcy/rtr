@@ -80,7 +80,7 @@ public:
 
 class IRHI_memory_buffer {
 protected:
-    int m_alignment{};
+    int m_alignment{0};
 
 public:
     IRHI_memory_buffer() {}

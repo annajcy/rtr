@@ -47,8 +47,6 @@ std::vector<unsigned int> indices = {
     0, 1, 2
 };    
 
-
-
 int main() {
 
     auto device = std::make_shared<RHI_device_OpenGL>();

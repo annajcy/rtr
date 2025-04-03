@@ -14,7 +14,8 @@ enum class RHI_resource_type {
     SHADER_PROGRAM,
     GEOMETRY,
     FRAME_BUFFER,
-    RENDERER
+    RENDERER,
+    COMPUTE_TASK
 };
 
 class RHI_resource : public std::enable_shared_from_this<RHI_resource> {

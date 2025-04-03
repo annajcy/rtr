@@ -4,6 +4,7 @@
 #include "engine/runtime/enum.h"
 #include "engine/runtime/rhi/opengl/rhi_cast_opengl.h"
 #include "engine/runtime/rhi/rhi_buffer.h"
+#include <memory>
 
 
 namespace rtr {
@@ -68,6 +69,7 @@ public:
 
 class RHI_vertex_buffer_OpenGL : public RHI_buffer_OpenGL, public IRHI_vertex_buffer {
 public:
+    using Ptr = std::shared_ptr<RHI_vertex_buffer_OpenGL>;
     RHI_vertex_buffer_OpenGL(
         Buffer_usage usage,
         Buffer_data_type attribute_type,
@@ -79,10 +81,28 @@ public:
         IRHI_vertex_buffer(attribute_type, iterate_type, unit_data_count) {}
 
     ~RHI_vertex_buffer_OpenGL() override {}
+    static Ptr create(
+        Buffer_usage usage,
+        Buffer_data_type attribute_type,
+        Buffer_iterate_type iterate_type,
+        unsigned int unit_data_count,
+        unsigned int data_size,
+        const void* data
+    ) {
+        return std::make_shared<RHI_vertex_buffer_OpenGL>(
+            usage,
+            attribute_type,
+            iterate_type,
+            unit_data_count,
+            data_size,
+            data
+        );
+    }
 };
 
 class RHI_element_buffer_OpenGL : public RHI_buffer_OpenGL, public IRHI_element_buffer {
 public:
+    using Ptr = std::shared_ptr<RHI_element_buffer_OpenGL>;
     RHI_element_buffer_OpenGL(
         Buffer_usage usage,
         unsigned int data_count,
@@ -92,10 +112,25 @@ public:
         IRHI_element_buffer(data_count) {}
 
     ~RHI_element_buffer_OpenGL() override {}
+
+    static Ptr create(
+        Buffer_usage usage,
+        unsigned int data_count,
+        unsigned int data_size,
+        const void* data
+    ) {
+        return std::make_shared<RHI_element_buffer_OpenGL>(
+            usage,
+            data_count,
+            data_size,
+            data
+        );
+    }
 };
 
 class RHI_memory_buffer_OpenGL : public RHI_buffer_OpenGL, public IRHI_memory_buffer {
 public:
+    using Ptr = std::shared_ptr<RHI_memory_buffer_OpenGL>;
 
     RHI_memory_buffer_OpenGL(
         Buffer_type type,
@@ -104,7 +139,7 @@ public:
         const void* data
     ) : RHI_buffer_OpenGL(type, usage, data_size, data),
         IRHI_memory_buffer() {
-            glGetIntegerv(gl_memory_buffer_alignment_type(Buffer_type::UNIFORM), &m_alignment);
+            glGetIntegerv(gl_memory_buffer_alignment_type(type), &m_alignment);
         }
 
     ~RHI_memory_buffer_OpenGL() override {}
@@ -115,6 +150,20 @@ public:
 
     void bind_partial_memory(unsigned int position, unsigned int offset, unsigned int size) override {
         glBindBufferRange(gl_buffer_type(m_type), position, m_buffer_id, offset, size);
+    }
+
+    static Ptr create(
+        Buffer_type type,
+        Buffer_usage usage,
+        unsigned int data_size,
+        const void* data
+    ) {
+        return std::make_shared<RHI_memory_buffer_OpenGL>(
+            type,
+            usage,
+            data_size,
+            data
+        );
     }
 
 };

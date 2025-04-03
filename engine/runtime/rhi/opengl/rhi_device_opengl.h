@@ -2,6 +2,7 @@
 
 #include "engine/global/base.h" 
 
+#include "engine/runtime/rhi/opengl/rhi_compute_opengl.h"
 #include "engine/runtime/rhi/opengl/rhi_error_opengl.h"
 #include "engine/runtime/rhi/opengl/rhi_renderer_opengl.h"
 #include "engine/runtime/rhi/rhi_device.h"
@@ -178,6 +179,12 @@ public:
             color_attachments,
             depth_attachment
         );
+    }
+
+    RHI_compute_task::Ptr create_compute_task(
+        const RHI_shader_program::Ptr& shader_program
+    ) override {
+        return std::make_shared<RHI_compute_task_OpenGL>(shader_program);
     }
 
     RHI_renderer::Ptr create_renderer(const Clear_state& clear_state) override {

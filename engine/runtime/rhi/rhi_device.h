@@ -3,6 +3,7 @@
 #include "engine/global/base.h" 
 #include "engine/runtime/enum.h"
 #include "engine/runtime/rhi/rhi_buffer.h"
+#include "engine/runtime/rhi/rhi_compute.h"
 #include "engine/runtime/rhi/rhi_frame_buffer.h"
 #include "engine/runtime/rhi/rhi_geometry.h"
 #include "engine/runtime/rhi/rhi_pipeline_state.h"
@@ -98,6 +99,10 @@ public:
         int height,
         const std::vector<RHI_texture::Ptr>& color_attachments,
         const RHI_texture::Ptr& depth_attachment
+    ) = 0;
+
+    virtual RHI_compute_task::Ptr create_compute_task(
+        const RHI_shader_program::Ptr& shader_program
     ) = 0;
 
 

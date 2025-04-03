@@ -84,6 +84,19 @@ glad
 ${OPENGL_LIBRARIES} 
 )
 
+add_executable(rhi_compute ${SOURCES} example/rhi/compute.cpp)
+
+target_link_libraries(rhi_compute 
+glfw
+glad
+assimp
+imgui
+stb_image
+glad
+${OPENGL_LIBRARIES} 
+)
+
+
 add_executable(main ${SOURCES} example/engine/main.cpp)
 
 target_link_libraries(main
