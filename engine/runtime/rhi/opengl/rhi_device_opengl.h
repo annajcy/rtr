@@ -187,6 +187,10 @@ public:
         return std::make_shared<RHI_compute_task_OpenGL>(shader_program);
     }
 
+    RHI_memory_binder::Ptr create_memory_binder() override {
+        return std::make_shared<RHI_memory_binder_OpenGL>();
+    }
+    
     RHI_renderer::Ptr create_renderer(const Clear_state& clear_state) override {
         return std::make_shared<RHI_renderer_OpenGL>(clear_state);
     }

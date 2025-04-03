@@ -90,4 +90,13 @@ public:
     int alignment() const { return m_alignment; }
 };
 
+class RHI_memory_binder {
+public:
+    using Ptr = std::shared_ptr<RHI_memory_binder>;
+    RHI_memory_binder() {}
+    virtual ~RHI_memory_binder() {}
+    virtual void bind_memory(const RHI_buffer::Ptr& buffer, unsigned int binding_point) = 0;
+    virtual void bind_partial_memory(const RHI_buffer::Ptr& buffer, unsigned int binding_point, unsigned int offset, unsigned int size) = 0;
+};
+
 }; // namespace rtr

@@ -14,13 +14,19 @@ using namespace rtr;
 const char* compute_shader_source = R"(
 #version 460 core
 layout(local_size_x = 1) in;
+
+layout(std140, binding = 0) uniform UniformBlock { // 添加UBO绑定
+    float scale;
+    float offset;
+};
+
 layout(std430, binding = 1) buffer DataBuffer {
     float data[];
 };
 
 void main() {
     uint idx = gl_GlobalInvocationID.x;
-    data[idx] = data[idx] * 2.0 + 1.0; 
+    data[idx] = data[idx] * scale + offset;
 }
 )";
 
@@ -29,6 +35,18 @@ int main() {
     auto window = device->create_window(800, 600, "RTR");
 
     std::vector<float> initial_data = {1.0f, 2.0f, 3.0f, 4.0f};
+
+    struct UniformData {
+        float scale = 5.0f;
+        float offset = 2.0f;
+    } ubo_data;
+    
+    auto uniform_buffer = device->create_memory_buffer(
+        Buffer_type::UNIFORM,
+        Buffer_usage::STATIC,
+        sizeof(UniformData),
+        &ubo_data
+    );
 
     // 创建存储缓冲
     auto storage_buffer = device->create_memory_buffer(
@@ -51,12 +69,13 @@ int main() {
         {}
     );
 
+    auto memory_binder = device->create_memory_binder();
+    memory_binder->bind_memory(uniform_buffer, 0);
+    memory_binder->bind_memory(storage_buffer, 1);
+
     // 设置计算任务
     auto compute_task = device->create_compute_task(compute_program);
-    compute_task->bind_memory(storage_buffer, 1);
-
     compute_task->dispatch(4, 1, 1);
-
     compute_task->wait();
 
     std::vector<float> res{};

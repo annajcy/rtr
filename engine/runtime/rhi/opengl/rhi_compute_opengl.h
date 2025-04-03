@@ -27,26 +27,6 @@ public:
     void wait() override {
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
-
-    void bind_memory(const RHI_buffer::Ptr& buffer, unsigned int binding_point) override {
-        if (auto gl_memory_buffer = std::dynamic_pointer_cast<RHI_memory_buffer_OpenGL>(buffer)) {
-            if (gl_memory_buffer->type() != Buffer_type::STORAGE) {
-                std::cout << "not a SSBO" << std::endl;
-            } 
-            gl_memory_buffer->bind_memory(binding_point);
-        }
-        
-    }
-
-    void bind_partial_memory(const RHI_buffer::Ptr& buffer, unsigned int binding_point, unsigned int offset, unsigned int size) override {
-        if (auto gl_memory_buffer = std::dynamic_pointer_cast<RHI_memory_buffer_OpenGL>(buffer)) {
-            if (gl_memory_buffer->type() != Buffer_type::STORAGE) {
-                std::cout << "not a SSBO" << std::endl;
-            } 
-            gl_memory_buffer->bind_partial_memory(binding_point, offset, size);
-        }
-    }
-
     
 
 

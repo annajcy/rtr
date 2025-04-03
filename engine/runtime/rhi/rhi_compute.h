@@ -25,9 +25,6 @@ public:
     virtual ~RHI_compute_task() {}
     virtual void dispatch(unsigned int x, unsigned int y, unsigned int z) = 0;
     virtual void wait() = 0;
-    virtual void bind_memory(const RHI_buffer::Ptr& buffer, unsigned int binding_point) = 0;
-    virtual void bind_partial_memory(const RHI_buffer::Ptr& buffer, unsigned int binding_point, unsigned int offset, unsigned int size) = 0;
-
 };
 
 };

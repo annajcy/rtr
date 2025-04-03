@@ -168,4 +168,46 @@ public:
 
 };
 
+class RHI_memory_binder_OpenGL : public RHI_memory_binder {
+
+public:
+    using Ptr = std::shared_ptr<RHI_memory_binder_OpenGL>;
+    RHI_memory_binder_OpenGL() : RHI_memory_binder() {}
+    virtual ~RHI_memory_binder_OpenGL() {}
+    void bind_memory(
+        const RHI_buffer::Ptr& buffer, 
+        unsigned int binding_point
+    ) override {
+        if (buffer->type() != Buffer_type::STORAGE && buffer->type()!= Buffer_type::UNIFORM) {
+            std::cout << "buffer type is not storage or uniform" << std::endl;
+            return;
+        }
+
+        if (auto memory_buffer = std::dynamic_pointer_cast<RHI_memory_buffer_OpenGL>(buffer)) {
+            memory_buffer->bind_memory(binding_point);
+        }
+
+    }
+   
+    virtual void bind_partial_memory(
+        const RHI_buffer::Ptr& buffer, 
+        unsigned int binding_point, 
+        unsigned int offset, 
+        unsigned int size
+    ) override {
+        if (buffer->type() != Buffer_type::STORAGE && buffer->type()!= Buffer_type::UNIFORM) {
+            std::cout << "buffer type is not storage or uniform" << std::endl;
+            return;
+        }
+
+        if (auto memory_buffer = std::dynamic_pointer_cast<RHI_memory_buffer_OpenGL>(buffer)) {
+            memory_buffer->bind_partial_memory(binding_point, offset, size);
+        }
+    }
+
+    static Ptr create() {
+        return std::make_shared<RHI_memory_binder_OpenGL>();
+    }
+};
+
 };

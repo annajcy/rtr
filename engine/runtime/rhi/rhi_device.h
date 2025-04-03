@@ -105,6 +105,7 @@ public:
         const RHI_shader_program::Ptr& shader_program
     ) = 0;
 
+    virtual RHI_memory_binder::Ptr create_memory_binder() = 0;
 
     virtual RHI_renderer::Ptr create_renderer(const Clear_state& clear_state) = 0;
 
