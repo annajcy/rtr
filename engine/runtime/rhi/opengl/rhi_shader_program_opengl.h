@@ -98,7 +98,7 @@ public:
     int get_uniform_locations(const std::string& name) {
         auto location = glGetUniformLocation(m_program_id, name.c_str());
         if (location == -1) {
-            std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_NOT_FOUND" << std::endl;
+            std::cout << "ERROR::SHADER::PROGRAM::UNIFORM_NOT_FOUND: " << name << std::endl;
         } 
         return location;
     }

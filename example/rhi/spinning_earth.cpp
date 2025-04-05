@@ -1,3 +1,4 @@
+#include "engine/editor/editor_opengl.h"
 #include "engine/global/base.h"
 #include "engine/runtime/core/camera.h"
 #include "engine/runtime/core/geometry.h"
@@ -54,8 +55,6 @@ in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
 
-uniform vec3 cameraPosition;
-
 struct Material {
     vec3 ka;  
     vec3 kd; 
@@ -64,10 +63,7 @@ struct Material {
 }; 
 
 uniform Material material;
-
-#define MAX_LIGHTS 16
-uniform int activeLights;
-uniform int mainLightIndex;
+uniform sampler2D mainTexture;
 
 struct Light {
     int type;        // 0=ambient, 1=directional, 2=point, 3=spot
@@ -80,9 +76,12 @@ struct Light {
     float outerAngle;
 };
 
+#define MAX_LIGHTS 16
 uniform Light lights[MAX_LIGHTS];
+uniform int activeLights;
+uniform int mainLightIndex;
 
-uniform sampler2D mainTexture;
+uniform vec3 cameraPosition;
 
 vec3 diffuseComponent(vec3 lightDir, vec3 normal, vec3 lightColor, vec3 objectColor, float intensity) {
     float diff = max(dot(normal, lightDir), 0.0);
@@ -146,6 +145,10 @@ void main()
     for (int i = 0; i < activeLights; i++) {
         Light light = lights[i];
 
+        if (i == mainLightIndex) {
+            objectColor *= 1.2; // 主光源照射区域增加20%亮度
+        }
+
         if (light.type == 0) {
             result += calculateAmbientLight(light, material, N, cameraPosition, FragPos, objectColor);
         } else if (light.type == 1) {
@@ -167,7 +170,9 @@ int main() {
     auto device = RHI_device_OpenGL::create();
     
     auto window = device->create_window(800, 600, "RTR");
-    auto input = std::make_shared<Input>(window);
+    auto editor = Editor_OpenGL::create(window);
+    auto input = Input::create(window);
+    
 
     auto sphere = Geometry::create_sphere(0.5);
 
@@ -349,10 +354,10 @@ int main() {
                 {"model", RHI_uniform_entry<glm::mat4>::create( glm::mat4(1.0f))},
                 {"view", RHI_uniform_entry<glm::mat4>::create(glm::mat4(1.0f))},
                 {"projection", RHI_uniform_entry<glm::mat4>::create(glm::mat4(1.0f))},
-                {"camera_position", RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.0f))},
+                {"cameraPosition", RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.0f))},
                 {"mainTexture", RHI_uniform_entry<int>::create(1)},
                 {"activeLights", RHI_uniform_entry<int>::create(0)},
-                {"mainLightIndex", RHI_uniform_entry<int>::create(-1)},
+                {"mainLightIndex", RHI_uniform_entry<int>::create(5)},
                 {"material.ka", RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.2f))},
                 {"material.kd", RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.5f))},
                 {"material.ks", RHI_uniform_entry<glm::vec3>::create(glm::vec3(0.2f))},
@@ -396,7 +401,7 @@ int main() {
         shader_program->modify_uniform<glm::mat4>("model", model);
         shader_program->modify_uniform<glm::mat4>("view", camera->view_matrix());
         shader_program->modify_uniform<glm::mat4>("projection", camera->projection_matrix());
-        shader_program->modify_uniform<glm::vec3>("camera_position", camera->position());
+        shader_program->modify_uniform<glm::vec3>("cameraPosition", camera->position());
         shader_program->modify_uniform<int>("activeLights", light_setting->active_light_count());
         shader_program->modify_uniform<int>("mainLightIndex", light_setting->main_light_index());
         
@@ -437,6 +442,17 @@ int main() {
 
         device->check_error();
         window->on_frame_end();
+
+        editor->begin_frame();
+        editor->begin_render("Light Setting");
+        editor->color_edit("Ambient Light Color", glm::value_ptr(ambient_light->color()));
+        editor->color_edit("Directional Light Color", glm::value_ptr(directional_light->color()));
+        editor->color_edit("Spot Light Color", glm::value_ptr(spot_light->color()));
+        editor->color_edit("Point Light 1 Color", glm::value_ptr(point_light_1->color()));
+        editor->color_edit("Point Light 2 Color", glm::value_ptr(point_light_2->color()));
+        editor->color_edit("Point Light 3 Color", glm::value_ptr(point_light_3->color()));
+        editor->end_render();
+        editor->end_frame();
     }
     
     return 0;
