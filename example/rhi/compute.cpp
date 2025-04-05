@@ -3,6 +3,7 @@
 #include "engine/runtime/rhi/rhi_buffer.h"
 #include "engine/runtime/rhi/rhi_device.h"
 #include "engine/runtime/rhi/opengl/rhi_device_opengl.h"
+#include "engine/runtime/rhi/rhi_shader_program.h"
 #include <iostream> // 添加输入输出支持
 #include <memory>
 #include <vector>
@@ -15,18 +16,26 @@ const char* compute_shader_source = R"(
 #version 460 core
 layout(local_size_x = 1) in;
 
-layout(std140, binding = 0) uniform UniformBlock { // 添加UBO绑定
+// 修正1：添加结构体结尾分号
+struct UniformParam {
     float scale;
     float offset;
+};  // 添加分号
+
+layout(std140, binding = 0) uniform UniformBlock {
+    UniformParam params[4];  // 数组元素自动16字节对齐
 };
 
-layout(std430, binding = 1) buffer DataBuffer {
-    float data[];
+layout(std430, binding = 1) buffer ResultBuffer {
+    float results[];
 };
+
+uniform float[4] scales;
 
 void main() {
     uint idx = gl_GlobalInvocationID.x;
-    data[idx] = data[idx] * scale + offset;
+    // 修正参数访问方式
+    results[idx] = results[idx] * params[idx].scale + params[idx].offset * scales[idx];
 }
 )";
 
@@ -37,15 +46,22 @@ int main() {
     std::vector<float> initial_data = {1.0f, 2.0f, 3.0f, 4.0f};
 
     struct UniformData {
-        float scale = 5.0f;
-        float offset = 2.0f;
-    } ubo_data;
+        float scale{};
+        float offset{};
+        // 添加padding保证结构体16字节对齐
+        float padding[2];  // 新增填充字段
+    } ubo_data[4];         // 原数组保持4个元素
+
+    ubo_data[0] = {1.0f, 0.0f, {}};  // 初始化添加padding
+    ubo_data[1] = {2.0f, 1.0f, {}};
+    ubo_data[2] = {3.0f, 2.0f, {}};
+    ubo_data[3] = {4.0f, 3.0f, {}};
     
     auto uniform_buffer = device->create_memory_buffer(
         Buffer_type::UNIFORM,
         Buffer_usage::STATIC,
-        sizeof(UniformData),
-        &ubo_data
+        sizeof(UniformData) * 4,
+        ubo_data
     );
 
     // 创建存储缓冲
@@ -61,12 +77,16 @@ int main() {
         compute_shader_source
     );
 
+    float scales[] = {1, 2, 3, 4};
+
     // 创建计算专用着色器程序
     auto compute_program = device->create_shader_program(
         std::unordered_map<Shader_type, RHI_shader_code::Ptr>{
             {Shader_type::COMPUTE, compute_shader}
         },
-        {}
+        {
+            {"scales", RHI_uniform_entry_array<float>::create(scales, 4)}
+        }
     );
 
     auto memory_binder = device->create_memory_buffer_binder();

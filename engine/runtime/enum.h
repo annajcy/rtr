@@ -282,7 +282,7 @@ enum class Front_face {
     CLOCKWISE
 };
 
-enum class Uniform_type {
+enum class Uniform_data_type {
     FLOAT, INT, BOOL,
     VEC2, VEC3, VEC4,
     IVEC2, IVEC3, IVEC4,

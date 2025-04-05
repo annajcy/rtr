@@ -70,7 +70,7 @@ public:
     int width() const { return m_width; }
     int height() const { return m_height; }
     int channels() const { return m_channels; }
-    const unsigned char* data() const { return m_data; }
+    const unsigned char* data_ptr() const { return m_data; }
     int data_size() const { return m_data_size; }
 
 };

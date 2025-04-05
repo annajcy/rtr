@@ -243,7 +243,7 @@ int main() {
         Image_data{
             earth_image->width(),
             earth_image->height(),
-            earth_image->data(),
+            earth_image->data_ptr(),
             Texture_buffer_type::UNSIGNED_BYTE,
             Texture_external_format::RGB_ALPHA
         }
@@ -273,7 +273,7 @@ int main() {
         Image_data{
             default_image->width(),
             default_image->height(),
-            default_image->data(),
+            default_image->data_ptr(),
             Texture_buffer_type::UNSIGNED_BYTE,
             Texture_external_format::RGB_ALPHA
         }

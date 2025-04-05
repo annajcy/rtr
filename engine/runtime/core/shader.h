@@ -7,39 +7,39 @@
 namespace rtr {
 
 template< typename T>
-inline constexpr Uniform_type get_uniform_type() {
+inline constexpr Uniform_data_type get_uniform_type() {
     if constexpr (std::is_same_v<T, int>) {
-        return Uniform_type::INT;
+        return Uniform_data_type::INT;
     } else if constexpr (std::is_same_v<T, float>) {
-        return Uniform_type::FLOAT;
+        return Uniform_data_type::FLOAT;
     } else if constexpr (std::is_same_v<T, glm::vec2>) {
-        return Uniform_type::VEC2;
+        return Uniform_data_type::VEC2;
     } else if constexpr (std::is_same_v<T, glm::vec3>) {
-        return Uniform_type::VEC3;
+        return Uniform_data_type::VEC3;
     } else if constexpr (std::is_same_v<T, glm::vec4>) {
-        return Uniform_type::VEC4;
+        return Uniform_data_type::VEC4;
     } else if constexpr (std::is_same_v<T, glm::mat2>) {
-        return Uniform_type::MAT2;
+        return Uniform_data_type::MAT2;
     } else if constexpr (std::is_same_v<T, glm::mat3>) {
-        return Uniform_type::MAT3;
+        return Uniform_data_type::MAT3;
     } else if constexpr (std::is_same_v<T, glm::mat4>) {
-        return Uniform_type::MAT4;
+        return Uniform_data_type::MAT4;
     } else if constexpr (std::is_same_v<T, Texture>) {
-        return Uniform_type::SAMPLER;
+        return Uniform_data_type::SAMPLER;
     } else {
-        return Uniform_type::UNKNOWN;
+        return Uniform_data_type::UNKNOWN;
     }
 }
 
 class Uniform_entry_base {
 protected:
-    Uniform_type m_type{};
+    Uniform_data_type m_type{};
 
 public:
-    Uniform_entry_base(Uniform_type type) : m_type(type) {}
+    Uniform_entry_base(Uniform_data_type type) : m_type(type) {}
     virtual ~Uniform_entry_base() = default;
     virtual const void* data_ptr() const = 0;
-    Uniform_type type() const { return m_type; }
+    Uniform_data_type type() const { return m_type; }
 };
 
 
@@ -58,14 +58,14 @@ public:
 
 class Uniform_array_entry_base {
 protected:
-    Uniform_type m_type{};
+    Uniform_data_type m_type{};
 
 public:
-    Uniform_array_entry_base(Uniform_type type, unsigned int count) : m_type(type) {}
+    Uniform_array_entry_base(Uniform_data_type type, unsigned int count) : m_type(type) {}
     virtual ~Uniform_array_entry_base() = default;
     virtual const void* data_ptr() const = 0;
     virtual unsigned int count() const = 0;
-    Uniform_type type() const { return m_type; }
+    Uniform_data_type type() const { return m_type; }
 };
 
 template <typename T>

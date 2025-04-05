@@ -113,7 +113,7 @@ int main() {
         Image_data{
             bk->width(),
             bk->height(),
-            bk->data(),
+            bk->data_ptr(),
             Texture_buffer_type::UNSIGNED_BYTE,
             Texture_external_format::RGB_ALPHA
         }
@@ -156,42 +156,42 @@ int main() {
         {Texture_cubemap_face::RIGHT, Image_data{
             right_image->width(),
             right_image->height(),
-            right_image->data(),
+            right_image->data_ptr(),
             Texture_buffer_type::UNSIGNED_BYTE,
             Texture_external_format::RGB_ALPHA
         }},
         {Texture_cubemap_face::LEFT, Image_data{
             left_image->width(),
             left_image->height(),
-            left_image->data(),
+            left_image->data_ptr(),
             Texture_buffer_type::UNSIGNED_BYTE,
             Texture_external_format::RGB_ALPHA
         }},
         {Texture_cubemap_face::TOP, Image_data{
             top_image->width(),
             top_image->height(),
-            top_image->data(),
+            top_image->data_ptr(),
             Texture_buffer_type::UNSIGNED_BYTE,
             Texture_external_format::RGB_ALPHA
         }},
         {Texture_cubemap_face::BOTTOM, Image_data{
             bottom_image->width(),
             bottom_image->height(),
-            bottom_image->data(),
+            bottom_image->data_ptr(),
             Texture_buffer_type::UNSIGNED_BYTE,
             Texture_external_format::RGB_ALPHA
         }},
         {Texture_cubemap_face::FRONT, Image_data{
             front_image->width(),
             front_image->height(),
-            front_image->data(),
+            front_image->data_ptr(),
             Texture_buffer_type::UNSIGNED_BYTE,
             Texture_external_format::RGB_ALPHA
         }},
         {Texture_cubemap_face::BACK, Image_data{
             back_image->width(),
             back_image->height(),
-            back_image->data(),
+            back_image->data_ptr(),
             Texture_buffer_type::UNSIGNED_BYTE,
             Texture_external_format::RGB_ALPHA
         }}
