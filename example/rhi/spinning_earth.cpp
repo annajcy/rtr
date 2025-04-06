@@ -18,6 +18,7 @@
 #include "glm/trigonometric.hpp"
 #include <iostream>
 #include <memory>
+#include <string>
 
 using namespace std;
 using namespace rtr;
@@ -451,6 +452,7 @@ int main() {
         editor->color_edit("Point Light 1 Color", glm::value_ptr(point_light_1->color()));
         editor->color_edit("Point Light 2 Color", glm::value_ptr(point_light_2->color()));
         editor->color_edit("Point Light 3 Color", glm::value_ptr(point_light_3->color()));
+        editor->text("Editor frame rate", std::to_string(editor->frame_rate()));
         editor->end_render();
         editor->end_frame();
     }

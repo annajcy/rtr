@@ -17,10 +17,14 @@ public:
         return std::make_shared<Editor_OpenGL>(window);
     }
     
-    Editor_OpenGL(const RHI_window::Ptr& window) : Editor(window) {
+    Editor_OpenGL(const RHI_window::Ptr& window, float dpi_scale = 1.0f) : Editor(window) {
         if (auto gl_window = std::dynamic_pointer_cast<RHI_window_OpenGL>(m_window)) {
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
+
+            ImGuiIO& io = ImGui::GetIO();
+            io.FontGlobalScale = dpi_scale;
+
             ImGui::StyleColorsDark();
             ImGui_ImplGlfw_InitForOpenGL(gl_window->window(), true);
             ImGui_ImplOpenGL3_Init("#version 460");
@@ -58,6 +62,21 @@ public:
     
     bool button(const std::string& title, float width, float height) override {
         return ImGui::Button(title.c_str(), ImVec2{width, height});
+    }
+
+    bool checkbox(const std::string& title, bool* value) override {
+        return ImGui::Checkbox(title.c_str(), value);
+    }
+    void text(const std::string& title, const std::string& text) override {
+        ImGui::Text("%s", text.c_str());
+    }
+
+    void text_edit(const std::string& title, std::string* text) override {
+        ImGui::InputText(title.c_str(), text->data(), text->size());
+    }
+
+    float frame_rate() override {
+        return ImGui::GetIO().Framerate;
     }
     
 };

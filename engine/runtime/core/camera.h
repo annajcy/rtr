@@ -185,7 +185,7 @@ public:
     void update() override {
 
         if (m_input->mouse_button(Mouse_button::LEFT) != Key_action::RELEASE) {
-            yaw(m_input->mouse_dx() * m_rotate_speed);
+            yaw(-m_input->mouse_dx() * m_rotate_speed);
             pitch(m_input->mouse_dy() * m_rotate_speed);
         } else if (m_input->mouse_button(Mouse_button::MIDDLE) != Key_action::RELEASE) {
             m_camera->translate(m_camera->up(), m_input->mouse_dy() * m_move_speed);

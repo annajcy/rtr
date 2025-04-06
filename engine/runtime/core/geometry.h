@@ -326,8 +326,6 @@ public:
             })}
         };
 
-        
-
         auto element_attribute = std::make_shared<Element_atrribute>(std::vector<unsigned int>{
             0, 1, 2, 2, 3, 0,   // Front face
             4, 5, 6, 6, 7, 4,   // Back face
