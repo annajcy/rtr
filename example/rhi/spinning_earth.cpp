@@ -170,11 +170,10 @@ int main() {
 
     auto device = RHI_device_OpenGL::create();
     
-    auto window = device->create_window(800, 600, "RTR");
+    auto window = device->create_window(1280, 720, "RTR");
     auto editor = Editor_OpenGL::create(window);
     auto input = Input::create(window);
     
-
     auto sphere = Geometry::create_sphere(0.5);
 
     auto sphere_position = sphere->attribute("position");
