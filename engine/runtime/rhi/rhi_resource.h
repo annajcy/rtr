@@ -55,7 +55,7 @@ public:
     }
 
     void add_dependency(const Ptr_resource& resource) {
-        auto self = shared_from_this();
+        if (!resource) return;
         // 使用find_if和自定义比较器
         auto pred = [&](const auto& weak) {
             return !weak.expired() && weak.lock() == resource;
@@ -67,15 +67,16 @@ public:
         
         auto& reverse_deps = resource->m_reverse_dependencies;
         auto self_pred = [&](const auto& weak) {
-            return !weak.expired() && weak.lock() == self;
+            return !weak.expired() && weak.lock() == shared_from_this();
         };
         
         if (std::find_if(reverse_deps.begin(), reverse_deps.end(), self_pred) == reverse_deps.end()) {
-            reverse_deps.push_back(self);
+            reverse_deps.push_back( weak_from_this());
         }
     }
 
     void remove_dependency(const Ptr_resource& resource) {
+        if (!resource) return;
         // 使用find_if定位元素
         auto pred = [&](const auto& weak) {
             return !weak.expired() && weak.lock() == resource;
@@ -86,10 +87,9 @@ public:
             m_dependencies.erase(it);
         }
     
-        auto self = shared_from_this();
         auto& reverse_deps = resource->m_reverse_dependencies;
         auto self_pred = [&](const auto& weak) {
-            return !weak.expired() && weak.lock() == self;
+            return !weak.expired() && weak.lock() == shared_from_this();
         };
         
         auto reverse_it = std::find_if(reverse_deps.begin(), reverse_deps.end(), self_pred);

@@ -7,6 +7,7 @@
 #include "engine/runtime/rhi/opengl/rhi_renderer_opengl.h"
 #include "engine/runtime/rhi/rhi_device.h"
 
+#include "engine/runtime/rhi/opengl/rhi_imgui_opengl.h"
 #include "engine/runtime/rhi/opengl/rhi_buffer_opengl.h"
 #include "engine/runtime/rhi/opengl/rhi_geometry_opengl.h"
 #include "engine/runtime/rhi/opengl/rhi_window_opengl.h"
@@ -167,6 +168,12 @@ public:
         );
     }
 
+    RHI_frame_buffer::Ptr create_screen_frame_buffer(
+        const RHI_window::Ptr& window
+    ) override {
+        return std::make_shared<RHI_frame_buffer_OpenGL>(window);
+    }
+
     RHI_frame_buffer::Ptr create_frame_buffer(
         int width, 
         int height,
@@ -201,6 +208,10 @@ public:
 
     RHI_pipeline_state::Ptr create_pipeline_state() override {
         return std::make_shared<RHI_pipeline_state_OpenGL>();
+    }
+
+    RHI_imgui::Ptr create_imgui(const RHI_window::Ptr& window) override {
+        return RHI_imgui_OpenGL::create(window);
     }
 
 };

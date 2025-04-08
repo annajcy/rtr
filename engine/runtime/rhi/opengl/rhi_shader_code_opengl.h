@@ -29,8 +29,6 @@ public:
         if (m_code_id) {
             glDeleteShader(m_code_id);
         }
-        
-        RHI_shader_code::~RHI_shader_code();
     }
 
     virtual bool compile() override {

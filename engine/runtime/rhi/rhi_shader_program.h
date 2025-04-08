@@ -136,14 +136,22 @@ public:
         const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms
     ) : RHI_resource(RHI_resource_type::SHADER_PROGRAM),
         m_codes(shaders), 
-        m_uniforms(uniforms) {}
+        m_uniforms(uniforms) {
+            for (auto &[type, code] : m_codes) {
+                this->add_dependency(code);
+            }
+        }
 
     using Ptr = std::shared_ptr<RHI_shader_program>;
 
     const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& codes() const { return m_codes; }
     const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms() const { return m_uniforms; }
 
-    virtual ~RHI_shader_program() {}
+    virtual ~RHI_shader_program() {
+        for (auto &[type, code] : m_codes) {
+            this->remove_dependency(code);
+        }
+    }
 
     virtual void attach_code(const RHI_shader_code::Ptr& code) = 0;
     virtual void detach_code(const RHI_shader_code::Ptr& code) = 0;

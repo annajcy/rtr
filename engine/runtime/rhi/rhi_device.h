@@ -2,6 +2,7 @@
 
 #include "engine/global/base.h" 
 #include "engine/runtime/enum.h"
+#include "engine/runtime/rhi/rhi_imgui.h"
 #include "engine/runtime/rhi/rhi_buffer.h"
 #include "engine/runtime/rhi/rhi_compute.h"
 #include "engine/runtime/rhi/rhi_frame_buffer.h"
@@ -101,6 +102,9 @@ public:
         const RHI_texture::Ptr& depth_attachment
     ) = 0;
 
+    virtual RHI_frame_buffer::Ptr create_screen_frame_buffer(
+        const RHI_window::Ptr& window
+    ) = 0;
     virtual RHI_compute_task::Ptr create_compute_task(
         const RHI_shader_program::Ptr& shader_program
     ) = 0;
@@ -111,6 +115,8 @@ public:
 
     virtual RHI_pipeline_state::Ptr create_pipeline_state() = 0;
     virtual RHI_pipeline_state::Ptr create_pipeline_state(const Pipeline_state& pipeline_state) = 0;
+
+    virtual RHI_imgui::Ptr create_imgui(const RHI_window::Ptr& window) = 0;
     
 
 

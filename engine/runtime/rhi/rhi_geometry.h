@@ -18,11 +18,22 @@ public:
         const RHI_buffer::Ptr& element_buffer
     ) : RHI_resource(RHI_resource_type::GEOMETRY),
         m_vertex_buffers(vertex_buffers) , 
-        m_element_buffer(element_buffer) { }
+        m_element_buffer(element_buffer) 
+    {
+        for (auto &[location, buffer] : m_vertex_buffers) {
+            if (buffer) {
+                this->add_dependency(buffer);
+            }
+        }
+    }
 
     using Ptr = std::shared_ptr<RHI_geometry>;
 
-    virtual ~RHI_geometry() {}
+    virtual ~RHI_geometry() {
+        for (auto &[location, buffer] : m_vertex_buffers) {
+            this->remove_dependency(buffer);
+        }
+    }
 
     virtual void bind_buffers() = 0;
     virtual void bind_vertex_buffer(unsigned int location, const RHI_buffer::Ptr& vbo) = 0;

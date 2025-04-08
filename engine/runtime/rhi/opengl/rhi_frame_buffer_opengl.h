@@ -13,6 +13,10 @@ protected:
 
 public:
     RHI_frame_buffer_OpenGL(
+        const RHI_window::Ptr& window
+    ) : RHI_frame_buffer(window) {}
+
+    RHI_frame_buffer_OpenGL(
         int width, 
         int height,
         const std::vector<RHI_texture::Ptr>& color_attachments,
@@ -98,7 +102,7 @@ public:
         }
     }
 
-    virtual bool is_valid() override {
+    bool is_valid() const override {
         unsigned int status = glCheckNamedFramebufferStatus(m_frame_buffer_id, GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
             // 输出具体错误原因（如GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT）
@@ -119,7 +123,7 @@ public:
     unsigned int frame_buffer_id() const { return m_frame_buffer_id; }
 
 private:
-    void log_framebuffer_error(GLenum status) {
+    void log_framebuffer_error(GLenum status) const {
         const char* error = "Unknown error";
         switch(status) {
             case GL_FRAMEBUFFER_UNDEFINED: error = "GL_FRAMEBUFFER_UNDEFINED"; break;

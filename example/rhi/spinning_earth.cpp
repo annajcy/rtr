@@ -1,4 +1,4 @@
-#include "engine/editor/editor_opengl.h"
+
 #include "engine/global/base.h"
 #include "engine/runtime/core/camera.h"
 #include "engine/runtime/core/geometry.h"
@@ -171,8 +171,10 @@ int main() {
     auto device = RHI_device_OpenGL::create();
     
     auto window = device->create_window(1280, 720, "RTR");
-    auto editor = Editor_OpenGL::create(window);
+    auto imgui = device->create_imgui(window);
     auto input = Input::create(window);
+
+    auto screen_frame_buffer = device->create_screen_frame_buffer(window);
     
     auto sphere = Geometry::create_sphere(0.5);
 
@@ -364,7 +366,6 @@ int main() {
                 {"material.shininess", RHI_uniform_entry<float>::create(32.0f)}
             };
     
-            // 为每个可能的灯光索引预注册参数
             for (int i = 0; i < 16; ++ i) {
                 std::string prefix = "lights[" + std::to_string(i) + "]";
                 uniforms[prefix + ".type"] = RHI_uniform_entry<int>::create(0);
@@ -387,8 +388,6 @@ int main() {
     Clear_state clear_state = Clear_state::enabled();
     clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
     auto renderer = device->create_renderer(clear_state);
-    renderer->shader_program() = shader_program;
-    renderer->geometry() = box_geometry;
 
     glm::mat4 model = glm::mat4(1.0f);
 
@@ -436,24 +435,29 @@ int main() {
         }
 
         shader_program->update_uniforms();
+        renderer->init();
 
-        renderer->clear();
-        renderer->draw();
+        renderer->clear(screen_frame_buffer);
+        renderer->draw(
+            shader_program,
+            box_geometry,
+            screen_frame_buffer
+        );
 
         device->check_error();
         window->on_frame_end();
 
-        editor->begin_frame();
-        editor->begin_render("Light Setting");
-        editor->color_edit("Ambient Light Color", glm::value_ptr(ambient_light->color()));
-        editor->color_edit("Directional Light Color", glm::value_ptr(directional_light->color()));
-        editor->color_edit("Spot Light Color", glm::value_ptr(spot_light->color()));
-        editor->color_edit("Point Light 1 Color", glm::value_ptr(point_light_1->color()));
-        editor->color_edit("Point Light 2 Color", glm::value_ptr(point_light_2->color()));
-        editor->color_edit("Point Light 3 Color", glm::value_ptr(point_light_3->color()));
-        editor->text("Editor frame rate", std::to_string(editor->frame_rate()));
-        editor->end_render();
-        editor->end_frame();
+        imgui->begin_frame();
+        imgui->begin_render("Light Setting");
+        imgui->color_edit("Ambient Light Color", glm::value_ptr(ambient_light->color()));
+        imgui->color_edit("Directional Light Color", glm::value_ptr(directional_light->color()));
+        imgui->color_edit("Spot Light Color", glm::value_ptr(spot_light->color()));
+        imgui->color_edit("Point Light 1 Color", glm::value_ptr(point_light_1->color()));
+        imgui->color_edit("Point Light 2 Color", glm::value_ptr(point_light_2->color()));
+        imgui->color_edit("Point Light 3 Color", glm::value_ptr(point_light_3->color()));
+        imgui->text("Editor frame rate", std::to_string(imgui->frame_rate()));
+        imgui->end_render();
+        imgui->end_frame();
     }
     
     return 0;

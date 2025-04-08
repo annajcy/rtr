@@ -1,23 +1,23 @@
 #pragma once
 #include "engine/global/base.h"
-#include "engine/runtime/rhi/opengl/rhi_window_opengl.h"
-#include "engine/runtime/rhi/rhi_window.h"
-#include "editor.h"
+#include "rhi_window_opengl.h"
+#include "../rhi_window.h"
+#include "../rhi_imgui.h"
 #include "imgui.h"
 #include <memory>
 
 namespace rtr {
 
-class Editor_OpenGL : public Editor {
+class RHI_imgui_OpenGL : public RHI_imgui {
 
 public:
-    using Ptr = std::shared_ptr<Editor_OpenGL>;
+    using Ptr = std::shared_ptr<RHI_imgui_OpenGL>;
 
     static Ptr create(const RHI_window::Ptr& window) {
-        return std::make_shared<Editor_OpenGL>(window);
+        return std::make_shared<RHI_imgui_OpenGL>(window);
     }
     
-    Editor_OpenGL(const RHI_window::Ptr& window, float dpi_scale = 1.0f) : Editor(window) {
+    RHI_imgui_OpenGL(const RHI_window::Ptr& window, float dpi_scale = 1.0f) : RHI_imgui(window) {
         if (auto gl_window = std::dynamic_pointer_cast<RHI_window_OpenGL>(m_window)) {
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
@@ -31,7 +31,7 @@ public:
         }
     }
    
-    ~Editor_OpenGL() {
+    ~RHI_imgui_OpenGL() {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();

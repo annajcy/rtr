@@ -17,80 +17,79 @@ public:
     }
 
     ~RHI_renderer_OpenGL() override {}
-    void draw() override {
+    void draw(
+        const RHI_shader_program::Ptr& shader_program,
+        const RHI_geometry::Ptr& geometry,
+        const RHI_frame_buffer::Ptr& frame_buffer
+    ) override {
 
-        auto viewport = get_viewport();
-
-        if (m_frame_buffer) {
+        if (m_frame_buffer != frame_buffer) {
+            set_frame_buffer(frame_buffer);
             if (auto gl_frame_buffer = std::dynamic_pointer_cast<RHI_frame_buffer_OpenGL>(m_frame_buffer)) {
                 gl_frame_buffer->bind();
-                set_viewport({0, 0, gl_frame_buffer->width(), gl_frame_buffer->height()});
+                if (!gl_frame_buffer->is_screen())
+                    set_viewport({0, 0, gl_frame_buffer->width(), gl_frame_buffer->height()});
+                else
+                    set_viewport({0, 0, gl_frame_buffer->window()->width(), gl_frame_buffer->window()->height()});
             }
         }
 
-        if (m_shader_program) {
+        if (m_shader_program != shader_program) {
+            set_shader_program(shader_program);
             if (auto gl_shader_program = std::dynamic_pointer_cast<RHI_shader_program_OpenGL>(m_shader_program)) {
                 gl_shader_program->bind();
             }
         }
 
-        if (m_geometry) {
+        if (m_geometry != geometry) {
+            set_geometry(geometry);
             if (auto gl_geometry = std::dynamic_pointer_cast<RHI_geometry_OpenGL>(m_geometry)) {
                 gl_geometry->bind();
+            }
+        }
+
+        if (m_geometry) {
+            if (auto gl_geometry = std::dynamic_pointer_cast<RHI_geometry_OpenGL>(m_geometry)) {
                 gl_geometry->draw();
-                gl_geometry->unbind();
-            }
-        }
-
-        if (m_shader_program) {
-            if (auto gl_shader_program = std::dynamic_pointer_cast<RHI_shader_program_OpenGL>(m_shader_program)) {
-                gl_shader_program->unbind();
-            }
-        }
-
-        if (m_frame_buffer) {
-            if (auto gl_frame_buffer = std::dynamic_pointer_cast<RHI_frame_buffer_OpenGL>(m_frame_buffer)) {
-                gl_frame_buffer->unbind();
-                set_viewport(viewport);
             }
         }
     }
 
-    void draw_instanced(unsigned int instance_count) override {
+    void draw_instanced(
+        const RHI_shader_program::Ptr& shader_program,
+        const RHI_geometry::Ptr& geometry,
+        const RHI_frame_buffer::Ptr& frame_buffer,
+        unsigned int instance_count
+    ) override {
 
-        auto viewport = get_viewport();
-
-        if (m_frame_buffer) {
+        if (m_frame_buffer != frame_buffer) {
+            set_frame_buffer(frame_buffer);
             if (auto gl_frame_buffer = std::dynamic_pointer_cast<RHI_frame_buffer_OpenGL>(m_frame_buffer)) {
                 gl_frame_buffer->bind();
-                set_viewport({0, 0, gl_frame_buffer->width(), gl_frame_buffer->height()});
+                if (!gl_frame_buffer->is_screen())
+                    set_viewport({0, 0, gl_frame_buffer->width(), gl_frame_buffer->height()});
+                else
+                    set_viewport({0, 0, gl_frame_buffer->window()->width(), gl_frame_buffer->window()->height()});
             }
         }
 
-        if (m_shader_program) {
+        if (m_shader_program != shader_program) {
+            set_shader_program(shader_program);
             if (auto gl_shader_program = std::dynamic_pointer_cast<RHI_shader_program_OpenGL>(m_shader_program)) {
                 gl_shader_program->bind();
             }
         }
 
-        if (m_geometry) {
+        if (m_geometry != geometry) {
+            set_geometry(geometry);
             if (auto gl_geometry = std::dynamic_pointer_cast<RHI_geometry_OpenGL>(m_geometry)) {
                 gl_geometry->bind();
+            }
+        }
+
+        if (m_geometry) {
+            if (auto gl_geometry = std::dynamic_pointer_cast<RHI_geometry_OpenGL>(m_geometry)) {
                 gl_geometry->draw_instanced(instance_count);
-                gl_geometry->unbind();
-            }
-        }
-
-        if (m_shader_program) {
-            if (auto gl_shader_program = std::dynamic_pointer_cast<RHI_shader_program_OpenGL>(m_shader_program)) {
-                gl_shader_program->unbind();
-            }
-        }
-
-        if (m_frame_buffer) {
-            if (auto gl_frame_buffer = std::dynamic_pointer_cast<RHI_frame_buffer_OpenGL>(m_frame_buffer)) {
-                gl_frame_buffer->unbind();
-                set_viewport(viewport);
             }
         }
         
@@ -108,11 +107,18 @@ public:
         glClearStencil(m_clear_state.stencil_clear_value);
     }
 
-    void clear() override {
+    void clear(
+        const RHI_frame_buffer::Ptr& frame_buffer
+    ) override {
 
-        if (m_frame_buffer) {
+        if (m_frame_buffer != frame_buffer) {
+            set_frame_buffer(frame_buffer);
             if (auto gl_frame_buffer = std::dynamic_pointer_cast<RHI_frame_buffer_OpenGL>(m_frame_buffer)) {
                 gl_frame_buffer->bind();
+                if (!gl_frame_buffer->is_screen())
+                    set_viewport({0, 0, gl_frame_buffer->width(), gl_frame_buffer->height()});
+                else
+                    set_viewport({0, 0, gl_frame_buffer->window()->width(), gl_frame_buffer->window()->height()});
             }
         }
 
@@ -130,12 +136,6 @@ public:
         }
 
         glClear(clear_mask);
-
-        if (m_frame_buffer) {
-            if (auto gl_frame_buffer = std::dynamic_pointer_cast<RHI_frame_buffer_OpenGL>(m_frame_buffer)) {
-                gl_frame_buffer->unbind();
-            }
-        }
         
     }
 

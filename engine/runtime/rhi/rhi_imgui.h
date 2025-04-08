@@ -5,14 +5,14 @@
 #include <string>
 
 namespace rtr {
-class Editor {
+class RHI_imgui {
 protected:
     RHI_window::Ptr m_window{};
 
 public:
-    using Ptr = std::shared_ptr<Editor>;
-    Editor(const RHI_window::Ptr& window) : m_window(window) {}
-    ~Editor() = default;
+    using Ptr = std::shared_ptr<RHI_imgui>;
+    RHI_imgui(const RHI_window::Ptr& window) : m_window(window) {}
+    ~RHI_imgui() = default;
 
     virtual void begin_frame() = 0;
     virtual void end_frame() = 0;

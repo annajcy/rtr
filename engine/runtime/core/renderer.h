@@ -10,7 +10,6 @@
 #include "engine/runtime/core/node.h"
 #include "engine/runtime/core/scene.h"
 
-
 namespace rtr {
 
 class Renderer {

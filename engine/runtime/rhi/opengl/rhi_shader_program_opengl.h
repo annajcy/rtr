@@ -222,7 +222,6 @@ public:
                 entry->is_need_update() = false;
             }
         }
-        glUseProgram(0);
     }
 
     static Ptr create(

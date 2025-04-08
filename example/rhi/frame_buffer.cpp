@@ -89,6 +89,7 @@ int main() {
     auto device = std::make_shared<RHI_device_OpenGL>();
     
     auto window = device->create_window(800, 600, "RTR");
+    auto screen_frame_buffer = device->create_screen_frame_buffer(window);
 
     auto position = device->create_vertex_buffer(
         Buffer_usage::STATIC, 
@@ -243,23 +244,26 @@ int main() {
         window->on_frame_begin();
 
         device->check_error();
-       
-        renderer->frame_buffer() = frame_buffer;
-        renderer->clear();
 
-        renderer->shader_program() = shader_program;
-        renderer->geometry() = geometry;
-        renderer->draw();
+        renderer->init();
+        renderer->clear(frame_buffer);
+
+        renderer->draw(
+            shader_program,
+            geometry,
+            frame_buffer
+        );
 
         color_attachment0->bind_to_unit(0);
         color_attachment1->bind_to_unit(1);
     
-        renderer->frame_buffer() = nullptr;
-        renderer->clear();
+        renderer->clear(screen_frame_buffer);
 
-        renderer->shader_program() = shader_program1;
-        renderer->geometry() = screen_geometry1;
-        renderer->draw();
+        renderer->draw(
+            shader_program1,
+            screen_geometry1,
+            screen_frame_buffer
+        );
 
         window->on_frame_end();
     }

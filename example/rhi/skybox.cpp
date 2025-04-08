@@ -13,6 +13,7 @@
 #include "glm/fwd.hpp"
 #include "engine/runtime/core/camera.h"
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 using namespace std;
@@ -91,6 +92,7 @@ int main() {
     
     auto window = device->create_window(800, 600, "RTR");
     auto input = std::make_shared<Input>(window);
+    auto screen_frame_buffer = device->create_screen_frame_buffer(window);
 
     auto bk = Image_loader::load_from_path(
         Image_format::RGB_ALPHA,
@@ -299,9 +301,6 @@ int main() {
     Clear_state clear_state = Clear_state::enabled();
     clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
     auto renderer = device->create_renderer(clear_state);
-    renderer->shader_program() = shader_program_cubemap;
-    renderer->geometry() = geometry;
-    renderer->frame_buffer() = nullptr;
     
 
     while (window->is_active()) {
@@ -321,8 +320,14 @@ int main() {
         shader_program_cubemap->modify_uniform("cameraPosition", camera->position());
         shader_program_cubemap->update_uniforms();
 
-        renderer->clear();
-        renderer->draw();
+        renderer->init();
+
+        renderer->clear(screen_frame_buffer);
+        renderer->draw(
+            shader_program_cubemap,
+            geometry,
+            screen_frame_buffer
+        );
 
         device->check_error();
         window->on_frame_end();
