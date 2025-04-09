@@ -22,6 +22,7 @@ add_subdirectory(ext/assimp)
 add_subdirectory(ext/glm)
 add_subdirectory(ext/stb_image)
 add_subdirectory(ext/imgui)
+add_subdirectory(ext/glfw)
 add_subdirectory(ext/spdlog)
 
 include_directories(build/ext/assimp/include)
@@ -31,6 +32,7 @@ include_directories(ext/glad/include)
 include_directories(ext/stb_image/include)
 include_directories(ext/imgui/include)
 include_directories(ext/spdlog/include)
+include_directories(ext/glfw/include)
 include_directories(ext/glm)
 
 include_directories(

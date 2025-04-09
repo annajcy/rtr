@@ -1,8 +1,17 @@
-//
-// Created by annaj on 25-4-9.
-//
+#pragma once
 
-#ifndef RTR_NODE_COMPONENT_H
-#define RTR_NODE_COMPONENT_H
+#include "engine/runtime/global/base.h"
+#include "component_base.h"
 
-#endif //RTR_NODE_COMPONENT_H
+namespace rtr {
+
+class Node_component : public Component_base {
+protected:
+
+public:
+	Node_component() : Component_base(Component_type::NODE) {}
+
+};
+
+
+};

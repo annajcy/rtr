@@ -27,7 +27,7 @@
 #include <stdexcept>
 #include <cassert>
 #include <type_traits>
-
+#include <filesystem>
 
 #include "event.h"
 #include "guid.h"
@@ -35,6 +35,7 @@
 #include "singleton.h"
 #include "math.h"
 #include "enum.h"
+#include "reflection.h"
 
 
 
