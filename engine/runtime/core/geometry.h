@@ -144,6 +144,7 @@ public:
 };
 
 using Position_attribute = Vertex_attribute<float, 3>;
+using Screen_position_attribute = Vertex_attribute<float, 2>;
 using Normal_attribute = Vertex_attribute<float, 3>;
 using Tangent_attribute = Vertex_attribute<float, 3>;
 using UV_attribute = Vertex_attribute<float, 2>;
@@ -396,7 +397,7 @@ public:
         };
 
         std::unordered_map<unsigned int, Vertex_attribute_base::Ptr> vertex_attributes = {
-            {0, std::make_shared<Position_attribute>(std::vector<float>{
+            {0, std::make_shared<Screen_position_attribute>(std::vector<float>{
                 -1.0f,  1.0f,
                 -1.0f, -1.0f,
                 1.0f, -1.0f,

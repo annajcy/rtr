@@ -96,6 +96,31 @@ glad
 ${OPENGL_LIBRARIES} 
 )
 
+add_executable(rhi_normal_map ${SOURCES} example/rhi/normal_map.cpp)
+
+target_link_libraries(rhi_normal_map 
+glfw
+glad
+assimp
+imgui
+stb_image
+glad
+${OPENGL_LIBRARIES} 
+)
+
+add_executable(rhi_parallax_map ${SOURCES} example/rhi/parrallax_map.cpp)
+
+target_link_libraries(rhi_parallax_map 
+glfw
+glad
+assimp
+imgui
+stb_image
+glad
+${OPENGL_LIBRARIES} 
+)
+
+
 
 add_executable(main ${SOURCES} example/engine/main.cpp)
 
