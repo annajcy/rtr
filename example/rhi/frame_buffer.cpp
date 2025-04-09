@@ -212,6 +212,7 @@ int main() {
         screen_position->data_size(),
         screen_position->data_ptr()
     );
+    
     auto screen_tex_coord_buffer = device->create_vertex_buffer(
         Buffer_usage::STATIC,
         Buffer_data_type::FLOAT,

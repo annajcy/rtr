@@ -311,18 +311,18 @@ public:
             })},
             {3, std::make_shared<Tangent_attribute>(std::vector<float>{
                 // 每个面的切线方向 (假设UV水平方向为切线方向)
-                // front face
-                1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-                // back face 
-                -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-                // top face
-                1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-                // bottom face
-                1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-                // right face
-                0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-                // left face
-                0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f
+                // Front face
+                1.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
+                // Back face
+                -1.0f, 0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
+                // Top face
+                1.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
+                // Bottom face
+                1.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
+                // Right face
+                0.0f, 0.0f, -1.0f,  0.0f, 0.0f, -1.0f,  0.0f, 0.0f, -1.0f,  0.0f, 0.0f, -1.0f,
+                // Left face
+                0.0f, 0.0f, 1.0f,  0.0f, 0.0f, 1.0f,  0.0f, 0.0f, 1.0f,  0.0f, 0.0f, 1.0f
             })}
         };
 
@@ -380,13 +380,44 @@ public:
             
         };
 
-
         auto element_attribute = std::make_shared<Element_atrribute>(std::vector<unsigned int>{
             0, 1, 2,
             2, 3, 0
         });
 
         return std::make_shared<Geometry>(vertex_attribute_names, vertex_attributes, element_attribute);
+    }
+
+    static Geometry::Ptr create_screen_plane() {
+        
+        std::unordered_map<std::string, unsigned int> vertex_attribute_names = {
+            {"position", 0},
+            {"uv", 1}
+        };
+
+        std::unordered_map<unsigned int, Vertex_attribute_base::Ptr> vertex_attributes = {
+            {0, std::make_shared<Position_attribute>(std::vector<float>{
+                -1.0f,  1.0f,
+                -1.0f, -1.0f,
+                1.0f, -1.0f,
+                1.0f,  1.0f,
+            })},
+
+            {1, std::make_shared<UV_attribute>(std::vector<float>{
+                0.0f, 1.0f,
+                0.0f, 0.0f,
+                1.0f, 0.0f,
+                1.0f, 1.0f
+            })}
+        };
+
+        auto element_attribute = std::make_shared<Element_atrribute>(std::vector<unsigned int>{
+            0, 1, 2,
+            0, 2, 3
+        });
+
+        return std::make_shared<Geometry>(vertex_attribute_names, vertex_attributes, element_attribute);
+
     }
 
     static Geometry::Ptr create_sphere(float radius = 1.0, unsigned int lat_count = 60, unsigned int long_count = 60) {
@@ -424,12 +455,6 @@ public:
                 normals.push_back(y);
                 normals.push_back(-z);
 
-                float dx = -radius * sin(phi) * cos(theta);
-                float dz = -radius * sin(phi) * sin(theta);
-                tangents.push_back(dx);
-                tangents.push_back(0.0f);
-                tangents.push_back(dz);
-
                 float u = 1.0f - 1.0f * j / long_count;
                 float v = 1.0f - 1.0f * i / lat_count;
 
@@ -437,7 +462,7 @@ public:
                 uvs.push_back(v);
             }
 
-        for (int i = 0; i < lat_count; i ++) 
+        for (int i = 0; i < lat_count; i ++) {
             for (int j = 0; j < long_count; j ++) {
                 int p1 = i * (long_count + 1) + j, p3 = p1 + 1;
                 int p2 = p1 + long_count + 1, p4 = p2 + 1;
@@ -449,6 +474,63 @@ public:
                 indices.push_back(p2);
                 indices.push_back(p4);
             }
+        }
+            
+        tangents.resize(positions.size());
+        //以三角形为单位进行indices的遍历
+        for (int i = 0; i < indices.size(); i += 3) {
+            //1 取出当前三角形的三个顶点的索引
+            int idx0 = indices[i];
+            int idx1 = indices[i + 1];
+            int idx2 = indices[i + 2];
+    
+            //2 根据三个顶点的索引，从positions数组中找到三个顶点的位置信息
+            auto p0 = glm::vec3(positions[idx0 * 3], positions[idx0 * 3+1], positions[idx0 * 3+2]);
+            auto p1 = glm::vec3(positions[idx1 * 3], positions[idx1 * 3+1], positions[idx1 * 3+2]);
+            auto p2 = glm::vec3(positions[idx2 * 3], positions[idx2 * 3+1], positions[idx2 * 3+2]);
+    
+            //3 根据三个顶点的索引，从uvs数组中找到三个顶点的uv信息
+            auto uv0 = glm::vec2(uvs[idx0 * 2], uvs[idx0 * 2+1]);
+            auto uv1 = glm::vec2(uvs[idx1 * 2], uvs[idx1 * 2+1]);
+            auto uv2 = glm::vec2(uvs[idx2 * 2], uvs[idx2 * 2+1]);
+    
+            //4 根据公式，计算当前三角形的tangent
+            glm::vec3 e0 = p1 - p0;
+            glm::vec3 e1 = p2 - p1;
+    
+            glm::vec2 duv0 = uv1 - uv0;
+            glm::vec2 duv1 = uv2 - uv1;
+    
+            float f = 1.0f / (duv0.x * duv1.y - duv1.x * duv0.y);
+    
+            glm::vec3 tangent;
+            tangent.x = f * (duv1.y * e0.x - duv0.y * e1.x);
+            tangent.y = f * (duv1.y * e0.y - duv0.y * e1.y);
+            tangent.z = f * (duv1.y * e0.z - duv0.y * e1.z);
+            tangent = glm::normalize(tangent);
+    
+            //5 针对本三角形的三个顶点的normal，使tangent正交化(三个不同的tangent）
+            auto normal0 = glm::normalize(glm::vec3(normals[idx0 * 3], normals[idx0 * 3 + 1], normals[idx0 * 3 + 2]));
+            auto normal1 = glm::normalize(glm::vec3(normals[idx1 * 3], normals[idx1 * 3 + 1], normals[idx1 * 3 + 2]));
+            auto normal2 = glm::normalize(glm::vec3(normals[idx2 * 3], normals[idx2 * 3 + 1], normals[idx2 * 3 + 2]));
+    
+            auto tangent0 = tangent - glm::dot(tangent, normal0) * normal0;
+            auto tangent1 = tangent - glm::dot(tangent, normal1) * normal1;
+            auto tangent2 = tangent - glm::dot(tangent, normal2) * normal2;
+    
+            //6 累加到每个顶点的tangent属性上
+            tangents[idx0 * 3] += tangent0.x;
+            tangents[idx0 * 3 + 1] += tangent0.y;
+            tangents[idx0 * 3 + 2] += tangent0.z;
+    
+            tangents[idx1 * 3] += tangent1.x;
+            tangents[idx1 * 3 + 1] += tangent1.y;
+            tangents[idx1 * 3 + 2] += tangent1.z;
+    
+            tangents[idx2 * 3] += tangent2.x;
+            tangents[idx2 * 3 + 1] += tangent2.y;
+            tangents[idx2 * 3 + 2] += tangent2.z;
+        }
 
         std::unordered_map<unsigned int, Vertex_attribute_base::Ptr> vertex_attributes = {
             {0, std::make_shared<Position_attribute>(positions)},
@@ -459,7 +541,6 @@ public:
 
         auto element_attribute = std::make_shared<Element_atrribute>(indices);
         return std::make_shared<Geometry>(vertex_attribute_names, vertex_attributes, element_attribute);
-    
     }
 
 
