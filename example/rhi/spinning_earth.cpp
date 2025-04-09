@@ -1,24 +1,15 @@
 
-#include "engine/global/base.h"
+
+#include "engine/runtime/global/base.h" 
+#include "engine/runtime/core/geometry.h"
+#include "engine/runtime/core/input.h"
 #include "engine/runtime/core/camera.h"
 #include "engine/runtime/core/geometry.h"
 #include "engine/runtime/core/light.h"
-#include "engine/runtime/enum.h"
+#include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
+
 #include "engine/runtime/resource/loader/image_loader.h"
-#include "engine/runtime/rhi/rhi_device.h"
-#include "engine/runtime/rhi/opengl/rhi_device_opengl.h"
-#include "engine/runtime/rhi/rhi_geometry.h"
-#include "engine/runtime/rhi/rhi_pipeline_state.h"
-#include "engine/runtime/rhi/rhi_resource.h"
-#include "engine/runtime/rhi/rhi_shader_program.h"
-#include "engine/runtime/rhi/rhi_window.h"
-#include "glm/fwd.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "engine/runtime/core/input.h"
-#include "glm/trigonometric.hpp"
-#include <iostream>
-#include <memory>
-#include <string>
+
 
 using namespace std;
 using namespace rtr;

@@ -1,10 +1,6 @@
 #pragma once
-#include "engine/global/base.h"
-#include "engine/global/guid.h"
-#include "engine/runtime/enum.h"
-#include <memory>
-#include <string>
-#include <unordered_map>
+
+#include "engine/runtime/global/base.h" 
 
 namespace rtr {
 

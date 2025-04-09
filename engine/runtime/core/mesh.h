@@ -1,10 +1,9 @@
 #pragma once
-#include "engine/global/base.h"
-#include "engine/runtime/enum.h"
+#include "engine/runtime/global/base.h" 
 
-#include "engine/runtime/core/geometry.h"
-#include "engine/runtime/core/material.h"
-#include "engine/runtime/core/node.h"
+#include "geometry.h"
+#include "material.h"
+#include "node.h"
 
 namespace rtr {
 

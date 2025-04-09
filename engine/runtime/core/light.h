@@ -1,12 +1,10 @@
 #pragma once
-#include "engine/global/base.h"
-#include "engine/runtime/enum.h"
 
-#include "engine/runtime/core/geometry.h"
-#include "engine/runtime/core/node.h"
-#include "engine/runtime/core/shader.h"
-#include "glm/gtc/constants.hpp"
-#include <vector>
+#include "engine/runtime/global/base.h" 
+
+#include "geometry.h"
+#include "node.h"
+#include "shader.h"
 
 
 namespace rtr {

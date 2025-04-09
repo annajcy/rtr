@@ -1,8 +1,9 @@
 #pragma once
 
-#include "engine/runtime/core/input.h"
-#include "engine/runtime/core/node.h"
-#include <memory>
+#include "engine/runtime/global/base.h" 
+#include "input.h"
+#include "node.h"
+
 
 namespace rtr {
 

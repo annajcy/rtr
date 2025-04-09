@@ -1,12 +1,5 @@
-#include "engine/global/base.h"
-#include "engine/runtime/enum.h"
-#include "engine/runtime/rhi/rhi_buffer.h"
-#include "engine/runtime/rhi/rhi_device.h"
-#include "engine/runtime/rhi/opengl/rhi_device_opengl.h"
-#include "engine/runtime/rhi/rhi_shader_program.h"
-#include <iostream> // 添加输入输出支持
-#include <memory>
-#include <vector>
+#include "engine/runtime/global/base.h" 
+#include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 
 using namespace std;
 using namespace rtr;

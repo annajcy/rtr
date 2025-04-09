@@ -1,14 +1,14 @@
 #pragma once
-#include "engine/global/base.h"
+#include "engine/runtime/global/base.h" 
 
-#include "engine/runtime/core/camera.h"
-#include "engine/runtime/core/frame_buffer.h"
-#include "engine/runtime/core/geometry.h"
-#include "engine/runtime/core/light.h"
-#include "engine/runtime/core/material.h"
-#include "engine/runtime/core/mesh.h"
-#include "engine/runtime/core/node.h"
-#include "engine/runtime/core/scene.h"
+#include "camera.h"
+#include "frame_buffer.h"
+#include "geometry.h"
+#include "light.h"
+#include "material.h"
+#include "mesh.h"
+#include "node.h"
+#include "scene.h"
 
 namespace rtr {
 
