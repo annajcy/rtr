@@ -16,3 +16,9 @@
 [submodule "ext/stb_image"]
 	path = ext/stb_image
 	url = https://github.com/annajcy/stb_image.git
+[submodule "ext/rttr"]
+	path = ext/rttr
+	url = https://github.com/rttrorg/rttr.git
+[submodule "ext/spdlog"]
+	path = ext/spdlog
+	url = https://github.com/gabime/spdlog.git
