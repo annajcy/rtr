@@ -4,7 +4,7 @@
 
 namespace rtr {
     
-class Scene {
+class Scene : public GUID {
 
 };
 

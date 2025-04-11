@@ -3,7 +3,7 @@
 
 namespace rtr {
 
-class World {
+class World : public GUID {
 
 };
 

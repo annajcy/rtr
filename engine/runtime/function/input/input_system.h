@@ -2,10 +2,11 @@
 
 #include "engine/runtime/global/base.h" 
 #include "engine/runtime/platform/rhi/rhi_window.h"
+#include <memory>
 
 namespace rtr {
 
-class Input {
+class Input_system {
 
 private:
     std::unordered_map<Key_mod, Key_action> m_key_mods{};
@@ -22,7 +23,7 @@ private:
     double m_mouse_scroll_dy{};
 
 public:
-    Input(const RHI_window::Ptr& window) {
+    Input_system(const RHI_window::Ptr& window) {
         window->mouse_move_event().add([&](double x, double y) {
             this->update_mouse_position(x, y);
         });
@@ -44,12 +45,10 @@ public:
         });
     }
 
-    ~Input() = default;
+    ~Input_system() = default;
 
-    using Ptr = std::shared_ptr<Input>;
-
-    static Ptr create(const RHI_window::Ptr& window) {
-        return std::make_shared<Input>(window);
+    static std::shared_ptr<Input_system> create(const RHI_window::Ptr& window) {
+        return std::make_shared<Input_system>(window);
     }
 
     [[nodiscard]] Key_action key_mod(Key_mod mod) const {

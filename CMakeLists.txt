@@ -55,35 +55,9 @@ spdlog::spdlog
 ${OPENGL_LIBRARIES} 
 )
 
-add_executable(rhi_spinning_earth ${SOURCES} example/rhi/spinning_earth.cpp)
-
-target_link_libraries(rhi_spinning_earth 
-glfw
-glad
-assimp
-imgui
-stb_image
-glad
-spdlog::spdlog
-${OPENGL_LIBRARIES} 
-)
-
 add_executable(rhi_frame_buffer ${SOURCES} example/rhi/frame_buffer.cpp)
 
 target_link_libraries(rhi_frame_buffer 
-glfw
-glad
-assimp
-imgui
-stb_image
-glad
-spdlog::spdlog
-${OPENGL_LIBRARIES} 
-)
-
-add_executable(rhi_skybox ${SOURCES} example/rhi/skybox.cpp)
-
-target_link_libraries(rhi_skybox 
 glfw
 glad
 assimp
