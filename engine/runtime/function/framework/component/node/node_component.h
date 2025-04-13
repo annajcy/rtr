@@ -9,7 +9,8 @@ namespace rtr {
 class Node_component : public std::enable_shared_from_this<Node_component>, public Component_base {
 
 protected:
-    Node_type m_type{};
+    glm::mat4 m_model_matrix{glm::identity<glm::mat4>()};
+    bool m_is_dirty{true};
 
     glm::vec3 m_position{glm::zero<glm::vec3>()};
     glm::vec3 m_scale{glm::one<glm::vec3>()};
@@ -22,13 +23,13 @@ public:
     Node_component() : Component_base(Component_type::NODE) {}
   	~Node_component() = default;
 
-	void tick(float delta_time) override {}
+	void tick(float delta_time) override {
+        // TODO: implement tick function for node component
+    }
 
 	static std::shared_ptr<Node_component> create() {
 		return std::make_shared<Node_component>();
 	}
-
-    static Component_type component_type() { return Component_type::NODE; }
 
 	const std::shared_ptr<Node_component> parent_ptr() const {
         if (m_parent.expired()) {
@@ -50,6 +51,7 @@ public:
         }
         m_children.push_back(node);
         node->m_parent = shared_from_this();
+        node->set_dirty();
     }
 
     void remove_child(const std::shared_ptr<Node_component>& node) {
@@ -57,20 +59,26 @@ public:
         if (it != m_children.end()) {
             m_children.erase(it);
             node->m_parent.reset();
+            node->set_dirty();
+        } else {
+            throw std::invalid_argument("Node is not a child");	
         }
     }
 
-    void clear_children() {
-        for (auto& child : m_children) {
-            child->m_parent.reset();
-        }
-
-        m_children.clear();
+    void set_position(const glm::vec3& pos) {
+        m_position = pos;
+        set_dirty();
     }
 
-	glm::quat& rotation() { return m_rotation; }
-    glm::vec3& scale() { return m_scale; }
-    glm::vec3& position() { return m_position; }
+    void set_rotation(const glm::quat& rot) {
+        m_rotation = rot;
+        set_dirty();
+    }
+
+    void set_scale(const glm::vec3& scale) {
+        m_scale = scale;
+        set_dirty();
+    }
 
     glm::vec3 position() const { return m_position; }
     glm::quat rotation() const { return m_rotation; }
@@ -82,9 +90,15 @@ public:
 	glm::vec3 left() const { return m_rotation * glm::vec3(-1.0f, 0.0f, 0.0f); }
 	glm::vec3 front() const { return m_rotation * glm::vec3(0.0f, 0.0f, 1.0f); }
     glm::vec3 back() const { return m_rotation * glm::vec3(0.0f, 0.0f, -1.0f); }
-    glm::mat4 normal_matrix() const { return glm::transpose(glm::inverse(model_matrix())); }
+    glm::mat4 normal_matrix() { return glm::transpose(glm::inverse(model_matrix())); }
 
-    glm::mat4 model_matrix() const {
+    glm::mat4 model_matrix()  {
+
+        if (!m_is_dirty) {
+            return m_model_matrix;
+        }
+
+        m_is_dirty = false;
 
         glm::mat4 parent_matrix = glm::identity<glm::mat4>();
 
@@ -98,11 +112,17 @@ public:
         transform *= glm::mat4_cast(m_rotation);
         transform = glm::translate(glm::identity<glm::mat4>(), m_position) * transform;
         
-        return parent_matrix * transform;
-
+        return m_model_matrix = parent_matrix * transform;
     }
 
-	glm::vec3 world_scale() const {
+    void set_dirty() { 
+        m_is_dirty = true; 
+        for (auto& child : m_children) {
+            child->set_dirty();	
+        }
+    }
+
+	glm::vec3 world_scale() {
         return glm::vec3(
 			glm::length(glm::vec3(model_matrix()[0])),
 			 glm::length(glm::vec3(model_matrix()[1])), 
@@ -110,11 +130,11 @@ public:
 			);
     }
 
-    glm::vec3 world_position() const {
+    glm::vec3 world_position() {
         return glm::vec3(model_matrix()[3]);
     }
 
-    glm::quat world_rotation() const {
+    glm::quat world_rotation() {
 		auto scale = world_scale();
 		auto model_matrix = glm::mat3(this->model_matrix());
 		model_matrix[0] /= scale.x;
@@ -149,10 +169,7 @@ public:
         // 计算旋转四元数：从 current_front 旋转到 direction
         glm::quat rotation_quat = glm::rotation(current_front, direction);
 
-        // 更新 m_rotation
-        m_rotation = rotation_quat * m_rotation;
-        m_rotation = glm::normalize(m_rotation); 
-
+        set_rotation(glm::normalize(rotation_quat * m_rotation)); 
     }
 
     void look_at_point(const glm::vec3& target_point) {
@@ -161,12 +178,12 @@ public:
     }
 
     void translate(const glm::vec3 &direction, float distance) {
-        m_position += direction * distance;
+        set_position(m_position + direction * distance);
     }
 
     void rotate(float angle, const glm::vec3& axis) {
         glm::quat rotation = glm::angleAxis(glm::radians(angle), axis);  // Convert angle-axis to quaternion
-        m_rotation = rotation * m_rotation;  // Apply rotation to current rotation
+        set_rotation(rotation * m_rotation);  // Apply rotation to current rotation
     }
 	
 };

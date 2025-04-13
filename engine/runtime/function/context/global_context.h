@@ -19,6 +19,4 @@ struct Global_context {
     std::shared_ptr<World> world{};
 };
 
-using Context = Singleton<Global_context>;
-
 }

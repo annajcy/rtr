@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.27)
 project(rtr)
 
-
 set(CMAKE_CXX_STANDARD 20)
+
+set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 add_definitions(-DDEBUG)
 
@@ -24,6 +25,7 @@ add_subdirectory(ext/stb_image)
 add_subdirectory(ext/imgui)
 add_subdirectory(ext/glfw)
 add_subdirectory(ext/spdlog)
+add_subdirectory(ext/nlohmann_json)
 
 include_directories(build/ext/assimp/include)
 
@@ -33,6 +35,7 @@ include_directories(ext/stb_image/include)
 include_directories(ext/imgui/include)
 include_directories(ext/spdlog/include)
 include_directories(ext/glfw/include)
+include_directories(ext/nlohmann_json/include)
 include_directories(ext/glm)
 
 include_directories(
@@ -52,6 +55,7 @@ imgui
 stb_image
 glad
 spdlog::spdlog
+nlohmann_json::nlohmann_json
 ${OPENGL_LIBRARIES} 
 )
 
@@ -65,6 +69,7 @@ imgui
 stb_image
 glad
 spdlog::spdlog
+nlohmann_json::nlohmann_json
 ${OPENGL_LIBRARIES} 
 )
 
@@ -78,6 +83,7 @@ imgui
 stb_image
 glad
 spdlog::spdlog
+nlohmann_json::nlohmann_json
 ${OPENGL_LIBRARIES} 
 )
 
@@ -92,6 +98,7 @@ imgui
 stb_image
 glad
 spdlog::spdlog
+nlohmann_json::nlohmann_json
 ${OPENGL_LIBRARIES} 
 )
 

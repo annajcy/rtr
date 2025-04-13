@@ -12,17 +12,15 @@ protected:
     glm::vec3 m_color{1.0f};
     float m_intensity{1.0f};
     Light_type m_light_type{};
+    std::weak_ptr<Node_component> m_node{};
 
 public:
-    Light_component(Light_type light_type) : Component_base(Component_type::LIGHT), m_light_type(light_type) {
-        m_required_component_types = {
-            Component_type::NODE
-        };
-    }
+    Light_component(
+        Light_type light_type
+    ) : Component_base(Component_type::LIGHT), 
+        m_light_type(light_type) {}
 
     virtual ~Light_component() = default;
-
-    static Component_type c_type() { return Component_type::LIGHT; }
 
     Light_type light_type() const { return m_light_type; }
     glm::vec3& color() { return m_color; }
@@ -31,6 +29,14 @@ public:
     glm::vec3 color() const { return m_color; }
     float intensity() const { return m_intensity; }
 
+    void set_node(const std::shared_ptr<Node_component>& node) { m_node = node; }
+    std::shared_ptr<Node_component> node() const {
+        if (m_node.expired()) {
+            return nullptr;
+        }
+        return m_node.lock();
+    }
+
 };
 
 class Directional_light_component : public Light_component {
@@ -38,9 +44,7 @@ public:
     Directional_light_component() : Light_component(Light_type::DIRECTIONAL) { }
     ~Directional_light_component() = default;
 
-    glm::vec3 direction() const { return get_component<Node_component>()->world_rotation() * glm::vec3(0.0f, 0.0f, 1.0);  }
-
-    static Component_type c_type() { return Component_type::LIGHT; }
+    glm::vec3 direction() const { return node()->world_rotation() * glm::vec3(0.0f, 0.0f, 1.0);  }
 
     static std::shared_ptr<Directional_light_component> create() {
         return std::make_shared<Directional_light_component>();
@@ -61,14 +65,12 @@ public:
     Spot_light_component() : Light_component(Light_type::SPOT) {}
     ~Spot_light_component() = default;
     
-    glm::vec3 direction() const { return get_component<Node_component>()->world_rotation() * glm::vec3(0.0f, 0.0f, 1.0); }
-    glm::vec3 position() const { return get_component<Node_component>()->world_position(); }
+    glm::vec3 direction() const { return node()->world_rotation() * glm::vec3(0.0f, 0.0f, 1.0); }
+    glm::vec3 position() const { return node()->world_position(); }
 
     static std::shared_ptr<Spot_light_component> create() {
         return std::make_shared<Spot_light_component>();
     }
-
-    static Component_type c_type() { return Component_type::LIGHT; }
 
     float& inner_angle() { return m_inner_angle; }
     float& outer_angle() { return m_outer_angle; }
@@ -95,9 +97,7 @@ public:
     Point_light_component() : Light_component(Light_type::POINT) {}
     ~Point_light_component() = default;
    
-    glm::vec3 position() const { return get_component<Node_component>()->world_position(); }
-
-    static Component_type c_type() { return Component_type::LIGHT; }
+    glm::vec3 position() const { return node()->world_position(); }
 
     static std::shared_ptr<Point_light_component> create() {
         return std::make_shared<Point_light_component>();

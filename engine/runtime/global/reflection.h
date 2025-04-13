@@ -1,7 +1,11 @@
 #pragma once
 
 namespace rtr {
-class Reflection {
+    
+class Reflection_manager {
+
+
 
 };
+
 };

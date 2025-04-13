@@ -3,6 +3,7 @@
 #include "engine/runtime/global/base.h"
 #include "../component_base.h"
 #include "../node/node_component.h"
+#include <memory>
 
 namespace rtr {
 
@@ -21,6 +22,7 @@ protected:
 
 public:
     Camera_component(
+        Camera_type type,
         float near_bound, 
         float far_bound
     ) : Component_base(Component_type::CAMERA),
@@ -37,8 +39,6 @@ public:
 
     void set_node(const std::shared_ptr<Node_component>& node) { m_node = node; }
 
-    static Component_type c_type() { return Component_type::CAMERA; }
-
     const std::shared_ptr<Node_component> node() const {
         if (m_node.expired()) {
             return nullptr; 
@@ -51,14 +51,14 @@ public:
         return glm::lookAt(node()->position(), center, node()->up());
     }
 
+    Camera_type camera_type() const { return m_camera_type; }
+
     virtual glm::mat4 projection_matrix() const = 0;
     virtual void adjust_zoom(float delta_zoom) = 0;
     
 };
 
 class Perspective_camera_component : public Camera_component {
-public:
-    using Ptr = std::shared_ptr<Perspective_camera_component>;
 
 protected:
     float m_fov{};
@@ -70,15 +70,13 @@ public:
         float aspect_ratio, 
         float near_bound, 
         float far_bound
-    ) : Camera_component(near_bound, far_bound),
+    ) : Camera_component(Camera_type::PERSPECTIVE, near_bound, far_bound),
         m_fov(fov),
         m_aspect_ratio(aspect_ratio) {}
 
-    static Ptr create(float fov, float aspect_ratio, float near_bound, float far_bound) {
+    static std::shared_ptr<Perspective_camera_component> create(float fov, float aspect_ratio, float near_bound, float far_bound) {
         return std::make_shared<Perspective_camera_component>(fov, aspect_ratio, near_bound, far_bound); 
     }
-
-    static Component_type c_type() { return Component_type::CAMERA; }
 
     ~Perspective_camera_component() override = default;
     float& fov() { return m_fov; }
@@ -92,6 +90,10 @@ public:
 
     void adjust_zoom(float delta_zoom) override {
         node()->translate(node()->front(), delta_zoom);
+    }
+
+    void tick(float delta_time) override {
+        //TODO: implement
     }
 
 };
@@ -112,7 +114,7 @@ public:
         float bottom_bound, 
         float near_bound, 
         float far_bound
-    ) : Camera_component(near_bound, far_bound),
+    ) : Camera_component(Camera_type::ORTHOGRAPHIC, near_bound, far_bound),
         m_left_bound(left_bound),
         m_right_bound(right_bound),
         m_top_bound(top_bound),
@@ -121,8 +123,6 @@ public:
     static std::shared_ptr<Orthographic_camera_component> create(float left_bound, float right_bound, float top_bound, float bottom_bound, float near_bound, float far_bound) {
         return std::make_shared<Orthographic_camera_component>(left_bound, right_bound, top_bound, bottom_bound, near_bound, far_bound);
     }
-
-    static Component_type c_type() { return Component_type::CAMERA; }
 
     ~Orthographic_camera_component() override = default;
 
@@ -145,6 +145,10 @@ public:
         m_right_bound += delta_zoom;
         m_top_bound += delta_zoom;
         m_bottom_bound -= delta_zoom;
+    }
+
+    void tick(float delta_time) override {
+        //TODO: implement
     }
 
 };

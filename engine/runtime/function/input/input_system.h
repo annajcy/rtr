@@ -6,21 +6,51 @@
 
 namespace rtr {
 
+struct Input_system_state {
+
+    std::unordered_map<Key_mod, Key_action> key_mods{};
+    std::unordered_map<Key_code, Key_action> keys{};
+    std::unordered_map<Mouse_button, Key_action> mouse_buttons{};
+
+    double mouse_x{};
+    double mouse_y{};
+
+    double mouse_dx{};
+    double mouse_dy{};
+
+    double mouse_scroll_dx{};
+    double mouse_scroll_dy{};
+
+    Input_system_state() = default;
+    ~Input_system_state() = default;
+
+    Key_action key_mod(Key_mod mod) const {
+        if (key_mods.find(mod) == key_mods.end()) {
+            return Key_action::RELEASE;
+        }
+        return key_mods.at(mod);
+    }
+
+    Key_action key(Key_code key) const {
+        if (keys.find(key) == keys.end()) {
+            return Key_action::RELEASE;
+        }
+        return keys.at(key);
+    }
+
+    Key_action mouse_button(Mouse_button button) const {
+        if (mouse_buttons.find(button) == mouse_buttons.end()) {
+            return Key_action::RELEASE;
+        }
+        return mouse_buttons.at(button);
+    }
+
+};
+
 class Input_system {
 
 private:
-    std::unordered_map<Key_mod, Key_action> m_key_mods{};
-    std::unordered_map<Key_code, Key_action> m_keys{};
-    std::unordered_map<Mouse_button, Key_action> m_mouse_buttons{};
-
-    double m_mouse_x{};
-    double m_mouse_y{};
-
-    double m_mouse_dx{};
-    double m_mouse_dy{};
-
-    double m_mouse_scroll_dx{};
-    double m_mouse_scroll_dy{};
+    Input_system_state m_state{};
 
 public:
     Input_system(const RHI_window::Ptr& window) {
@@ -50,84 +80,43 @@ public:
     static std::shared_ptr<Input_system> create(const RHI_window::Ptr& window) {
         return std::make_shared<Input_system>(window);
     }
-
-    [[nodiscard]] Key_action key_mod(Key_mod mod) const {
-        if (m_key_mods.find(mod) == m_key_mods.end()) {
-            return Key_action::RELEASE;
-        }
-        return m_key_mods.at(mod);
-    }
-
-    [[nodiscard]] Key_action key(Key_code key) const {
-        if (m_keys.find(key) == m_keys.end()) {
-            return Key_action::RELEASE;
-        }
-        return m_keys.at(key);
-    }
-
-    [[nodiscard]] Key_action mouse_button(Mouse_button button) const {
-        if (m_mouse_buttons.find(button) == m_mouse_buttons.end()) {
-            return Key_action::RELEASE;
-        }
-        return m_mouse_buttons.at(button);
-    }
-
-    [[nodiscard]] double mouse_x() const {
-        return m_mouse_x;
-    }
-
-    [[nodiscard]] double mouse_y() const {
-        return m_mouse_y;
-    }
-
-    [[nodiscard]] double mouse_dx() const {
-        return m_mouse_dx;
-    }
-
-    [[nodiscard]] double mouse_dy() const {
-        return m_mouse_dy;
-    }
-
-    [[nodiscard]] double mouse_scroll_dx() const {
-        return m_mouse_scroll_dx;
-    }
-
-    [[nodiscard]] double mouse_scroll_dy() const {
-        return m_mouse_scroll_dy;
-    }
     
     void update_mouse_position(double x, double y) {
-        m_mouse_dx = x - m_mouse_x;
-        m_mouse_dy = y - m_mouse_y;
-        m_mouse_x = x;
-        m_mouse_y = y;
+        m_state.mouse_dx = x - m_state.mouse_dx;
+        m_state.mouse_dy = y - m_state.mouse_dy;
+        m_state.mouse_x = x;
+        m_state.mouse_y = y;
     }
 
     void update_mouse_scroll(double x, double y) {
-        m_mouse_scroll_dx = x;
-        m_mouse_scroll_dy = y;
+        m_state.mouse_scroll_dx = x;
+        m_state.mouse_scroll_dy = y;
     }
 
     void update_key(Key_code key, Key_action action, int mod) {
         
         for (int i = mod, cnt = 0; i > 0; i >>= 1, cnt ++) {
             if (i & 1) {
-                m_key_mods[static_cast<Key_mod>(cnt)] = action;
+                m_state.key_mods[static_cast<Key_mod>(cnt)] = action;
             }
         }
 
-        m_keys[key] = action;
+        m_state.keys[key] = action;
     }
 
-    void update_mouse_button(Mouse_button button, Key_action action) {
-        m_mouse_buttons[button] = action;
+    void update_mouse_button(Mouse_button button, Key_action action) { 
+        m_state.mouse_buttons[button] = action; 
     }
 
     void reset_deltas() {
-        m_mouse_dx = 0.0;
-        m_mouse_dy = 0.0;
-        m_mouse_scroll_dx = 0.0;
-        m_mouse_scroll_dy = 0.0;
+        m_state.mouse_dx = 0.0;
+        m_state.mouse_dy = 0.0;
+        m_state.mouse_scroll_dx = 0.0;
+        m_state.mouse_scroll_dy = 0.0;
+    }
+    
+    Input_system_state state() const {
+        return m_state;
     }
 
 };

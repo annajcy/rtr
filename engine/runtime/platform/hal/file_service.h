@@ -2,19 +2,21 @@
 
 #include "engine/runtime/global/base.h"
 #include <filesystem>
+#include <memory>
+#include <string>
 #include <vector>
 
 namespace rtr {
 
 // 在类定义前添加文件树节点结构体
-struct File_tree_node {
-    std::string name;
-    bool is_directory;
-    std::vector<File_tree_node> children;
+struct File_node {
+    std::string name{};
+    bool is_directory{};
+    std::vector<std::shared_ptr<File_node>> children{};
 };
 
 class File_service {
-    std::filesystem::path m_root_path;  // 根目录路径
+    std::filesystem::path m_root_path{};  // 根目录路径
 
 public:
     // 设置文件系统根目录
@@ -33,22 +35,51 @@ public:
         return result;
     }
 
-    // 创建空文件
-    bool add_file(const std::string& relative_path) {
+    bool add_text_file(const std::string& relative_path, const std::string& content) {
         auto full_path = m_root_path / relative_path;
         if (exists(full_path)) return false;
         
         std::ofstream file(full_path);
-        return file.good();
+        if (file.is_open()) {
+            file << content;
+            file.close();
+            return true;
+        }
+        return false;
     }
 
-    // 删除文件/目录
+    bool read_text_file(const std::string& relative_path, std::string& content) const {
+        auto full_path = m_root_path / relative_path;
+        std::ifstream file(full_path);
+        if (file.is_open()) {
+            content = std::string((std::istreambuf_iterator<char>(file)),
+                                std::istreambuf_iterator<char>());
+            file.close();
+            return true;
+        }
+        return false;
+    }
+
+    bool exists(const std::string& relative_path) const {
+        auto full_path = m_root_path / relative_path;
+        return std::filesystem::exists(full_path);
+    }
+
+    bool is_directory(const std::string& relative_path) const {
+        auto full_path = m_root_path / relative_path;
+        return std::filesystem::is_directory(full_path);
+    }
+
+    bool create_directory(const std::string& relative_path) {
+        auto full_path = m_root_path / relative_path;
+        return std::filesystem::create_directories(full_path);
+    }
+
     bool delete_file(const std::string& relative_path) {
         auto full_path = m_root_path / relative_path;
         return std::filesystem::remove_all(full_path) > 0;
     }
 
-    // 复制文件/目录
     bool copy_file(const std::string& src, const std::string& dest) {
         auto src_path = m_root_path / src;
         auto dest_path = m_root_path / dest;
@@ -63,7 +94,6 @@ public:
         }
     }
 
-    // 移动/重命名文件
     bool move_file(const std::string& src, const std::string& dest) {
         auto src_path = m_root_path / src;
         auto dest_path = m_root_path / dest;
@@ -76,24 +106,23 @@ public:
         }
     }
 
-    // 新增文件树构建方法
-    File_tree_node build_file_tree(const std::string& relative_dir = "") const {
+    std::shared_ptr<File_node> build_file_tree(const std::string& relative_dir = "") const {
         return build_tree_recursive(m_root_path / relative_dir);
     }
 
 private:
-    // 新增递归构建方法
-    File_tree_node build_tree_recursive(const std::filesystem::path& current_path) const {
-        File_tree_node node;
-        node.name = current_path.filename().string();
-        node.is_directory = is_directory(current_path);
+    
+    std::shared_ptr<File_node> build_tree_recursive(const std::filesystem::path& current_path) const {
+        auto node = std::make_shared<File_node>();
+        node->name = current_path.filename().string();
+        node->is_directory = is_directory(current_path);
 
-        if (node.is_directory) {
+        if (node->is_directory) {
             for (const auto& entry : std::filesystem::directory_iterator(current_path)) {
-                node.children.push_back(build_tree_recursive(entry.path()));
+                node->children.push_back(build_tree_recursive(entry.path()));
             }
         }
-        
+
         return node;
     }
 };
