@@ -8,11 +8,12 @@
 #include "engine/runtime/function/framework/component/component_base.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/global/guid.h"
+#include <vector>
 
 namespace rtr {
 
-template<typename S, typename T>
-concept Component_derived_from = std::is_base_of_v<S, T>;
+template<typename BASE, typename T>
+concept Derived_from = std::is_base_of_v<BASE, T>;
 
 class Game_object : public std::enable_shared_from_this<Game_object>, public GUID {
 
@@ -46,23 +47,26 @@ public:
         return component;
     }
     
-    template<typename T> requires Component_derived_from<Camera_component, T>
+    template<typename T> requires Derived_from<Camera_component, T>
     std::shared_ptr<T> add_component(const std::shared_ptr<T>& component) {
-        component->set_node(get_component<Node_component>());
+        auto node = get_component<Node_component>();
+        component->set_node(node);
         m_components.push_back(component);
         return component;
     }
 
-    template<typename T> requires Component_derived_from<Camera_control_component, T>
+    template<typename T> requires Derived_from<Camera_control_component, T>
     std::shared_ptr<T> add_component(const std::shared_ptr<T>& component) {
-        component->set_camera(get_component<Camera_component>());
+        auto camera = get_component<Camera_component>();
+        component->set_camera(camera);
         m_components.push_back(component);
         return component;
     }
 
-	template<typename T> requires Component_derived_from<Light_component, T>
+	template<typename T> requires Derived_from<Light_component, T>
     std::shared_ptr<T> add_component(const std::shared_ptr<T>& component) {
-        component->set_node(get_component<Node_component>());
+        auto node = get_component<Node_component>();
+        component->set_node(node);
         m_components.push_back(component);
         return component;
     }
@@ -77,7 +81,15 @@ public:
         }
     }
 
+    void sort_components() {
+        std::sort(m_components.begin(), m_components.end(), [](const std::shared_ptr<Component_base>& a, const std::shared_ptr<Component_base>& b) {
+            return a->priority() < b->priority();
+        });
+    }
+
+
 	void tick(float delta_time) {
+		sort_components();
 		for (auto& component : m_components) {
 			if (component->is_enabled()) {
 				component->tick(delta_time);

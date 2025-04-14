@@ -24,7 +24,8 @@ public:
   	~Node_component() = default;
 
 	void tick(float delta_time) override {
-        // TODO: implement tick function for node component
+        // TODO: implement
+        std::cout << "Node component tick" << std::endl;
     }
 
 	static std::shared_ptr<Node_component> create() {
@@ -50,7 +51,7 @@ public:
             node->parent_ptr()->remove_child(node);
         }
         m_children.push_back(node);
-        node->m_parent = shared_from_this();
+        node->m_parent = std::enable_shared_from_this<Node_component>::shared_from_this();
         node->set_dirty();
     }
 

@@ -115,7 +115,7 @@ public:
         m_state.mouse_scroll_dy = 0.0;
     }
     
-    Input_system_state state() const {
+    const Input_system_state& state() const {
         return m_state;
     }
 

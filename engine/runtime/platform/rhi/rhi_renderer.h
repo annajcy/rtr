@@ -9,6 +9,29 @@
 
 
 namespace rtr {
+
+struct Clear_state {
+    bool color{true};
+    bool depth{true};
+    bool stencil{true};
+
+    float depth_clear_value{1.0f};
+    unsigned int stencil_clear_value{0x00};
+    glm::vec4 color_clear_value{0.0f, 0.0f, 0.0f, 1.0f};
+
+    static Clear_state enabled() {
+        return {
+            true,
+            true,
+            true,
+            1.0f,
+            0x00,
+            glm::vec4(0.0f, 0.0f, 0.0f, 0.0f)
+        };
+    }
+    
+};
+
 class RHI_renderer : public RHI_resource {
 protected:
     RHI_shader_program::Ptr m_shader_program{};

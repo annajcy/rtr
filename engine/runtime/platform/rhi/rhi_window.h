@@ -10,30 +10,8 @@ using Mouse_move_event = Event<double, double>;
 using Mouse_scroll_event = Event<double, double>;
 using Key_event = Event<Key_code, Key_action, unsigned int>;
 
-struct Clear_state {
-    bool color{true};
-    bool depth{true};
-    bool stencil{true};
-
-    float depth_clear_value{1.0f};
-    unsigned int stencil_clear_value{0x00};
-    glm::vec4 color_clear_value{0.0f, 0.0f, 0.0f, 1.0f};
-
-    static Clear_state enabled() {
-        return {
-            true,
-            true,
-            true,
-            1.0f,
-            0x00,
-            glm::vec4(0.0f, 0.0f, 0.0f, 0.0f)
-        };
-    }
-    
-};
-
-
 class RHI_window {
+
 protected:
     int m_width{};
     int m_height{};
@@ -71,13 +49,10 @@ public:
     using Ptr = std::shared_ptr<RHI_window>;
 
     virtual ~RHI_window() = default;
-    virtual void poll_events() = 0;
-    virtual void swap_buffers() = 0;
     virtual bool is_active() = 0;
 
     virtual void set_viewport(int x, int y, int width, int height) = 0;
     virtual void deactivate() = 0;
-    
 
     void on_frame_begin() {
         poll_events();
@@ -101,6 +76,10 @@ public:
 
     Event<RHI_window*>& frame_end_event() { return m_frame_end_event; }
     Event<RHI_window*>& frame_begin_event() { return m_frame_begin_event; }
+
+private:
+    virtual void poll_events() = 0;
+    virtual void swap_buffers() = 0;
 
 };
 

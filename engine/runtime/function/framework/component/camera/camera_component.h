@@ -37,7 +37,22 @@ public:
     float near_bound() const { return m_near_bound; }
     float far_bound() const { return m_far_bound; }
 
-    void set_node(const std::shared_ptr<Node_component>& node) { m_node = node; }
+    void set_node(const std::shared_ptr<Node_component>& node) { 
+        if (!node) {
+            return;
+        }
+
+        if (m_node.lock() == node) {
+            return; 
+        }
+
+        if (!m_node.expired()) {
+            remove_dependency(m_node.lock());
+        }
+
+        add_dependency(node);
+        m_node = node; 
+    }
 
     const std::shared_ptr<Node_component> node() const {
         if (m_node.expired()) {
@@ -93,6 +108,7 @@ public:
     }
 
     void tick(float delta_time) override {
+        std::cout << "Perspective camera component tick" << std::endl;
         //TODO: implement
     }
 
@@ -149,6 +165,7 @@ public:
 
     void tick(float delta_time) override {
         //TODO: implement
+        std::cout << "Orthographic camera component tick" << std::endl;
     }
 
 };

@@ -29,7 +29,23 @@ public:
     glm::vec3 color() const { return m_color; }
     float intensity() const { return m_intensity; }
 
-    void set_node(const std::shared_ptr<Node_component>& node) { m_node = node; }
+    void set_node(const std::shared_ptr<Node_component>& node) { 
+        if (!node) {
+            return;
+        }
+
+        if (m_node.lock() == node) {
+            return; 
+        }
+
+        if (!m_node.expired()) {
+            remove_dependency(m_node.lock());
+        }
+
+        add_dependency(node);
+        m_node = node; 
+    }
+
     std::shared_ptr<Node_component> node() const {
         if (m_node.expired()) {
             return nullptr;
@@ -52,6 +68,7 @@ public:
 
     void tick(float delta_time) override {
         // TODO: implement
+        std::cout << "Directional light component tick" << std::endl;
     }
 
 };
@@ -83,6 +100,7 @@ public:
 
     void tick(float delta_time) override {
         // TODO: implement
+        std::cout << "Spot light component tick" << std::endl;
     }
 
 };
@@ -113,6 +131,7 @@ public:
 
     void tick(float delta_time) override {
         // TODO: implement
+        std::cout << "Point light component tick" << std::endl;
     }
 
 };
