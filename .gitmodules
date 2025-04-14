@@ -25,3 +25,6 @@
 [submodule "ext/nlohmann_json"]
 	path = ext/nlohmann_json
 	url = https://github.com/nlohmann/json.git
+[submodule "ext/mirrow"]
+	path = ext/mirrow
+	url = https://github.com/VisualGMQ/mirrow.git
