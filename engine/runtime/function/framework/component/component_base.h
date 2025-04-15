@@ -59,8 +59,6 @@ public:
     const std::vector<std::weak_ptr<Component_base>>& dependencies() const { return m_dependencies; }
     const std::vector<std::weak_ptr<Component_base>>& reverse_dependencies() const { return m_reverse_dependencies; }
 
-
-
 };
 
 };

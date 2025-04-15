@@ -333,13 +333,10 @@ enum class Buffer_data_type {
 };
 
 enum class Material_type {
-    WHITE,
-    DEPTH,
-    EDGE,
-    TRANSLUCENT_PHONG,
-    OPAUE_PHONG,
     PHONG,
-    SKYBOX
+    PBR,
+    SKYBOX_CUBEMAP,
+    SKYBOX_SPHERICAL
 };
 
 enum class Draw_mode {

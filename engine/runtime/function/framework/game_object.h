@@ -3,6 +3,7 @@
 #include "engine/runtime/function/framework/component/camera/camera_component.h"
 #include "engine/runtime/function/framework/component/camera/camera_control_component.h"
 #include "engine/runtime/function/framework/component/light/light_component.h"
+#include "engine/runtime/function/framework/component/mesh_renderer/mesh_renderer_component.h"
 #include "engine/runtime/function/framework/component/node/node_component.h"
 #include "engine/runtime/global/base.h"
 #include "engine/runtime/function/framework/component/component_base.h"
@@ -71,6 +72,14 @@ public:
         return component;
     }
 
+    template<typename T> requires Derived_from<Mesh_renderer_component, T>
+    std::shared_ptr<T> add_component(const std::shared_ptr<T>& component) {
+        auto node = get_component<Node_component>();
+        component->set_node(node);
+        m_components.push_back(component);
+        return component;
+    }
+
     template<typename T>
     void remove_component(const std::shared_ptr<T>& component) {
         for (auto it = m_components.begin(); it!= m_components.end(); ++it) {
@@ -86,7 +95,6 @@ public:
             return a->priority() < b->priority();
         });
     }
-
 
 	void tick(float delta_time) {
 		sort_components();

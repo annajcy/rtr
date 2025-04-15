@@ -1,5 +1,7 @@
 #pragma once
 
+#include "serialization.h"
+
 namespace rtr {
 
 class GUID_generator {

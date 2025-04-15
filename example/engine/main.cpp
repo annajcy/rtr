@@ -1,3 +1,4 @@
+#include "engine/runtime/core/material.h"
 #include "engine/runtime/function/context/global_context.h"
 #include "engine/runtime/function/framework/component/camera/camera_component.h"
 #include "engine/runtime/function/framework/component/camera/camera_control_component.h"
@@ -11,6 +12,7 @@
 #include "engine/runtime/function/framework/component/component_base.h"
 #include "engine/runtime/core/geometry.h"
 #include "engine/runtime/runtime.h"
+#include <memory>
 
 using namespace rtr;
 
@@ -36,13 +38,22 @@ int main() {
     auto directional_light = Directional_light_component::create();
     game_object->add_component<Directional_light_component>(directional_light);
 
+    auto geometry = Geometry::create_box();
+    auto phong_material = Phong_material::create();
+    phong_material->is_receive_shadows = true;
+
+    auto mesh_renderer = Mesh_renderer_component::create(
+        geometry,
+        phong_material
+    );
+
+    game_object->add_component<Mesh_renderer_component>(mesh_renderer);
+
     auto scene = Scene::create("scene1");
     scene->add_game_object(game_object);
     auto world = World::create("world1");
     world->add_scene(scene);
     world->set_current_scene(scene);
-
-    auto geometry = Geometry::create_box();
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
     engine_runtime_descriptor.width = 800;
@@ -53,6 +64,6 @@ int main() {
     auto runtime = Engine_runtime::create(engine_runtime_descriptor);
 
     runtime->run();
-    
+
     return 0;
 }

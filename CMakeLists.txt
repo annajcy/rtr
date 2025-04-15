@@ -14,7 +14,6 @@ if (NOT OpenGL_FOUND)
     message(FATAL_ERROR "OpenGL not found!")
 endif()
 
-
 set(JSON_BuildTests OFF CACHE INTERNAL "Disable JSON tests")
 add_subdirectory(ext/nlohmann_json)
 include_directories(ext/nlohmann_json/include)

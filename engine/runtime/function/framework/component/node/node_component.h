@@ -2,7 +2,6 @@
 
 #include "engine/runtime/global/base.h"
 #include "../component_base.h"
-#include <memory>
 
 namespace rtr {
 
@@ -117,6 +116,10 @@ public:
     }
 
     void set_dirty() { 
+        if (m_is_dirty) {
+            return;	
+        }
+
         m_is_dirty = true; 
         for (auto& child : m_children) {
             child->set_dirty();	
@@ -189,5 +192,6 @@ public:
 	
 };
 
-
 };
+
+

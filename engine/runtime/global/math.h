@@ -114,7 +114,6 @@ struct Sphere {
 
 };
 
-
 struct Triangle {
     glm::vec3 v0{};
     glm::vec3 v1{};
@@ -149,6 +148,5 @@ struct Plane {
      
 };
 
-
-
 };
+

@@ -23,6 +23,7 @@ class Attribute_base : public GUID {
 protected:
     Buffer_usage m_usage{};
     Buffer_data_type m_type{}; 
+
 public:
     Attribute_base(
         Buffer_data_type type, 
@@ -241,7 +242,7 @@ public:
             {"position", 0},
             {"uv", 1},
             {"normal", 2},
-            {"tangent", 3}  
+            {"tangent", 3}
         };
 
         std::unordered_map<unsigned int, Vertex_attribute_base::Ptr> vertex_attributes = {
