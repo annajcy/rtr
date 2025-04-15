@@ -1,6 +1,5 @@
 #pragma once
 
-#include "engine/runtime/global/base.h"
 #include "game_object.h"
 #include <memory>
 #include <vector>
@@ -83,9 +82,9 @@ public:
         m_game_objects.clear();
     }
 
-    void tick(float delta_time) {
+    void tick(const Engine_tick_context& tick_context) {
         for (auto& game_object : m_game_objects) {
-            game_object->tick(delta_time);
+            game_object->tick(tick_context);
         }
     }
 

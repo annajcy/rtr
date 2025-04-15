@@ -1,9 +1,7 @@
 #pragma once
 
-#include "engine/runtime/global/base.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include <memory>
-#include <vector>
 
 namespace rtr {
     

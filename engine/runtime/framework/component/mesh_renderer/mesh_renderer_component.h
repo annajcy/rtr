@@ -1,9 +1,11 @@
 #pragma once
+
+#include "engine/runtime/function/render/render_struct.h"
+#include "engine/runtime/function/render/render_system.h"
 #include "engine/runtime/core/geometry.h"
 #include "engine/runtime/core/material.h"
-#include "engine/runtime/function/framework/component/component_base.h"
-#include "engine/runtime/function/framework/component/node/node_component.h"
-#include "engine/runtime/global/base.h"
+#include "engine/runtime/framework/component/component_base.h"
+#include "engine/runtime/framework/component/node/node_component.h"
 #include <memory>
 
 namespace rtr {
@@ -46,9 +48,11 @@ public:
     const std::shared_ptr<Geometry> geometry() const { return m_geometry; }
     const std::shared_ptr<Material> material() const { return m_material; }
 
-    void tick(float delta_time) override {
+    void tick(const Engine_tick_context& tick_context) override {
         std::cout << "tick mesh renderer" << std::endl;
         auto shader_program = m_material->get_shader_program();
+        auto& data = tick_context.global_context->render_system->logic_swap_data();
+        data.render_objects.push_back({});
     }
     
 };

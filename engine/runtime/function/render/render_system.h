@@ -1,25 +1,22 @@
 #pragma once
 
+#include "engine/runtime/function/render/render_struct.h"
+
 #include "engine/runtime/function/render/render_pipeline.h"
-#include "engine/runtime/global/base.h"
+
+#include "engine/runtime/global_context.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_frame_buffer.h"
-#include "engine/runtime/platform/rhi/rhi_geometry.h"
 #include "engine/runtime/platform/rhi/rhi_renderer.h"
-#include "engine/runtime/platform/rhi/rhi_shader_program.h"
-#include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "engine/runtime/platform/rhi/rhi_window.h"
-#include "glm/fwd.hpp"
+
 #include <memory>
-#include <string>
-#include <unordered_map>
 #include <utility>
-#include <vector>
-#include "render_struct.h"
 
 namespace rtr {
 
 class Render_system {
+    
 protected:
     std::shared_ptr<RHI_device> m_device{};
     std::shared_ptr<RHI_window> m_window{};
@@ -58,7 +55,7 @@ public:
 
     }
 
-    void tick(float delta_time) {
+    void tick(const Engine_tick_context& tick_context) {
         swap();
         prepare_ubo();
         m_renderer->clear(m_screen_buffer);

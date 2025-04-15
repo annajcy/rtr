@@ -1,13 +1,11 @@
 #pragma once
 
-#include "engine/runtime/function/framework/component/camera/camera_component.h"
-#include "engine/runtime/function/framework/component/camera/camera_control_component.h"
-#include "engine/runtime/function/framework/component/light/light_component.h"
-#include "engine/runtime/function/framework/component/mesh_renderer/mesh_renderer_component.h"
-#include "engine/runtime/function/framework/component/node/node_component.h"
-#include "engine/runtime/global/base.h"
-#include "engine/runtime/function/framework/component/component_base.h"
-#include "engine/runtime/global/enum.h"
+#include "engine/runtime/framework/component/camera/camera_component.h"
+#include "engine/runtime/framework/component/camera/camera_control_component.h"
+#include "engine/runtime/framework/component/light/light_component.h"
+#include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
+#include "engine/runtime/framework/component/node/node_component.h"
+#include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/global/guid.h"
 #include <vector>
 
@@ -96,11 +94,11 @@ public:
         });
     }
 
-	void tick(float delta_time) {
+	void tick(const Engine_tick_context& tick_context) {
 		sort_components();
 		for (auto& component : m_components) {
 			if (component->is_enabled()) {
-				component->tick(delta_time);
+				component->tick(tick_context);
 			}
 		}
 	}

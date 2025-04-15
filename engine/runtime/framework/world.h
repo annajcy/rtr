@@ -1,9 +1,7 @@
 #pragma once
-#include "engine/runtime/function/framework/scene.h"
-#include "engine/runtime/global/base.h"
+#include "engine/runtime/framework/scene.h"
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace rtr {
@@ -118,8 +116,8 @@ public:
         m_current_scene_index = (m_current_scene_index - 1) % m_scenes.size();
     }
 
-    void tick(float delta_time) {
-        current_scene()->tick(delta_time);
+    void tick(const Engine_tick_context& tick_context) {
+        current_scene()->tick(tick_context);
     }
     
 };

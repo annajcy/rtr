@@ -1,12 +1,15 @@
 #pragma once
-#include "engine/runtime/function/context/global_context.h"
-#include "engine/runtime/function/framework/world.h"
+#include "global_context.h"
+
+#include "engine/runtime/function/input/input_system.h"
 #include "engine/runtime/function/render/render_system.h"
 #include "engine/runtime/function/window/window_system.h"
-#include "engine/runtime/global/base.h"
 #include "engine/runtime/global/timer.h"
 #include "engine/runtime/platform/hal/file_service.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
+#include "engine/runtime/framework/world.h"
+
+#include <memory>
 
 namespace rtr {
 
@@ -17,33 +20,36 @@ struct Engine_runtime_descriptor {
     std::shared_ptr<World> world{};
 };
 
+
 class Engine_runtime {
 private:
     float m_delta_time {0.0f};
+    std::shared_ptr<Global_context> m_global_context{};
 
 public:
     Engine_runtime(const Engine_runtime_descriptor& descriptor) {
 
-        Global_context::rhi_device = RHI_device_OpenGL::create();
+        auto device = RHI_device_OpenGL::create();
 
-        Global_context::window_system = Window_system::create(
-            Global_context::rhi_device->create_window(
-                descriptor.width, 
-                descriptor.height, 
-                descriptor.title
-        ));
-
-        Global_context::input_system = Input_system::create(
-            Global_context::window_system->window()
+        auto window = device->create_window(
+            descriptor.width, 
+            descriptor.height, 
+            descriptor.title
         );
 
-        Global_context::render_system  = Render_system::create(
-            Global_context::rhi_device,
-            Global_context::window_system->window()
-        );
+        auto window_system = Window_system::create(window);
+        auto input_system = Input_system::create(window);
+        auto render_system = Render_system::create(device, window);
+        auto file_service = File_service::create("assets");
 
-        Global_context::file_service = File_service::create("assets");
-        Global_context::world = descriptor.world;
+        m_global_context = std::make_shared<Global_context>();
+        
+        m_global_context->rhi_device = device;
+        m_global_context->window_system = window_system;
+        m_global_context->input_system = input_system;
+        m_global_context->file_service = file_service;
+        m_global_context->render_system = render_system;
+        m_global_context->world = descriptor.world;
     }
 
     static std::shared_ptr<Engine_runtime> create(const Engine_runtime_descriptor& descriptor) {
@@ -57,11 +63,16 @@ public:
         auto timer = std::make_shared<Timer>();
         timer->start();
 
-        while (Global_context::window_system->window()->is_active()) {
-            Global_context::window_system->window()->on_frame_begin();
-            tick(get_delta_time(timer));
-            Global_context::rhi_device->check_error();
-            Global_context::window_system->window()->on_frame_end();
+        while (m_global_context->window_system->window()->is_active()) {
+            m_global_context->window_system->window()->on_frame_begin();
+
+            tick(Engine_tick_context{
+                m_global_context, 
+                get_delta_time(timer)
+            });
+
+            m_global_context->rhi_device->check_error();
+            m_global_context->window_system->window()->on_frame_end();
             std::cout << "fps: " << get_fps() << '\n';
         }
     }
@@ -75,9 +86,9 @@ public:
         return m_delta_time;
     }
 
-    void tick(float delta_time) {
-        Global_context::world->tick(delta_time);
-        Global_context::render_system->tick(delta_time);
+    void tick(const Engine_tick_context& tick_context) {
+        m_global_context->world->tick(tick_context);
+        m_global_context->render_system->tick(tick_context);
     }
     
 };

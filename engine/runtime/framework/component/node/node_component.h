@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/runtime/global/base.h"
 #include "../component_base.h"
+#include <iostream>
 
 namespace rtr {
 
@@ -22,7 +22,7 @@ public:
     Node_component() : Component_base(Component_type::NODE) {}
   	~Node_component() = default;
 
-	void tick(float delta_time) override {
+	void tick(const Engine_tick_context& tick_context) override {
         std::cout << "Node component tick" << std::endl;
     }
 

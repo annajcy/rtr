@@ -1,14 +1,9 @@
 #pragma once
 
-#include "engine/runtime/function/context/global_context.h"
-#include "engine/runtime/global/base.h"
 #include "engine/runtime/global/enum.h"
-#include "engine/runtime/platform/rhi/rhi_device.h"
-#include "engine/runtime/platform/rhi/rhi_shader_code.h"
-#include "engine/runtime/platform/rhi/rhi_shader_program.h"
 #include <bitset>
 #include <cstddef>
-#include <format>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <unordered_map>

@@ -1,11 +1,8 @@
 #pragma once
 
-#include "engine/runtime/function/context/global_context.h"
-#include "engine/runtime/global/base.h"
 #include "engine/runtime/function/input/input_system.h"
-#include "../component_base.h"
-
 #include "camera_component.h"
+
 #include <iostream>
 #include <memory>
 
@@ -84,11 +81,11 @@ public:
         return std::make_shared<Trackball_camera_control_component>();
     }
 
-    void tick(float delta_time) override {
+    void tick(const Engine_tick_context& tick_context) override {
 
         std::cout << "trackball camera control tick" << std::endl;
 
-        auto input_system_state = Global_context::input_system->state();
+        auto input_system_state = tick_context.global_context->input_system->state();
 
         if (input_system_state.mouse_button(Mouse_button::LEFT) != Key_action::RELEASE) {
             yaw(-input_system_state.mouse_dx * m_rotate_speed);
@@ -130,9 +127,9 @@ public:
         return std::make_shared<Game_camera_control_component>();
     }
 
-    void tick(float delta_time) override {
+    void tick(const Engine_tick_context& tick_context) override {
         std::cout << "game camera control tick" << std::endl;
-        auto input_system_state = Global_context::input_system->state();
+        auto input_system_state = tick_context.global_context->input_system->state();
 
         if (input_system_state.mouse_button(Mouse_button::LEFT)!= Key_action::RELEASE) {
             yaw(input_system_state.mouse_dx * m_rotate_speed);

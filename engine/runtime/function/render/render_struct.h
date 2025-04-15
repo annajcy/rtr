@@ -1,7 +1,11 @@
 #pragma once
 
-#include "engine/runtime/global/base.h"
-#include "engine/runtime/platform/rhi/rhi_device.h"
+
+#include "engine/runtime/platform/rhi/rhi_geometry.h"
+#include "engine/runtime/platform/rhi/rhi_renderer.h"
+#include "engine/runtime/platform/rhi/rhi_shader_program.h"
+#include "engine/runtime/platform/rhi/rhi_texture.h"
+#include <unordered_map>
 
 namespace rtr {
 

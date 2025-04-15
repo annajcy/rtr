@@ -1,15 +1,11 @@
 #include "engine/runtime/core/material.h"
-#include "engine/runtime/function/context/global_context.h"
-#include "engine/runtime/function/framework/component/camera/camera_component.h"
-#include "engine/runtime/function/framework/component/camera/camera_control_component.h"
-#include "engine/runtime/function/framework/component/node/node_component.h"
-#include "engine/runtime/global/base.h"
-#include "engine/runtime/platform/rhi/rhi_device.h"
-#include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
-#include "engine/runtime/function/framework/game_object.h"
-#include "engine/runtime/function/framework/scene.h"
-#include "engine/runtime/function/framework/world.h"
-#include "engine/runtime/function/framework/component/component_base.h"
+#include "engine/runtime/global_context.h"
+#include "engine/runtime/framework/component/camera/camera_component.h"
+#include "engine/runtime/framework/component/camera/camera_control_component.h"
+#include "engine/runtime/framework/component/node/node_component.h"
+#include "engine/runtime/framework/game_object.h"
+#include "engine/runtime/framework/scene.h"
+#include "engine/runtime/framework/world.h"
 #include "engine/runtime/core/geometry.h"
 #include "engine/runtime/resource/loader/image_loader.h"
 #include "engine/runtime/runtime.h"
@@ -37,6 +33,7 @@ int main() {
     game_object->add_component<Trackball_camera_control_component>(camera_control);
 
     auto directional_light = Directional_light_component::create();
+    directional_light->intensity() = 2;
     game_object->add_component<Directional_light_component>(directional_light);
 
     auto geometry = Geometry::create_box();
@@ -64,7 +61,6 @@ int main() {
     engine_runtime_descriptor.world = world;
 
     auto runtime = Engine_runtime::create(engine_runtime_descriptor);
-
     runtime->run();
 
     return 0;
