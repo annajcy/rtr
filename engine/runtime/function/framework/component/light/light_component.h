@@ -1,8 +1,12 @@
 #pragma once
 #include "../node/node_component.h"
+#include "engine/runtime/function/context/global_context.h"
+#include "engine/runtime/function/render/render_struct.h"
+#include "engine/runtime/function/render/render_system.h"
 #include "engine/runtime/global/base.h"
 #include "engine/runtime/function/framework/component/component_base.h"
 #include "engine/runtime/global/enum.h"
+#include "glm/fwd.hpp"
 #include <memory>
 
 namespace rtr {
@@ -67,8 +71,15 @@ public:
     }
 
     void tick(float delta_time) override {
-        // TODO: implement
-        std::cout << "Directional light component tick" << std::endl;
+        std::cout << "tick directional light" << std::endl;
+        auto& data = Global_context::render_system->logic_swap_data();
+
+        Render_directional_light directional_light{};
+        directional_light.color = color();
+        directional_light.direction = direction();
+        directional_light.intensity = intensity();
+
+        data.directional_light = directional_light;
     }
 
 };
@@ -99,8 +110,16 @@ public:
     float outer_angle_cos() const { return glm::cos(glm::radians(m_outer_angle)); }
 
     void tick(float delta_time) override {
-        // TODO: implement
-        std::cout << "Spot light component tick" << std::endl;
+        std::cout << "spot point light" << std::endl;
+        auto& data = Global_context::render_system->logic_swap_data();
+        Render_spot_light spot_light{};
+        spot_light.color = color();
+        spot_light.direction = direction();
+        spot_light.intensity = intensity();
+        spot_light.position = position();
+        spot_light.inner_angle_cos = inner_angle_cos();
+        spot_light.outer_angle_cos = outer_angle_cos();
+        data.spot_lights.push_back(spot_light);
     }
 
 };
@@ -130,8 +149,14 @@ public:
     float kc() const { return m_kc; }
 
     void tick(float delta_time) override {
-        // TODO: implement
-        std::cout << "Point light component tick" << std::endl;
+        std::cout << "tick point light" << std::endl;
+        auto& data = Global_context::render_system->logic_swap_data();
+        Render_point_light point_light{};
+        point_light.attenuation = glm::vec3(kc(), k1(), k2());
+        point_light.color = color();
+        point_light.intensity = intensity();
+        point_light.position = position();
+        data.point_lights.push_back(point_light);
     }
 
 };

@@ -17,7 +17,7 @@ struct Clear_state {
 
     float depth_clear_value{1.0f};
     unsigned int stencil_clear_value{0x00};
-    glm::vec4 color_clear_value{0.0f, 0.0f, 0.0f, 1.0f};
+    glm::vec4 color_clear_value{1.0f, 0.75f, 0.8f, 1.0f};
 
     static Clear_state enabled() {
         return {
@@ -26,7 +26,7 @@ struct Clear_state {
             true,
             1.0f,
             0x00,
-            glm::vec4(0.0f, 0.0f, 0.0f, 0.0f)
+            glm::vec4(1.0f, 0.75f, 0.8f, 1.0f)
         };
     }
     
@@ -46,20 +46,24 @@ public:
         
     using Ptr = std::shared_ptr<RHI_renderer>;
     virtual ~RHI_renderer() {}
+
     virtual void draw(
         const RHI_shader_program::Ptr& shader_program,
         const RHI_geometry::Ptr& geometry,
         const RHI_frame_buffer::Ptr& frame_buffer
     ) = 0;
+
     virtual void draw_instanced(
         const RHI_shader_program::Ptr& shader_program,
         const RHI_geometry::Ptr& geometry,
         const RHI_frame_buffer::Ptr& frame_buffer,
         unsigned int instance_count
     ) = 0;
+
     virtual void clear(
         const RHI_frame_buffer::Ptr& frame_buffer
     ) = 0;
+
     virtual void apply_clear_state() = 0;
 
     void change_clear_state(std::function<void(Clear_state&)> changer) {

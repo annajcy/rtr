@@ -11,32 +11,37 @@
 namespace rtr {
 
 struct Engine_runtime_descriptor {
-    int width = 1280;
-    int height = 720;
-    std::string title = "RTR Engine";
+    int width{800};
+    int height{600};
+    std::string title{"RTR Engine"};
     std::shared_ptr<World> world{};
 };
 
 class Engine_runtime {
 private:
-    float m_delta_time = 0.0f;
+    float m_delta_time {0.0f};
 
 public:
     Engine_runtime(const Engine_runtime_descriptor& descriptor) {
 
         Global_context::rhi_device = RHI_device_OpenGL::create();
 
-        Global_context::window_system = Window_system::create(Global_context::rhi_device->create_window(
-            descriptor.width, 
-            descriptor.height, 
-            descriptor.title
+        Global_context::window_system = Window_system::create(
+            Global_context::rhi_device->create_window(
+                descriptor.width, 
+                descriptor.height, 
+                descriptor.title
         ));
 
         Global_context::input_system = Input_system::create(
             Global_context::window_system->window()
         );
 
-        Global_context::render_system  = Render_system::create(Global_context::rhi_device);
+        Global_context::render_system  = Render_system::create(
+            Global_context::rhi_device,
+            Global_context::window_system->window()
+        );
+
         Global_context::file_service = File_service::create("assets");
         Global_context::world = descriptor.world;
     }
@@ -57,6 +62,7 @@ public:
             tick(get_delta_time(timer));
             Global_context::rhi_device->check_error();
             Global_context::window_system->window()->on_frame_end();
+            std::cout << "fps: " << get_fps() << '\n';
         }
     }
 

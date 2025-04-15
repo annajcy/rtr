@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/runtime/function/render/render_struct.h"
 #include <memory>
 
 namespace rtr {
@@ -9,7 +10,6 @@ class Render_system;
 class Window_system;
 class File_service;
 class World;
-
 
 struct Global_context {
     inline static std::shared_ptr<RHI_device> rhi_device{};

@@ -47,8 +47,8 @@ public:
     const std::shared_ptr<Material> material() const { return m_material; }
 
     void tick(float delta_time) override {
+        std::cout << "tick mesh renderer" << std::endl;
         auto shader_program = m_material->get_shader_program();
-        std::cout << "Mesh renderer component tick: " << shader_program->name << std::endl;
     }
     
 };

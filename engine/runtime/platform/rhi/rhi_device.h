@@ -104,6 +104,7 @@ public:
     virtual RHI_frame_buffer::Ptr create_screen_frame_buffer(
         const RHI_window::Ptr& window
     ) = 0;
+    
     virtual RHI_compute_task::Ptr create_compute_task(
         const RHI_shader_program::Ptr& shader_program
     ) = 0;
@@ -113,6 +114,7 @@ public:
     virtual RHI_renderer::Ptr create_renderer(const Clear_state& clear_state) = 0;
 
     virtual RHI_pipeline_state::Ptr create_pipeline_state() = 0;
+
     virtual RHI_pipeline_state::Ptr create_pipeline_state(const Pipeline_state& pipeline_state) = 0;
 
     virtual RHI_imgui::Ptr create_imgui(const RHI_window::Ptr& window) = 0;

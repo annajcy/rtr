@@ -6,6 +6,7 @@
 #include "../component_base.h"
 
 #include "camera_component.h"
+#include <iostream>
 #include <memory>
 
 namespace rtr {
@@ -85,6 +86,8 @@ public:
 
     void tick(float delta_time) override {
 
+        std::cout << "trackball camera control tick" << std::endl;
+
         auto input_system_state = Global_context::input_system->state();
 
         if (input_system_state.mouse_button(Mouse_button::LEFT) != Key_action::RELEASE) {
@@ -128,6 +131,7 @@ public:
     }
 
     void tick(float delta_time) override {
+        std::cout << "game camera control tick" << std::endl;
         auto input_system_state = Global_context::input_system->state();
 
         if (input_system_state.mouse_button(Mouse_button::LEFT)!= Key_action::RELEASE) {

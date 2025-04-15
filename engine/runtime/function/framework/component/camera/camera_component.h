@@ -1,5 +1,8 @@
 #pragma once
 
+#include "engine/runtime/function/context/global_context.h"
+#include "engine/runtime/function/render/render_struct.h"
+#include "engine/runtime/function/render/render_system.h"
 #include "engine/runtime/global/base.h"
 #include "../component_base.h"
 #include "../node/node_component.h"
@@ -70,6 +73,18 @@ public:
 
     virtual glm::mat4 projection_matrix() const = 0;
     virtual void adjust_zoom(float delta_zoom) = 0;
+
+    void tick(float delta_time) override {
+        std::cout << "tick camera" << std::endl;
+        auto& data = Global_context::render_system->logic_swap_data();
+
+        Render_camera camera{};
+        camera.camera_position = node()->world_position();
+        camera.projection_matrix = projection_matrix();
+        camera.view_matrix = view_matrix();
+
+        data.camera = camera;
+    }
     
 };
 
@@ -105,11 +120,6 @@ public:
 
     void adjust_zoom(float delta_zoom) override {
         node()->translate(node()->front(), delta_zoom);
-    }
-
-    void tick(float delta_time) override {
-        std::cout << "Perspective camera component tick" << std::endl;
-        //TODO: implement
     }
 
 };
@@ -161,11 +171,6 @@ public:
         m_right_bound += delta_zoom;
         m_top_bound += delta_zoom;
         m_bottom_bound -= delta_zoom;
-    }
-
-    void tick(float delta_time) override {
-        //TODO: implement
-        std::cout << "Orthographic camera component tick" << std::endl;
     }
 
 };

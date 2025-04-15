@@ -61,9 +61,6 @@ int main() {
     world->set_current_scene(scene);
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
-    engine_runtime_descriptor.width = 800;
-    engine_runtime_descriptor.height = 600;
-    engine_runtime_descriptor.title = "RTR";
     engine_runtime_descriptor.world = world;
 
     auto runtime = Engine_runtime::create(engine_runtime_descriptor);

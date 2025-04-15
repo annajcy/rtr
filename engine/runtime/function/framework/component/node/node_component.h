@@ -23,7 +23,6 @@ public:
   	~Node_component() = default;
 
 	void tick(float delta_time) override {
-        // TODO: implement
         std::cout << "Node component tick" << std::endl;
     }
 
