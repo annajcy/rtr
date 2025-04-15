@@ -28,7 +28,10 @@ public:
         const std::shared_ptr<Geometry>& geometry,
         const std::shared_ptr<Material>& material
     ) {
-        return std::make_shared<Mesh_renderer_component>(geometry, material);
+        return std::make_shared<Mesh_renderer_component>(
+            geometry, 
+            material
+        );
     }
 
     std::shared_ptr<Node_component> node() const {
@@ -45,7 +48,7 @@ public:
 
     void tick(float delta_time) override {
         auto shader_program = m_material->get_shader_program();
-        std::cout << "Mesh renderer component tick" << shader_program->name << std::endl;
+        std::cout << "Mesh renderer component tick: " << shader_program->name << std::endl;
     }
     
 };

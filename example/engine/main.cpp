@@ -11,6 +11,7 @@
 #include "engine/runtime/function/framework/world.h"
 #include "engine/runtime/function/framework/component/component_base.h"
 #include "engine/runtime/core/geometry.h"
+#include "engine/runtime/resource/loader/image_loader.h"
 #include "engine/runtime/runtime.h"
 #include <memory>
 
@@ -39,12 +40,16 @@ int main() {
     game_object->add_component<Directional_light_component>(directional_light);
 
     auto geometry = Geometry::create_box();
-    auto phong_material = Phong_material::create();
-    phong_material->is_receive_shadows = true;
+    auto pbr_material = PBR_material::create();
+
+    pbr_material->is_receive_shadows = true;
+    pbr_material->albedo_map = Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/bk.jpg");
+    pbr_material->roughness_map = Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/box.jpg");
+    pbr_material->metallic_map = Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/box.jpg");
 
     auto mesh_renderer = Mesh_renderer_component::create(
         geometry,
-        phong_material
+        pbr_material
     );
 
     game_object->add_component<Mesh_renderer_component>(mesh_renderer);
