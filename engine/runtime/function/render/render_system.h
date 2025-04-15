@@ -1,7 +1,6 @@
 #pragma once
 
 #include "engine/runtime/function/render/render_struct.h"
-
 #include "engine/runtime/function/render/render_pipeline.h"
 
 #include "engine/runtime/global_context.h"
@@ -16,7 +15,7 @@
 namespace rtr {
 
 class Render_system {
-    
+
 protected:
     std::shared_ptr<RHI_device> m_device{};
     std::shared_ptr<RHI_window> m_window{};

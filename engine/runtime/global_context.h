@@ -19,12 +19,11 @@ struct Global_context {
 
     std::shared_ptr<File_service> file_service{};
     std::shared_ptr<World> world{};
-
 };
 
 struct Engine_tick_context {
     std::shared_ptr<Global_context> global_context{};
     float delta_time{};
-    
 };
+
 }
