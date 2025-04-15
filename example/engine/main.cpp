@@ -40,16 +40,16 @@ int main() {
     game_object->add_component<Directional_light_component>(directional_light);
 
     auto geometry = Geometry::create_box();
-    auto pbr_material = PBR_material::create();
+    auto material = PBR_material::create();
 
-    pbr_material->is_receive_shadows = true;
-    pbr_material->albedo_map = Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/bk.jpg");
-    pbr_material->roughness_map = Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/box.jpg");
-    pbr_material->metallic_map = Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/box.jpg");
+    material->is_receive_shadows = true;
+    material->albedo_map = Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/bk.jpg");
+    material->roughness_map = Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/box.jpg");
+    material->metallic_map = Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/box.jpg");
 
     auto mesh_renderer = Mesh_renderer_component::create(
         geometry,
-        pbr_material
+        material
     );
 
     game_object->add_component<Mesh_renderer_component>(mesh_renderer);

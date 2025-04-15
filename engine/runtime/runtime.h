@@ -4,9 +4,9 @@
 #include "engine/runtime/function/render/render_system.h"
 #include "engine/runtime/function/window/window_system.h"
 #include "engine/runtime/global/base.h"
+#include "engine/runtime/global/timer.h"
 #include "engine/runtime/platform/hal/file_service.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
-#include <memory>
 
 namespace rtr {
 
@@ -18,6 +18,8 @@ struct Engine_runtime_descriptor {
 };
 
 class Engine_runtime {
+private:
+    float m_delta_time = 0.0f;
 
 public:
     Engine_runtime(const Engine_runtime_descriptor& descriptor) {
@@ -46,33 +48,30 @@ public:
     virtual ~Engine_runtime() = default;
 
     void run() {
+
+        auto timer = std::make_shared<Timer>();
+        timer->start();
+
         while (Global_context::window_system->window()->is_active()) {
             Global_context::window_system->window()->on_frame_begin();
-            tick(get_delta_time());
+            tick(get_delta_time(timer));
             Global_context::rhi_device->check_error();
             Global_context::window_system->window()->on_frame_end();
         }
     }
 
-    float get_fps() const {
-        return 0.0f;
-    }
+    float get_fps() const { return 1000.0f / m_delta_time; }
 
-    float get_delta_time() const {
-        return 0.0f;
-    }
-
-    void render_tick(float delta_time) {
-        Global_context::render_system->tick(delta_time);
-    }
-
-    void logic_tick(float delta_time) {
-        Global_context::world->tick(delta_time);
+    float get_delta_time(const std::shared_ptr<Timer>& timer) {
+        timer->pause();
+        m_delta_time = timer->elapsed_ms();
+        timer->start();
+        return m_delta_time;
     }
 
     void tick(float delta_time) {
-        logic_tick(delta_time);
-        render_tick(delta_time);
+        Global_context::world->tick(delta_time);
+        Global_context::render_system->tick(delta_time);
     }
     
 };
