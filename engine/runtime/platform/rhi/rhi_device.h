@@ -43,14 +43,14 @@ public:
         unsigned int unit_data_count,
         unsigned int data_size,
         const void* data
-    )= 0;
+    ) = 0;
 
     virtual RHI_buffer::Ptr create_element_buffer(
         Buffer_usage usage,
         unsigned int data_count,
         unsigned int data_size,
         const void* data
-    )= 0;
+    ) = 0;
 
     virtual RHI_buffer::Ptr create_memory_buffer(
         Buffer_type type,

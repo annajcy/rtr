@@ -1,16 +1,13 @@
 #pragma once
 
-#include "engine/runtime/function/render/render_struct.h"
 #include "engine/runtime/function/render/render_pipeline.h"
 
-#include "engine/runtime/global_context.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_frame_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_renderer.h"
 #include "engine/runtime/platform/rhi/rhi_window.h"
 
 #include <memory>
-#include <utility>
 
 namespace rtr {
 
@@ -21,9 +18,7 @@ protected:
     std::shared_ptr<RHI_window> m_window{};
     std::shared_ptr<RHI_frame_buffer> m_screen_buffer{};
     std::shared_ptr<RHI_renderer> m_renderer{};
-    Swap_data m_swap_data[2];
-    int m_render_swap_data_index = 0;
-    int m_logic_swap_data_index = 1;
+    
 
     std::shared_ptr<Render_pipeline> m_render_pipeline{};
 
@@ -34,7 +29,9 @@ public:
     ) : m_device(device), 
         m_window(window), 
         m_screen_buffer(device->create_screen_frame_buffer(window)),
-        m_renderer(device->create_renderer(Clear_state::enabled())) {}
+        m_renderer(device->create_renderer(Clear_state::enabled())) {
+            m_render_pipeline = std::make_shared<Test_render_pipeline>();
+        }
 
     static std::shared_ptr<Render_system> create(
         const RHI_device::Ptr& device,
@@ -43,21 +40,19 @@ public:
         return std::make_shared<Render_system>(device, window);
     }
 
-    Swap_data& render_swap_data() { return m_swap_data[m_render_swap_data_index]; }
-    Swap_data& logic_swap_data() { return m_swap_data[m_logic_swap_data_index]; }
+    std::shared_ptr<RHI_device>& device() { return m_device; }
+    std::shared_ptr<RHI_window>& window() { return m_window; }
+    std::shared_ptr<RHI_frame_buffer>& screen_buffer() { return m_screen_buffer; }
+    std::shared_ptr<RHI_renderer>& renderer() { return m_renderer; }
 
-    void swap() {
-        std::swap(m_render_swap_data_index, m_logic_swap_data_index);
+    void set_render_pipeline(const std::shared_ptr<Render_pipeline>& pipeline) {
+        m_render_pipeline = pipeline;
+        m_render_pipeline->init(m_device);
     }
 
-    void prepare_ubo() {
-
-    }
-
-    void tick(const Engine_tick_context& tick_context) {
-        swap();
-        prepare_ubo();
-        m_renderer->clear(m_screen_buffer);
+    void tick(const Render_tick_context& tick_context) {
+        m_render_pipeline->prepare_ubo(tick_context);
+        m_render_pipeline->execute(tick_context);
     }
 
 };

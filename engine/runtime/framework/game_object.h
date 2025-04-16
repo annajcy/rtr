@@ -94,7 +94,7 @@ public:
         });
     }
 
-	void tick(const Engine_tick_context& tick_context) {
+	void tick(const Logic_tick_context& tick_context) {
 		sort_components();
 		for (auto& component : m_components) {
 			if (component->is_enabled()) {

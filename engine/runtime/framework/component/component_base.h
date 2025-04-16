@@ -1,7 +1,7 @@
 #pragma once
 
+#include "engine/runtime/context/engine_tick_context.h"
 #include "engine/runtime/global/guid.h"
-#include "engine/runtime/global_context.h"
 #include <memory>
 #include <vector>
 
@@ -29,7 +29,7 @@ protected:
 public:
     Component_base(Component_type type) : m_component_type(type) {}
     virtual ~Component_base() = default;
-    virtual void tick(const Engine_tick_context& tick_context) = 0;
+    virtual void tick(const Logic_tick_context& tick_context) = 0;
     Component_type component_type() const { return m_component_type; }
     bool is_enabled() const { return m_is_enabled; }
     void set_enabled(bool enabled) { m_is_enabled = enabled; }

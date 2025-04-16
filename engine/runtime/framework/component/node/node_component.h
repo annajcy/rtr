@@ -22,9 +22,7 @@ public:
     Node_component() : Component_base(Component_type::NODE) {}
   	~Node_component() = default;
 
-	void tick(const Engine_tick_context& tick_context) override {
-        std::cout << "Node component tick" << std::endl;
-    }
+	void tick(const Logic_tick_context& tick_context) override {}
 
 	static std::shared_ptr<Node_component> create() {
 		return std::make_shared<Node_component>();

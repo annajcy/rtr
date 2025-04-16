@@ -81,11 +81,13 @@ public:
         return std::make_shared<Trackball_camera_control_component>();
     }
 
-    void tick(const Engine_tick_context& tick_context) override {
+    void tick(const Logic_tick_context& tick_context) override {
 
-        std::cout << "trackball camera control tick" << std::endl;
+        auto &input_system_state = tick_context.input_state;
 
-        auto input_system_state = tick_context.global_context->input_system->state();
+        // std::cout << "mouse dx: " << input_system_state.mouse_dx << std::endl;
+        // std::cout << "mouse dy: " << input_system_state.mouse_dy << std::endl;
+        // std::cout << "mouse scroll dy: " << input_system_state.mouse_scroll_dy << std::endl;
 
         if (input_system_state.mouse_button(Mouse_button::LEFT) != Key_action::RELEASE) {
             yaw(-input_system_state.mouse_dx * m_rotate_speed);
@@ -127,9 +129,9 @@ public:
         return std::make_shared<Game_camera_control_component>();
     }
 
-    void tick(const Engine_tick_context& tick_context) override {
+    void tick(const Logic_tick_context& tick_context) override {
         std::cout << "game camera control tick" << std::endl;
-        auto input_system_state = tick_context.global_context->input_system->state();
+        auto &input_system_state = tick_context.input_state;
 
         if (input_system_state.mouse_button(Mouse_button::LEFT)!= Key_action::RELEASE) {
             yaw(input_system_state.mouse_dx * m_rotate_speed);

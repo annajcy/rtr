@@ -82,7 +82,7 @@ public:
         m_game_objects.clear();
     }
 
-    void tick(const Engine_tick_context& tick_context) {
+    void tick(const Logic_tick_context& tick_context) {
         for (auto& game_object : m_game_objects) {
             game_object->tick(tick_context);
         }

@@ -1,7 +1,5 @@
 #pragma once
 #include "../node/node_component.h"
-#include "engine/runtime/function/render/render_struct.h"
-#include "engine/runtime/function/render/render_system.h"
 
 #include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/global/enum.h"
@@ -70,11 +68,11 @@ public:
         return std::make_shared<Directional_light_component>();
     }
 
-    void tick(const Engine_tick_context& tick_context) override {
-        std::cout << "tick directional light" << std::endl;
-        auto& data = tick_context.global_context->render_system->logic_swap_data();
+    void tick(const Logic_tick_context& tick_context) override {
+        
+        auto& data = tick_context.logic_swap_data;
 
-        Render_directional_light directional_light{};
+        Swap_directional_light directional_light{};
         directional_light.color = color();
         directional_light.direction = direction();
         directional_light.intensity = intensity();
@@ -109,10 +107,10 @@ public:
     float inner_angle_cos() const { return glm::cos(glm::radians(m_inner_angle)); }
     float outer_angle_cos() const { return glm::cos(glm::radians(m_outer_angle)); }
 
-    void tick(const Engine_tick_context& tick_context) override {
-        std::cout << "spot point light" << std::endl;
-        auto& data = tick_context.global_context->render_system->logic_swap_data();
-        Render_spot_light spot_light{};
+    void tick(const Logic_tick_context& tick_context) override {
+       
+        auto& data = tick_context.logic_swap_data;
+        Swap_spot_light spot_light{};
         spot_light.color = color();
         spot_light.direction = direction();
         spot_light.intensity = intensity();
@@ -148,10 +146,10 @@ public:
     float k2() const { return m_k2; }
     float kc() const { return m_kc; }
 
-    void tick(const Engine_tick_context& tick_context) override {
-        std::cout << "tick point light" << std::endl;
-        auto& data = tick_context.global_context->render_system->logic_swap_data();
-        Render_point_light point_light{};
+    void tick(const Logic_tick_context& tick_context) override {
+       
+        auto& data = tick_context.logic_swap_data;
+        Swap_point_light point_light{};
         point_light.attenuation = glm::vec3(kc(), k1(), k2());
         point_light.color = color();
         point_light.intensity = intensity();

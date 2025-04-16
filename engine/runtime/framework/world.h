@@ -116,7 +116,7 @@ public:
         m_current_scene_index = (m_current_scene_index - 1) % m_scenes.size();
     }
 
-    void tick(const Engine_tick_context& tick_context) {
+    void tick(const Logic_tick_context& tick_context) {
         current_scene()->tick(tick_context);
     }
     

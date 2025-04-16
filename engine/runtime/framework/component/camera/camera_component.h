@@ -1,8 +1,5 @@
 #pragma once
 
-#include "engine/runtime/function/render/render_struct.h"
-#include "engine/runtime/function/render/render_system.h"
-
 #include "../component_base.h"
 #include "../node/node_component.h"
 #include <memory>
@@ -73,11 +70,11 @@ public:
     virtual glm::mat4 projection_matrix() const = 0;
     virtual void adjust_zoom(float delta_zoom) = 0;
 
-    void tick(const Engine_tick_context& tick_context) override {
-        std::cout << "tick camera" << std::endl;
-        auto& data = tick_context.global_context->render_system->logic_swap_data();
+    void tick(const Logic_tick_context& tick_context) override {
+    
+        auto& data = tick_context.logic_swap_data;
 
-        Render_camera camera{};
+        Swap_camera camera{};
         camera.camera_position = node()->world_position();
         camera.projection_matrix = projection_matrix();
         camera.view_matrix = view_matrix();

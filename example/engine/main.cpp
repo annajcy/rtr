@@ -1,5 +1,4 @@
 #include "engine/runtime/core/material.h"
-#include "engine/runtime/global_context.h"
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
 #include "engine/runtime/framework/component/node/node_component.h"
