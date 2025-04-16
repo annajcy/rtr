@@ -5,6 +5,7 @@
 #include "engine/runtime/runtime.h"
 #include "glm/gtc/type_ptr.hpp"
 #include <memory>
+#include <string>
 
 namespace rtr {
 
@@ -57,13 +58,14 @@ private:
 
     void render_main_menu() {
         m_imgui->begin_render("main menu");
+        m_imgui->text("fps", std::to_string(m_engine_runtime->get_fps()));
         m_imgui->end_render();
     }
 
     void render_inspector() {
         m_imgui->begin_render("inspector");
         m_imgui->color_edit("bg color", glm::value_ptr(m_engine_runtime->render_system()->renderer()->clear_state().color_clear_value));
-        if (m_imgui->button("change", 50.0, 50.0)) {
+        if (m_imgui->button("change", 50.0, 30.0)) {
             m_engine_runtime->render_system()->renderer()->apply_clear_state();
         }
         m_imgui->frame_rate();

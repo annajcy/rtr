@@ -14,4 +14,6 @@ public:
     virtual void excute(const Logic_tick_context& tick_context) = 0;
 };
 
+
+
 }

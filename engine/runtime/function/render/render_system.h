@@ -15,11 +15,8 @@ class Render_system {
 
 protected:
     std::shared_ptr<RHI_device> m_device{};
-    std::shared_ptr<RHI_window> m_window{};
     std::shared_ptr<RHI_frame_buffer> m_screen_buffer{};
     std::shared_ptr<RHI_renderer> m_renderer{};
-    
-
     std::shared_ptr<Render_pipeline> m_render_pipeline{};
 
 public:
@@ -27,7 +24,6 @@ public:
         const std::shared_ptr<RHI_device>& device, 
         const std::shared_ptr<RHI_window>& window
     ) : m_device(device), 
-        m_window(window), 
         m_screen_buffer(device->create_screen_frame_buffer(window)),
         m_renderer(device->create_renderer(Clear_state::enabled())) {
             m_render_pipeline = std::make_shared<Test_render_pipeline>();
@@ -41,7 +37,6 @@ public:
     }
 
     std::shared_ptr<RHI_device>& device() { return m_device; }
-    std::shared_ptr<RHI_window>& window() { return m_window; }
     std::shared_ptr<RHI_frame_buffer>& screen_buffer() { return m_screen_buffer; }
     std::shared_ptr<RHI_renderer>& renderer() { return m_renderer; }
 

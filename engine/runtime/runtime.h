@@ -121,7 +121,6 @@ public:
 
         m_rhi_device->check_error();
         m_window_system->window()->on_frame_end();
-        std::cout << "fps: " << get_fps() << '\n';
     }
     
 };
