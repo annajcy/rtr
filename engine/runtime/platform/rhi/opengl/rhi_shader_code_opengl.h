@@ -14,7 +14,7 @@ protected:
 
 public:
     RHI_shader_code_OpenGL(Shader_type type, const std::string & code) : RHI_shader_code(type, code) {
-        m_code_id = glCreateShader(gl_shader_type(m_type));
+        m_code_id = glCreateShader(gl_shader_type(m_shader_type));
         const char* code_ptr = code.c_str();
         glShaderSource(m_code_id, 1, &code_ptr, nullptr);
 
@@ -43,10 +43,10 @@ public:
         glGetShaderiv(m_code_id, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(m_code_id, LOG_STR_LEN, nullptr, info_log);
-            std::cerr << "Shader compiled failed" << " --" << gl_shader_type_str(m_type) << " " <<  m_code_id << std::endl;
+            std::cerr << "Shader compiled failed" << " --" << gl_shader_type_str(m_shader_type) << " " <<  m_code_id << std::endl;
             std::cerr << info_log << std::endl;
         } else {
-            std::cout << "Shader compiled successfully" << " --" << gl_shader_type_str(m_type) << " " << m_code_id << std::endl;
+            std::cout << "Shader compiled successfully" << " --" << gl_shader_type_str(m_shader_type) << " " << m_code_id << std::endl;
         }
         return success;
     }

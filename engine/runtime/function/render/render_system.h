@@ -24,7 +24,7 @@ protected:
 
 public:
     Render_system(
-        const RHI_device::Ptr& device, 
+        const std::shared_ptr<RHI_device>& device, 
         const std::shared_ptr<RHI_window>& window
     ) : m_device(device), 
         m_window(window), 
@@ -34,7 +34,7 @@ public:
         }
 
     static std::shared_ptr<Render_system> create(
-        const RHI_device::Ptr& device,
+        const std::shared_ptr<RHI_device>& device, 
         const std::shared_ptr<RHI_window>& window
     ) {
         return std::make_shared<Render_system>(device, window);

@@ -12,9 +12,8 @@ namespace rtr {
 
 class RHI_compute_task_OpenGL : public RHI_compute_task {
 public:
-    using Ptr = std::shared_ptr<RHI_compute_task_OpenGL>;
     RHI_compute_task_OpenGL(
-        const RHI_shader_program::Ptr& shader_program
+        const std::shared_ptr<RHI_shader_program>& shader_program
     ) : RHI_compute_task(shader_program) {}
     ~RHI_compute_task_OpenGL() override {}
     void dispatch(unsigned int x, unsigned int y, unsigned int z) override {

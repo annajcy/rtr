@@ -4,7 +4,6 @@
 #include "../rhi_buffer.h"
 #include "../rhi_cast.h"
 #include "../rhi_geometry.h"
-#include "../rhi_resource.h"
 
 #include "rhi_buffer_opengl.h"
 #include "rhi_cast_opengl.h"

@@ -2,7 +2,6 @@
 
 #include "engine/runtime/global/base.h" 
 #include "rhi_cast.h"
-#include "rhi_resource.h"
 
 namespace rtr {
 
@@ -12,7 +11,7 @@ struct RHI_buffer_access_flags {
     bool is_buffer_discard;
 };
 
-class RHI_buffer : public RHI_resource {
+class RHI_buffer {
 protected:
     Buffer_type m_type{};
     Buffer_usage m_usage{};
@@ -26,8 +25,7 @@ public:
         Buffer_usage usage,
         unsigned int data_size,
         const void* data
-    ) : RHI_resource(RHI_resource_type::BUFFER),
-        m_type(type), 
+    ) : m_type(type), 
         m_usage(usage), 
         m_data_size(data_size) { }
 
@@ -91,7 +89,6 @@ public:
 
 class RHI_memory_buffer_binder {
 public:
-    using Ptr = std::shared_ptr<RHI_memory_buffer_binder>;
     RHI_memory_buffer_binder() {}
     virtual ~RHI_memory_buffer_binder() {}
     virtual void bind_memory_buffer(const RHI_buffer::Ptr& buffer, unsigned int binding_point) = 0;

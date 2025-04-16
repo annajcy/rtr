@@ -239,8 +239,7 @@ public:
 
     RHI_pipeline_state() : Pipeline_state() { }
     RHI_pipeline_state(const Pipeline_state& pipeline) : Pipeline_state(pipeline) {}
-
-    using Ptr = std::shared_ptr<RHI_pipeline_state>;
+    
     virtual ~RHI_pipeline_state() = default;
     
     void apply() {

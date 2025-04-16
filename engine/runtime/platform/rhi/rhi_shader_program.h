@@ -1,9 +1,10 @@
 #pragma once
 
 #include "engine/runtime/global/base.h" 
-#include "rhi_resource.h"
+
 #include "rhi_cast.h"
 #include "rhi_shader_code.h"
+#include <memory>
 
 namespace rtr {
 
@@ -13,8 +14,7 @@ enum class Uniform_entry_type {
 };
 
 class RHI_uniform_entry_base {
-public:
-    using Ptr = std::shared_ptr<RHI_uniform_entry_base>;
+
 protected:
     Uniform_entry_type m_entry_type{};
     Uniform_data_type m_data_type{};
@@ -77,7 +77,6 @@ protected:
     std::unique_ptr<T[]> m_data{};
     unsigned int m_count{};
 public:
-    using Ptr = std::shared_ptr<RHI_uniform_entry_array<T>>;
     ~RHI_uniform_entry_array() override {}
     RHI_uniform_entry_array(const T* data, unsigned int count) : RHI_uniform_entry_base(get_uniform_data_type<T>(), Uniform_entry_type::ARRAY), m_count(count) {
         m_data = std::make_unique<T[]>(count);
@@ -115,42 +114,31 @@ public:
         }
     }
 
-    static Ptr create(const T* data, unsigned int count) {
+    static std::shared_ptr<RHI_uniform_entry_array<T>> create(const T* data, unsigned int count) {
         return std::make_shared<RHI_uniform_entry_array<T>>(data, count);
     }
 };
 
-class RHI_shader_program : public RHI_resource { 
+class RHI_shader_program { 
 protected:
-    std::unordered_map<Shader_type, RHI_shader_code::Ptr> m_codes{};
-    std::unordered_map<std::string, RHI_uniform_entry_base::Ptr> m_uniforms{};
+    std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>> m_codes{};
+    std::unordered_map<std::string, std::shared_ptr<RHI_uniform_entry_base>> m_uniforms{};
 
 public:
     
     RHI_shader_program(
-        const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& shaders, 
-        const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms
-    ) : RHI_resource(RHI_resource_type::SHADER_PROGRAM),
-        m_codes(shaders), 
-        m_uniforms(uniforms) {
-            for (auto &[type, code] : m_codes) {
-                this->add_dependency(code);
-            }
-        }
+        const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>> & shaders, 
+        const std::unordered_map<std::string, std::shared_ptr<RHI_uniform_entry_base>>& uniforms
+    ) : m_codes(shaders), 
+        m_uniforms(uniforms) {}
 
-    using Ptr = std::shared_ptr<RHI_shader_program>;
+    const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& codes() const { return m_codes; }
+    const std::unordered_map<std::string, std::shared_ptr<RHI_uniform_entry_base>>& uniforms() const { return m_uniforms; }
 
-    const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& codes() const { return m_codes; }
-    const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms() const { return m_uniforms; }
+    virtual ~RHI_shader_program() {}
 
-    virtual ~RHI_shader_program() {
-        for (auto &[type, code] : m_codes) {
-            this->remove_dependency(code);
-        }
-    }
-
-    virtual void attach_code(const RHI_shader_code::Ptr& code) = 0;
-    virtual void detach_code(const RHI_shader_code::Ptr& code) = 0;
+    virtual void attach_code(const std::shared_ptr<RHI_shader_code>& code) = 0;
+    virtual void detach_code(const std::shared_ptr<RHI_shader_code>& code) = 0;
     virtual bool link() = 0;
     virtual void set_uniform(const std::string& name, Uniform_data_type type, const void* data) = 0;
     virtual void set_uniform_array(const std::string& name, Uniform_data_type type, const void* data, unsigned int count) = 0;
@@ -168,7 +156,6 @@ public:
         }
     }
 
-    
     template<typename T>
     void modify_uniform_array(const std::string& name, const T* data, unsigned int count, unsigned int offset = 0) {
         if (auto it = m_uniforms.find(name); it!= m_uniforms.end()) {

@@ -1,5 +1,6 @@
 #include "engine/runtime/global/base.h" 
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
+#include <memory>
 
 using namespace std;
 using namespace rtr;
@@ -74,7 +75,7 @@ int main() {
 
     // 创建计算专用着色器程序
     auto compute_program = device->create_shader_program(
-        std::unordered_map<Shader_type, RHI_shader_code::Ptr>{
+        std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>{
             {Shader_type::COMPUTE, compute_shader}
         },
         {

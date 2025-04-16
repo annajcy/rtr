@@ -3,11 +3,11 @@
 #include "engine/runtime/global/base.h" 
 
 #include "../rhi_renderer.h"
-#include "../rhi_resource.h"
 #include "../rhi_window.h"
 #include "rhi_frame_buffer_opengl.h"
 #include "rhi_geometry_opengl.h"
 #include "rhi_shader_program_opengl.h"
+#include <memory>
 
 namespace rtr {
 class RHI_renderer_OpenGL : public RHI_renderer {
@@ -20,9 +20,9 @@ public:
 
     ~RHI_renderer_OpenGL() override {}
     void draw(
-        const RHI_shader_program::Ptr& shader_program,
-        const RHI_geometry::Ptr& geometry,
-        const RHI_frame_buffer::Ptr& frame_buffer
+        const std::shared_ptr<RHI_shader_program>& shader_program,
+        const std::shared_ptr<RHI_geometry>& geometry,
+        const std::shared_ptr<RHI_frame_buffer>& frame_buffer
     ) override {
 
         if (m_frame_buffer != frame_buffer) {
@@ -58,9 +58,9 @@ public:
     }
 
     void draw_instanced(
-        const RHI_shader_program::Ptr& shader_program,
-        const RHI_geometry::Ptr& geometry,
-        const RHI_frame_buffer::Ptr& frame_buffer,
+        const std::shared_ptr<RHI_shader_program>& shader_program,
+        const std::shared_ptr<RHI_geometry>& geometry,
+        const std::shared_ptr<RHI_frame_buffer>& frame_buffer,
         unsigned int instance_count
     ) override {
 
@@ -110,7 +110,7 @@ public:
     }
 
     void clear(
-        const RHI_frame_buffer::Ptr& frame_buffer
+        const std::shared_ptr<RHI_frame_buffer>& frame_buffer
     ) override {
 
         if (m_frame_buffer != frame_buffer) {

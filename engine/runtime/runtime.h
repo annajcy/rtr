@@ -38,7 +38,6 @@ private:
 
 public:
 
-    
     Engine_runtime(const Engine_runtime_descriptor& descriptor) {
 
         auto device = RHI_device_OpenGL::create();

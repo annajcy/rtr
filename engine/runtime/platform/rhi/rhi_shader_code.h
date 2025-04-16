@@ -1,27 +1,23 @@
 #pragma once
 
 #include "engine/runtime/global/base.h" 
-#include "rhi_resource.h"
 
 namespace rtr {
 
-class RHI_shader_code : public RHI_resource
+class RHI_shader_code 
 {
 protected:
-    Shader_type m_type{};
+    Shader_type m_shader_type{};
 
 public:
     RHI_shader_code(
         Shader_type type, 
         const std::string& code
-    ) : RHI_resource(RHI_resource_type::SHADER_CODE),
-        m_type(type) {} 
-
-    using Ptr = std::shared_ptr<RHI_shader_code>;
+    ) :  m_shader_type(type) {} 
 
     virtual ~RHI_shader_code() {}
 
-    const Shader_type& type() const { return m_type; }
+    const Shader_type& shader_type() const { return m_shader_type; }
     virtual bool compile() = 0;
 
 };

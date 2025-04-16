@@ -2,14 +2,15 @@
 
 #include "engine/runtime/global/base.h" 
 #include "rhi_window.h"
+#include <memory>
 
 namespace rtr {
 class RHI_imgui {
 protected:
-    RHI_window::Ptr m_window{};
+    std::shared_ptr<RHI_window> m_window{};
 
 public:
-    using Ptr = std::shared_ptr<RHI_imgui>;
+
     RHI_imgui(const RHI_window::Ptr& window) : m_window(window) {}
     ~RHI_imgui() = default;
 

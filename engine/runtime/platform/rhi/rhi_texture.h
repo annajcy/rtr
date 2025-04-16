@@ -1,7 +1,6 @@
 #pragma once
 
 #include "engine/runtime/global/base.h" 
-#include "rhi_resource.h"
 
 namespace rtr {
 
@@ -13,7 +12,7 @@ struct Image_data {
     Texture_external_format external_format{ Texture_external_format::RGB_ALPHA };
 };
 
-class RHI_texture : public RHI_resource  {
+class RHI_texture {
 protected:
     int m_width{};
     int m_height{};
@@ -30,14 +29,11 @@ public:
         Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters
-    ) : RHI_resource(RHI_resource_type::TEXTURE),
-        m_type(type), 
+    ) : m_type(type), 
         m_internal_format(internal_format),
         m_width(width),
         m_height(height),
         m_mipmap_levels(mipmap_levels) {}
-
-    using Ptr = std::shared_ptr<RHI_texture>;
 
     virtual ~RHI_texture() {}
     

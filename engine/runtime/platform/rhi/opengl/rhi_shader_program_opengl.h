@@ -2,12 +2,12 @@
 
 #include "engine/runtime/global/base.h" 
 
-#include "../rhi_resource.h"
 #include "../rhi_shader_code.h"
 #include "../rhi_shader_program.h"
 
 #include "rhi_error_opengl.h"
 #include "rhi_shader_code_opengl.h"
+#include <memory>
 
 #define LOG_STR_LEN 1024
 
@@ -19,11 +19,10 @@ protected:
     unsigned int m_program_id{};
 
 public:
-    using Ptr = std::shared_ptr<RHI_shader_program_OpenGL>;
 
     RHI_shader_program_OpenGL(
-        const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& shader_codes,
-        const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms
+        const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shader_codes,
+        const std::unordered_map<std::string, std::shared_ptr<RHI_uniform_entry_base>>& uniforms
     ) : RHI_shader_program(shader_codes, uniforms) {
 
         m_program_id = glCreateProgram();
@@ -68,12 +67,12 @@ public:
         return m_program_id;
     }
 
-    void attach_code(const RHI_shader_code::Ptr& code) override {
+    void attach_code(const std::shared_ptr<RHI_shader_code>& code) override {
         auto gl_code = std::dynamic_pointer_cast<RHI_shader_code_OpenGL>(code);
         glAttachShader(m_program_id, gl_code->code_id());
     }
 
-    void detach_code(const RHI_shader_code::Ptr& code) override {
+    void detach_code(const std::shared_ptr<RHI_shader_code>& code) override {
         auto gl_code = std::dynamic_pointer_cast<RHI_shader_code_OpenGL>(code);
         glDetachShader(m_program_id, gl_code->code_id());
     }
@@ -223,13 +222,6 @@ public:
                 entry->is_need_update() = false;
             }
         }
-    }
-
-    static Ptr create(
-        const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& shaders,
-        const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms
-    ) {
-        return std::make_shared<RHI_shader_program_OpenGL>(shaders, uniforms);
     }
     
 };

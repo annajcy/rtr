@@ -1,5 +1,6 @@
 #include "engine/runtime/global/base.h" 
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
+#include <memory>
 
 using namespace std;
 using namespace rtr;
@@ -73,7 +74,7 @@ int main() {
     auto fragment_shader_code = device->create_shader_code(Shader_type::FRAGMENT, fragment_shader_source);
 
     auto shader_program = device->create_shader_program(
-        std::unordered_map<Shader_type, RHI_shader_code::Ptr>{
+        std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>{
             {Shader_type::VERTEX, vertex_shader_code},
             {Shader_type::FRAGMENT, fragment_shader_code}
         },

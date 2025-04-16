@@ -20,6 +20,7 @@
 #include "rhi_pipeline_state_opengl.h"
 #include "rhi_texture_opengl.h"
 #include "rhi_frame_buffer_opengl.h"
+#include <memory>
 
 namespace rtr {
 
@@ -34,11 +35,11 @@ public:
         gl_check_error();
     }
 
-    static RHI_device::Ptr create() {
+    static std::shared_ptr<RHI_device> create() {
         return std::make_shared<RHI_device_OpenGL>();
     }
 
-    RHI_window::Ptr create_window(
+    std::shared_ptr<RHI_window> create_window(
         int width,
         int height,
         const std::string& title
@@ -50,7 +51,7 @@ public:
         );
     }
 
-    RHI_buffer::Ptr create_vertex_buffer(
+    std::shared_ptr<RHI_buffer> create_vertex_buffer(
         Buffer_usage usage,
         Buffer_data_type attribute_type,
         Buffer_iterate_type iterate_type,
@@ -68,7 +69,7 @@ public:
         );
     }
 
-    RHI_buffer::Ptr create_element_buffer(
+    std::shared_ptr<RHI_buffer> create_element_buffer(
         Buffer_usage usage,
         unsigned int data_count,
         unsigned int data_size,
@@ -82,7 +83,7 @@ public:
         );
     }
 
-    RHI_buffer::Ptr create_memory_buffer(
+    std::shared_ptr<RHI_buffer> create_memory_buffer(
         Buffer_type type,
         Buffer_usage usage,
         unsigned int data_size,
@@ -96,9 +97,9 @@ public:
         );
     }
 
-    RHI_geometry::Ptr create_geometry(
-        const std::unordered_map<unsigned int, RHI_buffer::Ptr> &vertex_buffers,
-        const RHI_buffer::Ptr& element_buffer
+    std::shared_ptr<RHI_geometry> create_geometry(
+        const std::unordered_map<unsigned int, std::shared_ptr<RHI_buffer>> &vertex_buffers,
+        const std::shared_ptr<RHI_buffer>& element_buffer
     ) override {
         return std::make_shared<RHI_geometry_OpenGL>(
             vertex_buffers,
@@ -106,7 +107,7 @@ public:
         );
     }
 
-    RHI_shader_code::Ptr create_shader_code(
+    std::shared_ptr<RHI_shader_code> create_shader_code(
         Shader_type type, 
         const std::string& code
     ) override {
@@ -116,9 +117,9 @@ public:
         );
     }
 
-    RHI_shader_program::Ptr create_shader_program(
-        const std::unordered_map<Shader_type, RHI_shader_code::Ptr>& shader_codes,
-        const std::unordered_map<std::string, RHI_uniform_entry_base::Ptr>& uniforms
+    std::shared_ptr<RHI_shader_program> create_shader_program(
+        const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shader_codes,
+        const std::unordered_map<std::string, std::shared_ptr<RHI_uniform_entry_base>>& uniforms
     ) override {
         return std::make_shared<RHI_shader_program_OpenGL>(
             shader_codes,
@@ -126,7 +127,7 @@ public:
         );
     }
 
-    RHI_texture::Ptr create_texture_2D(
+    std::shared_ptr<RHI_texture> create_texture_2D(
         int width,
         int height,
         unsigned int mipmap_levels,
@@ -146,7 +147,7 @@ public:
         );
     }
 
-    RHI_texture::Ptr create_texture_cubemap(
+    std::shared_ptr<RHI_texture> create_texture_cubemap(
         int width,
         int height,
         unsigned int mipmap_levels,
@@ -166,17 +167,17 @@ public:
         );
     }
 
-    RHI_frame_buffer::Ptr create_screen_frame_buffer(
-        const RHI_window::Ptr& window
+    std::shared_ptr<RHI_frame_buffer> create_screen_frame_buffer(
+        const std::shared_ptr<RHI_window>& window
     ) override {
         return std::make_shared<RHI_frame_buffer_OpenGL>(window);
     }
 
-    RHI_frame_buffer::Ptr create_frame_buffer(
+    std::shared_ptr<RHI_frame_buffer> create_frame_buffer(
         int width, 
         int height,
-        const std::vector<RHI_texture::Ptr>& color_attachments,
-        const RHI_texture::Ptr& depth_attachment
+        const std::vector<std::shared_ptr<RHI_texture>>& color_attachments,
+        const std::shared_ptr<RHI_texture>& depth_attachment
     ) override {
         return std::make_shared<RHI_frame_buffer_OpenGL>(
             width,
@@ -186,29 +187,29 @@ public:
         );
     }
 
-    RHI_compute_task::Ptr create_compute_task(
-        const RHI_shader_program::Ptr& shader_program
+    std::shared_ptr<RHI_compute_task> create_compute_task(
+        const std::shared_ptr<RHI_shader_program>& shader_program
     ) override {
         return std::make_shared<RHI_compute_task_OpenGL>(shader_program);
     }
 
-    RHI_memory_buffer_binder::Ptr create_memory_buffer_binder() override {
+    std::shared_ptr<RHI_memory_buffer_binder> create_memory_buffer_binder() override {
         return std::make_shared<RHI_memory_binder_OpenGL>();
     }
 
-    RHI_renderer::Ptr create_renderer(const Clear_state& clear_state) override {
+    std::shared_ptr<RHI_renderer> create_renderer(const Clear_state& clear_state) override {
         return std::make_shared<RHI_renderer_OpenGL>(clear_state);
     }
 
-    RHI_pipeline_state::Ptr create_pipeline_state(const Pipeline_state& pipeline_state) override {
+    std::shared_ptr<RHI_pipeline_state> create_pipeline_state(const Pipeline_state& pipeline_state) override {
         return std::make_shared<RHI_pipeline_state_OpenGL>(pipeline_state);
     }
 
-    RHI_pipeline_state::Ptr create_pipeline_state() override {
+    std::shared_ptr<RHI_pipeline_state> create_pipeline_state() override {
         return std::make_shared<RHI_pipeline_state_OpenGL>();
     }
 
-    RHI_imgui::Ptr create_imgui(const RHI_window::Ptr& window) override {
+    std::shared_ptr<RHI_imgui> create_imgui(const std::shared_ptr<RHI_window>& window) override {
         return RHI_imgui_OpenGL::create(window);
     }
 

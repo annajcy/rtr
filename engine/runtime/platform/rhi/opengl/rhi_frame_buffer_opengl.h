@@ -4,6 +4,7 @@
 #include "rhi_texture_opengl.h"
 #include "../rhi_frame_buffer.h"
 #include "../rhi_texture.h"
+#include <memory>
 
 namespace rtr {
 
@@ -12,15 +13,13 @@ protected:
     unsigned int m_frame_buffer_id{};
 
 public:
-    RHI_frame_buffer_OpenGL(
-        const RHI_window::Ptr& window
-    ) : RHI_frame_buffer(window) {}
+    RHI_frame_buffer_OpenGL(const std::shared_ptr<RHI_window>& window) : RHI_frame_buffer(window) {}
 
     RHI_frame_buffer_OpenGL(
         int width, 
         int height,
-        const std::vector<RHI_texture::Ptr>& color_attachments,
-        const RHI_texture::Ptr& depth_attachment
+        const std::vector<std::shared_ptr<RHI_texture>>& color_attachments,
+        const std::shared_ptr<RHI_texture>& depth_attachment
     ) : RHI_frame_buffer(width, height, color_attachments, depth_attachment) 
     {
         int max_color_attachments{};
