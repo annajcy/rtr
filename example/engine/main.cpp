@@ -1,3 +1,4 @@
+#include "engine/editor/editor.h"
 #include "engine/runtime/core/material.h"
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
@@ -60,7 +61,9 @@ int main() {
     engine_runtime_descriptor.world = world;
 
     auto runtime = Engine_runtime::create(engine_runtime_descriptor);
-    runtime->run();
+    
+    auto editor = editor::Editor::create(runtime);
+    editor->run();
 
     return 0;
 }

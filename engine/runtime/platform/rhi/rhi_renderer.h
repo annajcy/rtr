@@ -64,6 +64,8 @@ public:
 
     virtual void apply_clear_state() = 0;
 
+    Clear_state& clear_state() { return m_clear_state; }
+
     void change_clear_state(std::function<void(Clear_state&)> changer) {
         changer(m_clear_state);
         apply_clear_state();

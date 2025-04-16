@@ -8,6 +8,7 @@
 #include "engine/runtime/platform/hal/file_service.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 #include "engine/runtime/framework/world.h"
+#include "engine/runtime/platform/rhi/rhi_device.h"
 
 #include <memory>
 
@@ -61,6 +62,13 @@ public:
         m_world = descriptor.world;
     }
 
+    std::shared_ptr<RHI_device>& rhi_device() { return m_rhi_device; }
+    std::shared_ptr<Input_system>& input_system() { return m_input_system; }
+    std::shared_ptr<Render_system>& render_system() { return m_render_system; }
+    std::shared_ptr<Window_system>& window_system() { return m_window_system; }
+    std::shared_ptr<File_service>& file_service() { return m_file_service; }
+    std::shared_ptr<World>& world() { return m_world; }
+
     static std::shared_ptr<Engine_runtime> create(const Engine_runtime_descriptor& descriptor) {
         return std::make_shared<Engine_runtime>(descriptor);
     }
@@ -73,14 +81,7 @@ public:
         timer->start();
 
         while (m_window_system->window()->is_active()) {
-            m_window_system->window()->on_frame_begin();
-            get_delta_time(timer);
-
-            tick(m_delta_time);
-
-            m_rhi_device->check_error();
-            m_window_system->window()->on_frame_end();
-            std::cout << "fps: " << get_fps() << '\n';
+            tick(get_delta_time(timer));
         }
     }
 
@@ -101,6 +102,7 @@ public:
     }
 
     void tick(float delta_time) {
+        m_window_system->window()->on_frame_begin();
 
         m_world->tick(Logic_tick_context(
             m_input_system->state(),
@@ -116,6 +118,10 @@ public:
             render_swap_data(),
             delta_time
         ));
+
+        m_rhi_device->check_error();
+        m_window_system->window()->on_frame_end();
+        std::cout << "fps: " << get_fps() << '\n';
     }
     
 };
