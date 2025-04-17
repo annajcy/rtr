@@ -104,20 +104,21 @@ public:
     void tick(float delta_time) {
         m_window_system->window()->on_frame_begin();
 
-        m_world->tick(Logic_tick_context(
+        m_world->tick(Logic_tick_context{
             m_input_system->state(),
             logic_swap_data(),
             delta_time
-        ));
+        });
 
         swap();
+        logic_swap_data().clear();
 
-        m_render_system->tick(Render_tick_context(
+        m_render_system->tick(Render_tick_context{
             m_render_system->renderer(),
             m_render_system->screen_buffer(),
             render_swap_data(),
             delta_time
-        ));
+        });
 
         m_rhi_device->check_error();
         m_window_system->window()->on_frame_end();

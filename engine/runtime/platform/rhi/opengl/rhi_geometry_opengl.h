@@ -17,8 +17,8 @@ protected:
 
 public:
     RHI_geometry_OpenGL(
-        const std::unordered_map<unsigned int, RHI_buffer::Ptr> &vertex_buffers, 
-        const RHI_buffer::Ptr& element_buffer
+        const std::unordered_map<unsigned int, std::shared_ptr<RHI_buffer>> &vertex_buffers, 
+        const std::shared_ptr<RHI_buffer>& element_buffer
     ) : RHI_geometry(vertex_buffers, element_buffer) { 
         glGenVertexArrays(1, &m_vao);
         bind_buffers();
@@ -38,7 +38,7 @@ public:
         glBindVertexArray(0);
     }
 
-    virtual void bind_vertex_buffer(unsigned int location, const RHI_buffer::Ptr &vbo) override {
+    virtual void bind_vertex_buffer(unsigned int location, const std::shared_ptr<RHI_buffer> &vbo) override {
         
         auto gl_vbo = std::dynamic_pointer_cast<RHI_vertex_buffer_OpenGL>(vbo);
         

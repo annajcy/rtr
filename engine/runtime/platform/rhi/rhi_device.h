@@ -29,13 +29,13 @@ public:
 
     virtual void check_error() = 0;
 
-    virtual RHI_window::Ptr create_window(
+    virtual std::shared_ptr<RHI_window> create_window(
         int width,
         int height,
         const std::string& title
     ) = 0;
 
-    virtual RHI_buffer::Ptr create_vertex_buffer(
+    virtual std::shared_ptr<RHI_buffer> create_vertex_buffer(
         Buffer_usage usage,
         Buffer_data_type attribute_type,
         Buffer_iterate_type iterate_type,
@@ -44,14 +44,14 @@ public:
         const void* data
     ) = 0;
 
-    virtual RHI_buffer::Ptr create_element_buffer(
+    virtual std::shared_ptr<RHI_buffer> create_element_buffer(
         Buffer_usage usage,
         unsigned int data_count,
         unsigned int data_size,
         const void* data
     ) = 0;
 
-    virtual RHI_buffer::Ptr create_memory_buffer(
+    virtual std::shared_ptr<RHI_buffer> create_memory_buffer(
         Buffer_type type,
         Buffer_usage usage,
         unsigned int data_size,
@@ -59,8 +59,8 @@ public:
     ) = 0;
 
     virtual std::shared_ptr<RHI_geometry> create_geometry(
-        const std::unordered_map<unsigned int, RHI_buffer::Ptr> &vertex_buffers,
-        const RHI_buffer::Ptr& element_buffer
+        const std::unordered_map<unsigned int, std::shared_ptr<RHI_buffer>> &vertex_buffers,
+        const std::shared_ptr<RHI_buffer>& element_buffer
     ) = 0;
 
     virtual std::shared_ptr<RHI_shader_code> create_shader_code(
@@ -101,7 +101,7 @@ public:
     ) = 0;
 
     virtual std::shared_ptr<RHI_frame_buffer> create_screen_frame_buffer(
-        const RHI_window::Ptr& window
+        const std::shared_ptr<RHI_window>& window
     ) = 0;
     
     virtual RHI_compute_task::Ptr create_compute_task(
@@ -116,7 +116,7 @@ public:
 
     virtual std::shared_ptr<RHI_pipeline_state> create_pipeline_state(const Pipeline_state& pipeline_state) = 0;
 
-    virtual std::shared_ptr<RHI_imgui> create_imgui(const RHI_window::Ptr& window) = 0;
+    virtual std::shared_ptr<RHI_imgui> create_imgui(const std::shared_ptr<RHI_window>& window) = 0;
     
 
 

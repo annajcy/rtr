@@ -8,13 +8,13 @@ namespace rtr {
 
 class RHI_geometry  {
 protected:
-    RHI_buffer::Ptr m_element_buffer{};
-    std::unordered_map<unsigned int, RHI_buffer::Ptr> m_vertex_buffers{};
+    std::shared_ptr<RHI_buffer> m_element_buffer{};
+    std::unordered_map<unsigned int, std::shared_ptr<RHI_buffer>> m_vertex_buffers{};
 
 public:
     RHI_geometry(
-        const std::unordered_map<unsigned int, RHI_buffer::Ptr> &vertex_buffers, 
-        const RHI_buffer::Ptr& element_buffer
+        const std::unordered_map<unsigned int, std::shared_ptr<RHI_buffer>> &vertex_buffers, 
+        const std::shared_ptr<RHI_buffer>& element_buffer
     ) : m_vertex_buffers(vertex_buffers) , 
         m_element_buffer(element_buffer) {}
 
@@ -23,7 +23,7 @@ public:
     virtual ~RHI_geometry() {}
 
     virtual void bind_buffers() = 0;
-    virtual void bind_vertex_buffer(unsigned int location, const RHI_buffer::Ptr& vbo) = 0;
+    virtual void bind_vertex_buffer(unsigned int location, const std::shared_ptr<RHI_buffer>& vbo) = 0;
 
     virtual void draw(Draw_mode mode = Draw_mode::TRIANGLES) = 0;
     virtual void draw_instanced(unsigned int instance_count, Draw_mode mode = Draw_mode::TRIANGLES) = 0;

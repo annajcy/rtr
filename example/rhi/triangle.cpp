@@ -64,7 +64,7 @@ int main() {
     );
 
     auto geometry = device->create_geometry(
-        std::unordered_map<unsigned int, RHI_buffer::Ptr>{
+        std::unordered_map<unsigned int, std::shared_ptr<RHI_buffer>>{
             {0, position}
         }, 
         element
@@ -84,7 +84,6 @@ int main() {
     Clear_state clear_state = Clear_state::enabled();
     clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
     auto renderer = device->create_renderer(clear_state);
-
 
     while (window->is_active()) {
         window->on_frame_begin();

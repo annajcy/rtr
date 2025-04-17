@@ -14,11 +14,11 @@ class RHI_imgui_OpenGL : public RHI_imgui {
 public:
     using Ptr = std::shared_ptr<RHI_imgui_OpenGL>;
 
-    static Ptr create(const RHI_window::Ptr& window) {
+    static Ptr create(const std::shared_ptr<RHI_window>& window) {
         return std::make_shared<RHI_imgui_OpenGL>(window);
     }
     
-    RHI_imgui_OpenGL(const RHI_window::Ptr& window, float dpi_scale = 1.0f) : RHI_imgui(window) {
+    RHI_imgui_OpenGL(const std::shared_ptr<RHI_window>& window, float dpi_scale = 1.0f) : RHI_imgui(window) {
         if (auto gl_window = std::dynamic_pointer_cast<RHI_window_OpenGL>(m_window)) {
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();

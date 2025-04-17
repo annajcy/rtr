@@ -53,7 +53,7 @@ private:
     Input_system_state m_state{};
 
 public:
-    Input_system(const RHI_window::Ptr& window) {
+    Input_system(const std::shared_ptr<RHI_window>& window) {
         window->mouse_move_event().add([&](double x, double y) {
             this->update_mouse_position(x, y);
         });
@@ -77,7 +77,7 @@ public:
 
     ~Input_system() = default;
 
-    static std::shared_ptr<Input_system> create(const RHI_window::Ptr& window) {
+    static std::shared_ptr<Input_system> create(const std::shared_ptr<RHI_window>& window) {
         return std::make_shared<Input_system>(window);
     }
     

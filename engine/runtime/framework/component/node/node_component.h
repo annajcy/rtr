@@ -20,7 +20,17 @@ protected:
 
 public:
     Node_component() : Component_base(Component_type::NODE) {}
-  	~Node_component() = default;
+  	~Node_component() {
+        
+        if (parent()) {
+            parent()->remove_child(std::enable_shared_from_this<Node_component>::shared_from_this());	
+        }
+
+        for (auto& child : m_children) {
+            child->m_parent.reset();
+            child->set_dirty();
+        }
+    }
 
 	void tick(const Logic_tick_context& tick_context) override {}
 
@@ -28,7 +38,7 @@ public:
 		return std::make_shared<Node_component>();
 	}
 
-	const std::shared_ptr<Node_component> parent_ptr() const {
+	const std::shared_ptr<Node_component> parent() const {
         if (m_parent.expired()) {
             return nullptr;
         }
@@ -43,8 +53,8 @@ public:
         if (node.get() == this) {
             throw std::invalid_argument("Cannot add self as child");
         }
-        if (node->parent_ptr()) {
-            node->parent_ptr()->remove_child(node);
+        if (node->parent()) {
+            node->parent()->remove_child(node);
         }
         m_children.push_back(node);
         node->m_parent = std::enable_shared_from_this<Node_component>::shared_from_this();
@@ -99,8 +109,8 @@ public:
 
         glm::mat4 parent_matrix = glm::identity<glm::mat4>();
 
-        if (parent_ptr()) {
-            parent_matrix = parent_ptr()->model_matrix();
+        if (parent()) {
+            parent_matrix = parent()->model_matrix();
         }
 
         glm::mat4 transform = glm::identity<glm::mat4>();

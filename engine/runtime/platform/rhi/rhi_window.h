@@ -46,8 +46,6 @@ public:
         m_height(height), 
         m_title(title) {}
 
-    using Ptr = std::shared_ptr<RHI_window>;
-
     virtual ~RHI_window() = default;
     virtual bool is_active() = 0;
 

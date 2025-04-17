@@ -101,7 +101,7 @@ int main() {
     );
 
     auto geometry = device->create_geometry(
-        std::unordered_map<unsigned int, RHI_buffer::Ptr>{
+        std::unordered_map<unsigned int, std::shared_ptr<RHI_buffer>>{
             {0, position}
         }, 
         element
@@ -223,7 +223,7 @@ int main() {
     );
 
     auto screen_geometry1 = device->create_geometry(
-        std::unordered_map<unsigned int, RHI_buffer::Ptr>{
+        std::unordered_map<unsigned int, std::shared_ptr<RHI_buffer>>{
             {0, screen_vertex_buffer},
             {1, screen_tex_coord_buffer}
         },

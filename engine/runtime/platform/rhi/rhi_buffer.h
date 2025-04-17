@@ -2,13 +2,14 @@
 
 #include "engine/runtime/global/base.h" 
 #include "rhi_cast.h"
+#include <memory>
 
 namespace rtr {
 
 struct RHI_buffer_access_flags {
-    bool is_read;
-    bool is_write;
-    bool is_buffer_discard;
+    bool is_read{};
+    bool is_write{};
+    bool is_buffer_discard{};
 };
 
 class RHI_buffer {
@@ -18,8 +19,7 @@ protected:
     unsigned int m_data_size{};
 
 public:
-    using Ptr = std::shared_ptr<RHI_buffer>;
-
+    
     RHI_buffer(
         Buffer_type type, 
         Buffer_usage usage,
@@ -91,8 +91,8 @@ class RHI_memory_buffer_binder {
 public:
     RHI_memory_buffer_binder() {}
     virtual ~RHI_memory_buffer_binder() {}
-    virtual void bind_memory_buffer(const RHI_buffer::Ptr& buffer, unsigned int binding_point) = 0;
-    virtual void bind_memory_bufer_partial(const RHI_buffer::Ptr& buffer, unsigned int binding_point, unsigned int offset, unsigned int size) = 0;
+    virtual void bind_memory_buffer(const std::shared_ptr<RHI_buffer>& buffer, unsigned int binding_point) = 0;
+    virtual void bind_memory_bufer_partial(const std::shared_ptr<RHI_buffer>& buffer, unsigned int binding_point, unsigned int offset, unsigned int size) = 0;
 };
 
 }; // namespace rtr

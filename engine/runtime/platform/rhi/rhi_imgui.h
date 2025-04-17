@@ -11,7 +11,7 @@ protected:
 
 public:
 
-    RHI_imgui(const RHI_window::Ptr& window) : m_window(window) {}
+    RHI_imgui(const std::shared_ptr<RHI_window>& window) : m_window(window) {}
     ~RHI_imgui() = default;
 
     virtual void begin_frame() = 0;

@@ -44,7 +44,7 @@ public:
 
     const std::vector<std::shared_ptr<RHI_texture>>& color_attachments() const { return m_color_attachments; }
     const std::shared_ptr<RHI_texture>& depth_attachment() const { return m_depth_attachment; }
-    const RHI_window::Ptr& window() const { return m_window; }
+    const std::shared_ptr<RHI_window>& window() const { return m_window; }
     
 };
 

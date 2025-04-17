@@ -175,7 +175,7 @@ public:
     RHI_memory_binder_OpenGL() : RHI_memory_buffer_binder() {}
     virtual ~RHI_memory_binder_OpenGL() {}
     void bind_memory_buffer(
-        const RHI_buffer::Ptr& buffer, 
+        const std::shared_ptr<RHI_buffer>& buffer, 
         unsigned int binding_point
     ) override {
         if (buffer->type() != Buffer_type::STORAGE && buffer->type()!= Buffer_type::UNIFORM) {
@@ -190,7 +190,7 @@ public:
     }
    
     virtual void bind_memory_bufer_partial(
-        const RHI_buffer::Ptr& buffer, 
+        const std::shared_ptr<RHI_buffer>& buffer, 
         unsigned int binding_point, 
         unsigned int offset, 
         unsigned int size
