@@ -153,7 +153,7 @@ public:
         width,
         height,
         mipmap_levels,
-        Texture_type::TEXTURE_CUBE_MAP,
+        Texture_type::TEXTURE_CUBEMAP,
         internal_format,
         wraps,
         filters

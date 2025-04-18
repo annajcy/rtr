@@ -12,7 +12,7 @@ public:
     virtual ~Render_pipeline() {}
     virtual void init(const std::shared_ptr<RHI_device>& device) = 0;
     virtual void execute(const Render_tick_context& tick_context) = 0;
-    virtual void prepare_ubo(const Render_tick_context& tick_context) = 0;
+    virtual void update_ubo(const Render_tick_context& tick_context) = 0;
 };
 
 class Test_render_pipeline : public Render_pipeline {
@@ -28,7 +28,7 @@ public:
         tick_context.renderer->clear(tick_context.screen_frame_buffer);
     }
 
-    void prepare_ubo(const Render_tick_context& tick_context) override {
+    void update_ubo(const Render_tick_context& tick_context) override {
         
     }
 
@@ -47,10 +47,9 @@ public:
 
     }
 
-    void prepare_ubo(const Render_tick_context& tick_context) override {
-
+    void update_ubo(const Render_tick_context& tick_context) override {
+        
     }
-
 
 };
 
@@ -67,7 +66,7 @@ public:
         
     }
 
-    void prepare_ubo(const Render_tick_context& tick_context) override {
+    void update_ubo(const Render_tick_context& tick_context) override {
         
     }
 

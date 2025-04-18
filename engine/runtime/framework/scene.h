@@ -1,7 +1,11 @@
 #pragma once
 
+#include "engine/runtime/core/texture.h"
+#include "engine/runtime/global/enum.h"
+#include "engine/runtime/resource/loader/image_loader.h"
 #include "game_object.h"
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace rtr {
@@ -11,6 +15,7 @@ class Scene : public GUID {
 protected:
     std::string m_name{};
     std::vector<std::shared_ptr<Game_object>> m_game_objects{};
+    std::shared_ptr<Texture> m_skybox{};
     
 public:
     Scene(const std::string& name) : m_name(name) {}
@@ -20,6 +25,8 @@ public:
 
     virtual ~Scene() = default;
     const std::string& name() const { return m_name; }
+    void set_skybox(const std::shared_ptr<Texture>& skybox) { m_skybox = skybox; }
+    const std::shared_ptr<Texture>& skybox() const { return m_skybox; }
 
     std::shared_ptr<Game_object> add_game_object(const std::shared_ptr<Game_object>& game_object) {
         m_game_objects.push_back(game_object);
@@ -83,6 +90,7 @@ public:
     }
 
     void tick(const Logic_tick_context& tick_context) {
+        tick_context.logic_swap_data.skybox_texture = skybox();
         for (auto& game_object : m_game_objects) {
             game_object->tick(tick_context);
         }

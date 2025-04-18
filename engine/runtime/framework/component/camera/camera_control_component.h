@@ -93,7 +93,6 @@ public:
             yaw(-input_system_state.mouse_dx * m_rotate_speed);
             pitch(input_system_state.mouse_dy * m_rotate_speed);
         } else if (input_system_state.mouse_button(Mouse_button::MIDDLE) != Key_action::RELEASE) {
-            
             camera()->node()->translate(camera()->node()->up(), input_system_state.mouse_dy * m_move_speed);
             camera()->node()->translate(camera()->node()->right(), input_system_state.mouse_dx * m_move_speed);
         }

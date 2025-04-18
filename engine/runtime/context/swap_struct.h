@@ -1,17 +1,20 @@
 #pragma once
 
+#include "engine/runtime/core/geometry.h"
+#include "engine/runtime/core/material.h"
+#include "engine/runtime/core/texture.h"
 #include "engine/runtime/platform/rhi/rhi_geometry.h"
 #include "engine/runtime/platform/rhi/rhi_renderer.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
 #include "engine/runtime/platform/rhi/rhi_texture.h"
+#include <memory>
 #include <unordered_map>
 
 namespace rtr {
 
 struct Swap_object {
-    std::unordered_map<unsigned int, std::shared_ptr<RHI_texture>> textures{};
-    std::shared_ptr<RHI_shader_program> shader_program{};
-    std::shared_ptr<RHI_geometry> geometry{};
+    std::shared_ptr<Material> material{};
+    std::shared_ptr<Geometry> geometry{};
     glm::mat4 model_matrix{1.0f};
 };
 
@@ -51,6 +54,8 @@ struct Swap_data {
     Swap_directional_light directional_light{};
     Swap_camera camera{};
 
+    std::shared_ptr<Texture> skybox_texture{};
+
 
     void clear() {
         render_objects.clear();
@@ -58,6 +63,7 @@ struct Swap_data {
         spot_lights.clear();
         directional_light = Swap_directional_light{};
         camera = Swap_camera{};
+        skybox_texture.reset();
     }
 };
 

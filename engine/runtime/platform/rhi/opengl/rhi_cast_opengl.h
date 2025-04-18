@@ -174,7 +174,7 @@ inline constexpr unsigned int gl_texture_type(Texture_type type) {
     switch (type) {
         case Texture_type::TEXTURE_2D:
             return GL_TEXTURE_2D;
-        case Texture_type::TEXTURE_CUBE_MAP:
+        case Texture_type::TEXTURE_CUBEMAP:
             return GL_TEXTURE_CUBE_MAP;
         default:
             return GL_TEXTURE_2D;

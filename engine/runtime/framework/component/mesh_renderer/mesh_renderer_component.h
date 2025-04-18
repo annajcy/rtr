@@ -1,10 +1,14 @@
 #pragma once
 
+#include "engine/runtime/context/swap_struct.h"
 #include "engine/runtime/core/geometry.h"
 #include "engine/runtime/core/material.h"
+#include "engine/runtime/core/texture.h"
 #include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/framework/component/node/node_component.h"
+#include "engine/runtime/global/enum.h"
 #include <memory>
+#include <unordered_map>
 
 namespace rtr {
 class Mesh_renderer_component : public Component_base {
@@ -41,15 +45,25 @@ public:
         return m_node.lock();
     }
 
+
     void set_geometry(const std::shared_ptr<Geometry>& geometry) { m_geometry = geometry; }
     void set_material(const std::shared_ptr<Material>& material) { m_material = material; }
     const std::shared_ptr<Geometry> geometry() const { return m_geometry; }
     const std::shared_ptr<Material> material() const { return m_material; }
 
     void tick(const Logic_tick_context& tick_context) override {
+
         auto shader_program = m_material->get_shader_program();
+        
+        // std::cout << "vs" << shader_program->shader_sources.at(Shader_type::VERTEX) << std::endl;
+        // std::cout << "fs" << shader_program->shader_sources.at(Shader_type::FRAGMENT) << std::endl;
+
         auto& data = tick_context.logic_swap_data;
-        data.render_objects.push_back({});
+        data.render_objects.push_back(Swap_object{
+            .material = m_material,
+            .geometry = m_geometry,
+            .model_matrix = node()->model_matrix()
+        });
     }
     
 };

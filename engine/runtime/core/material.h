@@ -1,9 +1,12 @@
 #pragma once
 
 #include "engine/runtime/core/shader.h"
+#include "engine/runtime/core/texture.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/resource/loader/image_loader.h"
+#include <memory>
+#include <unordered_map>
 
 namespace rtr {
 
@@ -21,7 +24,7 @@ public:
         m_shader(shader) {}
     virtual ~Material() = default;
 
-    Material_type type() const { return m_material_type; }
+    Material_type material_type() const { return m_material_type; }
     const std::shared_ptr<Shader>& shader() const { return m_shader; }
 
     virtual Shader::feature_set get_shader_feature_set() const = 0;
@@ -39,16 +42,18 @@ public:
             return Pipeline_state::opaque_pipeline_state();
         }
     }
+
+    virtual std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() = 0;
 };
 
 class Phong_material : public Material {
 public:
     bool is_receive_shadows{false};
-    std::shared_ptr<Image> albedo_map{};
-    std::shared_ptr<Image> alpha_map{};
-    std::shared_ptr<Image> normal_map{};
-    std::shared_ptr<Image> height_map{};
-    std::shared_ptr<Image> specular_map{};
+    std::shared_ptr<Texture2D> albedo_map{};
+    std::shared_ptr<Texture2D> alpha_map{};
+    std::shared_ptr<Texture2D> normal_map{};
+    std::shared_ptr<Texture2D> height_map{};
+    std::shared_ptr<Texture2D> specular_map{};
 
     float transparency{1.0f};
     glm::vec3 ambient = glm::vec3(0.2f);     // 环境反射系数
@@ -72,6 +77,26 @@ public:
 
     static std::shared_ptr<Phong_material> create() {
         return std::make_shared<Phong_material>();
+    }
+
+    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
+        std::unordered_map<unsigned int, std::shared_ptr<Texture>> texture_map{};
+        if (has_albedo_map()) {
+            texture_map[0] = albedo_map;
+        }
+        if (has_alpha_map()) {
+            texture_map[1] = alpha_map;
+        }
+        if (has_normal_map()) {
+            texture_map[2] = normal_map;
+        }
+        if (has_height_map()) {
+            texture_map[3] = height_map;
+        }
+        if (has_specular_map()) {
+            texture_map[4] = specular_map;
+        }
+        return texture_map;
     }
 
     Shader::feature_set get_shader_feature_set() const override {
@@ -101,15 +126,15 @@ public:
 class PBR_material : public Material {
 public:
     bool is_receive_shadows{false};
-    std::shared_ptr<Image> albedo_map{};
-    std::shared_ptr<Image> alpha_map{};
-    std::shared_ptr<Image> normal_map{};
-    std::shared_ptr<Image> height_map{};
+    std::shared_ptr<Texture2D> albedo_map{};
+    std::shared_ptr<Texture2D> alpha_map{};
+    std::shared_ptr<Texture2D> normal_map{};
+    std::shared_ptr<Texture2D> height_map{};
     
-    std::shared_ptr<Image> metallic_map{};
-    std::shared_ptr<Image> roughness_map{};
-    std::shared_ptr<Image> ao_map{};
-    std::shared_ptr<Image> emissive_map{}; // 新增自发光贴图
+    std::shared_ptr<Texture2D> metallic_map{};
+    std::shared_ptr<Texture2D> roughness_map{};
+    std::shared_ptr<Texture2D> ao_map{};
+    std::shared_ptr<Texture2D> emissive_map{}; // 新增自发光贴图
 
     glm::vec3 base_color{};
     float metallic_factor = {1.0f};      // 金属度系数
@@ -167,11 +192,40 @@ public:
 
         return feature_set;
     }
+
+    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
+        std::unordered_map<unsigned int, std::shared_ptr<Texture>> texture_map{};
+        if (has_albedo_map()) {
+            texture_map[0] = albedo_map;
+        }
+        if (has_alpha_map()) {
+            texture_map[1] = alpha_map;
+        }
+        if (has_normal_map()) {
+            texture_map[2] = normal_map;
+        }
+        if (has_height_map()) {
+            texture_map[3] = height_map;
+        }
+        if (has_metallic_map()) {
+            texture_map[4] = metallic_map;
+        }
+        if (has_roughness_map()) {
+            texture_map[5] = roughness_map;
+        }
+        if (has_ao_map()) {
+            texture_map[6] = ao_map;
+        }
+        if (has_emissive_map()) {
+            texture_map[7] = emissive_map;
+        }
+        return texture_map;
+    }
 };
 
 class Skybox_cubemap_material : public Material {
 public:
-    std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>> cubemap_faces{};
+    std::shared_ptr<Texture_cubemap> cubemap_texture{};
     Skybox_cubemap_material() : Material(
         Material_type::SKYBOX_CUBEMAP, 
         Shader::create_skybox_cubemap_shader()
@@ -186,7 +240,7 @@ public:
 
 class SkyBox_spherical_material : public Material {
 public:
-    std::shared_ptr<Image> skybox_image{};
+    std::shared_ptr<Texture2D> skybox_image{};
     SkyBox_spherical_material() : Material(
         Material_type::SKYBOX_SPHERICAL, 
         Shader::create_skybox_cubemap_shader()

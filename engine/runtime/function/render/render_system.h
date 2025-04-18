@@ -46,7 +46,7 @@ public:
     }
 
     void tick(const Render_tick_context& tick_context) {
-        m_render_pipeline->prepare_ubo(tick_context);
+        m_render_pipeline->update_ubo(tick_context);
         m_render_pipeline->execute(tick_context);
     }
 
