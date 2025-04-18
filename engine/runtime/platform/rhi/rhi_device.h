@@ -70,7 +70,7 @@ public:
 
     virtual std::shared_ptr<RHI_shader_program> create_shader_program(
         const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shader_codes,
-        const std::unordered_map<std::string, std::shared_ptr<RHI_uniform_entry_base>>& uniforms
+        const std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>& uniforms
     ) = 0;
 
     virtual std::shared_ptr<RHI_texture> create_texture_2D(
@@ -82,6 +82,49 @@ public:
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
         const Image_data& image
     ) = 0;
+
+    std::shared_ptr<RHI_texture> create_texture_color_attachment(
+        int width,
+        int height
+    ) {
+        return create_texture_2D(
+            width,
+            height,
+            1,
+            Texture_internal_format::RGB_ALPHA,
+            {
+                {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
+                {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
+            },
+            {
+                {Texture_filter_target::MIN, Texture_filter::LINEAR},
+                {Texture_filter_target::MAG, Texture_filter::LINEAR}
+            },
+            Image_data{}
+        );
+    }
+
+    std::shared_ptr<RHI_texture> create_texture_depth_attachment(
+        int width,
+        int height
+    ) {
+        return create_texture_2D(
+            width,
+            height,
+            1,
+            Texture_internal_format::DEPTH_STENCIL_24_8,
+            std::unordered_map<Texture_wrap_target, Texture_wrap>{
+                {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
+                {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
+            },
+            std::unordered_map<Texture_filter_target, Texture_filter>{
+                // 修改过滤模式为NEAREST
+                {Texture_filter_target::MIN, Texture_filter::NEAREST},
+                {Texture_filter_target::MAG, Texture_filter::NEAREST}
+            },
+            Image_data{}
+        );
+    }
 
     virtual std::shared_ptr<RHI_texture> create_texture_cubemap(
         int width,

@@ -26,6 +26,9 @@ int main() {
          "assets/image/earth.png"
     );
 
+    Engine_runtime_descriptor engine_runtime_descriptor{};
+    auto runtime = Engine_runtime::create(engine_runtime_descriptor);
+
     auto world = World::create("world1");
     auto scene = world->add_scene(Scene::create("scene1"));
     world->set_current_scene(scene);
@@ -75,11 +78,8 @@ int main() {
         material
     ));
 
-    Engine_runtime_descriptor engine_runtime_descriptor{};
-    engine_runtime_descriptor.world = world;
+    runtime->world() = world;
 
-    auto runtime = Engine_runtime::create(engine_runtime_descriptor);
-    
     auto editor = editor::Editor::create(runtime);
     editor->run();
 

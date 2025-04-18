@@ -1,6 +1,10 @@
 #pragma once
 
 #include "engine/runtime/global/enum.h"
+#include "engine/runtime/global/guid.h"
+#include "engine/runtime/platform/rhi/rhi_linker.h"
+#include "engine/runtime/platform/rhi/rhi_shader_code.h"
+#include "engine/runtime/platform/rhi/rhi_shader_program.h"
 #include <bitset>
 #include <cstddef>
 #include <iostream>
@@ -8,6 +12,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 #include <fstream>
 #include <sstream>
@@ -61,19 +66,76 @@ inline constexpr const char* shader_feature_to_defines(Shader_feature feature) {
     }
 }
 
-struct Shader_program {
-    std::string name{};
-    std::unordered_map<Shader_type, std::string> shader_sources{};
+class Shader_code : public GUID, public RHI_linker<RHI_shader_code> {
+protected:
+    std::string m_code{};
+    Shader_type m_shader_code_type{};
+
+public:
+    Shader_code(Shader_type type, const std::string& code) : m_code(code), m_shader_code_type(type) {}
+    ~Shader_code() = default;
+    const std::string& code() const { return m_code; }
+    Shader_type shader_code_type() const { return m_shader_code_type; }
+    static std::shared_ptr<Shader_code> create(Shader_type type, const std::string& code) {
+        return std::make_shared<Shader_code>(type, code);
+    }
+
+    virtual void link(const std::shared_ptr<RHI_device>& device) override {
+        m_rhi_resource = device->create_shader_code(m_shader_code_type, m_code);
+    }
 };
 
-class Shader {
+class Shader_program : public GUID, public RHI_linker<RHI_shader_program> {
+private:
+    std::string m_name{};
+    std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> m_shader_codes{};
+    std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> m_uniforms{};
+
+public:
+    Shader_program(
+        const std::string& name,
+        const std::unordered_map<Shader_type, std::shared_ptr<Shader_code>>& shader_codes,
+        const std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>& uniforms
+    ) : m_name(name), 
+        m_shader_codes(shader_codes), 
+        m_uniforms(uniforms) {}
+
+    ~Shader_program() = default;
+
+    const std::string& name() const { return m_name; }
+    const std::unordered_map<Shader_type, std::shared_ptr<Shader_code>>& shader_codes() const { return m_shader_codes; }
+    const std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>& uniforms() const { return m_uniforms; }
+
+    virtual void link(const std::shared_ptr<RHI_device>& device) override {
+
+        std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>> rhi_shader_codes{};
+        for (const auto& [type, code] : m_shader_codes) {
+            if (!code->is_linked()) code->link(device);
+            rhi_shader_codes[type] = code->rhi_resource();
+        }
+
+        m_rhi_resource = device->create_shader_program(
+            rhi_shader_codes,
+            m_uniforms
+        );
+    }
+
+    static std::shared_ptr<Shader_program> create(
+        const std::string& name,
+        const std::unordered_map<Shader_type, std::shared_ptr<Shader_code>>& shader_codes,
+        const std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>& uniforms
+    ) {
+        return std::make_shared<Shader_program>(name, shader_codes, uniforms);
+    }
+};
+
+class Shader : public GUID {
 public:
     using feature_set = std::bitset<static_cast<size_t>(Shader_feature::MAX_FEATURES)>;
 
 protected:
     std::shared_ptr<Shader_program> m_main_shader_program{};
     feature_set m_shader_feature_whitelist{};
-
     std::unordered_map<feature_set, std::shared_ptr<Shader_program>> m_variant_shader_programs{};
 
 public:
@@ -98,7 +160,8 @@ public:
         }
 
         // 生成变体名称
-        std::string variant_name = m_main_shader_program->name;
+        std::string variant_name = m_main_shader_program->name();
+
         std::vector<std::string> active_features{};
         for (size_t i = 0; i < static_cast<size_t>(Shader_feature::MAX_FEATURES); ++i) {
             if (feature_set.test(i)) {
@@ -110,10 +173,6 @@ public:
             variant_name += "_";
             variant_name += feat;
         }
-
-        // 创建变体程序
-        auto variant_shader_program = std::make_shared<Shader_program>();
-        variant_shader_program->name = variant_name;
         
         // 预处理定义
         std::string defines = "// " + variant_name + "\n";
@@ -123,15 +182,29 @@ public:
             defines += "\n";
         }
 
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
+
         // 处理着色器源码
-        for (const auto& [type, source] : m_main_shader_program->shader_sources) {
-            variant_shader_program->shader_sources[type] = defines + source;
+        for (const auto& [type, source] : m_main_shader_program->shader_codes()) {
+            shader_codes[type] = Shader_code::create(type, defines + source->code());
         }
+
+        auto variant_shader_program = std::make_shared<Shader_program>(
+            variant_name,
+            shader_codes,
+            m_main_shader_program->uniforms()
+        );
 
         m_variant_shader_programs.emplace(feature_set, variant_shader_program);
         return m_variant_shader_programs.at(feature_set);
     }
 
+    static std::shared_ptr<Shader> create(
+        const std::shared_ptr<Shader_program>& main_program,
+        const feature_set& shader_feature_whitelist
+    ) {
+        return std::make_shared<Shader>(main_program, shader_feature_whitelist);
+    }
 
     static std::string get_shader_code_from_url(const std::string& url) {
         std::unordered_set<std::string> processed_files{};
@@ -176,10 +249,26 @@ public:
     }
 
     static std::shared_ptr<Shader> create_phong_shader() {
-        auto main_program = std::make_shared<Shader_program>();
-        main_program->name = "phong_shader";
-        main_program->shader_sources[Shader_type::VERTEX] = get_shader_code_from_url("assets/shader/phong.vert");
-        main_program->shader_sources[Shader_type::FRAGMENT] = get_shader_code_from_url("assets/shader/phong.frag");
+
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
+
+        shader_codes[Shader_type::VERTEX] = Shader_code::create(
+            Shader_type::VERTEX,
+            get_shader_code_from_url("assets/shader/phong.vert")
+        ); 
+
+        shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
+            Shader_type::FRAGMENT,
+            get_shader_code_from_url("assets/shader/phong.frag")
+        );
+
+
+        auto main_program = std::make_shared<Shader_program>(
+            "phong_shader",
+            shader_codes,
+            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>{}
+        );        
+
         return std::make_shared<Shader>(
             main_program,
             get_phong_shader_feature_whitelist()
@@ -187,32 +276,77 @@ public:
     }
 
     static std::shared_ptr<Shader> create_pbr_shader() {
-        auto main_program = std::make_shared<Shader_program>();
-        main_program->name = "pbr_shader";
-        main_program->shader_sources[Shader_type::VERTEX] = get_shader_code_from_url("assets/shader/pbr.vert");
-        main_program->shader_sources[Shader_type::FRAGMENT] = get_shader_code_from_url("assets/shader/pbr.frag");
+
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
+
+        shader_codes[Shader_type::VERTEX] = Shader_code::create(
+            Shader_type::VERTEX,
+            get_shader_code_from_url("assets/shader/pbr.vert")
+        ); 
+
+        shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
+            Shader_type::FRAGMENT,
+            get_shader_code_from_url("assets/shader/pbr.frag")
+        );
+
+        auto main_program = std::make_shared<Shader_program>(
+            "pbr_shader",
+            shader_codes,
+            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>{}
+        );        
+
         return std::make_shared<Shader>(
             main_program,
             get_pbr_shader_feature_whitelist()
         );
+
     }
 
     static std::shared_ptr<Shader> create_skybox_cubemap_shader() {
-        auto main_program = std::make_shared<Shader_program>();
-        main_program->name = "skybox_cubemap_shader";
-        main_program->shader_sources[Shader_type::VERTEX] = get_shader_code_from_url("assets/shader/skybox_cubemap.vert");
-        main_program->shader_sources[Shader_type::FRAGMENT] = get_shader_code_from_url("assets/shader/skybox_cubemap.frag");
+
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
+        shader_codes[Shader_type::VERTEX] = Shader_code::create(
+            Shader_type::VERTEX,
+            get_shader_code_from_url("assets/shader/skybox_cubemap.vert")
+        );
+
+        shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
+            Shader_type::FRAGMENT,
+            get_shader_code_from_url("assets/shader/skybox_cubemap.frag")
+        );
+
+        auto main_program = std::make_shared<Shader_program>(
+            "skybox_cubemap_shader",
+            shader_codes,
+            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>{}
+        );     
+
         return std::make_shared<Shader>(
             main_program,
             get_skybox_cubemap_shader_feature_whitelist()
         );
+        
     }
 
     static std::shared_ptr<Shader> create_skybox_spherical_shader() {
-        auto main_program = std::make_shared<Shader_program>();
-        main_program->name = "skybox_spherical_shader";
-        main_program->shader_sources[Shader_type::VERTEX] = get_shader_code_from_url("assets/shader/skybox_spherical.vert");
-        main_program->shader_sources[Shader_type::FRAGMENT] = get_shader_code_from_url("assets/shader/skybox_spherical.frag");
+
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
+        shader_codes[Shader_type::VERTEX] = Shader_code::create(
+            Shader_type::VERTEX,
+            get_shader_code_from_url("assets/shader/skybox_spherical.vert")
+        );
+
+        shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
+            Shader_type::FRAGMENT,
+            get_shader_code_from_url("assets/shader/skybox_spherical.frag")
+        );
+
+        auto main_program = std::make_shared<Shader_program>(
+            "skybox_spherical_shader",
+            shader_codes,
+            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>{}
+        );
+
         return std::make_shared<Shader>(
             main_program,
             get_skybox_spherical_shader_feature_whitelist()

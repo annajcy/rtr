@@ -10,7 +10,6 @@ class Render_pipeline {
 public:
     Render_pipeline() {}
     virtual ~Render_pipeline() {}
-    virtual void init(const std::shared_ptr<RHI_device>& device) = 0;
     virtual void execute(const Render_tick_context& tick_context) = 0;
     virtual void update_ubo(const Render_tick_context& tick_context) = 0;
 };
@@ -20,9 +19,6 @@ class Test_render_pipeline : public Render_pipeline {
 public:
     Test_render_pipeline() {}
     ~Test_render_pipeline() {}
-    void init(const std::shared_ptr<RHI_device>& device) override {
-        
-    }
 
     void execute(const Render_tick_context& tick_context) override {
         tick_context.renderer->clear(tick_context.screen_frame_buffer);
@@ -39,10 +35,6 @@ public:
     Forward_render_pipeline() {}
     ~Forward_render_pipeline() {}
 
-    void init(const std::shared_ptr<RHI_device>& device) override {
-
-    }
-
     void execute(const Render_tick_context& tick_context) override {
 
     }
@@ -58,9 +50,6 @@ public:
     Deferred_render_pipeline() {}
     ~Deferred_render_pipeline() {}
 
-    void init(const std::shared_ptr<RHI_device>& device) override {
-        
-    }
 
     void execute(const Render_tick_context& tick_context) override {
         

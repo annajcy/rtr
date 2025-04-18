@@ -20,7 +20,6 @@ struct Engine_runtime_descriptor {
     int width{800};
     int height{600};
     std::string title{"RTR Engine"};
-    std::shared_ptr<World> world{};
 };
 
 class Engine_runtime {
@@ -60,7 +59,6 @@ public:
         m_input_system = input_system;
         m_file_service = file_service;
         m_render_system = render_system;
-        m_world = descriptor.world;
 
         Log_sys::get_instance()->log(Logging_system::Level::info, "Engine Runtime Created");
     }

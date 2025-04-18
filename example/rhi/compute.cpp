@@ -1,4 +1,6 @@
+#include "engine/runtime/core/shader.h"
 #include "engine/runtime/global/base.h" 
+#include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 #include <memory>
 
@@ -10,11 +12,11 @@ const char* compute_shader_source = R"(
 #version 460 core
 layout(local_size_x = 1) in;
 
-// 修正1：添加结构体结尾分号
+
 struct UniformParam {
     float scale;
     float offset;
-};  // 添加分号
+}; 
 
 layout(std140, binding = 0) uniform UniformBlock {
     UniformParam params[4];  // 数组元素自动16字节对齐
@@ -28,7 +30,6 @@ uniform float[4] scales;
 
 void main() {
     uint idx = gl_GlobalInvocationID.x;
-    // 修正参数访问方式
     results[idx] = results[idx] * params[idx].scale + params[idx].offset * scales[idx];
 }
 )";
@@ -66,28 +67,24 @@ int main() {
         initial_data.data() 
     );
 
-    auto compute_shader = device->create_shader_code(
-        Shader_type::COMPUTE, 
-        compute_shader_source
-    );
+    auto cs = Shader_code::create(Shader_type::COMPUTE, compute_shader_source);
 
     float scales[] = {1, 2, 3, 4};
 
-    // 创建计算专用着色器程序
-    auto compute_program = device->create_shader_program(
-        std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>{
-            {Shader_type::COMPUTE, compute_shader}
-        },
-        {
-            {"scales", RHI_uniform_entry_array<float>::create(scales, 4)}
-        }
-    );
+    auto csp = Shader_program::create("csp", std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
+        {Shader_type::COMPUTE, cs}
+    }, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+        {"scales", Uniform_entry_array<float>::create(scales, 4)}
+    });
 
+    csp->link(device);
+
+    auto compute_program = csp->rhi_resource();
+    
     auto memory_binder = device->create_memory_buffer_binder();
     memory_binder->bind_memory_buffer(uniform_buffer, 0);
     memory_binder->bind_memory_buffer(storage_buffer, 1);
 
-    // 设置计算任务
     auto compute_task = device->create_compute_task(compute_program);
     compute_task->dispatch(4, 1, 1);
     compute_task->wait();

@@ -1,3 +1,6 @@
+#include "engine/runtime/core/frame_buffer.h"
+#include "engine/runtime/core/shader.h"
+#include "engine/runtime/core/texture.h"
 #include "engine/runtime/global/base.h" 
 #include "engine/runtime/core/geometry.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
@@ -84,151 +87,73 @@ int main() {
     auto window = device->create_window(800, 600, "RTR");
     auto screen_frame_buffer = device->create_screen_frame_buffer(window);
 
-    auto position = device->create_vertex_buffer(
-        Buffer_usage::STATIC, 
-        Buffer_data_type::FLOAT, 
-        Buffer_iterate_type::PER_VERTEX,
-        3, 
-        vertices.size() * sizeof(float), 
-        vertices.data()
+    auto geo = Geometry::create(
+        std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> {
+            {0, Vertex_attribute<float, 3>::create(vertices)},
+            {1, Vertex_attribute<float, 2>::create(tex_coords)}
+        },  
+        Element_atrribute::create(indices)
     );
 
-    auto element = device->create_element_buffer(
-        Buffer_usage::STATIC,
-        indices.size(),
-        indices.size() * sizeof(unsigned int),
-        indices.data()
-    );
+    geo->link(device);
+    auto geometry = geo->rhi_resource();
 
-    auto geometry = device->create_geometry(
-        std::unordered_map<unsigned int, std::shared_ptr<RHI_buffer>>{
-            {0, position}
-        }, 
-        element
-    );
+    auto sc0 = Shader_code::create(Shader_type::VERTEX, vertex_shader_source);
+    auto sc1 = Shader_code::create(Shader_type::FRAGMENT, fragment_shader_source);
 
-    auto vertex_shader_code = device->create_shader_code(Shader_type::VERTEX, vertex_shader_source);
-    auto fragment_shader_code = device->create_shader_code(Shader_type::FRAGMENT, fragment_shader_source);
-
-    auto shader_program = device->create_shader_program(
-        std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>{
-            {Shader_type::VERTEX, vertex_shader_code},
-            {Shader_type::FRAGMENT, fragment_shader_code}
-        },
-        {}
-    );
-
-    // 创建两个颜色附件
-    auto color_attachment0 = device->create_texture_2D(
-        window->width(),
-        window->height(),
-        1,
-        Texture_internal_format::RGB_ALPHA,
-        {
-            {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
-            {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
-        },
-        {
-            {Texture_filter_target::MIN, Texture_filter::LINEAR},
-            {Texture_filter_target::MAG, Texture_filter::LINEAR}
-        },
-        Image_data{}
-    );
-
-    auto color_attachment1 = device->create_texture_2D(
-        window->width(),
-        window->height(),
-        1,
-        Texture_internal_format::RGB_ALPHA,
-        {
-            {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
-            {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
-        },
-        {
-            {Texture_filter_target::MIN, Texture_filter::LINEAR},
-            {Texture_filter_target::MAG, Texture_filter::LINEAR}
-        },
-        Image_data{}
-    );
-
-    auto depth_attachment = device->create_texture_2D(
-        window->width(),
-        window->height(),
-        1,
-        Texture_internal_format::DEPTH_STENCIL_24_8,
-        std::unordered_map<Texture_wrap_target, Texture_wrap>{
-            {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
-            {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
-        },
-        std::unordered_map<Texture_filter_target, Texture_filter>{
-            // 修改过滤模式为NEAREST
-            {Texture_filter_target::MIN, Texture_filter::NEAREST},
-            {Texture_filter_target::MAG, Texture_filter::NEAREST}
-        },
-        Image_data{}
-    );
-
-    auto frame_buffer = device->create_frame_buffer(
-        window->width(),
-        window->height(),
-        std::vector<std::shared_ptr<RHI_texture>>{
-            color_attachment0, 
-            color_attachment1
-        },
-        depth_attachment
-    );
-
-    auto vertex_shader_code1 = device->create_shader_code(Shader_type::VERTEX, vertex_shader_source1);
-    auto fragment_shader_code1 = device->create_shader_code(Shader_type::FRAGMENT, fragment_shader_source1);
+    auto sp = Shader_program::create("shader_program", std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
+        {Shader_type::VERTEX, sc0},
+        {Shader_type::FRAGMENT, sc1}
+    },  std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {});
     
-    auto shader_program1 = device->create_shader_program(
-        std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>{
-            {Shader_type::VERTEX, vertex_shader_code1},
-            {Shader_type::FRAGMENT, fragment_shader_code1}
+    sp->link(device);
+    auto shader_program = sp->rhi_resource();
+
+    auto ca0 = Texture_color_attachment::create(
+        window->width(),
+        window->height()
+    );
+
+    auto ca1 = Texture_color_attachment::create(
+        window->width(),
+        window->height()
+    );
+
+    auto da = Texture_depth_attachment::create(
+        window->width(),
+        window->height()
+    );
+
+    auto fb = Frame_buffer::create(
+        window->width(),
+        window->height(),
+        std::vector<std::shared_ptr<Texture>>{
+            ca0,
+            ca1
         },
-        {
-            {"texture0", RHI_uniform_entry<int>::create(0)},
-            {"texture1", RHI_uniform_entry<int>::create(1)}
-        }
+        da  
     );
 
-    auto screen_geometry = Geometry::create_plane();
+    fb->link(device);
+    auto frame_buffer = fb->rhi_resource();
 
-    auto screen_position = screen_geometry->attribute("position");
-    auto screen_tex_coord = screen_geometry->attribute("uv");
-    auto screen_element = screen_geometry->element_attribute();
-    auto screen_vertex_buffer = device->create_vertex_buffer(
-        Buffer_usage::STATIC,
-        Buffer_data_type::FLOAT,
-        Buffer_iterate_type::PER_VERTEX,
-        screen_position->unit_data_count(),
-        screen_position->data_size(),
-        screen_position->data_ptr()
-    );
-    
-    auto screen_tex_coord_buffer = device->create_vertex_buffer(
-        Buffer_usage::STATIC,
-        Buffer_data_type::FLOAT,
-        Buffer_iterate_type::PER_VERTEX,
-        screen_tex_coord->unit_data_count(),
-        screen_tex_coord->data_size(),
-        screen_tex_coord->data_ptr()
-    );
+    auto screen_vertex_shader_code = Shader_code::create(Shader_type::VERTEX, vertex_shader_source1);
+    auto screen_fragment_shader_code = Shader_code::create(Shader_type::FRAGMENT, fragment_shader_source1);
 
-    auto screen_element_buffer = device->create_element_buffer(
-        Buffer_usage::STATIC,
-        screen_element->data_count(),
-        screen_element->data_size(),
-        screen_element->data_ptr()
-    );
+    auto screen_shader_program = Shader_program::create("screen_shader_program", std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
+        {Shader_type::VERTEX, screen_vertex_shader_code},
+        {Shader_type::FRAGMENT, screen_fragment_shader_code}
+    },  std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+        {"texture0", Uniform_entry<int>::create(0)},
+        {"texture1", Uniform_entry<int>::create(1)}
+    });
 
-    auto screen_geometry1 = device->create_geometry(
-        std::unordered_map<unsigned int, std::shared_ptr<RHI_buffer>>{
-            {0, screen_vertex_buffer},
-            {1, screen_tex_coord_buffer}
-        },
-        screen_element_buffer
-    );
+    screen_shader_program->link(device);
+    auto shader_program1 = screen_shader_program->rhi_resource();
+
+    auto sg = Geometry::create_plane();
+    sg->link(device);
+    auto screen_geometry = sg->rhi_resource();
 
     Clear_state clear_state = Clear_state::enabled();
     clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
@@ -248,14 +173,14 @@ int main() {
             frame_buffer
         );
 
-        color_attachment0->bind_to_unit(0);
-        color_attachment1->bind_to_unit(1);
+        ca0->rhi_resource()->bind_to_unit(0);
+        ca1->rhi_resource()->bind_to_unit(1);
     
         renderer->clear(screen_frame_buffer);
 
         renderer->draw(
             shader_program1,
-            screen_geometry1,
+            screen_geometry,
             screen_frame_buffer
         );
 

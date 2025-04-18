@@ -67,9 +67,6 @@ set(COMMON_LIBS
     ${OPENGL_LIBRARIES}
 )
 
-add_executable(rhi_triangle ${SOURCES} example/rhi/triangle.cpp)
-target_link_libraries(rhi_triangle ${COMMON_LIBS})
-
 add_executable(rhi_frame_buffer ${SOURCES} example/rhi/frame_buffer.cpp)
 target_link_libraries(rhi_frame_buffer ${COMMON_LIBS})
 

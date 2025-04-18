@@ -28,24 +28,17 @@ public:
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         console_sink->set_level(spdlog::level::trace);
         console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
-
-        spdlog::init_thread_pool(8192, 1);
-        
-        m_logger = std::make_shared<spdlog::async_logger>(
+    
+        m_logger = std::make_shared<spdlog::logger>(
             "logger",
-            spdlog::sinks_init_list{console_sink},
-            spdlog::thread_pool(),
-            spdlog::async_overflow_policy::block
+            spdlog::sinks_init_list{console_sink}
         );
         
         m_logger->set_level(spdlog::level::trace);
         spdlog::register_logger(m_logger);
     }
 
-    ~Logging_system() {
-        spdlog::shutdown();
-        spdlog::drop_all();
-    }
+    ~Logging_system() {}
 
     template<typename... TARGS>
     void log(Level level, std::format_string<TARGS...> fmt, TARGS&&... args) {

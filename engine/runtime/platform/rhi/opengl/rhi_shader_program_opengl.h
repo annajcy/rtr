@@ -22,7 +22,7 @@ public:
 
     RHI_shader_program_OpenGL(
         const std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>>& shader_codes,
-        const std::unordered_map<std::string, std::shared_ptr<RHI_uniform_entry_base>>& uniforms
+        const std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>& uniforms
     ) : RHI_shader_program(shader_codes, uniforms) {
 
         m_program_id = glCreateProgram();

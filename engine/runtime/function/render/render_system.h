@@ -42,7 +42,6 @@ public:
 
     void set_render_pipeline(const std::shared_ptr<Render_pipeline>& pipeline) {
         m_render_pipeline = pipeline;
-        m_render_pipeline->init(m_device);
     }
 
     void tick(const Render_tick_context& tick_context) {
