@@ -69,14 +69,11 @@ public:
     }
 
     void tick(const Logic_tick_context& tick_context) override {
-        
         auto& data = tick_context.logic_swap_data;
-
         Swap_directional_light directional_light{};
         directional_light.color = color();
         directional_light.direction = direction();
         directional_light.intensity = intensity();
-
         data.directional_light = directional_light;
     }
 
@@ -108,7 +105,6 @@ public:
     float outer_angle_cos() const { return glm::cos(glm::radians(m_outer_angle)); }
 
     void tick(const Logic_tick_context& tick_context) override {
-       
         auto& data = tick_context.logic_swap_data;
         Swap_spot_light spot_light{};
         spot_light.color = color();
@@ -147,7 +143,6 @@ public:
     float kc() const { return m_kc; }
 
     void tick(const Logic_tick_context& tick_context) override {
-       
         auto& data = tick_context.logic_swap_data;
         Swap_point_light point_light{};
         point_light.attenuation = glm::vec3(kc(), k1(), k2());

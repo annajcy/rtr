@@ -56,7 +56,6 @@ struct Swap_data {
 
     std::shared_ptr<Texture> skybox_texture{};
 
-
     void clear() {
         render_objects.clear();
         point_lights.clear();

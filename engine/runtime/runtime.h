@@ -4,11 +4,13 @@
 #include "engine/runtime/function/input/input_system.h"
 #include "engine/runtime/function/render/render_system.h"
 #include "engine/runtime/function/window/window_system.h"
+#include "engine/runtime/global/logger.h"
 #include "engine/runtime/global/timer.h"
 #include "engine/runtime/platform/hal/file_service.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 #include "engine/runtime/framework/world.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
+#include "spdlog/common.h"
 
 #include <memory>
 
@@ -33,7 +35,6 @@ private:
     std::shared_ptr<Input_system> m_input_system{};
     std::shared_ptr<Render_system> m_render_system{};
     std::shared_ptr<Window_system> m_window_system{};
-
     std::shared_ptr<File_service> m_file_service{};
     std::shared_ptr<World> m_world{};
 
@@ -60,6 +61,8 @@ public:
         m_file_service = file_service;
         m_render_system = render_system;
         m_world = descriptor.world;
+
+        Log_sys::get_instance()->log(Logging_system::Level::info, "Engine Runtime Created");
     }
 
     std::shared_ptr<RHI_device>& rhi_device() { return m_rhi_device; }
@@ -73,7 +76,9 @@ public:
         return std::make_shared<Engine_runtime>(descriptor);
     }
 
-    virtual ~Engine_runtime() = default;
+    virtual ~Engine_runtime() {
+        Log_sys::get_instance()->log(Logging_system::Level::info, "Engine Runtime Destroyed");
+    }
 
     void run() {
 

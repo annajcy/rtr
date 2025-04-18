@@ -43,19 +43,24 @@ int main() {
         100.0f
     ));
 
-    camera->node()->set_position(glm::vec3(0, 0, 5));
+    camera->node()->set_position(glm::vec3(0, 0, 3));
     camera->node()->look_at_point(glm::vec3(0, 0, 0));
 
     auto camera_control = game_object->add_component<Trackball_camera_control_component>(Trackball_camera_control_component::create());
 
     auto directional_light = game_object->add_component<Directional_light_component>(Directional_light_component::create());
-    directional_light->intensity() = 2;
+    directional_light->intensity() = 1.0f;
     directional_light->node()->look_at_direction(glm::vec3(0, -1, 0));
 
     auto point_light = game_object->add_component<Point_light_component>(Point_light_component::create());
-    point_light->intensity() = 1;
+    point_light->intensity() = 5;
     point_light->node()->set_position(glm::vec3(-2, 0, 0));
-    point_light->kc() = 1;
+
+    auto spot_light = game_object->add_component<Spot_light_component>(Spot_light_component::create());
+    spot_light->intensity() = 5;
+    spot_light->node()->set_position(glm::vec3(2, 0, 0));
+    spot_light->inner_angle() = 5.0f;
+    spot_light->outer_angle() = 10.0f;
 
     auto geometry = Geometry::create_box();
     auto material = Phong_material::create();

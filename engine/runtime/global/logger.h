@@ -1,15 +1,20 @@
 #pragma once
 
+#include "engine/runtime/global/singleton.h"
+#include "spdlog/logger.h"
 #include <spdlog/async.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <cstdint>
 #include <stdexcept>
+#include <format>
 
 namespace rtr {
 
-
 class Logging_system {
+private:
+    std::shared_ptr<spdlog::logger> m_logger{};
+
 public:
     enum class Level : uint8_t {
         debug,
@@ -27,8 +32,8 @@ public:
         spdlog::init_thread_pool(8192, 1);
         
         m_logger = std::make_shared<spdlog::async_logger>(
-            "RTLogger",
-            console_sink,
+            "logger",
+            spdlog::sinks_init_list{console_sink},
             spdlog::thread_pool(),
             spdlog::async_overflow_policy::block
         );
@@ -38,40 +43,39 @@ public:
     }
 
     ~Logging_system() {
-        m_logger->flush();
+        spdlog::shutdown();
         spdlog::drop_all();
     }
 
     template<typename... TARGS>
-    void log(Level level, TARGS&&... args) {
+    void log(Level level, std::format_string<TARGS...> fmt, TARGS&&... args) {
+        // 先统一格式化消息
+        std::string message = std::format(fmt, std::forward<TARGS>(args)...);
+        
         switch(level) {
             case Level::debug:
-                m_logger->debug(std::forward<TARGS>(args)...);
+                m_logger->debug(message);
                 break;
             case Level::info:
-                m_logger->info(std::forward<TARGS>(args)...);
+                m_logger->info(message);
                 break;
             case Level::warn:
-                m_logger->warn(std::forward<TARGS>(args)...);
+                m_logger->warn(message);
                 break;
             case Level::error:
-                m_logger->error(std::forward<TARGS>(args)...);
+                m_logger->error(message);
                 break;
-            case Level::fatal:
-                m_logger->critical(std::forward<TARGS>(args)...);
-                fatal(std::forward<TARGS>(args)...);
+            case Level::fatal: {
+                std::string error_msg = std::format("FATAL: {}", message);
+                m_logger->critical(error_msg);
+                throw std::runtime_error(error_msg);
                 break;
+            }
         }
     }
 
-private:
-    template<typename... TARGS>
-    void fatal(TARGS&&... args) {
-        const std::string format_str = fmt::format(std::forward<TARGS>(args)...);
-        throw std::runtime_error(format_str);
-    }
-
-    std::shared_ptr<spdlog::logger> m_logger;
 };
+
+using Log_sys = Singleton<Logging_system>;
 
 }

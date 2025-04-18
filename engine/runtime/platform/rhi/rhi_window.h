@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/runtime/global/base.h" 
+#include "engine/runtime/global/logger.h"
 
 namespace rtr {
 
@@ -18,13 +19,13 @@ protected:
     std::string m_title{};
 
     Window_resize_event m_window_resize_event{[&](int width, int height) {
-        std::cout << "Viewport resized to: " << width << " " << height << std::endl;
+        Log_sys::get_instance()->log(Logging_system::Level::info, "Window resized: {} {}", width, height);
 		this->set_viewport(0, 0, width, height);
     }};
 
     Key_event m_key_event{[&](Key_code key_code, Key_action key_action, unsigned int repeat_count) {
         if (key_code == Key_code::ESCAPE && key_action == Key_action::PRESS) {
-            std::cout << "Window close" << std::endl;
+            Log_sys::get_instance()->log(Logging_system::Level::info, "Window closed");
             this->deactivate();
         }
     }};

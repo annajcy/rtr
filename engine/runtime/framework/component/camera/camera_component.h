@@ -74,12 +74,12 @@ public:
     
         auto& data = tick_context.logic_swap_data;
 
-        Swap_camera camera{};
-        camera.camera_position = node()->world_position();
-        camera.projection_matrix = projection_matrix();
-        camera.view_matrix = view_matrix();
+        data.camera = Swap_camera{
+            .view_matrix = view_matrix(),
+            .projection_matrix = projection_matrix(),
+            .camera_position = node()->world_position(),
+        };
 
-        data.camera = camera;
     }
     
 };
