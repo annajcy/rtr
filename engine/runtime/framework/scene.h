@@ -40,6 +40,7 @@ public:
     }
 
     const std::vector<std::shared_ptr<Game_object>>& game_objects() const { return m_game_objects; }
+    
     std::shared_ptr<Game_object> get_game_object(const std::string& name) {
         for (auto& game_object : m_game_objects) {
             if (game_object->name() == name) {

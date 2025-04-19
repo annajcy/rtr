@@ -7,6 +7,7 @@
 #include "engine/runtime/framework/component/node/node_component.h"
 #include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/global/guid.h"
+#include <memory>
 #include <vector>
 
 namespace rtr {
@@ -29,6 +30,8 @@ public:
 
     virtual ~Game_object() = default;
     const std::string& name() const { return m_name; }
+
+    const std::vector<std::shared_ptr<Component_base>>& components() const { return m_components; }
 
 	template<typename T> 
 	std::shared_ptr<T> get_component() {

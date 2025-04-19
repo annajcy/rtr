@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/platform/rhi/rhi_imgui.h"
 #include "engine/runtime/platform/rhi/rhi_window.h"
 #include "engine/runtime/runtime.h"
@@ -67,6 +68,26 @@ private:
         m_imgui->color_edit("bg color", glm::value_ptr(m_engine_runtime->render_system()->renderer()->clear_state().color_clear_value));
         if (m_imgui->button("change", 50.0, 30.0)) {
             m_engine_runtime->render_system()->renderer()->apply_clear_state();
+        }
+        for (auto& gos : m_engine_runtime->world()->current_scene()->game_objects()) {
+            m_imgui->text("game object", gos->name());
+            for (auto& component : gos->components()) {
+                if (component->component_type() == Component_type::NODE) {
+                    auto node = std::dynamic_pointer_cast<Node_component>(component);
+                    m_imgui->text("position", glm::to_string(node->position()));
+                    m_imgui->text("rotation", glm::to_string(node->rotation()));
+                    m_imgui->text("scale", glm::to_string(node->scale()));
+                } else if (component->component_type() == Component_type::MESH_RENDERER) {
+                    auto mesh_renderer = std::dynamic_pointer_cast<Mesh_renderer_component>(component);
+                    m_imgui->text("material", mesh_renderer->material()->shader()->get_main_shader()->name());
+                } else if (component->component_type() == Component_type::CAMERA) {
+                    auto camera = std::dynamic_pointer_cast<Camera_component>(component);
+                    m_imgui->text("camera type", camera->camera_type() == Camera_type::PERSPECTIVE ? "perspective" : "orthographic");
+                } else if (component->component_type() == Component_type::CAMERA_CONTROL) {
+                    auto camera_control = std::dynamic_pointer_cast<Camera_control_component>(component);
+                    m_imgui->text("camera control type", camera_control->camera_control_type() == Camera_control_type::TRACKBALL? "trackball" : "orbit");
+                }
+            }
         }
         m_imgui->frame_rate();
         m_imgui->end_render();

@@ -82,8 +82,8 @@ public:
     }
     
     void update_mouse_position(double x, double y) {
-        m_state.mouse_dx = x - m_state.mouse_dx;
-        m_state.mouse_dy = y - m_state.mouse_dy;
+        m_state.mouse_dx = x - m_state.mouse_x;
+        m_state.mouse_dy = y - m_state.mouse_y;
         m_state.mouse_x = x;
         m_state.mouse_y = y;
     }

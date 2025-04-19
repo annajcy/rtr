@@ -23,8 +23,8 @@ using namespace rtr;
 const char* vertex_shader_source = R"(
 
 layout(location = 0) in vec3 a_position;
-layout(location = 2) in vec2 a_uv;
-layout(location = 1) in vec3 a_normal;
+layout(location = 1) in vec2 a_uv;
+layout(location = 2) in vec3 a_normal;
 layout(location = 3) in vec3 a_tangent;
 
 layout(std140, binding = 0) uniform Camera {
@@ -50,14 +50,10 @@ void main() {
 )";
 
 const char* fragment_shader_source = R"(
-
 // 输入变量
 in vec2 v_uv;
 in vec3 v_normal;
 in vec3 v_frag_position;
-
-// 添加宏定义
-#define ENABLE_ALBEDO_MAP  // 由材质系统根据是否设置albedo_map动态控制
 
 // 输出变量
 out vec4 frag_color;
@@ -98,35 +94,21 @@ int main() {
 
     scene->set_skybox(std::make_shared<Texture2D>(bk_image));
 
-    auto game_object = scene->add_game_object(Game_object::create("go1"));
- 
-    auto node = game_object->add_component<Node_component>(Node_component::create());
+    
 
-    auto camera = game_object->add_component<Perspective_camera_component>(Perspective_camera_component::create(
+    auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
+    auto camera_node = camera_game_object->add_component<Node_component>(Node_component::create());
+    auto camera = camera_game_object->add_component<Perspective_camera_component>(Perspective_camera_component::create(
         45.0f,
-        1.0f,
+        (float)engine_runtime_descriptor.width / (float)engine_runtime_descriptor.height,
         0.1f,
         100.0f
     ));
 
-    camera->node()->set_position(glm::vec3(0, 0, 3));
+    camera->node()->set_position(glm::vec3(0, 0, 5));
     camera->node()->look_at_point(glm::vec3(0, 0, 0));
 
-    auto camera_control = game_object->add_component<Trackball_camera_control_component>(Trackball_camera_control_component::create());
-
-    auto directional_light = game_object->add_component<Directional_light_component>(Directional_light_component::create());
-    directional_light->intensity() = 1.0f;
-    directional_light->node()->look_at_direction(glm::vec3(0, -1, 0));
-
-    auto point_light = game_object->add_component<Point_light_component>(Point_light_component::create());
-    point_light->intensity() = 5;
-    point_light->node()->set_position(glm::vec3(-2, 0, 0));
-
-    auto spot_light = game_object->add_component<Spot_light_component>(Spot_light_component::create());
-    spot_light->intensity() = 5;
-    spot_light->node()->set_position(glm::vec3(2, 0, 0));
-    spot_light->inner_angle() = 5.0f;
-    spot_light->outer_angle() = 10.0f;
+    auto camera_control = camera_game_object->add_component<Trackball_camera_control_component>(Trackball_camera_control_component::create());
 
     auto shader = Shader::create(
         Shader_program::create(
@@ -136,7 +118,10 @@ int main() {
                 {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, fragment_shader_source)}
             }, 
             std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
-                {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))}
+                {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
+                // {"view", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
+                // {"projection", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
+                // //{"camera_position", Uniform_entry<glm::vec3>::create(glm::vec3(0.0))}
             }), 
         Shader::get_feature_set_from_features_list(std::vector<Shader_feature> {
             Shader_feature::ALBEDO_MAP
@@ -145,12 +130,24 @@ int main() {
 
     shader->premake_shader_variants();
 
-    auto geometry = Geometry::create_sphere();
     auto material = Test_material::create(shader);
     material->albedo_map = std::make_shared<Texture2D>(image);
 
+    auto game_object = scene->add_game_object(Game_object::create("go1"));
+    auto node = game_object->add_component<Node_component>(Node_component::create());
+    node->set_position(glm::vec3(-1, 0, 0));
+
     auto mesh_renderer = game_object->add_component<Mesh_renderer_component>(Mesh_renderer_component::create(
-        geometry,
+        Geometry::create_sphere(),
+        material
+    ));
+
+    auto game_object2 = scene->add_game_object(Game_object::create("go2"));
+    auto node2 = game_object2->add_component<Node_component>(Node_component::create());
+    node2->set_position(glm::vec3(1, 0, 0));
+
+    auto mesh_renderer2 = game_object2->add_component<Mesh_renderer_component>(Mesh_renderer_component::create(
+        Geometry::create_box(),
         material
     ));
 

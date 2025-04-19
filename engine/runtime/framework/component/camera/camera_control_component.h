@@ -20,7 +20,7 @@ protected:
     Camera_control_type m_camera_control_type{};
     
     float m_move_speed{0.001f};
-    float m_rotate_speed{0.1f};
+    float m_rotate_speed{0.05f};
     float m_zoom_speed{0.01f};
 
 public:
@@ -85,12 +85,8 @@ public:
 
         auto &input_system_state = tick_context.input_state;
 
-        // std::cout << "mouse dx: " << input_system_state.mouse_dx << std::endl;
-        // std::cout << "mouse dy: " << input_system_state.mouse_dy << std::endl;
-        // std::cout << "mouse scroll dy: " << input_system_state.mouse_scroll_dy << std::endl;
-
         if (input_system_state.mouse_button(Mouse_button::LEFT) != Key_action::RELEASE) {
-            yaw(-input_system_state.mouse_dx * m_rotate_speed);
+            yaw(input_system_state.mouse_dx * m_rotate_speed);
             pitch(input_system_state.mouse_dy * m_rotate_speed);
         } else if (input_system_state.mouse_button(Mouse_button::MIDDLE) != Key_action::RELEASE) {
             camera()->node()->translate(camera()->node()->up(), input_system_state.mouse_dy * m_move_speed);
@@ -106,7 +102,7 @@ public:
 private:
     void pitch(float angle) override {
         auto mat = glm::rotate(glm::identity<glm::mat4>(), glm::radians(angle), camera()->node()->right());
-        camera()->node()->rotate(angle, camera()->node()->right());
+        camera()->node()->rotate(angle, camera()->node()->left());
         camera()->node()->position() = glm::vec3(mat * glm::vec4(camera()->node()->position(), 1.0f));
     }
 

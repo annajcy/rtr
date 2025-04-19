@@ -25,7 +25,6 @@ private:
     std::shared_ptr<RHI_memory_buffer_binder> m_memory_binder{};
     std::shared_ptr<Uniform_buffer<Camera_ubo>> m_camera_ubo{};
     
-
 public:
     Test_render_pipeline(
         const std::shared_ptr<RHI_device>& device
@@ -43,6 +42,7 @@ public:
         tick_context.renderer->clear(tick_context.screen_frame_buffer);
         for (auto &go : tick_context.render_swap_data.render_objects) {
             auto mat = go.material;
+            auto pipeline = m_device->create_pipeline_state(mat->get_pipeline_state());
 
             auto geo = go.geometry;
             if (!geo->is_linked()) geo->link(m_device);
