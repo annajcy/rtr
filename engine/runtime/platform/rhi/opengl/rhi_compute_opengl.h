@@ -27,9 +27,14 @@ public:
     void wait() override {
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
-    
 
-
+    static std::shared_ptr<RHI_compute_task_OpenGL> create(
+        const std::shared_ptr<RHI_shader_program>& shader_program
+    ) {
+        return std::make_shared<RHI_compute_task_OpenGL>(
+            shader_program
+        );
+    }
 };
 
 };

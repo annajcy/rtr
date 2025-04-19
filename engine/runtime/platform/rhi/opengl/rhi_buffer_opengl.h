@@ -69,7 +69,7 @@ public:
 
 class RHI_vertex_buffer_OpenGL : public RHI_buffer_OpenGL, public IRHI_vertex_buffer {
 public:
-    using Ptr = std::shared_ptr<RHI_vertex_buffer_OpenGL>;
+
     RHI_vertex_buffer_OpenGL(
         Buffer_usage usage,
         Buffer_data_type attribute_type,
@@ -81,7 +81,7 @@ public:
         IRHI_vertex_buffer(attribute_type, iterate_type, unit_data_count) {}
 
     ~RHI_vertex_buffer_OpenGL() override {}
-    static Ptr create(
+    static std::shared_ptr<RHI_vertex_buffer_OpenGL> create(
         Buffer_usage usage,
         Buffer_data_type attribute_type,
         Buffer_iterate_type iterate_type,
@@ -102,7 +102,7 @@ public:
 
 class RHI_element_buffer_OpenGL : public RHI_buffer_OpenGL, public IRHI_element_buffer {
 public:
-    using Ptr = std::shared_ptr<RHI_element_buffer_OpenGL>;
+
     RHI_element_buffer_OpenGL(
         Buffer_usage usage,
         unsigned int data_count,
@@ -113,7 +113,7 @@ public:
 
     ~RHI_element_buffer_OpenGL() override {}
 
-    static Ptr create(
+    static std::shared_ptr<RHI_element_buffer_OpenGL> create(
         Buffer_usage usage,
         unsigned int data_count,
         unsigned int data_size,
@@ -130,8 +130,6 @@ public:
 
 class RHI_memory_buffer_OpenGL : public RHI_buffer_OpenGL, public IRHI_memory_buffer {
 public:
-    using Ptr = std::shared_ptr<RHI_memory_buffer_OpenGL>;
-
     RHI_memory_buffer_OpenGL(
         Buffer_type type,
         Buffer_usage usage,
@@ -152,7 +150,7 @@ public:
         glBindBufferRange(gl_buffer_type(m_type), position, m_buffer_id, offset, size);
     }
 
-    static Ptr create(
+    static std::shared_ptr<RHI_memory_buffer_OpenGL> create(
         Buffer_type type,
         Buffer_usage usage,
         unsigned int data_size,
@@ -169,9 +167,7 @@ public:
 };
 
 class RHI_memory_binder_OpenGL : public RHI_memory_buffer_binder {
-
 public:
-    using Ptr = std::shared_ptr<RHI_memory_binder_OpenGL>;
     RHI_memory_binder_OpenGL() : RHI_memory_buffer_binder() {}
     virtual ~RHI_memory_binder_OpenGL() {}
     void bind_memory_buffer(
@@ -205,7 +201,7 @@ public:
         }
     }
 
-    static Ptr create() {
+    static std::shared_ptr<RHI_memory_binder_OpenGL> create() {
         return std::make_shared<RHI_memory_binder_OpenGL>();
     }
 };

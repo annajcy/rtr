@@ -1,8 +1,10 @@
+#include "engine/runtime/core/memory_buffer.h"
 #include "engine/runtime/core/shader.h"
 #include "engine/runtime/global/base.h" 
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 #include <memory>
+#include <vector>
 
 using namespace std;
 using namespace rtr;
@@ -45,27 +47,25 @@ int main() {
         float offset{};
         // 添加padding保证结构体16字节对齐
         float padding[2];  // 新增填充字段
-    } ubo_data[4];         // 原数组保持4个元素
+    };
+
+    std::vector<UniformData> ubo_data(4);
 
     ubo_data[0] = {1.0f, 0.0f, {}};  // 初始化添加padding
     ubo_data[1] = {2.0f, 1.0f, {}};
     ubo_data[2] = {3.0f, 2.0f, {}};
     ubo_data[3] = {4.0f, 3.0f, {}};
-    
-    auto uniform_buffer = device->create_memory_buffer(
-        Buffer_type::UNIFORM,
-        Buffer_usage::STATIC,
-        sizeof(UniformData) * 4,
-        ubo_data
-    );
 
-    // 创建存储缓冲
-    auto storage_buffer = device->create_memory_buffer(
-        Buffer_type::STORAGE, 
-        Buffer_usage::DYNAMIC, 
-        initial_data.size() * sizeof(float), 
-        initial_data.data() 
-    );
+    auto ubos = Uniform_buffer_array<UniformData>::create(ubo_data);
+    ubos->link(device);
+
+    auto uniform_buffer = ubos->rhi_resource();
+
+    auto sb = Storage_buffer_array<float>::create(initial_data);
+
+    sb->link(device);
+
+    auto storage_buffer = sb->rhi_resource();
 
     auto cs = Shader_code::create(Shader_type::COMPUTE, compute_shader_source);
 

@@ -12,9 +12,8 @@ namespace rtr {
 class RHI_imgui_OpenGL : public RHI_imgui {
 
 public:
-    using Ptr = std::shared_ptr<RHI_imgui_OpenGL>;
 
-    static Ptr create(const std::shared_ptr<RHI_window>& window) {
+    static std::shared_ptr<RHI_imgui_OpenGL> create(const std::shared_ptr<RHI_window>& window) {
         return std::make_shared<RHI_imgui_OpenGL>(window);
     }
     

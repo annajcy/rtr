@@ -7,6 +7,7 @@
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include <memory>
 #include <vector>
+
 namespace rtr {
 
 class Frame_buffer : public GUID, public RHI_linker<RHI_frame_buffer> {

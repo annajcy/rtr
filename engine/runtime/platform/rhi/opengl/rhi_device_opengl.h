@@ -210,7 +210,7 @@ public:
     }
 
     std::shared_ptr<RHI_imgui> create_imgui(const std::shared_ptr<RHI_window>& window) override {
-        return RHI_imgui_OpenGL::create(window);
+        return std::make_shared<RHI_imgui_OpenGL>(window);
     }
 
 };
