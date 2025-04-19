@@ -65,8 +65,6 @@ public:
         stbi_image_free(const_cast<void*>(reinterpret_cast<const void*>(m_data)));
     }
 
-    using Ptr = std::shared_ptr<Image>;
-
     int width() const { return m_width; }
     int height() const { return m_height; }
     int channels() const { return m_channels; }
@@ -77,7 +75,7 @@ public:
 
 class Image_loader {
 public:
-    static Image::Ptr load_from_path(
+    static std::shared_ptr<Image> load_from_path(
         Image_format format,
         const std::string& path,
         bool flip_y = true
@@ -85,7 +83,7 @@ public:
         return std::make_shared<Image>(format, path, flip_y);
     }
 
-    static Image::Ptr load_from_data(
+    static std::shared_ptr<Image> load_from_data(
         Image_format format,
         const unsigned char* data,
         unsigned int data_size,

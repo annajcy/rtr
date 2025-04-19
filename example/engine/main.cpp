@@ -94,8 +94,6 @@ int main() {
 
     scene->set_skybox(std::make_shared<Texture2D>(bk_image));
 
-    
-
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
     auto camera_node = camera_game_object->add_component<Node_component>(Node_component::create());
     auto camera = camera_game_object->add_component<Perspective_camera_component>(Perspective_camera_component::create(
@@ -118,10 +116,7 @@ int main() {
                 {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, fragment_shader_source)}
             }, 
             std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
-                {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
-                // {"view", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
-                // {"projection", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
-                // //{"camera_position", Uniform_entry<glm::vec3>::create(glm::vec3(0.0))}
+                {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))}
             }), 
         Shader::get_feature_set_from_features_list(std::vector<Shader_feature> {
             Shader_feature::ALBEDO_MAP
