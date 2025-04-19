@@ -1,7 +1,9 @@
 #pragma once
 
+#include "engine/runtime/core/memory_buffer.h"
 #include "engine/runtime/function/render/render_pipeline.h"
 
+#include "engine/runtime/function/render/render_struct.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_frame_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_renderer.h"
@@ -26,7 +28,7 @@ public:
     ) : m_device(device), 
         m_screen_buffer(device->create_screen_frame_buffer(window)),
         m_renderer(device->create_renderer(Clear_state::enabled())) {
-            m_render_pipeline = std::make_shared<Test_render_pipeline>();
+            m_render_pipeline = std::make_shared<Test_render_pipeline>(m_device);
         }
 
     static std::shared_ptr<Render_system> create(

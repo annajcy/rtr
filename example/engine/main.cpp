@@ -1,5 +1,7 @@
 #include "engine/editor/editor.h"
 #include "engine/runtime/core/material.h"
+#include "engine/runtime/core/memory_buffer.h"
+#include "engine/runtime/core/shader.h"
 #include "engine/runtime/core/texture.h"
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
@@ -8,11 +10,72 @@
 #include "engine/runtime/framework/scene.h"
 #include "engine/runtime/framework/world.h"
 #include "engine/runtime/core/geometry.h"
+#include "engine/runtime/global/enum.h"
+#include "engine/runtime/platform/rhi/rhi_shader_program.h"
 #include "engine/runtime/resource/loader/image_loader.h"
 #include "engine/runtime/runtime.h"
+#include "glm/fwd.hpp"
 #include <memory>
+#include <vector>
 
 using namespace rtr;
+
+const char* vertex_shader_source = R"(
+
+layout(location = 0) in vec3 a_position;
+layout(location = 2) in vec2 a_uv;
+layout(location = 1) in vec3 a_normal;
+layout(location = 3) in vec3 a_tangent;
+
+layout(std140, binding = 0) uniform Camera {
+    mat4 view;
+    mat4 projection;
+    vec3 camera_position;
+};
+
+uniform mat4 model;
+
+out vec2 v_uv;
+out vec3 v_normal;
+out vec3 v_frag_position;
+
+void main() {
+    gl_Position = projection * view * model * vec4(a_position, 1.0);
+
+    v_uv = a_uv;
+    v_normal = mat3(transpose(inverse(model))) * a_normal;
+    v_frag_position = vec3(model * vec4(a_position, 1.0));
+}
+
+)";
+
+const char* fragment_shader_source = R"(
+
+// 输入变量
+in vec2 v_uv;
+in vec3 v_normal;
+in vec3 v_frag_position;
+
+// 添加宏定义
+#define ENABLE_ALBEDO_MAP  // 由材质系统根据是否设置albedo_map动态控制
+
+// 输出变量
+out vec4 frag_color;
+
+// 纹理采样器
+layout(binding = 0) uniform sampler2D u_albedo_map;
+
+void main() {
+#ifdef ENABLE_ALBEDO_MAP
+    // 启用albedo时使用纹理采样
+    frag_color = texture(u_albedo_map, v_uv);
+#else
+    // 未启用时用法线值显示（标准化到0~1范围）
+    vec3 normalized_normal = normalize(v_normal);
+    frag_color = vec4((normalized_normal + 1.0) / 2.0, 1.0);
+#endif
+}
+)";
 
 int main() {
 
@@ -23,7 +86,7 @@ int main() {
 
     auto image = Image_loader::load_from_path(
         Image_format::RGB_ALPHA, 
-         "assets/image/earth.png"
+        "assets/image/earth.png"
     );
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
@@ -65,13 +128,26 @@ int main() {
     spot_light->inner_angle() = 5.0f;
     spot_light->outer_angle() = 10.0f;
 
-    auto geometry = Geometry::create_box();
-    auto material = Phong_material::create();
+    auto shader = Shader::create(
+        Shader_program::create(
+            "test", 
+            std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
+                {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, vertex_shader_source)},
+                {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, fragment_shader_source)}
+            }, 
+            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+                {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))}
+            }), 
+        Shader::get_feature_set_from_features_list(std::vector<Shader_feature> {
+            Shader_feature::ALBEDO_MAP
+        })
+    );
 
-    material->is_receive_shadows = false;
+    shader->premake_shader_variants();
+
+    auto geometry = Geometry::create_sphere();
+    auto material = Test_material::create(shader);
     material->albedo_map = std::make_shared<Texture2D>(image);
-    material->shininess = 32;
-    material->transparency = 0.5f;
 
     auto mesh_renderer = game_object->add_component<Mesh_renderer_component>(Mesh_renderer_component::create(
         geometry,

@@ -22,6 +22,9 @@ public:
     Buffer_type get_type() const { return m_type; }
     Buffer_usage get_usage() const { return m_usage; }
 
+    virtual void pull_from_rhi() = 0;
+    virtual void push_to_rhi() = 0;
+
 };
 
 template<typename T>
@@ -38,13 +41,29 @@ public:
     T data() const { return m_data; }
     void set_data(const T& data) { m_data = data; }
 
-    void link(const std::shared_ptr<RHI_device>& device) {
+    void link(const std::shared_ptr<RHI_device>& device) override {
         m_rhi_resource = device->create_memory_buffer(
             m_type,  
             m_usage, 
             sizeof(T), 
             &m_data
         );
+    }
+
+    void push_to_rhi() override {
+        if (m_rhi_resource) {
+            m_rhi_resource->map_buffer([this](void* data) {
+                memcpy(data, &m_data, sizeof(T));
+            }, RHI_buffer_access_flags::write_only());
+        }
+    }
+
+    void pull_from_rhi () override {
+        if (m_rhi_resource) {
+            m_rhi_resource->map_buffer([this](void* data) {
+                memcpy(&m_data, data, sizeof(T));
+            }, RHI_buffer_access_flags::read_only());
+        }
     }
 
     static std::shared_ptr<Uniform_buffer<T>> create(const T& data) {
@@ -64,13 +83,32 @@ public:
 
     ~Uniform_buffer_array() = default;
 
-    void link(const std::shared_ptr<RHI_device>& device) {
+    const std::vector<T>& data() const { return m_data; }
+    void set_data(const std::vector<T>& data) { m_data = data; }
+
+    void link(const std::shared_ptr<RHI_device>& device) override {
         m_rhi_resource = device->create_memory_buffer(
             m_type,  
             m_usage, 
             sizeof(T) * m_data.size(), 
             m_data.data()
         );
+    }
+
+    void push_to_rhi() override {
+        if (m_rhi_resource) {
+            m_rhi_resource->map_buffer([this](void* data) {
+                memcpy(data, m_data.data(), sizeof(T) * m_data.size());
+            }, RHI_buffer_access_flags::write_only());
+        }
+    }
+
+    void pull_from_rhi() override {
+        if (m_rhi_resource) {
+            m_rhi_resource->map_buffer([this](void* data) {
+                memcpy(m_data.data(), data, sizeof(T) * m_data.size());
+            }, RHI_buffer_access_flags::read_only());
+        }
     }
 
     static std::shared_ptr<Uniform_buffer_array<T>> create(const std::vector<T>& data) {
@@ -94,13 +132,29 @@ public:
     T data() const { return m_data; }
     void set_data(const T& data) { m_data = data; }
 
-    void link(const std::shared_ptr<RHI_device>& device) {
+    void link(const std::shared_ptr<RHI_device>& device) override {
         m_rhi_resource = device->create_memory_buffer(
             m_type,  
             m_usage, 
             sizeof(T), 
             &m_data
         );
+    }
+
+    void push_to_rhi() override {
+        if (m_rhi_resource) {
+            m_rhi_resource->map_buffer([this](void* data) {
+                memcpy(data, &m_data, sizeof(T));
+            }, RHI_buffer_access_flags::write_only());
+        };
+    }
+
+    void pull_from_rhi() override {
+        if (m_rhi_resource) {
+            m_rhi_resource->map_buffer([this](void* data) {
+                memcpy(&m_data, data, sizeof(T));
+            }, RHI_buffer_access_flags::read_only());
+        }
     }
 
     static std::shared_ptr<Storage_buffer<T>> create(const T& data) {
@@ -120,15 +174,32 @@ public:
     m_data(data) {}
 
     ~Storage_buffer_array() = default;
-    const std::shared_ptr<T[]> data() const { return m_data; }
-    void set_data(const std::shared_ptr<T[]>& data) { m_data = data; }
-    void link(const std::shared_ptr<RHI_device>& device) {
+    const std::vector<T>&data() const { return m_data; }
+    void set_data(const std::vector<T>& data) { m_data = data; }
+    void link(const std::shared_ptr<RHI_device>& device) override {
         m_rhi_resource = device->create_memory_buffer(
             m_type,
             m_usage,
             sizeof(T) * m_data.size(),
             m_data.data()
         );
+    }
+
+    void push_to_rhi() override {
+        if (m_rhi_resource) {
+            m_rhi_resource->map_buffer([this](void* data) {
+                memcpy(data, m_data.data(), sizeof(T) * m_data.size());
+            }, RHI_buffer_access_flags::write_only());
+        }
+
+    }
+
+    void pull_from_rhi() override {
+        if (m_rhi_resource) {
+            m_rhi_resource->map_buffer([this](void* data) {
+                memcpy(m_data.data(), data, sizeof(T) * m_data.size());
+            }, RHI_buffer_access_flags::read_only());
+        }
     }
 
     static std::shared_ptr<Storage_buffer_array<T>> create(const std::vector<T>& data) {

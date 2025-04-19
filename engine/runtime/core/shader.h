@@ -2,11 +2,13 @@
 
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/global/guid.h"
+#include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_shader_code.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
 #include <bitset>
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -186,7 +188,7 @@ public:
 
         // 处理着色器源码
         for (const auto& [type, source] : m_main_shader_program->shader_codes()) {
-            shader_codes[type] = Shader_code::create(type, defines + source->code());
+            shader_codes[type] = Shader_code::create(type, "#version 460 core\n" + defines + source->code());
         }
 
         auto variant_shader_program = std::make_shared<Shader_program>(
@@ -199,6 +201,46 @@ public:
         return m_variant_shader_programs.at(feature_set);
     }
 
+    std::vector<feature_set> get_shader_variants_permutation() {
+        std::vector<feature_set> permutations{};
+
+        std::function<void(size_t u, feature_set, std::vector<feature_set>&)> dfs = [&](size_t u, feature_set current, std::vector<feature_set>& permutations) {
+            if (u == static_cast<size_t>(Shader_feature::MAX_FEATURES)) {
+                permutations.push_back(current);
+                return;
+            }
+            
+            if (m_shader_feature_whitelist.test(u)) {
+                // 情况1：该位为0
+                dfs(u + 1, current, permutations);
+                // 情况2：该位为1
+                current.set(u);
+                dfs(u + 1, current, permutations);
+            } else {
+                // 不在白名单则保持为0
+                dfs(u + 1, current, permutations);
+            }
+        };
+
+        dfs(0, feature_set{}, permutations);
+        return permutations;
+    }
+
+    // 替代原来的空实现
+    void premake_shader_variants() {
+        auto permutations = get_shader_variants_permutation();
+        for (const auto& perm : permutations) {
+            get_shader_variant(perm);  // 预生成所有变体
+        }
+    }
+
+    void link_all_shader_variants(const std::shared_ptr<RHI_device>& device) {
+        for (auto &[_, shader_program] : m_variant_shader_programs) {
+            if (!shader_program->is_linked())
+                shader_program->link(device);
+        }
+    }
+
     static std::shared_ptr<Shader> create(
         const std::shared_ptr<Shader_program>& main_program,
         const feature_set& shader_feature_whitelist
@@ -209,6 +251,14 @@ public:
     static std::string get_shader_code_from_url(const std::string& url) {
         std::unordered_set<std::string> processed_files{};
         return load_shader_code_with_includes(url, processed_files);
+    }
+
+    static feature_set get_feature_set_from_features_list(const std::vector<Shader_feature>& feature_list) {
+        feature_set feature_set{};
+        for (const auto& feature : feature_list) {
+            feature_set.set(static_cast<size_t>(feature));
+        }
+        return feature_set;
     }
 
     static feature_set get_phong_shader_feature_whitelist() {
@@ -353,7 +403,18 @@ public:
         );
     }
 
-private:
+
+
+
+
+
+
+
+
+
+
+
+
     static std::string load_shader_code_with_includes(
         const std::string& file_path,
         std::unordered_set<std::string>& processed

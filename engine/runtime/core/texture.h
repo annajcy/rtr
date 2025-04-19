@@ -24,7 +24,9 @@ protected:
 public:
     Texture2D(
         const std::shared_ptr<Image>& image
-    ) : Texture(Texture_type::TEXTURE_2D) {}
+    ) : Texture(Texture_type::TEXTURE_2D),
+        m_image(image) {}
+        
     virtual ~Texture2D() {}
 
     const std::shared_ptr<Image>& image() const { return m_image; }

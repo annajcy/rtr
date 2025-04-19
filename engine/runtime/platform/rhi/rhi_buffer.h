@@ -7,9 +7,33 @@
 namespace rtr {
 
 struct RHI_buffer_access_flags {
-    bool is_read{};
-    bool is_write{};
-    bool is_buffer_discard{};
+    bool is_read{true};
+    bool is_write{true};
+    bool is_buffer_discard{false};
+
+    static RHI_buffer_access_flags read_only() {
+        return RHI_buffer_access_flags{
+            .is_read = true,
+            .is_write = false,
+            .is_buffer_discard = false
+        };
+    }
+
+    static RHI_buffer_access_flags write_only() {
+        return RHI_buffer_access_flags{
+           .is_read = false,
+           .is_write = true,
+           .is_buffer_discard = false
+        };
+    }
+
+    static RHI_buffer_access_flags read_write() {
+        return RHI_buffer_access_flags{
+          .is_read = true,
+          .is_write = true,
+          .is_buffer_discard = false
+        };
+    }
 };
 
 class RHI_buffer {

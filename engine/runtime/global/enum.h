@@ -336,7 +336,8 @@ enum class Material_type {
     PHONG,
     PBR,
     SKYBOX_CUBEMAP,
-    SKYBOX_SPHERICAL
+    SKYBOX_SPHERICAL,
+    TEST
 };
 
 enum class Draw_mode {

@@ -89,21 +89,22 @@ int main() {
     compute_task->dispatch(4, 1, 1);
     compute_task->wait();
 
-    std::vector<float> res{};
+    sb->pull_from_rhi();
 
-    storage_buffer->map_buffer([&](void* data_ptr){
-        float* data = static_cast<float*>(data_ptr);
-        for (size_t i = 0; i < initial_data.size(); ++i) {
-            res.push_back(data[i]);
-        }
-    }, RHI_buffer_access_flags{
-        true,
-        false,
-        false
-    });
+    std::vector<float> res = sb->data();
     
     for (auto v : initial_data) cout << v << " ";
     cout << endl;
+    for (auto v : res) cout << v << " ";
+    cout << endl;
+
+    sb->push_to_rhi();
+
+    compute_task->dispatch(4, 1, 1);
+    compute_task->wait();
+
+    sb->pull_from_rhi();
+    res = sb->data();
     for (auto v : res) cout << v << " ";
     cout << endl;
 

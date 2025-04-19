@@ -89,27 +89,27 @@
 //         "assets/image/bk.jpg"
 //     );
 
-    // auto mainTex = device->create_texture_2D(
-    //     bk->width(), 
-    //     bk->height(), 
-    //     1, 
-    //     Texture_internal_format::RGB_ALPHA, 
-    //     std::unordered_map<Texture_wrap_target, Texture_wrap>{
-    //         {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
-    //         {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
-    //     }, 
-    //     std::unordered_map<Texture_filter_target, Texture_filter>{
-    //         {Texture_filter_target::MIN, Texture_filter::LINEAR},
-    //         {Texture_filter_target::MAG, Texture_filter::LINEAR}
-    //     }, 
-    //     Image_data{
-    //         bk->width(),
-    //         bk->height(),
-    //         bk->data_ptr(),
-    //         Texture_buffer_type::UNSIGNED_BYTE,
-    //         Texture_external_format::RGB_ALPHA
-    //     }
-    // );
+//     auto mainTex = device->create_texture_2D(
+//         bk->width(), 
+//         bk->height(), 
+//         1, 
+//         Texture_internal_format::RGB_ALPHA, 
+//         std::unordered_map<Texture_wrap_target, Texture_wrap>{
+//             {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
+//             {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
+//         }, 
+//         std::unordered_map<Texture_filter_target, Texture_filter>{
+//             {Texture_filter_target::MIN, Texture_filter::LINEAR},
+//             {Texture_filter_target::MAG, Texture_filter::LINEAR}
+//         }, 
+//         Image_data{
+//             bk->width(),
+//             bk->height(),
+//             bk->data_ptr(),
+//             Texture_buffer_type::UNSIGNED_BYTE,
+//             Texture_external_format::RGB_ALPHA
+//         }
+//     );
 
 //     mainTex->bind_to_unit(0);
 
@@ -291,7 +291,6 @@
 //     Clear_state clear_state = Clear_state::enabled();
 //     clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
 //     auto renderer = device->create_renderer(clear_state);
-    
 
 //     while (window->is_active()) {
 //         window->on_frame_begin();

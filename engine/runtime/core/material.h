@@ -46,6 +46,43 @@ public:
     virtual std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() = 0;
 };
 
+//TEST
+
+class Test_material : public Material {
+public:
+    std::shared_ptr<Texture2D> albedo_map{};
+    Test_material(const std::shared_ptr<Shader>& shader) : Material(
+        Material_type::TEST,
+        shader
+    ) {}
+
+    ~Test_material() = default;
+    bool is_transparent() const override { return false; }
+
+    Shader::feature_set get_shader_feature_set() const override { 
+        Shader::feature_set feature_set{};
+        if (albedo_map) {
+            feature_set.set(static_cast<size_t>(Shader_feature::ALBEDO_MAP));
+        }
+        return feature_set;
+    }
+
+    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
+        if (albedo_map) {
+            return {
+                {0, albedo_map}
+            };
+        }
+        return {};
+    }
+
+    static std::shared_ptr<Test_material> create(
+        const std::shared_ptr<Shader>& shader
+    ) {
+        return std::make_shared<Test_material>(shader);
+    }
+};
+
 class Phong_material : public Material {
 public:
     bool is_receive_shadows{false};
