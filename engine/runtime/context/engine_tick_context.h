@@ -23,19 +23,14 @@ struct Logic_tick_context {
 };
 
 struct Render_tick_context {
-    std::shared_ptr<RHI_renderer> renderer{};
-    std::shared_ptr<RHI_frame_buffer> screen_frame_buffer{};
+   
     const Swap_data &render_swap_data;
     float delta_time{};
     
     Render_tick_context(
-        const std::shared_ptr<RHI_renderer>& renderer,
-        std::shared_ptr<RHI_frame_buffer> screen_frame_buffer,
         const Swap_data &render_swap_data,
         float delta_time
-    ) : renderer(renderer),
-        screen_frame_buffer(screen_frame_buffer),
-        render_swap_data(render_swap_data),
+    ) : render_swap_data(render_swap_data),
         delta_time(delta_time) {}
 };
 

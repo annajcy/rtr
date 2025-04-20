@@ -38,6 +38,7 @@ uniform mat4 model;
 out vec2 v_uv;
 out vec3 v_normal;
 out vec3 v_frag_position;
+out vec3 v_tangent;
 
 void main() {
     gl_Position = projection * view * model * vec4(a_position, 1.0);
@@ -45,6 +46,7 @@ void main() {
     v_uv = a_uv;
     v_normal = mat3(transpose(inverse(model))) * a_normal;
     v_frag_position = vec3(model * vec4(a_position, 1.0));
+    v_tangent = mat3(model) * a_tangent;
 }
 
 )";
@@ -54,6 +56,7 @@ const char* fragment_shader_source = R"(
 in vec2 v_uv;
 in vec3 v_normal;
 in vec3 v_frag_position;
+in vec3 v_tangent;
 
 // 输出变量
 out vec4 frag_color;

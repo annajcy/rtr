@@ -117,8 +117,6 @@ public:
         logic_swap_data().clear();
 
         m_render_system->tick(Render_tick_context{
-            m_render_system->renderer(),
-            m_render_system->screen_buffer(),
             render_swap_data(),
             delta_time
         });
