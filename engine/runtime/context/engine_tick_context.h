@@ -2,9 +2,6 @@
 
 #include "engine/runtime/context/swap_struct.h"
 #include "engine/runtime/function/input/input_system.h"
-#include "engine/runtime/platform/rhi/rhi_frame_buffer.h"
-#include "engine/runtime/platform/rhi/rhi_renderer.h"
-#include <memory>
 
 namespace rtr {
     

@@ -2,14 +2,7 @@
 
 #include "engine/runtime/core/geometry.h"
 #include "engine/runtime/core/material.h"
-#include "engine/runtime/core/texture.h"
-#include "engine/runtime/core/skybox.h"
-#include "engine/runtime/platform/rhi/rhi_geometry.h"
-#include "engine/runtime/platform/rhi/rhi_renderer.h"
-#include "engine/runtime/platform/rhi/rhi_shader_program.h"
-#include "engine/runtime/platform/rhi/rhi_texture.h"
 #include <memory>
-#include <unordered_map>
 
 namespace rtr {
 

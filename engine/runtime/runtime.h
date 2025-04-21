@@ -10,7 +10,7 @@
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 #include "engine/runtime/framework/world.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
-#include "spdlog/common.h"
+
 
 #include <memory>
 

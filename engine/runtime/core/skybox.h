@@ -1,7 +1,6 @@
 #pragma once
 #include "engine/runtime/core/geometry.h"
 #include "engine/runtime/core/material.h"
-#include "engine/runtime/core/memory_buffer.h"
 #include "engine/runtime/core/texture.h"
 
 namespace rtr {

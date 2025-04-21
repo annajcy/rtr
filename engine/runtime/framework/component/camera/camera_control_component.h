@@ -88,14 +88,14 @@ public:
 private:
     void pitch(float angle) override {
         auto mat = glm::rotate(glm::identity<glm::mat4>(), glm::radians(angle), camera()->node()->right());
-        camera()->node()->rotate(angle, camera()->node()->left());
-        camera()->node()->position() = glm::vec3(mat * glm::vec4(camera()->node()->position(), 1.0f));
+        camera()->node()->rotate(angle, camera()->node()->right());
+        camera()->node()->set_position(glm::vec3(mat * glm::vec4(camera()->node()->position(), 1.0f)));
     }
 
     void yaw(float angle) override {
         auto mat = glm::rotate(glm::identity<glm::mat4>(), glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
         camera()->node()->rotate(angle, glm::vec3(0.0f, 1.0f, 0.0f));
-        camera()->node()->position() = glm::vec3(mat * glm::vec4(camera()->node()->position(), 1.0f));
+        camera()->node()->set_position(glm::vec3(mat * glm::vec4(camera()->node()->position(), 1.0f)));
     }
 };
 

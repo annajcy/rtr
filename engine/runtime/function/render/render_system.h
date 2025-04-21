@@ -1,9 +1,8 @@
 #pragma once
 
-#include "engine/runtime/core/memory_buffer.h"
+
 #include "engine/runtime/function/render/render_pipeline.h"
 
-#include "engine/runtime/function/render/render_struct.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_frame_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_renderer.h"

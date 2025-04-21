@@ -1,16 +1,9 @@
 #pragma once
 
 #include "engine/runtime/context/swap_struct.h"
-#include "engine/runtime/core/geometry.h"
-#include "engine/runtime/core/material.h"
-#include "engine/runtime/core/shader.h"
-#include "engine/runtime/core/texture.h"
 #include "engine/runtime/core/skybox.h"
-#include "engine/runtime/global/enum.h"
-#include "engine/runtime/resource/loader/image_loader.h"
 #include "game_object.h"
 #include <memory>
-#include <unordered_map>
 #include <vector>
 
 namespace rtr {

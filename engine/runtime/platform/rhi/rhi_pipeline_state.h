@@ -1,6 +1,5 @@
 #pragma once
 
-#include "engine/runtime/global/base.h" 
 #include "engine/runtime/global/enum.h"
 
 namespace rtr {
