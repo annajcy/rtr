@@ -17,17 +17,17 @@ public:
     Texture_type texture_type() const { return m_texture_type; }
 };
 
-class Texture2D : public Texture {
+class Texture_2D : public Texture {
 protected:
     std::shared_ptr<Image> m_image{};
 
 public:
-    Texture2D(
+    Texture_2D(
         const std::shared_ptr<Image>& image
     ) : Texture(Texture_type::TEXTURE_2D),
         m_image(image) {}
         
-    virtual ~Texture2D() {}
+    virtual ~Texture_2D() {}
 
     const std::shared_ptr<Image>& image() const { return m_image; }
     void set_image(const std::shared_ptr<Image>& image) { m_image = image; }
@@ -62,8 +62,8 @@ public:
         );
     }
 
-    static std::shared_ptr<Texture2D> create(const std::shared_ptr<Image>& image) {
-        return std::make_shared<Texture2D>(image);
+    static std::shared_ptr<Texture_2D> create(const std::shared_ptr<Image>& image) {
+        return std::make_shared<Texture_2D>(image);
     }
 
 };
@@ -105,7 +105,10 @@ public:
     int width() const { return m_width; }
     int height() const { return m_height; }
     void link(const std::shared_ptr<RHI_device>& device) override {
-        m_rhi_resource = device->create_texture_depth_attachment(m_width, m_height);
+        m_rhi_resource = device->create_texture_depth_attachment(
+            m_width, 
+            m_height
+        );
     }
 
     static std::shared_ptr<Texture_depth_attachment> create(int width, int height) {

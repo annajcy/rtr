@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/runtime/global/base.h" 
+#include "engine/runtime/global/enum.h"
 
 namespace rtr {
 
@@ -22,6 +23,14 @@ struct Depth_state {
             true,
             false,
             Depth_function::LESS
+        };
+    }
+
+    static Depth_state skybox() {
+        return {
+            true,
+            false,
+            Depth_function::LESS_EQUAL
         };
     }
 };
@@ -229,6 +238,16 @@ struct Pipeline_state {
             Polygon_offset_state::disabled(),
             Stencil_state::edge(),
             Cull_state::back()
+        };
+    }
+
+    static Pipeline_state skybox_pipeline_state() {
+        return Pipeline_state{
+            Depth_state::skybox(),
+            Blend_state::opaque(),
+            Polygon_offset_state::disabled(),
+            Stencil_state::disabled(),
+            Cull_state::disabled(),
         };
     }
 };

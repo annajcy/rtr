@@ -3,6 +3,7 @@
 #include "engine/runtime/global/base.h" 
 #include "../rhi_shader_code.h"
 #include "rhi_cast_opengl.h"
+#include <cassert>
 
 #define LOG_STR_LEN 1024
 
@@ -45,6 +46,7 @@ public:
             glGetShaderInfoLog(m_code_id, LOG_STR_LEN, nullptr, info_log);
             std::cerr << "Shader compiled failed" << " --" << gl_shader_type_str(m_shader_type) << " " <<  m_code_id << std::endl;
             std::cerr << info_log << std::endl;
+            assert(false);
         } else {
             std::cout << "Shader compiled successfully" << " --" << gl_shader_type_str(m_shader_type) << " " << m_code_id << std::endl;
         }

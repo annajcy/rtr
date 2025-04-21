@@ -23,7 +23,6 @@ struct Logic_tick_context {
 };
 
 struct Render_tick_context {
-   
     const Swap_data &render_swap_data;
     float delta_time{};
     

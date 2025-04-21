@@ -3,6 +3,7 @@
 #include "engine/runtime/core/geometry.h"
 #include "engine/runtime/core/material.h"
 #include "engine/runtime/core/texture.h"
+#include "engine/runtime/core/skybox.h"
 #include "engine/runtime/platform/rhi/rhi_geometry.h"
 #include "engine/runtime/platform/rhi/rhi_renderer.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
@@ -46,6 +47,11 @@ struct Swap_camera {
     glm::vec3 camera_position{1.0f};
 };
 
+struct Swap_skybox {
+    std::shared_ptr<Material> skybox_material{};
+    std::shared_ptr<Geometry> skybox_geometry{};
+};
+
 struct Swap_data {
     std::vector<Swap_object> render_objects{};
     std::vector<Swap_point_light> point_lights{};
@@ -54,7 +60,8 @@ struct Swap_data {
     Swap_directional_light directional_light{};
     Swap_camera camera{};
 
-    std::shared_ptr<Texture> skybox_texture{};
+    bool has_skybox{false};
+    Swap_skybox skybox{};
 
     void clear() {
         render_objects.clear();
@@ -62,7 +69,7 @@ struct Swap_data {
         spot_lights.clear();
         directional_light = Swap_directional_light{};
         camera = Swap_camera{};
-        skybox_texture.reset();
+        skybox = Swap_skybox{};
     }
 };
 

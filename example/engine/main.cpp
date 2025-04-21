@@ -3,6 +3,8 @@
 #include "engine/runtime/core/memory_buffer.h"
 #include "engine/runtime/core/shader.h"
 #include "engine/runtime/core/texture.h"
+#include "engine/runtime/core/skybox.h"
+
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
 #include "engine/runtime/framework/component/custom/rotate_component.h"
@@ -97,7 +99,19 @@ int main() {
     auto scene = world->add_scene(Scene::create("scene1"));
     world->set_current_scene(scene);
 
-    scene->set_skybox(std::make_shared<Texture2D>(bk_image));
+    auto spherical = Skybox::create(Texture_2D::create(bk_image));
+    scene->set_skybox(spherical);
+
+    // auto cubemap = Skybox::create(Texture_cubemap::create(std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
+    //     {Texture_cubemap_face::BACK, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/back.jpg", false)},
+    //     {Texture_cubemap_face::BOTTOM, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/bottom.jpg", false)},
+    //     {Texture_cubemap_face::FRONT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/front.jpg", false)},
+    //     {Texture_cubemap_face::LEFT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/left.jpg", false)},
+    //     {Texture_cubemap_face::RIGHT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/right.jpg", false)},
+    //     {Texture_cubemap_face::TOP, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/top.jpg", false)}
+    // }));
+    // scene->set_skybox(cubemap);
+    
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
     auto camera_node = camera_game_object->add_component<Node_component>();
@@ -125,9 +139,10 @@ int main() {
     );
 
     shader->premake_shader_variants();
+    shader->link_all_shader_variants(runtime->rhi_device());
 
     auto material = Test_material::create(shader);
-    material->albedo_map = std::make_shared<Texture2D>(image);
+    material->albedo_map = std::make_shared<Texture_2D>(image);
 
     auto game_object = scene->add_game_object(Game_object::create("go1"));
     auto node = game_object->add_component<Node_component>();

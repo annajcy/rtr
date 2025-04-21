@@ -10,6 +10,7 @@ protected:
     glm::vec3 m_axis{0.0f, 1.0f, 0.0f};
     float m_speed{1.0f};
     std::shared_ptr<Node_component> m_node{};
+
 public:
     Rotate_component() : Component_base(Component_type::CUSTOM) {}
     ~Rotate_component() = default;
@@ -26,6 +27,7 @@ public:
         m_node = node; 
         set_priority(node->priority() - 1);
     }
+    
     std::shared_ptr<Node_component> node() const { return m_node; }
 
     void tick(const Logic_tick_context& tick_context) override {

@@ -33,15 +33,7 @@ public:
         return shader_variant;
     }
 
-    virtual bool is_transparent() const = 0;
-
-    Pipeline_state get_pipeline_state() const {
-        if (is_transparent()) {
-            return Pipeline_state::translucent_pipeline_state();
-        } else {
-            return Pipeline_state::opaque_pipeline_state();
-        }
-    }
+    virtual Pipeline_state get_pipeline_state() const = 0;
 
     virtual std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() = 0;
 };
@@ -50,14 +42,22 @@ public:
 
 class Test_material : public Material {
 public:
-    std::shared_ptr<Texture2D> albedo_map{};
+    std::shared_ptr<Texture_2D> albedo_map{};
     Test_material(const std::shared_ptr<Shader>& shader) : Material(
         Material_type::TEST,
         shader
     ) {}
 
     ~Test_material() = default;
-    bool is_transparent() const override { return false; }
+    bool is_transparent() const { return false; }
+
+    Pipeline_state get_pipeline_state() const override {
+        if (is_transparent()) {
+            return Pipeline_state::translucent_pipeline_state();
+        } else {
+            return Pipeline_state::opaque_pipeline_state();
+        }
+    }
 
     Shader::feature_set get_shader_feature_set() const override { 
         Shader::feature_set feature_set{};
@@ -86,11 +86,11 @@ public:
 class Phong_material : public Material {
 public:
     bool is_receive_shadows{false};
-    std::shared_ptr<Texture2D> albedo_map{};
-    std::shared_ptr<Texture2D> alpha_map{};
-    std::shared_ptr<Texture2D> normal_map{};
-    std::shared_ptr<Texture2D> height_map{};
-    std::shared_ptr<Texture2D> specular_map{};
+    std::shared_ptr<Texture_2D> albedo_map{};
+    std::shared_ptr<Texture_2D> alpha_map{};
+    std::shared_ptr<Texture_2D> normal_map{};
+    std::shared_ptr<Texture_2D> height_map{};
+    std::shared_ptr<Texture_2D> specular_map{};
 
     float transparency{1.0f};
     glm::vec3 ambient = glm::vec3(0.2f);     // 环境反射系数
@@ -105,7 +105,7 @@ public:
     ) {}
     ~Phong_material() = default;
 
-    bool is_transparent() const override { return transparency < 1.0f || has_alpha_map(); }
+    bool is_transparent() const { return transparency < 1.0f || has_alpha_map(); }
     bool has_albedo_map() const { return albedo_map != nullptr; }
     bool has_alpha_map() const { return alpha_map != nullptr; }
     bool has_height_map() const { return height_map != nullptr; }
@@ -114,6 +114,14 @@ public:
 
     static std::shared_ptr<Phong_material> create() {
         return std::make_shared<Phong_material>();
+    }
+
+    Pipeline_state get_pipeline_state() const override {
+        if (is_transparent()) {
+            return Pipeline_state::translucent_pipeline_state();
+        } else {
+            return Pipeline_state::opaque_pipeline_state();
+        }
     }
 
     std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
@@ -163,15 +171,15 @@ public:
 class PBR_material : public Material {
 public:
     bool is_receive_shadows{false};
-    std::shared_ptr<Texture2D> albedo_map{};
-    std::shared_ptr<Texture2D> alpha_map{};
-    std::shared_ptr<Texture2D> normal_map{};
-    std::shared_ptr<Texture2D> height_map{};
+    std::shared_ptr<Texture_2D> albedo_map{};
+    std::shared_ptr<Texture_2D> alpha_map{};
+    std::shared_ptr<Texture_2D> normal_map{};
+    std::shared_ptr<Texture_2D> height_map{};
     
-    std::shared_ptr<Texture2D> metallic_map{};
-    std::shared_ptr<Texture2D> roughness_map{};
-    std::shared_ptr<Texture2D> ao_map{};
-    std::shared_ptr<Texture2D> emissive_map{}; // 新增自发光贴图
+    std::shared_ptr<Texture_2D> metallic_map{};
+    std::shared_ptr<Texture_2D> roughness_map{};
+    std::shared_ptr<Texture_2D> ao_map{};
+    std::shared_ptr<Texture_2D> emissive_map{}; // 新增自发光贴图
 
     glm::vec3 base_color{};
     float metallic_factor = {1.0f};      // 金属度系数
@@ -183,7 +191,7 @@ public:
     PBR_material() : Material(Material_type::PBR, Shader::create_pbr_shader()) {}
     ~PBR_material() = default;
 
-    bool is_transparent() const override { return transparency < 1.0f || has_alpha_map(); }
+    bool is_transparent() const { return transparency < 1.0f || has_alpha_map(); }
     bool has_height_map() const { return height_map!= nullptr; }
     bool has_normal_map() const { return normal_map != nullptr; }
     bool has_emissive_map() const { return emissive_map != nullptr; }
@@ -195,6 +203,14 @@ public:
 
     static std::shared_ptr<PBR_material> create() {
         return std::make_shared<PBR_material>();
+    }
+
+    Pipeline_state get_pipeline_state() const override {
+        if (is_transparent()) {
+            return Pipeline_state::translucent_pipeline_state();
+        } else {
+            return Pipeline_state::opaque_pipeline_state();
+        }
     }
     
     Shader::feature_set get_shader_feature_set() const override {
@@ -268,25 +284,57 @@ public:
         Shader::create_skybox_cubemap_shader()
     ) {}
     ~Skybox_cubemap_material() = default;
-    bool is_transparent() const override { return false; }
     Shader::feature_set get_shader_feature_set() const override {
         Shader::feature_set feature_set{};
         return feature_set;
     }
+
+    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
+        if (cubemap_texture) {
+            return {
+                {0, cubemap_texture}
+            };
+        }
+        return {};
+    }
+
+    Pipeline_state get_pipeline_state() const override {
+        return Pipeline_state::skybox_pipeline_state();
+    }
+
+    static std::shared_ptr<Skybox_cubemap_material> create() {
+        return std::make_shared<Skybox_cubemap_material>();
+    }
 };
 
-class SkyBox_spherical_material : public Material {
+class Skybox_spherical_material : public Material {
 public:
-    std::shared_ptr<Texture2D> skybox_image{};
-    SkyBox_spherical_material() : Material(
+    std::shared_ptr<Texture_2D> spherical_map{};
+    Skybox_spherical_material() : Material(
         Material_type::SKYBOX_SPHERICAL, 
-        Shader::create_skybox_cubemap_shader()
+        Shader::create_skybox_spherical_shader()
     ) {}
-    ~SkyBox_spherical_material() = default;
-    bool is_transparent() const override { return false; }
+    ~Skybox_spherical_material() = default;
     Shader::feature_set get_shader_feature_set() const override {
         Shader::feature_set feature_set{};
         return feature_set;
+    }
+
+    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
+        if (spherical_map) {
+            return {
+                {0, spherical_map}
+            };
+        }
+        return {};
+    }
+
+    Pipeline_state get_pipeline_state() const override {
+        return Pipeline_state::skybox_pipeline_state();
+    }
+
+    static std::shared_ptr<Skybox_spherical_material> create() {
+        return std::make_shared<Skybox_spherical_material>();
     }
 
 };

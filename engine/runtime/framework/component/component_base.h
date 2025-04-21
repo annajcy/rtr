@@ -97,8 +97,10 @@ public:
     bool is_enabled() const { return m_is_enabled; }
     void set_enabled(bool enabled) { m_is_enabled = enabled; }
     int priority() const { return m_priority; }
-    void set_priority(int priority) { m_priority = priority; }
-    
+    void set_priority(int priority) { 
+        m_priority = priority; 
+    }
+
     bool is_attached_to_gameobject() const { return component_list() != nullptr; }
 
     template<typename T> 
