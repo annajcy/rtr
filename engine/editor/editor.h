@@ -1,6 +1,9 @@
 #pragma once
 
-#include "engine/runtime/framework/component/component_base.h"
+#include "engine/runtime/framework/component/camera/camera_component.h"
+#include "engine/runtime/framework/component/camera/camera_control_component.h"
+#include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
+#include "engine/runtime/framework/component/node/node_component.h"
 #include "engine/runtime/platform/rhi/rhi_imgui.h"
 #include "engine/runtime/platform/rhi/rhi_window.h"
 #include "engine/runtime/runtime.h"
@@ -71,7 +74,7 @@ private:
         }
         for (auto& gos : m_engine_runtime->world()->current_scene()->game_objects()) {
             m_imgui->text("game object", gos->name());
-            for (auto& component : gos->components()) {
+            for (auto& component : gos->component_list()->components()) {
                 if (component->component_type() == Component_type::NODE) {
                     auto node = std::dynamic_pointer_cast<Node_component>(component);
                     m_imgui->text("position", glm::to_string(node->position()));

@@ -49,16 +49,33 @@ public:
         return m_children;
     }
 
-    void add_child(const std::shared_ptr<Node_component>& node) {
+    void add_child(const std::shared_ptr<Node_component>& node, bool world_position_stays = false) {
+
         if (node.get() == this) {
             throw std::invalid_argument("Cannot add self as child");
         }
         if (node->parent()) {
             node->parent()->remove_child(node);
         }
+
         m_children.push_back(node);
-        node->m_parent = std::enable_shared_from_this<Node_component>::shared_from_this();
+
+        if (world_position_stays) {
+            auto world_position = node->world_position();
+            auto world_rotation = node->world_rotation();
+            auto world_scale = node->world_scale();
+
+            node->m_parent = std::enable_shared_from_this<Node_component>::shared_from_this();
+            node->set_world_position(world_position);
+            node->set_world_rotation(world_rotation);
+            node->set_world_scale(world_scale);
+
+        } else {
+            node->m_parent = std::enable_shared_from_this<Node_component>::shared_from_this();
+        }
+
         node->set_dirty();
+
     }
 
     void remove_child(const std::shared_ptr<Node_component>& node) {
@@ -77,13 +94,43 @@ public:
         set_dirty();
     }
 
+    void set_world_position(const glm::vec3& pos) {
+        if (parent()) {
+            m_position = pos - parent()->world_position();	
+        } else {
+            m_position = pos;	
+        }
+        set_dirty();
+    }
+
     void set_rotation(const glm::quat& rot) {
         m_rotation = rot;
         set_dirty();
     }
 
+    void set_rotation_euler(const glm::vec3& rot) {
+        m_rotation = glm::quat(glm::radians(rot));
+        set_dirty();	
+    }
+
+    void set_world_rotation(const glm::quat& rot) {
+        if (parent()) {
+            m_rotation = rot * glm::inverse(parent()->world_rotation());	
+        }	
+        set_dirty();
+    }
+
     void set_scale(const glm::vec3& scale) {
         m_scale = scale;
+        set_dirty();
+    }
+
+    void set_world_scale(const glm::vec3& scale) {
+        if (parent()) {
+            m_scale = scale / parent()->world_scale();	
+        } else {
+            m_scale = scale;
+        }
         set_dirty();
     }
 

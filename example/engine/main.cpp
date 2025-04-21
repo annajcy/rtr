@@ -5,6 +5,8 @@
 #include "engine/runtime/core/texture.h"
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
+#include "engine/runtime/framework/component/custom/rotate_component.h"
+#include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 #include "engine/runtime/framework/game_object.h"
 #include "engine/runtime/framework/scene.h"
@@ -98,18 +100,14 @@ int main() {
     scene->set_skybox(std::make_shared<Texture2D>(bk_image));
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
-    auto camera_node = camera_game_object->add_component<Node_component>(Node_component::create());
-    auto camera = camera_game_object->add_component<Perspective_camera_component>(Perspective_camera_component::create(
-        45.0f,
-        (float)engine_runtime_descriptor.width / (float)engine_runtime_descriptor.height,
-        0.1f,
-        100.0f
-    ));
+    auto camera_node = camera_game_object->add_component<Node_component>();
+    camera_node->set_position(glm::vec3(0, 0, 5));
+    camera_node->look_at_point(glm::vec3(0, 0, 0));
 
-    camera->node()->set_position(glm::vec3(0, 0, 5));
-    camera->node()->look_at_point(glm::vec3(0, 0, 0));
+    auto camera = camera_game_object->add_component<Perspective_camera_component>();
+    camera->add_resize_callback(runtime->window_system()->window());
 
-    auto camera_control = camera_game_object->add_component<Trackball_camera_control_component>(Trackball_camera_control_component::create());
+    auto camera_control = camera_game_object->add_component<Trackball_camera_control_component>();
 
     auto shader = Shader::create(
         Shader_program::create(
@@ -132,23 +130,26 @@ int main() {
     material->albedo_map = std::make_shared<Texture2D>(image);
 
     auto game_object = scene->add_game_object(Game_object::create("go1"));
-    auto node = game_object->add_component<Node_component>(Node_component::create());
+    auto node = game_object->add_component<Node_component>();
     node->set_position(glm::vec3(-1, 0, 0));
 
-    auto mesh_renderer = game_object->add_component<Mesh_renderer_component>(Mesh_renderer_component::create(
-        Geometry::create_sphere(),
-        material
-    ));
+    auto mesh_renderer = game_object->add_component<Mesh_renderer_component>();
+    mesh_renderer->set_geometry(Geometry::create_sphere());
+    mesh_renderer->set_material(material);
 
     auto game_object2 = scene->add_game_object(Game_object::create("go2"));
-    auto node2 = game_object2->add_component<Node_component>(Node_component::create());
+    auto node2 = game_object2->add_component<Node_component>();
     node2->set_position(glm::vec3(1, 0, 0));
 
-    auto mesh_renderer2 = game_object2->add_component<Mesh_renderer_component>(Mesh_renderer_component::create(
-        Geometry::create_box(),
-        material
-    ));
+    auto rotate_component = game_object2->add_component<Rotate_component>();
+    rotate_component->speed() = 0.1f;
 
+    auto mesh_renderer2 = game_object2->add_component<Mesh_renderer_component>();
+    mesh_renderer2->set_geometry(Geometry::create_box());
+    mesh_renderer2->set_material(material);
+
+    node2->add_child(node, true);
+    
     runtime->world() = world;
 
     auto editor = editor::Editor::create(runtime);

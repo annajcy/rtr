@@ -2,6 +2,7 @@
 
 #include "../component_base.h"
 #include "../node/node_component.h"
+#include "engine/runtime/platform/rhi/rhi_window.h"
 #include <memory>
 
 namespace rtr {
@@ -14,12 +15,17 @@ enum class Camera_type {
 class Camera_component : public Component_base {
 
 protected:
-    float m_near_bound{};
-    float m_far_bound{};
+        
+    float m_near_bound{0.1f};
+    float m_far_bound{100.0f};
     Camera_type m_camera_type{};
-    std::weak_ptr<Node_component> m_node{};
+    std::shared_ptr<Node_component> m_node{};
 
 public:
+    Camera_component(
+        Camera_type type 
+    ) : Component_base(Component_type::CAMERA), m_camera_type(type) {}
+
     Camera_component(
         Camera_type type,
         float near_bound, 
@@ -30,34 +36,23 @@ public:
 
     virtual ~Camera_component() override = default;
 
+    void on_add_to_game_object() override {
+        set_node(component_list()->get_component<Node_component>()); 
+    }
+
     float& near_bound() { return m_near_bound; }
     float& far_bound() { return m_far_bound; }
 
     float near_bound() const { return m_near_bound; }
     float far_bound() const { return m_far_bound; }
 
-    void set_node(const std::shared_ptr<Node_component>& node) { 
-        if (!node) {
-            return;
-        }
-
-        if (m_node.lock() == node) {
-            return; 
-        }
-
-        if (!m_node.expired()) {
-            remove_dependency(m_node.lock());
-        }
-
-        add_dependency(node);
-        m_node = node; 
+    void set_node(const std::shared_ptr<Node_component>& node) {
+        m_node = node;
+        set_priority(node->priority() + 1);
     }
 
-    const std::shared_ptr<Node_component> node() const {
-        if (m_node.expired()) {
-            return nullptr; 
-        }
-        return m_node.lock(); 
+    const std::shared_ptr<Node_component>& node() const {
+        return m_node; 
     }
 
     glm::mat4 view_matrix() const {
@@ -81,16 +76,20 @@ public:
         };
 
     }
+
+    virtual void add_resize_callback(const std::shared_ptr<RHI_window>& window) {}
     
 };
 
 class Perspective_camera_component : public Camera_component {
 
 protected:
-    float m_fov{};
-    float m_aspect_ratio{};
+    float m_fov{45.0f};
+    float m_aspect_ratio{16 / 9.0f};
 
 public:
+    Perspective_camera_component() : Camera_component(Camera_type::PERSPECTIVE) {}
+
     Perspective_camera_component(
         float fov, 
         float aspect_ratio, 
@@ -118,17 +117,26 @@ public:
         node()->translate(node()->front(), delta_zoom);
     }
 
+    void add_resize_callback(const std::shared_ptr<RHI_window>& window) override {
+        m_aspect_ratio = (float)window->width() / (float)window->height();
+        window->window_resize_event().add([&](int width, int height) {
+            m_aspect_ratio = (float)width / (float)height;
+        }); 
+    }
+
 };
 
 class Orthographic_camera_component : public Camera_component {
 
 protected:
-    float m_left_bound{};
-    float m_right_bound{};
-    float m_top_bound{};
-    float m_bottom_bound{};
+    float m_left_bound{-5.0f};
+    float m_right_bound{5.0f};
+    float m_top_bound{5.0f};
+    float m_bottom_bound{-5.0f};
 
 public:
+    Orthographic_camera_component() : Camera_component(Camera_type::ORTHOGRAPHIC) {}
+
     Orthographic_camera_component(
         float left_bound, 
         float right_bound, 

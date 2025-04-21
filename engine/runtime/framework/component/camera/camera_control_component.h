@@ -16,7 +16,7 @@ enum class Camera_control_type {
 class Camera_control_component : public Component_base {
 
 protected:
-    std::weak_ptr<Camera_component> m_camera{};
+    std::shared_ptr<Camera_component> m_camera{};
     Camera_control_type m_camera_control_type{};
     
     float m_move_speed{0.001f};
@@ -31,6 +31,10 @@ public:
 
     virtual ~Camera_control_component() = default;
 
+    void on_add_to_game_object() override {
+        set_camera(component_list()->get_component<Camera_component>()); 
+    }
+
     Camera_control_type camera_control_type() const { return m_camera_control_type; }
 
     float& move_speed() { return m_move_speed; }
@@ -41,34 +45,16 @@ public:
     float zoom_speed() const { return m_zoom_speed; }
 
     void set_camera(const std::shared_ptr<Camera_component>& camera) { 
-        if (!camera) {
-            return;
-        }
-
-        if (m_camera.lock() == camera) {
-            return; 
-        }
-
-        if (!m_camera.expired()) {
-            remove_dependency(m_camera.lock());
-        }
-
-        add_dependency(camera);
         m_camera = camera; 
-
-        set_priority(camera->priority() - 1);
+        set_priority(camera->node()->priority() - 1);
     }
 
-    const std::shared_ptr<Camera_component> camera() const { 
-        if (m_camera.expired()) {
-            return nullptr; 
-        }
-        return m_camera.lock();
+    const std::shared_ptr<Camera_component>& camera() const { 
+        return m_camera;
     }
 
     virtual void pitch(float angle) = 0;
     virtual void yaw(float angle) = 0;
-    
 };
 
 class Trackball_camera_control_component : public Camera_control_component {

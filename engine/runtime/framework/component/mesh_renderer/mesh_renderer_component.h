@@ -14,20 +14,26 @@ namespace rtr {
 class Mesh_renderer_component : public Component_base {
 
 protected:
-    std::weak_ptr<Node_component> m_node{};
+    std::shared_ptr<Node_component> m_node{};
     std::shared_ptr<Geometry> m_geometry{};
     std::shared_ptr<Material> m_material{};
 
 public:
+    Mesh_renderer_component() : Component_base(Component_type::MESH_RENDERER) {}
+
     Mesh_renderer_component(
         const std::shared_ptr<Geometry>& geometry,
         const std::shared_ptr<Material>& material
     ) : Component_base(Component_type::MESH_RENDERER),
         m_geometry(geometry),
         m_material(material) {}
-    virtual ~Mesh_renderer_component() = default;
-    void set_node(const std::shared_ptr<Node_component>& node) { m_node = node; }
 
+    virtual ~Mesh_renderer_component() = default;
+
+    void on_add_to_game_object() override {
+        set_node(component_list()->get_component<Node_component>());
+    }
+    
     static std::shared_ptr<Mesh_renderer_component> create(
         const std::shared_ptr<Geometry>& geometry,
         const std::shared_ptr<Material>& material
@@ -38,11 +44,18 @@ public:
         );
     }
 
-    std::shared_ptr<Node_component> node() const {
-        if (m_node.expired()) {
-            return nullptr;
-        }
-        return m_node.lock();
+    static std::shared_ptr<Mesh_renderer_component> create(
+    ) {
+        return std::make_shared<Mesh_renderer_component>();
+    }
+
+    void set_node(const std::shared_ptr<Node_component>& node) { 
+        m_node = node; 
+        set_priority(m_node->priority() + 1);
+    }
+
+    const std::shared_ptr<Node_component>& node() const {
+        return m_node;
     }
 
     void set_geometry(const std::shared_ptr<Geometry>& geometry) { m_geometry = geometry; }

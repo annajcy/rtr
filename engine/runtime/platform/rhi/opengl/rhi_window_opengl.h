@@ -48,7 +48,7 @@ public:
 
         glfwGetFramebufferSize(window(), &m_width, &m_height);
         set_viewport(0, 0, m_width, m_height);
-
+        
     }
 
     ~RHI_window_OpenGL() override {

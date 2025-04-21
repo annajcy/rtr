@@ -14,7 +14,7 @@ protected:
     glm::vec3 m_color{1.0f};
     float m_intensity{1.0f};
     Light_type m_light_type{};
-    std::weak_ptr<Node_component> m_node{};
+    std::shared_ptr<Node_component> m_node{};
 
 public:
     Light_component(
@@ -24,6 +24,10 @@ public:
 
     virtual ~Light_component() = default;
 
+    void on_add_to_game_object() override {
+        m_node = component_list()->get_component<Node_component>();
+    }
+
     Light_type light_type() const { return m_light_type; }
     glm::vec3& color() { return m_color; }
     float& intensity() { return m_intensity; }
@@ -32,27 +36,12 @@ public:
     float intensity() const { return m_intensity; }
 
     void set_node(const std::shared_ptr<Node_component>& node) { 
-        if (!node) {
-            return;
-        }
-
-        if (m_node.lock() == node) {
-            return; 
-        }
-
-        if (!m_node.expired()) {
-            remove_dependency(m_node.lock());
-        }
-
-        add_dependency(node);
         m_node = node; 
+        set_priority(node->priority() + 1);
     }
 
     std::shared_ptr<Node_component> node() const {
-        if (m_node.expired()) {
-            return nullptr;
-        }
-        return m_node.lock();
+        return m_node;
     }
 
 };
