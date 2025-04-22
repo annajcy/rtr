@@ -8,14 +8,11 @@
 
 namespace rtr {
 
-class Model : public Resource_base {
+class Model {
     std::vector<std::shared_ptr<Game_object>> m_model_game_objects{};
 
 public:
-    Model(const std::string& path) : 
-    Resource_base(
-        Resource_type::MODEL, 
-        Hash::from_string(path)) {}
+    Model(const std::string& path) {}
 
     virtual ~Model() = default;
 

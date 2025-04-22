@@ -2,6 +2,7 @@
 
 #include "engine/runtime/context/engine_tick_context.h"
 #include "engine/runtime/function/input/input_system.h"
+#include "engine/runtime/function/render/render_pipeline.h"
 #include "engine/runtime/function/render/render_system.h"
 #include "engine/runtime/function/window/window_system.h"
 #include "engine/runtime/global/logger.h"
@@ -59,6 +60,9 @@ public:
         m_input_system = input_system;
         m_file_service = file_service;
         m_render_system = render_system;
+
+        auto test_render_pipeline = Test_render_pipeline::create(render_system->global_render_resource());
+        render_system->set_render_pipeline(test_render_pipeline);
 
         Log_sys::get_instance()->log(Logging_system::Level::info, "Engine Runtime Created");
     }

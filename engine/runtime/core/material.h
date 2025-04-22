@@ -2,6 +2,7 @@
 
 #include "engine/runtime/core/shader.h"
 #include "engine/runtime/core/texture.h"
+#include "engine/runtime/function/render/render_resource.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include <memory>
@@ -9,7 +10,7 @@
 
 namespace rtr {
 
-class Material {
+class Material : public Render_resource {
     
 protected:
     Material_type m_material_type{};
@@ -19,7 +20,8 @@ public:
     Material(
         Material_type material_type, 
         const std::shared_ptr<Shader>& shader
-    ) : m_material_type(material_type),
+    ) : Render_resource(Render_resource_type::MATERIAL),
+        m_material_type(material_type),
         m_shader(shader) {}
     virtual ~Material() = default;
 
@@ -49,7 +51,7 @@ public:
 
 class Test_material : public Material {
 public:
-    std::shared_ptr<Texture_2D> albedo_map{};
+    std::shared_ptr<Texture> albedo_map{};
     Test_material(const std::shared_ptr<Shader>& shader) : Material(
         Material_type::TEST,
         shader
@@ -84,11 +86,11 @@ public:
 class Phong_material : public Material {
 public:
     bool is_receive_shadows{false};
-    std::shared_ptr<Texture_2D> albedo_map{};
-    std::shared_ptr<Texture_2D> alpha_map{};
-    std::shared_ptr<Texture_2D> normal_map{};
-    std::shared_ptr<Texture_2D> height_map{};
-    std::shared_ptr<Texture_2D> specular_map{};
+    std::shared_ptr<Texture> albedo_map{};
+    std::shared_ptr<Texture> alpha_map{};
+    std::shared_ptr<Texture> normal_map{};
+    std::shared_ptr<Texture> height_map{};
+    std::shared_ptr<Texture> specular_map{};
 
     float transparency{1.0f};
     glm::vec3 ambient = glm::vec3(0.2f);     // 环境反射系数
@@ -169,15 +171,15 @@ public:
 class PBR_material : public Material {
 public:
     bool is_receive_shadows{false};
-    std::shared_ptr<Texture_2D> albedo_map{};
-    std::shared_ptr<Texture_2D> alpha_map{};
-    std::shared_ptr<Texture_2D> normal_map{};
-    std::shared_ptr<Texture_2D> height_map{};
+    std::shared_ptr<Texture> albedo_map{};
+    std::shared_ptr<Texture> alpha_map{};
+    std::shared_ptr<Texture> normal_map{};
+    std::shared_ptr<Texture> height_map{};
     
-    std::shared_ptr<Texture_2D> metallic_map{};
-    std::shared_ptr<Texture_2D> roughness_map{};
-    std::shared_ptr<Texture_2D> ao_map{};
-    std::shared_ptr<Texture_2D> emissive_map{}; // 新增自发光贴图
+    std::shared_ptr<Texture> metallic_map{};
+    std::shared_ptr<Texture> roughness_map{};
+    std::shared_ptr<Texture> ao_map{};
+    std::shared_ptr<Texture> emissive_map{}; // 新增自发光贴图
 
     glm::vec3 base_color{};
     float metallic_factor = {1.0f};      // 金属度系数
@@ -276,7 +278,7 @@ public:
 
 class Skybox_cubemap_material : public Material {
 public:
-    std::shared_ptr<Texture_cubemap> cubemap_texture{};
+    std::shared_ptr<Texture> cube_map{};
     Skybox_cubemap_material() : Material(
         Material_type::SKYBOX_CUBEMAP, 
         Shader::create_skybox_cubemap_shader()
@@ -284,9 +286,9 @@ public:
     ~Skybox_cubemap_material() = default;
 
     std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
-        if (cubemap_texture) {
+        if (cube_map) {
             return {
-                {0, cubemap_texture}
+                {0, cube_map}
             };
         }
         return {};
@@ -303,7 +305,7 @@ public:
 
 class Skybox_spherical_material : public Material {
 public:
-    std::shared_ptr<Texture_2D> spherical_map{};
+    std::shared_ptr<Texture> spherical_map{};
 
     Skybox_spherical_material() : Material(
         Material_type::SKYBOX_SPHERICAL, 
@@ -333,7 +335,8 @@ public:
 
 class Gamma_material : public Material {
 public:
-    std::shared_ptr<Texture_2D> screen_map{};
+    std::shared_ptr<Texture> screen_map{};
+
     Gamma_material() : Material(
         Material_type::GAMMA,
         Shader::create_gamma_shader()
@@ -348,10 +351,6 @@ public:
             };
         }
         return {};
-    }
-
-    Pipeline_state get_pipeline_state() const override {
-        return Pipeline_state::opaque_pipeline_state();
     }
 
     static std::shared_ptr<Gamma_material> create() {

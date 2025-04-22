@@ -68,9 +68,9 @@ private:
 
     void render_inspector() {
         m_imgui->begin_render("inspector");
-        m_imgui->color_edit("bg color", glm::value_ptr(m_engine_runtime->render_system()->renderer()->clear_state().color_clear_value));
+        m_imgui->color_edit("bg color", glm::value_ptr(m_engine_runtime->render_system()->global_render_resource().renderer->clear_state().color_clear_value));
         if (m_imgui->button("change", 50.0, 30.0)) {
-            m_engine_runtime->render_system()->renderer()->apply_clear_state();
+            m_engine_runtime->render_system()->global_render_resource().renderer->apply_clear_state();
         }
         for (auto& gos : m_engine_runtime->world()->current_scene()->game_objects()) {
             m_imgui->text("game object", gos->name());

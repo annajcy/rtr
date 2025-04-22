@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include "engine/runtime/function/render/render_resource.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/global/guid.h"
 #include "engine/runtime/platform/rhi/rhi_buffer.h"
@@ -11,13 +12,15 @@
 
 namespace rtr {
 
-class Memory_buffer : public GUID, public RHI_linker<RHI_buffer> {
+class Memory_buffer : public GUID, public RHI_linker<RHI_buffer>, public Render_resource {
 protected:
     Buffer_type m_type{};
     Buffer_usage m_usage{};
 
 public:
-    Memory_buffer(Buffer_type type, Buffer_usage usage) : m_type(type), m_usage(usage) {}
+    Memory_buffer(Buffer_type type, Buffer_usage usage) : 
+    Render_resource(Render_resource_type::MEMORY_BUFFER),  
+    m_type(type), m_usage(usage) {}
     ~Memory_buffer() = default;
     Buffer_type get_type() const { return m_type; }
     Buffer_usage get_usage() const { return m_usage; }

@@ -99,7 +99,7 @@ int main() {
     auto scene = world->add_scene(Scene::create("scene1"));
     world->set_current_scene(scene);
 
-    auto spherical = Skybox::create(Texture_2D::create(bk_image));
+    auto spherical = Skybox::create(Texture_image::create(bk_image));
     scene->set_skybox(spherical);
 
     // auto cubemap = Skybox::create(Texture_cubemap::create(std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
@@ -142,7 +142,7 @@ int main() {
     shader->link_all_shader_variants(runtime->rhi_device());
 
     auto material = Test_material::create(shader);
-    material->albedo_map = std::make_shared<Texture_2D>(image);
+    material->albedo_map = std::make_shared<Texture_image>(image);
 
     auto game_object = scene->add_game_object(Game_object::create("go1"));
     auto node = game_object->add_component<Node_component>();

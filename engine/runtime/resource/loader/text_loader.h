@@ -6,25 +6,15 @@
 
 namespace rtr {
 
-class Text : public Resource_base {
+class Text {
 private:
     std::string m_text{};
 public:
-    Text(const std::string& path) : 
-    Resource_base(
-        Resource_type::TEXT, 
-        Hash::from_string(path)) {
+    Text(const std::string& path) {
        load_from_file(path, m_text);
     }
 
-    Text(const char* data) : 
-    Resource_base(
-        Resource_type::TEXT, 
-        Hash::from_raw_data(
-            reinterpret_cast<const unsigned char*>(data), 
-            strlen(data))
-        ), 
-        m_text(data) {}
+    Text(const char* data) : m_text(data) {}
 
     ~Text() = default;
 

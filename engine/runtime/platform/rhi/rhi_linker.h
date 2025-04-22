@@ -13,7 +13,7 @@ protected:
 public:
 
     RHI_linker() {}
-    ~RHI_linker() {}
+    virtual ~RHI_linker() {}
 
     virtual void link(const std::shared_ptr<RHI_device>& device) = 0; 
 

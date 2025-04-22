@@ -31,7 +31,7 @@ inline unsigned int stbi_image_format(Image_format format) {
     }
 }
 
-class Image : public Resource_base {
+class Image {
 protected:
     int m_width{};
     int m_height{};
@@ -45,7 +45,7 @@ public:
         const unsigned char* data,
         unsigned int data_size,
         bool flip_y = true
-    ) : Resource_base(Resource_type::IMAGE, Hash::from_raw_data(data, data_size)) {
+    ) {
         stbi_set_flip_vertically_on_load(flip_y);
         m_data = stbi_load_from_memory(data, data_size, &m_width, &m_height, &m_channels, stbi_image_format(format));
         m_data_size = m_width * m_height * m_channels * sizeof(unsigned char);
@@ -55,7 +55,7 @@ public:
         Image_format format,
         const std::string& path,
         bool flip_y = true
-    ) : Resource_base(Resource_type::IMAGE, Hash::from_string(path)) {
+    ) {
         stbi_set_flip_vertically_on_load(flip_y);
         m_data = stbi_load(path.c_str(), &m_width, &m_height, &m_channels, stbi_image_format(format));
         m_data_size = m_width * m_height * m_channels * sizeof(unsigned char);

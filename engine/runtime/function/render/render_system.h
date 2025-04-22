@@ -1,10 +1,7 @@
 #pragma once
 
-
 #include "engine/runtime/function/render/render_pipeline.h"
-
 #include "engine/runtime/platform/rhi/rhi_device.h"
-#include "engine/runtime/platform/rhi/rhi_frame_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_renderer.h"
 #include "engine/runtime/platform/rhi/rhi_window.h"
 
@@ -15,33 +12,21 @@ namespace rtr {
 class Render_system {
 
 protected:
-    std::shared_ptr<RHI_device> m_device{};
-    std::shared_ptr<RHI_window> m_window{};
-
-    std::shared_ptr<RHI_screen_buffer> m_screen_buffer{};
-    std::shared_ptr<RHI_renderer> m_renderer{};
-    std::shared_ptr<RHI_memory_buffer_binder> m_memory_binder{};
-
+    RHI_global_render_resource m_global_render_resource{};
     std::shared_ptr<Render_pipeline> m_render_pipeline{};
 
 public:
     Render_system(
         const std::shared_ptr<RHI_device>& device, 
         const std::shared_ptr<RHI_window>& window
-    ) : m_device(device), 
-        m_window(window),
-        m_screen_buffer(device->create_screen_buffer(window)),
-        m_renderer(device->create_renderer(Clear_state::enabled())),
-        m_memory_binder(device->create_memory_buffer_binder()) {
-
-            m_render_pipeline = std::make_shared<Test_render_pipeline>(
-                m_device,
-                m_renderer,
-                m_screen_buffer,
-                m_memory_binder
-            );
-            
-        }
+    ) {
+        m_global_render_resource.device = device;
+        m_global_render_resource.window = window;
+        m_global_render_resource.renderer = device->create_renderer(Clear_state::enabled());
+        m_global_render_resource.screen_buffer = device->create_screen_buffer(window);
+        m_global_render_resource.memory_binder = device->create_memory_buffer_binder();
+        m_global_render_resource.pipeline_state = device->create_pipeline_state();
+    }
 
     static std::shared_ptr<Render_system> create(
         const std::shared_ptr<RHI_device>& device, 
@@ -50,9 +35,13 @@ public:
         return std::make_shared<Render_system>(device, window);
     }
 
-    std::shared_ptr<RHI_device>& device() { return m_device; }
-    std::shared_ptr<RHI_screen_buffer>& screen_buffer() { return m_screen_buffer; }
-    std::shared_ptr<RHI_renderer>& renderer() { return m_renderer; }
+    const RHI_global_render_resource& global_render_resource() const {
+        return m_global_render_resource;
+    }
+
+    RHI_global_render_resource& global_render_resource() {
+        return m_global_render_resource;
+    }
 
     void set_render_pipeline(const std::shared_ptr<Render_pipeline>& pipeline) {
         m_render_pipeline = pipeline;

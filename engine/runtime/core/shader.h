@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/runtime/function/render/render_resource.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/global/guid.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
@@ -74,7 +75,12 @@ protected:
     Shader_type m_shader_code_type{};
 
 public:
-    Shader_code(Shader_type type, const std::string& code) : m_code(code), m_shader_code_type(type) {}
+    Shader_code(
+        Shader_type type, 
+        const std::string& code
+    ) : m_code(code), 
+        m_shader_code_type(type) {}
+        
     ~Shader_code() = default;
     const std::string& code() const { return m_code; }
     Shader_type shader_code_type() const { return m_shader_code_type; }

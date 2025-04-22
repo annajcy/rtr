@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/runtime/function/render/render_resource.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_texture.h"
@@ -8,26 +9,28 @@
 #include <unordered_map>
 namespace rtr {
 
-class Texture : public GUID, public RHI_linker<RHI_texture> {
+class Texture : public GUID, public RHI_linker<RHI_texture>, public Render_resource {
 protected:
     Texture_type m_texture_type{};
 public:
-    Texture(Texture_type texture_type) : m_texture_type(texture_type) {}
+    Texture(Texture_type texture_type) : 
+    Render_resource(Render_resource_type::TEXTURE),
+    m_texture_type(texture_type) {}
     virtual ~Texture() {}
     Texture_type texture_type() const { return m_texture_type; }
 };
 
-class Texture_2D : public Texture {
+class Texture_image : public Texture {
 protected:
     std::shared_ptr<Image> m_image{};
 
 public:
-    Texture_2D(
+    Texture_image(
         const std::shared_ptr<Image>& image
     ) : Texture(Texture_type::TEXTURE_2D),
         m_image(image) {}
         
-    virtual ~Texture_2D() {}
+    virtual ~Texture_image() {}
 
     const std::shared_ptr<Image>& image() const { return m_image; }
     void set_image(const std::shared_ptr<Image>& image) { m_image = image; }
@@ -62,8 +65,8 @@ public:
         );
     }
 
-    static std::shared_ptr<Texture_2D> create(const std::shared_ptr<Image>& image) {
-        return std::make_shared<Texture_2D>(image);
+    static std::shared_ptr<Texture_image> create(const std::shared_ptr<Image>& image) {
+        return std::make_shared<Texture_image>(image);
     }
 
 };

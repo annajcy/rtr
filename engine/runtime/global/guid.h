@@ -24,6 +24,7 @@ public:
     bool operator==(const GUID& other) const {
         return m_guid == other.m_guid;
     }
+    virtual ~GUID() = default;
 };
 
 }

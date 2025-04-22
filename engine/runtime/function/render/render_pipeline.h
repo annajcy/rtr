@@ -1,164 +1,91 @@
 #pragma once
 
 #include "engine/runtime/context/engine_tick_context.h"
-#include "engine/runtime/core/frame_buffer.h"
-#include "engine/runtime/core/geometry.h"
-#include "engine/runtime/core/material.h"
 #include "engine/runtime/core/memory_buffer.h"
-#include "engine/runtime/core/shader.h"
 #include "engine/runtime/core/texture.h"
+#include "engine/runtime/function/render/render_pass.h"
+#include "engine/runtime/function/render/render_resource.h"
 #include "engine/runtime/function/render/render_struct.h"
-#include "engine/runtime/global/enum.h"
-#include "engine/runtime/platform/rhi/rhi_buffer.h"
-#include "engine/runtime/platform/rhi/rhi_device.h"
-#include "engine/runtime/platform/rhi/rhi_frame_buffer.h"
-#include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
-#include "engine/runtime/platform/rhi/rhi_shader_program.h"
+#include "engine/runtime/resource/resource_base.h"
 #include <memory>
-#include <unordered_map>
-#include <vector>
 
 namespace rtr {
 
 class Render_pipeline {
+protected:
+    RHI_global_render_resource& m_rhi_global_render_resource;
+    Resource_manager<std::string, Render_resource> m_render_resource_manager{};
+
 public:
-    Render_pipeline() {}
+    Render_pipeline(RHI_global_render_resource& global_render_resource) : 
+    m_rhi_global_render_resource(global_render_resource) {}
+
     virtual ~Render_pipeline() {}
 
     virtual void execute(const Render_tick_context& tick_context) = 0;
     virtual void update_ubo(const Render_tick_context& tick_context) = 0;
+    virtual void init_render_resource() = 0;
+    virtual void init_ubo() = 0;
+    virtual void init_render_passes() = 0;
 };
+
 
 class Test_render_pipeline : public Render_pipeline {
 private:
-    std::shared_ptr<RHI_device> m_device{};
-    std::shared_ptr<RHI_renderer> m_renderer{};
-    std::shared_ptr<RHI_screen_buffer> m_rhi_screen_buffer{};
-    std::shared_ptr<RHI_memory_buffer_binder> m_memory_binder{};
-    std::shared_ptr<RHI_pipeline_state> m_pipeline_state{};
-
     std::shared_ptr<Uniform_buffer<Camera_ubo>> m_camera_ubo{};
 
-    std::shared_ptr<Material> m_gamma_material{};
-    std::shared_ptr<Frame_buffer> m_frame_buffer{};
-    std::shared_ptr<Geometry> m_screen_geometry{};
+    std::shared_ptr<Main_pass> m_main_pass{};
+    std::shared_ptr<Gamma_pass> m_gamma_pass{};
     
 public:
-    Test_render_pipeline(
-        const std::shared_ptr<RHI_device>& device,
-        const std::shared_ptr<RHI_renderer>& renderer,
-        const std::shared_ptr<RHI_screen_buffer>& screen_buffer,
-        const std::shared_ptr<RHI_memory_buffer_binder>& memory_binder
-    ) : m_device(device),
-        m_renderer(renderer),
-        m_rhi_screen_buffer(screen_buffer),
-        m_memory_binder(memory_binder),
-        m_pipeline_state(device->create_pipeline_state()),
-        m_camera_ubo(Uniform_buffer<Camera_ubo>::create(Camera_ubo{})) {
+    Test_render_pipeline (RHI_global_render_resource& global_render_resource) : Render_pipeline(global_render_resource) {
+        init_render_resource();
+        init_ubo();
+        init_render_passes();
+    }
 
-        if (!m_camera_ubo->is_linked()) m_camera_ubo->link(m_device);
-        m_memory_binder->bind_memory_buffer(m_camera_ubo->rhi_resource(), 0);
+    void init_render_resource() override {
 
-        m_frame_buffer = Frame_buffer::create(
-            m_rhi_screen_buffer->width(), 
-            m_rhi_screen_buffer->height(),
-            std::vector<std::shared_ptr<Texture>> {
-                Texture_color_attachment::create(
-                    m_rhi_screen_buffer->width(),
-                    m_rhi_screen_buffer->height()
-                )
-            },
-            Texture_depth_attachment::create(
-                m_rhi_screen_buffer->width(),
-                m_rhi_screen_buffer->height()
-            )
+        auto color_attachment = Texture_color_attachment::create(
+            m_rhi_global_render_resource.window->width(), 
+            m_rhi_global_render_resource.window->height()
         );
-        m_frame_buffer->link(m_device);
+        color_attachment->link(m_rhi_global_render_resource.device);
 
-        m_gamma_material = Gamma_material::create();
+        auto depth_attachment = Texture_depth_attachment::create(
+            m_rhi_global_render_resource.window->width(),
+            m_rhi_global_render_resource.window->height()
+        );
+        depth_attachment->link(m_rhi_global_render_resource.device);
 
-        m_screen_geometry = Geometry::create_screen_plane();
-        m_screen_geometry->link(m_device);
-    
+        m_render_resource_manager.add("main_color_attachment", color_attachment);
+        m_render_resource_manager.add("main_depth_attachment", depth_attachment);
+    }
+
+    void init_ubo() override {
+        m_camera_ubo = Uniform_buffer<Camera_ubo>::create(Camera_ubo{});
+        if (!m_camera_ubo->is_linked()) m_camera_ubo->link(m_rhi_global_render_resource.device);
+        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_camera_ubo->rhi_resource(), 0);
+    }
+
+    void init_render_passes() override {
+        m_main_pass = Main_pass::create(m_rhi_global_render_resource, m_render_resource_manager);
+        m_gamma_pass = Gamma_pass::create(m_rhi_global_render_resource, m_render_resource_manager);
     }
 
     ~Test_render_pipeline() {}
 
     void execute(const Render_tick_context& tick_context) override {
-        m_renderer->clear(m_frame_buffer->rhi_resource());
+        auto& skybox = tick_context.render_swap_data.skybox;
+        auto& render_objects = tick_context.render_swap_data.render_objects;
 
-        //draw skybox
-        if (tick_context.render_swap_data.has_skybox) {
+        m_main_pass->set_context(Main_pass::Execution_context{
+            .skybox = skybox,
+            .render_swap_objects = render_objects
+        });
 
-            auto mat = tick_context.render_swap_data.skybox.skybox_material;
-
-            m_pipeline_state->pipeline_state = mat->get_pipeline_state();
-            m_pipeline_state->apply();
-
-            auto tex_map = mat->get_texture_map();
-            for (auto& [slot, tex] : tex_map) {
-                if (!tex->is_linked()) tex->link(m_device);
-                tex->rhi_resource()->bind_to_unit(slot);
-            }
-
-            auto shader = mat->get_shader_program();
-            if (!shader->is_linked()) shader->link(m_device);
-
-            auto geo = tick_context.render_swap_data.skybox.skybox_geometry;
-            if (!geo->is_linked()) geo->link(m_device);
-
-            m_renderer->draw(
-                shader->rhi_resource(),
-                geo->rhi_resource(),
-                m_frame_buffer->rhi_resource()
-            );
-        }
-
-        //draw objects
-        for (auto &go : tick_context.render_swap_data.render_objects) {
-            auto mat = go.material;
-
-            m_pipeline_state->pipeline_state = mat->get_pipeline_state();
-            m_pipeline_state->apply();
-
-            auto geo = go.geometry;
-            if (!geo->is_linked()) geo->link(m_device);
-
-            auto shader = mat->get_shader_program();
-            if (!shader->is_linked()) shader->link(m_device);
-
-            shader->rhi_resource()->modify_uniform("model", go.model_matrix);
-            shader->rhi_resource()->update_uniforms();
-
-            auto tex_map = mat->get_texture_map();
-            for (auto& [slot, tex] : tex_map) {
-                if (!tex->is_linked()) tex->link(m_device);
-                tex->rhi_resource()->bind_to_unit(slot);
-            }
-
-            m_renderer->draw(
-                shader->rhi_resource(), 
-                geo->rhi_resource(), 
-                m_frame_buffer->rhi_resource()
-            );
-        }
-
-        m_renderer->clear(m_rhi_screen_buffer);
-
-        //draw gamma
-        m_pipeline_state->pipeline_state = Pipeline_state::opaque_pipeline_state();
-        m_pipeline_state->apply();
-
-        m_frame_buffer->rhi_resource()->color_attachments()[0]->bind_to_unit(0);
-
-        auto shader = m_gamma_material->get_shader_program();
-        if (!shader->is_linked()) shader->link(m_device);
-
-        m_renderer->draw(
-            shader->rhi_resource(),
-            m_screen_geometry->rhi_resource(),
-            m_rhi_screen_buffer
-        );
+        m_main_pass->excute();
+        m_gamma_pass->excute();
     }
 
     void update_ubo(const Render_tick_context& tick_context) override {
@@ -167,15 +94,18 @@ public:
             .projection_matrix = tick_context.render_swap_data.camera.projection_matrix,
             .camera_position = tick_context.render_swap_data.camera.camera_position
         });
-
         m_camera_ubo->push_to_rhi();
+    }
+
+    static std::shared_ptr<Test_render_pipeline> create(RHI_global_render_resource& global_render_resource) {
+        return std::make_shared<Test_render_pipeline>(global_render_resource);
     }
 
 };
 
 class Forward_render_pipeline : public Render_pipeline {
 public:
-    Forward_render_pipeline() {}
+    Forward_render_pipeline(RHI_global_render_resource& global_render_resource) : Render_pipeline(global_render_resource) {}
     ~Forward_render_pipeline() {}
 
     void execute(const Render_tick_context& tick_context) override {
@@ -190,7 +120,7 @@ public:
 
 class Deferred_render_pipeline : public Render_pipeline {
 public:
-    Deferred_render_pipeline() {}
+    Deferred_render_pipeline(RHI_global_render_resource &global_render_resource) : Render_pipeline(global_render_resource) {}
     ~Deferred_render_pipeline() {}
 
 

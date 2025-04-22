@@ -91,17 +91,7 @@ public:
     }
 
     void tick(const Logic_tick_context& tick_context) {
-
-        if (m_skybox != nullptr) {
-            tick_context.logic_swap_data.has_skybox = true;
-            tick_context.logic_swap_data.skybox = Swap_skybox{
-                .skybox_material = m_skybox->material(),
-                .skybox_geometry = m_skybox->geometry()
-            };
-        } else {
-            tick_context.logic_swap_data.has_skybox = false;
-        }
-
+        tick_context.logic_swap_data.skybox = m_skybox;
         for (auto& game_object : m_game_objects) {
             game_object->tick(tick_context);
         }
