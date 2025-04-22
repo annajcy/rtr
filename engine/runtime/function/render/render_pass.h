@@ -17,14 +17,11 @@ namespace rtr {
 class Render_pass {
 protected:
     RHI_global_render_resource& m_rhi_global_render_resource;
-    Resource_manager<std::string, Render_resource>& m_render_resource_manager;
 
 public:
     Render_pass(
-        RHI_global_render_resource& rhi_global_render_resource,
-        Resource_manager<std::string, Render_resource>& render_resource_manager
-    ) : m_rhi_global_render_resource(rhi_global_render_resource), 
-        m_render_resource_manager(render_resource_manager) {}
+        RHI_global_render_resource& rhi_global_render_resource
+    ) : m_rhi_global_render_resource(rhi_global_render_resource) {}
 
     virtual ~Render_pass() {}
     virtual void excute() = 0;
@@ -38,20 +35,30 @@ struct Execution_context {
     std::vector<Swap_object> render_swap_objects{};
 };
 
+struct Resource_flow {
+    std::shared_ptr<Texture> color_attachment_in_out{};
+    std::shared_ptr<Texture> depth_attachment_in{};
+};
+
 protected:
     std::shared_ptr<Frame_buffer> m_frame_buffer{};
     Execution_context m_context{};
+    Resource_flow m_resource_input{};
     
 public:
     Main_pass(
-        RHI_global_render_resource& rhi_global_render_resource,
-        Resource_manager<std::string, Render_resource>& render_resource_manager
-    ) : Render_pass(rhi_global_render_resource, render_resource_manager) {
-        int width = rhi_global_render_resource.window->width();
-        int height = rhi_global_render_resource.window->height();
+        RHI_global_render_resource& rhi_global_render_resource
+    ) : Render_pass(rhi_global_render_resource) {}
 
-        auto color_attachment = m_render_resource_manager.get<Texture>("main_color_attachment");
-        auto depth_attachment =  m_render_resource_manager.get<Texture>("main_depth_attachment");
+    ~Main_pass() {}
+
+    void set_resource_flow(const Resource_flow& input) {
+        m_resource_input = input;
+        int width = m_rhi_global_render_resource.window->width();
+        int height = m_rhi_global_render_resource.window->height();
+
+        auto color_attachment = m_resource_input.color_attachment_in_out;
+        auto depth_attachment = m_resource_input.depth_attachment_in;
 
         m_frame_buffer = Frame_buffer::create(
             width, height, 
@@ -62,17 +69,14 @@ public:
         m_frame_buffer->link(m_rhi_global_render_resource.device);
     }
 
-    ~Main_pass() {}
-
     void set_context(const Execution_context& context) {
         m_context = context;
     }
 
     static std::shared_ptr<Main_pass> create(
-        RHI_global_render_resource& rhi_global_render_resource,
-        Resource_manager<std::string, Render_resource>& render_resource_manager
+        RHI_global_render_resource& rhi_global_render_resource
     ) {
-        return std::make_shared<Main_pass>(rhi_global_render_resource, render_resource_manager);
+        return std::make_shared<Main_pass>(rhi_global_render_resource);
     }
 
     void excute() {
@@ -129,21 +133,26 @@ public:
             );
         }
     }
-
 };
 
 class Gamma_pass : public Render_pass {
+public:
+
+    struct Resource_flow {
+        std::shared_ptr<Texture> color_attachment_in{};
+    };
+
 protected:
     std::shared_ptr<Gamma_material> m_gamma_material{};
     std::shared_ptr<Geometry> m_screen_geometry{};
 
+    Resource_flow m_resource_input{};
+
 public:
     Gamma_pass(
-        RHI_global_render_resource& rhi_global_render_resource,
-        Resource_manager<std::string, Render_resource>& render_resource_manager
-    ) : Render_pass(rhi_global_render_resource, render_resource_manager) {
+        RHI_global_render_resource& rhi_global_render_resource
+    ) : Render_pass(rhi_global_render_resource) {
         m_gamma_material = Gamma_material::create();
-        m_gamma_material->screen_map = m_render_resource_manager.get<Texture>("main_color_attachment");
         
         m_screen_geometry = Geometry::create_screen_plane();
         m_screen_geometry->link(m_rhi_global_render_resource.device);
@@ -152,10 +161,14 @@ public:
     ~Gamma_pass() {}
 
     static std::shared_ptr<Gamma_pass> create(
-        RHI_global_render_resource& rhi_global_render_resource,
-        Resource_manager<std::string, Render_resource>& render_resource_manager
+        RHI_global_render_resource& rhi_global_render_resource
     ) {
-        return std::make_shared<Gamma_pass>(rhi_global_render_resource, render_resource_manager);
+        return std::make_shared<Gamma_pass>(rhi_global_render_resource);
+    }
+
+    void set_resource_flow(const Resource_flow& input) {
+        m_resource_input = input;
+        m_gamma_material->screen_map = m_resource_input.color_attachment_in;
     }
 
     void excute() {

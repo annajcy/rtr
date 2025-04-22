@@ -99,18 +99,18 @@ int main() {
     auto scene = world->add_scene(Scene::create("scene1"));
     world->set_current_scene(scene);
 
-    auto spherical = Skybox::create(Texture_image::create(bk_image));
-    scene->set_skybox(spherical);
+    // auto spherical = Skybox::create(Texture_image::create(bk_image));
+    // scene->set_skybox(spherical);
 
-    // auto cubemap = Skybox::create(Texture_cubemap::create(std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
-    //     {Texture_cubemap_face::BACK, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/back.jpg", false)},
-    //     {Texture_cubemap_face::BOTTOM, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/bottom.jpg", false)},
-    //     {Texture_cubemap_face::FRONT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/front.jpg", false)},
-    //     {Texture_cubemap_face::LEFT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/left.jpg", false)},
-    //     {Texture_cubemap_face::RIGHT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/right.jpg", false)},
-    //     {Texture_cubemap_face::TOP, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/top.jpg", false)}
-    // }));
-    // scene->set_skybox(cubemap);
+    auto cubemap = Skybox::create(Texture_cubemap::create(std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
+        {Texture_cubemap_face::BACK, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/back.jpg", false)},
+        {Texture_cubemap_face::BOTTOM, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/bottom.jpg", false)},
+        {Texture_cubemap_face::FRONT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/front.jpg", false)},
+        {Texture_cubemap_face::LEFT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/left.jpg", false)},
+        {Texture_cubemap_face::RIGHT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/right.jpg", false)},
+        {Texture_cubemap_face::TOP, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/top.jpg", false)}
+    }));
+    scene->set_skybox(cubemap);
     
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));

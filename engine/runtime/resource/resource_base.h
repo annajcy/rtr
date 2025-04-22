@@ -78,7 +78,6 @@ template<typename Key_type, typename T>
 class Resource_manager {
 protected:
     std::unordered_map<Key_type, std::shared_ptr<T>> m_resources{};
-    std::unordered_map<Key_type, std::vector<Key_type>> m_dependencies{};
 
 public:
     Resource_manager() = default;
@@ -92,29 +91,6 @@ public:
         return m_resources[key];
     }
 
-    std::vector<Key_type> get_dependencies(const Key_type& key) {
-        if (m_dependencies.find(key) == m_dependencies.end()) {
-            std::cerr << "Resource_manager::get_dependencies: resource not found" << std::endl;
-            return {};
-        }
-        return m_dependencies[key];
-    }
-
-    std::vector<std::shared_ptr<T>> get_dependencies(const Key_type& key, bool recursive) {
-        if (m_dependencies.find(key) == m_dependencies.end()) {
-            std::cerr << "Resource_manager::get_dependencies: resource not found" << std::endl;
-            return {};
-        }
-        std::vector<std::shared_ptr<T>> dependencies{};
-        for (const auto& dependency : m_dependencies[key]) {
-            dependencies.push_back(get(dependency));
-            if (recursive) {
-                auto recursive_dependencies = get_dependencies(dependency, recursive);
-                dependencies.insert(dependencies.end(), recursive_dependencies.begin(), recursive_dependencies.end());
-            }
-        }
-    }
-
     template<typename S>
     std::shared_ptr<S> get(const Key_type& key) {
         if (m_resources.find(key) == m_resources.end()) {
@@ -122,19 +98,6 @@ public:
             return nullptr;
         }
         return std::dynamic_pointer_cast<S>(m_resources[key]);
-    }
-
-    void add_dependency(const Key_type& key, const Key_type& dependency) {
-        m_dependencies[key].push_back(dependency);
-    }
-
-    void remove_dependency(const Key_type& key, const Key_type& dependency) {
-        if (m_dependencies.find(key) == m_dependencies.end()) {
-            std::cerr << "Resource_manager::remove_dependency: resource not found" << std::endl;
-            return;
-        }
-        auto& dependencies = m_dependencies[key];
-        dependencies.erase(std::remove(dependencies.begin(), dependencies.end(), dependency), dependencies.end());
     }
 
     void add(const Key_type& key, const std::shared_ptr<T>& resource) {
@@ -147,10 +110,6 @@ public:
             return;
         }
         m_resources.erase(key);
-        m_dependencies.erase(key);
-        for (auto &[_, dependencies] : m_dependencies) {
-            dependencies.erase(std::remove(dependencies.begin(), dependencies.end(), key), dependencies.end());
-        }
     }
 
     bool has(const Key_type& key) const {

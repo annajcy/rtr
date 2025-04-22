@@ -69,8 +69,17 @@ public:
     }
 
     void init_render_passes() override {
-        m_main_pass = Main_pass::create(m_rhi_global_render_resource, m_render_resource_manager);
-        m_gamma_pass = Gamma_pass::create(m_rhi_global_render_resource, m_render_resource_manager);
+        
+        m_main_pass = Main_pass::create(m_rhi_global_render_resource);
+        m_main_pass->set_resource_flow(Main_pass::Resource_flow{
+            .color_attachment_in_out = m_render_resource_manager.get<Texture_color_attachment>("main_color_attachment"),
+           .depth_attachment_in = m_render_resource_manager.get<Texture_depth_attachment>("main_depth_attachment")
+        });
+
+        m_gamma_pass = Gamma_pass::create(m_rhi_global_render_resource);
+        m_gamma_pass->set_resource_flow(Gamma_pass::Resource_flow{
+            .color_attachment_in = m_render_resource_manager.get<Texture_color_attachment>("main_color_attachment")
+        });
     }
 
     ~Test_render_pipeline() {}
