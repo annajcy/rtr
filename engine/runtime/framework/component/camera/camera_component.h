@@ -56,8 +56,9 @@ public:
     }
 
     glm::mat4 view_matrix() const {
-        glm::vec3 center = node()->position() + node()->front();
-        return glm::lookAt(node()->position(), center, node()->up());
+        glm::vec3 center = node()->world_position() + node()->world_front();
+        return glm::lookAt(node()->world_position(), center, node()->world_up());
+        //return glm::inverse(node()->model_matrix());
     }
 
     Camera_type camera_type() const { return m_camera_type; }

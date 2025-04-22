@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../component_base.h"
+#include "glm/fwd.hpp"
 #include <iostream>
 
 namespace rtr {
@@ -143,6 +144,16 @@ public:
 	glm::vec3 left() const { return m_rotation * glm::vec3(-1.0f, 0.0f, 0.0f); }
 	glm::vec3 front() const { return m_rotation * glm::vec3(0.0f, 0.0f, 1.0f); }
     glm::vec3 back() const { return m_rotation * glm::vec3(0.0f, 0.0f, -1.0f); }
+
+    glm::vec3 world_up() { return world_rotation() * glm::vec3(0.0f, 1.0f, 0.0f); }
+    glm::vec3 world_down() { return world_rotation() * glm::vec3(0.0f, -1.0f, 0.0f); }
+    glm::vec3 world_right() { return world_rotation() * glm::vec3(1.0f, 0.0f, 0.0f); }
+    glm::vec3 world_left() { return world_rotation() * glm::vec3(-1.0f, 0.0f, 0.0f); }
+    glm::vec3 world_front() { return world_rotation() * glm::vec3(0.0f, 0.0f, 1.0f); }
+    glm::vec3 world_back() { return world_rotation() * glm::vec3(0.0f, 0.0f, -1.0f); }
+
+
+
     glm::mat4 normal_matrix() { return glm::transpose(glm::inverse(model_matrix())); }
 
     glm::mat4 model_matrix()  {

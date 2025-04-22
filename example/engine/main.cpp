@@ -164,6 +164,7 @@ int main() {
     mesh_renderer2->set_material(material);
 
     node2->add_child(node, true);
+    // node2->add_child(camera_node, true);
     
     runtime->world() = world;
 
