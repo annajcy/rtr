@@ -1,5 +1,4 @@
 // gamma.frag
-#version 460 core
 
 out vec4 frag_color;
 in vec2 v_uv;

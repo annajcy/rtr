@@ -3,6 +3,7 @@
 #include "engine/runtime/context/engine_tick_context.h"
 #include "engine/runtime/core/frame_buffer.h"
 #include "engine/runtime/core/geometry.h"
+#include "engine/runtime/core/material.h"
 #include "engine/runtime/core/memory_buffer.h"
 #include "engine/runtime/core/shader.h"
 #include "engine/runtime/core/texture.h"
@@ -32,13 +33,13 @@ class Test_render_pipeline : public Render_pipeline {
 private:
     std::shared_ptr<RHI_device> m_device{};
     std::shared_ptr<RHI_renderer> m_renderer{};
-    std::shared_ptr<RHI_screen_buffer> m_screen_buffer{};
+    std::shared_ptr<RHI_screen_buffer> m_rhi_screen_buffer{};
     std::shared_ptr<RHI_memory_buffer_binder> m_memory_binder{};
     std::shared_ptr<RHI_pipeline_state> m_pipeline_state{};
 
     std::shared_ptr<Uniform_buffer<Camera_ubo>> m_camera_ubo{};
 
-    std::shared_ptr<Shader_program> m_gamma_shader{};
+    std::shared_ptr<Material> m_gamma_material{};
     std::shared_ptr<Frame_buffer> m_frame_buffer{};
     std::shared_ptr<Geometry> m_screen_geometry{};
     
@@ -50,7 +51,7 @@ public:
         const std::shared_ptr<RHI_memory_buffer_binder>& memory_binder
     ) : m_device(device),
         m_renderer(renderer),
-        m_screen_buffer(screen_buffer),
+        m_rhi_screen_buffer(screen_buffer),
         m_memory_binder(memory_binder),
         m_pipeline_state(device->create_pipeline_state()),
         m_camera_ubo(Uniform_buffer<Camera_ubo>::create(Camera_ubo{})) {
@@ -58,27 +59,23 @@ public:
         if (!m_camera_ubo->is_linked()) m_camera_ubo->link(m_device);
         m_memory_binder->bind_memory_buffer(m_camera_ubo->rhi_resource(), 0);
 
-        m_gamma_shader = Shader_program::create("gamma", std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
-            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, Shader::get_shader_code_from_url("assets/shader/gamma.vert"))},
-            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, Shader::get_shader_code_from_url("assets/shader/gamma.frag"))}
-        }, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {});
-        m_gamma_shader->link(m_device);
-
         m_frame_buffer = Frame_buffer::create(
-            m_screen_buffer->width(), 
-            m_screen_buffer->height(),
+            m_rhi_screen_buffer->width(), 
+            m_rhi_screen_buffer->height(),
             std::vector<std::shared_ptr<Texture>> {
                 Texture_color_attachment::create(
-                    m_screen_buffer->width(),
-                    m_screen_buffer->height()
+                    m_rhi_screen_buffer->width(),
+                    m_rhi_screen_buffer->height()
                 )
             },
             Texture_depth_attachment::create(
-                m_screen_buffer->width(),
-                m_screen_buffer->height()
+                m_rhi_screen_buffer->width(),
+                m_rhi_screen_buffer->height()
             )
         );
         m_frame_buffer->link(m_device);
+
+        m_gamma_material = Gamma_material::create();
 
         m_screen_geometry = Geometry::create_screen_plane();
         m_screen_geometry->link(m_device);
@@ -146,7 +143,7 @@ public:
             );
         }
 
-        m_renderer->clear(m_screen_buffer);
+        m_renderer->clear(m_rhi_screen_buffer);
 
         //draw gamma
         m_pipeline_state->pipeline_state = Pipeline_state::opaque_pipeline_state();
@@ -154,10 +151,13 @@ public:
 
         m_frame_buffer->rhi_resource()->color_attachments()[0]->bind_to_unit(0);
 
+        auto shader = m_gamma_material->get_shader_program();
+        if (!shader->is_linked()) shader->link(m_device);
+
         m_renderer->draw(
-            m_gamma_shader->rhi_resource(),
+            shader->rhi_resource(),
             m_screen_geometry->rhi_resource(),
-            m_screen_buffer
+            m_rhi_screen_buffer
         );
     }
 
