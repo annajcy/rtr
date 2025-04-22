@@ -70,14 +70,14 @@ public:
 
 class Spot_light_component : public Light_component {
 protected:
-    float m_inner_angle{30.0f};
-    float m_outer_angle{40.0f};
+    float m_inner_angle{10.0f};
+    float m_outer_angle{20.0f};
 
 public:
     Spot_light_component() : Light_component(Light_type::SPOT) {}
     ~Spot_light_component() = default;
     
-    glm::vec3 direction() const { return node()->world_rotation() * glm::vec3(0.0f, 0.0f, 1.0); }
+    glm::vec3 direction() const { return node()->world_front(); }
     glm::vec3 position() const { return node()->world_position(); }
 
     static std::shared_ptr<Spot_light_component> create() {

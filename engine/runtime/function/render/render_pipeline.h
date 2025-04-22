@@ -33,6 +33,9 @@ public:
 class Test_render_pipeline : public Render_pipeline {
 private:
     std::shared_ptr<Uniform_buffer<Camera_ubo>> m_camera_ubo{};
+    std::shared_ptr<Uniform_buffer<Directional_light_ubo>> m_directional_light_ubo{};
+    std::shared_ptr<Uniform_buffer<Point_light_ubo_array>> m_point_light_ubo_array{};
+    std::shared_ptr<Uniform_buffer<Spot_light_ubo_array>> m_spot_light_ubo_array{};
 
     std::shared_ptr<Main_pass> m_main_pass{};
     std::shared_ptr<Gamma_pass> m_gamma_pass{};
@@ -66,6 +69,18 @@ public:
         m_camera_ubo = Uniform_buffer<Camera_ubo>::create(Camera_ubo{});
         if (!m_camera_ubo->is_linked()) m_camera_ubo->link(m_rhi_global_render_resource.device);
         m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_camera_ubo->rhi_resource(), 0);
+
+        m_directional_light_ubo = Uniform_buffer<Directional_light_ubo>::create(Directional_light_ubo{});
+        if (!m_directional_light_ubo->is_linked()) m_directional_light_ubo->link(m_rhi_global_render_resource.device);
+        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_directional_light_ubo->rhi_resource(), 1);
+
+        m_point_light_ubo_array = Uniform_buffer<Point_light_ubo_array>::create(Point_light_ubo_array{});
+        if (!m_point_light_ubo_array->is_linked()) m_point_light_ubo_array->link(m_rhi_global_render_resource.device);
+        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_point_light_ubo_array->rhi_resource(), 2);
+        
+        m_spot_light_ubo_array = Uniform_buffer<Spot_light_ubo_array>::create(Spot_light_ubo_array{});
+        if (!m_spot_light_ubo_array->is_linked()) m_spot_light_ubo_array->link(m_rhi_global_render_resource.device);
+        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_spot_light_ubo_array->rhi_resource(), 3);
     }
 
     void init_render_passes() override {
@@ -104,6 +119,44 @@ public:
             .camera_position = tick_context.render_swap_data.camera.camera_position
         });
         m_camera_ubo->push_to_rhi();
+
+        m_directional_light_ubo->set_data(Directional_light_ubo{
+            .intensity = tick_context.render_swap_data.directional_light.intensity,
+            .color = tick_context.render_swap_data.directional_light.color,
+            .direction = tick_context.render_swap_data.directional_light.direction,
+        });
+        m_directional_light_ubo->push_to_rhi();
+
+        auto pl_ubo_arr = Point_light_ubo_array{};
+        pl_ubo_arr.count = tick_context.render_swap_data.point_lights.size();
+        for (size_t i = 0; i < tick_context.render_swap_data.point_lights.size(); i++) {
+            pl_ubo_arr.point_light_ubo[i] = Point_light_ubo{
+                .intensity = tick_context.render_swap_data.point_lights[i].intensity,
+                .position = tick_context.render_swap_data.point_lights[i].position,
+                .color = tick_context.render_swap_data.point_lights[i].color,
+                .attenuation = tick_context.render_swap_data.point_lights[i].attenuation,
+            };
+        }
+
+        m_point_light_ubo_array->set_data(pl_ubo_arr);
+        m_point_light_ubo_array->push_to_rhi();
+
+        auto sl_ubo_arr = Spot_light_ubo_array{};
+        sl_ubo_arr.count = tick_context.render_swap_data.spot_lights.size();
+        for (size_t i = 0; i < tick_context.render_swap_data.spot_lights.size(); i++) {
+            sl_ubo_arr.spot_light_ubo[i] = Spot_light_ubo{
+                .intensity = tick_context.render_swap_data.spot_lights[i].intensity,
+                .inner_angle_cos = tick_context.render_swap_data.spot_lights[i].inner_angle_cos,
+                .outer_angle_cos = tick_context.render_swap_data.spot_lights[i].outer_angle_cos,
+                .direction = tick_context.render_swap_data.spot_lights[i].direction,
+                .position = tick_context.render_swap_data.spot_lights[i].position,
+                .color = tick_context.render_swap_data.spot_lights[i].color,
+            };
+        }
+
+        m_spot_light_ubo_array->set_data(sl_ubo_arr);
+        m_spot_light_ubo_array->push_to_rhi();
+        m_spot_light_ubo_array->pull_from_rhi();
     }
 
     static std::shared_ptr<Test_render_pipeline> create(RHI_global_render_resource& global_render_resource) {

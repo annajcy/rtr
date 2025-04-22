@@ -6,12 +6,12 @@
 namespace rtr {
     
 struct Logic_tick_context {
-    const Input_system_state& input_state;
+    Input_system_state input_state;
     Swap_data &logic_swap_data;
     float delta_time{};
 
     Logic_tick_context(
-        const Input_system_state& input_state,
+        Input_system_state input_state,
         Swap_data &logic_swap_data,
         float delta_time
     ) : input_state(input_state),
@@ -20,11 +20,11 @@ struct Logic_tick_context {
 };
 
 struct Render_tick_context {
-    const Swap_data &render_swap_data;
+    Swap_data &render_swap_data;
     float delta_time{};
     
     Render_tick_context(
-        const Swap_data &render_swap_data,
+        Swap_data &render_swap_data,
         float delta_time
     ) : render_swap_data(render_swap_data),
         delta_time(delta_time) {}

@@ -49,7 +49,9 @@ struct Point_light_ubo_array {
 
 struct Spot_light_ubo {
     float intensity{};
-    float padding1[3];
+    float inner_angle_cos{};
+    float outer_angle_cos{};  
+    float padding1[1];
 
     glm::vec3 direction{};
     float padding2[1];   
@@ -58,13 +60,7 @@ struct Spot_light_ubo {
     float padding3[1];
 
     glm::vec3 color{};
-    float padding4[1];
-
-    float inner_angle_cos{};
-    float padding5[3];
-
-    float outer_angle_cos{};   
-    float padding6[3];     
+    float padding4[1]; 
 }; 
 
 struct Spot_light_ubo_array {
