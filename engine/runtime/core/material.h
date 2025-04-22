@@ -26,15 +26,23 @@ public:
     Material_type material_type() const { return m_material_type; }
     const std::shared_ptr<Shader>& shader() const { return m_shader; }
 
-    virtual Shader::feature_set get_shader_feature_set() const = 0;
     const std::shared_ptr<Shader_program> get_shader_program() const {
         auto shader_variant = m_shader->get_shader_variant(get_shader_feature_set());
         return shader_variant;
     }
 
-    virtual Pipeline_state get_pipeline_state() const = 0;
+    virtual Shader::feature_set get_shader_feature_set() const {
+        Shader::feature_set feature_set{};
+        return feature_set;
+    }
 
-    virtual std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() = 0;
+    virtual Pipeline_state get_pipeline_state() const {
+        return Pipeline_state::opaque_pipeline_state();
+    }
+
+    virtual std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() {
+        return {};
+    }
 };
 
 //TEST
@@ -48,15 +56,6 @@ public:
     ) {}
 
     ~Test_material() = default;
-    bool is_transparent() const { return false; }
-
-    Pipeline_state get_pipeline_state() const override {
-        if (is_transparent()) {
-            return Pipeline_state::translucent_pipeline_state();
-        } else {
-            return Pipeline_state::opaque_pipeline_state();
-        }
-    }
 
     Shader::feature_set get_shader_feature_set() const override { 
         Shader::feature_set feature_set{};
@@ -283,10 +282,6 @@ public:
         Shader::create_skybox_cubemap_shader()
     ) {}
     ~Skybox_cubemap_material() = default;
-    Shader::feature_set get_shader_feature_set() const override {
-        Shader::feature_set feature_set{};
-        return feature_set;
-    }
 
     std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
         if (cubemap_texture) {
@@ -309,15 +304,13 @@ public:
 class Skybox_spherical_material : public Material {
 public:
     std::shared_ptr<Texture_2D> spherical_map{};
+
     Skybox_spherical_material() : Material(
         Material_type::SKYBOX_SPHERICAL, 
         Shader::create_skybox_spherical_shader()
     ) {}
+
     ~Skybox_spherical_material() = default;
-    Shader::feature_set get_shader_feature_set() const override {
-        Shader::feature_set feature_set{};
-        return feature_set;
-    }
 
     std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
         if (spherical_map) {
@@ -334,6 +327,35 @@ public:
 
     static std::shared_ptr<Skybox_spherical_material> create() {
         return std::make_shared<Skybox_spherical_material>();
+    }
+
+};
+
+class Gamma_material : public Material {
+public:
+    std::shared_ptr<Texture_2D> screen_map{};
+    Gamma_material() : Material(
+        Material_type::GAMMA,
+        Shader::create_gamma_shader()
+    ) {}
+
+    ~Gamma_material() = default;
+
+    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
+        if (screen_map) {
+            return {
+                {0, screen_map}
+            };
+        }
+        return {};
+    }
+
+    Pipeline_state get_pipeline_state() const override {
+        return Pipeline_state::opaque_pipeline_state();
+    }
+
+    static std::shared_ptr<Gamma_material> create() {
+        return std::make_shared<Gamma_material>();
     }
 
 };

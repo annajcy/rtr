@@ -167,10 +167,10 @@ public:
         );
     }
 
-    std::shared_ptr<RHI_frame_buffer> create_screen_frame_buffer(
+    std::shared_ptr<RHI_screen_buffer> create_screen_buffer(
         const std::shared_ptr<RHI_window>& window
     ) override {
-        return std::make_shared<RHI_frame_buffer_OpenGL>(window);
+        return std::make_shared<RHI_screen_buffer_OpenGL>(window);
     }
 
     std::shared_ptr<RHI_frame_buffer> create_frame_buffer(

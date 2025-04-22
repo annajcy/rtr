@@ -64,7 +64,6 @@ public:
             auto world_position = node->world_position();
             auto world_rotation = node->world_rotation();
             auto world_scale = node->world_scale();
-
             node->m_parent = std::enable_shared_from_this<Node_component>::shared_from_this();
             node->set_world_position(world_position);
             node->set_world_rotation(world_rotation);

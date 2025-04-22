@@ -85,7 +85,7 @@ int main() {
     auto device = std::make_shared<RHI_device_OpenGL>();
     
     auto window = device->create_window(800, 600, "RTR");
-    auto screen_frame_buffer = device->create_screen_frame_buffer(window);
+    auto screen_frame_buffer = device->create_screen_buffer(window);
 
     auto geo = Geometry::create(
         std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> {

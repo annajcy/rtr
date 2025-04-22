@@ -10,6 +10,7 @@
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/rhi_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
+#include "engine/runtime/platform/rhi/rhi_frame_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
 #include <memory>
@@ -31,7 +32,7 @@ class Test_render_pipeline : public Render_pipeline {
 private:
     std::shared_ptr<RHI_device> m_device{};
     std::shared_ptr<RHI_renderer> m_renderer{};
-    std::shared_ptr<RHI_frame_buffer> m_screen_frame_buffer{};
+    std::shared_ptr<RHI_screen_buffer> m_screen_buffer{};
     std::shared_ptr<RHI_memory_buffer_binder> m_memory_binder{};
     std::shared_ptr<RHI_pipeline_state> m_pipeline_state{};
 
@@ -45,11 +46,11 @@ public:
     Test_render_pipeline(
         const std::shared_ptr<RHI_device>& device,
         const std::shared_ptr<RHI_renderer>& renderer,
-        const std::shared_ptr<RHI_frame_buffer>& screen_frame_buffer,
+        const std::shared_ptr<RHI_screen_buffer>& screen_buffer,
         const std::shared_ptr<RHI_memory_buffer_binder>& memory_binder
     ) : m_device(device),
         m_renderer(renderer),
-        m_screen_frame_buffer(screen_frame_buffer),
+        m_screen_buffer(screen_buffer),
         m_memory_binder(memory_binder),
         m_pipeline_state(device->create_pipeline_state()),
         m_camera_ubo(Uniform_buffer<Camera_ubo>::create(Camera_ubo{})) {
@@ -64,17 +65,17 @@ public:
         m_gamma_shader->link(m_device);
 
         m_frame_buffer = Frame_buffer::create(
-            m_screen_frame_buffer->window()->width(), 
-            m_screen_frame_buffer->window()->height(),
+            m_screen_buffer->width(), 
+            m_screen_buffer->height(),
             std::vector<std::shared_ptr<Texture>> {
                 Texture_color_attachment::create(
-                    m_screen_frame_buffer->window()->width(),
-                    m_screen_frame_buffer->window()->height()
+                    m_screen_buffer->width(),
+                    m_screen_buffer->height()
                 )
             },
             Texture_depth_attachment::create(
-                m_screen_frame_buffer->window()->width(),
-                m_screen_frame_buffer->window()->height()
+                m_screen_buffer->width(),
+                m_screen_buffer->height()
             )
         );
         m_frame_buffer->link(m_device);
@@ -145,7 +146,7 @@ public:
             );
         }
 
-        m_renderer->clear(m_screen_frame_buffer);
+        m_renderer->clear(m_screen_buffer);
 
         //draw gamma
         m_pipeline_state->pipeline_state = Pipeline_state::opaque_pipeline_state();
@@ -156,7 +157,7 @@ public:
         m_renderer->draw(
             m_gamma_shader->rhi_resource(),
             m_screen_geometry->rhi_resource(),
-            m_screen_frame_buffer
+            m_screen_buffer
         );
     }
 

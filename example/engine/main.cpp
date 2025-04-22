@@ -133,7 +133,7 @@ int main() {
             std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
                 {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))}
             }), 
-        Shader::get_feature_set_from_features_list(std::vector<Shader_feature> {
+        Shader::get_shader_feature_set(std::vector<Shader_feature> {
             Shader_feature::ALBEDO_MAP
         })
     );

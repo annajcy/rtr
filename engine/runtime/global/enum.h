@@ -337,6 +337,7 @@ enum class Material_type {
     PBR,
     SKYBOX_CUBEMAP,
     SKYBOX_SPHERICAL,
+    GAMMA,
     TEST
 };
 

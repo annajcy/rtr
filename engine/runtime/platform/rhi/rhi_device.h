@@ -143,7 +143,7 @@ public:
         const std::shared_ptr<RHI_texture>& depth_attachment
     ) = 0;
 
-    virtual std::shared_ptr<RHI_frame_buffer> create_screen_frame_buffer(
+    virtual std::shared_ptr<RHI_screen_buffer> create_screen_buffer(
         const std::shared_ptr<RHI_window>& window
     ) = 0;
     

@@ -37,7 +37,7 @@ class RHI_renderer {
 protected:
     std::shared_ptr<RHI_shader_program> m_shader_program{};
     std::shared_ptr<RHI_geometry> m_geometry{};
-    std::shared_ptr<RHI_frame_buffer> m_frame_buffer{};
+    std::shared_ptr<RHI_frame_buffer_base> m_frame_buffer{};
     Clear_state m_clear_state{};
 
 public:
@@ -48,18 +48,18 @@ public:
     virtual void draw(
         const std::shared_ptr<RHI_shader_program>& shader_program,
         const std::shared_ptr<RHI_geometry>& geometry,
-        const std::shared_ptr<RHI_frame_buffer>& frame_buffer
+        const std::shared_ptr<RHI_frame_buffer_base>& frame_buffer
     ) = 0;
 
     virtual void draw_instanced(
         const std::shared_ptr<RHI_shader_program>& shader_program,
         const std::shared_ptr<RHI_geometry>& geometry,
-        const std::shared_ptr<RHI_frame_buffer>& frame_buffer,
+        const std::shared_ptr<RHI_frame_buffer_base>& frame_buffer,
         unsigned int instance_count
     ) = 0;
 
     virtual void clear(
-        const std::shared_ptr<RHI_frame_buffer>& frame_buffer
+        const std::shared_ptr<RHI_frame_buffer_base>& frame_buffer
     ) = 0;
 
     virtual void apply_clear_state() = 0;
@@ -73,7 +73,7 @@ public:
 
     const std::shared_ptr<RHI_shader_program>& shader_program() const { return m_shader_program; }
     const std::shared_ptr<RHI_geometry>& geometry() const { return m_geometry; }
-    const std::shared_ptr<RHI_frame_buffer>& frame_buffer() const { return m_frame_buffer; }
+    const std::shared_ptr<RHI_frame_buffer_base>& frame_buffer() const { return m_frame_buffer; }
 
     void set_shader_program(const std::shared_ptr<RHI_shader_program>& shader_program) {
         m_shader_program = shader_program;
@@ -83,7 +83,7 @@ public:
         m_geometry = geometry;
     }
 
-    void set_frame_buffer(const std::shared_ptr<RHI_frame_buffer>& frame_buffer) {
+    void set_frame_buffer(const std::shared_ptr<RHI_frame_buffer_base>& frame_buffer) {
         m_frame_buffer = frame_buffer;
     }
 

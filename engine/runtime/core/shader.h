@@ -253,49 +253,12 @@ public:
         return load_shader_code_with_includes(url, processed_files);
     }
 
-    static feature_set get_feature_set_from_features_list(const std::vector<Shader_feature>& feature_list) {
+    static feature_set get_shader_feature_set(const std::vector<Shader_feature>& feature_list) {
         feature_set feature_set{};
         for (const auto& feature : feature_list) {
             feature_set.set(static_cast<size_t>(feature));
         }
         return feature_set;
-    }
-
-    static feature_set get_phong_shader_feature_whitelist() {
-        feature_set keyword_whitelist{};
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::SHADOWS));
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::ALBEDO_MAP));
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::ALPHA_MAP));
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::NORMAL_MAP));
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::HEIGHT_MAP));
-
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::SPECULAR_MAP));
-        return keyword_whitelist;
-    }
-
-    static feature_set get_pbr_shader_feature_whitelist() {
-        feature_set keyword_whitelist{};
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::SHADOWS));
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::ALBEDO_MAP));
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::ALPHA_MAP));
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::NORMAL_MAP));
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::HEIGHT_MAP));
-        
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::METALLIC_MAP));
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::ROUGHNESS_MAP));
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::AO_MAP));
-        keyword_whitelist.set(static_cast<size_t>(Shader_feature::EMISSIVE_MAP));
-        return keyword_whitelist;
-    }
-
-    static feature_set get_skybox_cubemap_shader_feature_whitelist() {
-        feature_set keyword_whitelist{};
-        return keyword_whitelist;
-    }
-
-    static feature_set get_skybox_spherical_shader_feature_whitelist() {
-        feature_set keyword_whitelist{};
-        return keyword_whitelist;
     }
 
     static std::shared_ptr<Shader> create_phong_shader() {
@@ -321,7 +284,14 @@ public:
 
         return std::make_shared<Shader>(
             main_program,
-            get_phong_shader_feature_whitelist()
+            get_shader_feature_set(std::vector<Shader_feature>{
+                Shader_feature::SHADOWS,
+                Shader_feature::ALBEDO_MAP,
+                Shader_feature::ALPHA_MAP,
+                Shader_feature::NORMAL_MAP,
+                Shader_feature::HEIGHT_MAP,
+                Shader_feature::SPECULAR_MAP
+            })
         );
     }
 
@@ -347,7 +317,17 @@ public:
 
         return std::make_shared<Shader>(
             main_program,
-            get_pbr_shader_feature_whitelist()
+            get_shader_feature_set(std::vector<Shader_feature>{
+                Shader_feature::SHADOWS,
+                Shader_feature::ALBEDO_MAP,
+                Shader_feature::ALPHA_MAP,
+                Shader_feature::NORMAL_MAP,
+                Shader_feature::HEIGHT_MAP,
+                Shader_feature::METALLIC_MAP,
+                Shader_feature::ROUGHNESS_MAP,
+                Shader_feature::AO_MAP,
+                Shader_feature::EMISSIVE_MAP
+            })
         );
 
     }
@@ -373,7 +353,7 @@ public:
 
         return std::make_shared<Shader>(
             main_program,
-            get_skybox_cubemap_shader_feature_whitelist()
+            get_shader_feature_set({})
         );
         
     }
@@ -399,21 +379,30 @@ public:
 
         return std::make_shared<Shader>(
             main_program,
-            get_skybox_spherical_shader_feature_whitelist()
+            get_shader_feature_set({})
         );
     }
 
-
-
-
-
-
-
-
-
-
-
-
+    static std::shared_ptr<Shader> create_gamma_shader() {
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
+        shader_codes[Shader_type::VERTEX] = Shader_code::create(
+            Shader_type::VERTEX,
+            get_shader_code_from_url("assets/shader/gamma.vert")
+        );
+        shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
+            Shader_type::FRAGMENT,
+            get_shader_code_from_url("assets/shader/gamma.frag")
+        );
+        auto main_program = std::make_shared<Shader_program>(
+            "gamma_shader",
+            shader_codes,
+            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>{}
+        );
+        return std::make_shared<Shader>(
+            main_program,
+            get_shader_feature_set({})
+        );
+    }
 
     static std::string load_shader_code_with_includes(
         const std::string& file_path,

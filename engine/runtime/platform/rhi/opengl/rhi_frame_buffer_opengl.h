@@ -8,12 +8,27 @@
 
 namespace rtr {
 
-class RHI_frame_buffer_OpenGL : public RHI_frame_buffer {
+class RHI_frame_buffer_base_OpenGL {
 protected:
-    unsigned int m_frame_buffer_id{};
+    unsigned int m_frame_buffer_id{0};
 
 public:
-    RHI_frame_buffer_OpenGL(const std::shared_ptr<RHI_window>& window) : RHI_frame_buffer(window) {}
+    RHI_frame_buffer_base_OpenGL() {}
+
+    void bind() {
+        glBindFramebuffer(GL_FRAMEBUFFER, m_frame_buffer_id);
+    }
+
+    void unbind() {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    unsigned int frame_buffer_id() const { return m_frame_buffer_id; }
+    
+};
+
+class RHI_frame_buffer_OpenGL : public RHI_frame_buffer, public RHI_frame_buffer_base_OpenGL {
+public:
 
     RHI_frame_buffer_OpenGL(
         int width, 
@@ -111,16 +126,6 @@ public:
         return true;
     }
 
-    void bind() {
-        glBindFramebuffer(GL_FRAMEBUFFER, m_frame_buffer_id);
-    }
-
-    void unbind() {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-
-    unsigned int frame_buffer_id() const { return m_frame_buffer_id; }
-
 private:
     void log_framebuffer_error(GLenum status) const {
         const char* error = "Unknown error";
@@ -135,6 +140,19 @@ private:
     }
 
     
+};
+
+class RHI_screen_buffer_OpenGL : public RHI_screen_buffer, public RHI_frame_buffer_base_OpenGL {
+public:
+    RHI_screen_buffer_OpenGL(
+        const std::shared_ptr<RHI_window>& window
+    ) : RHI_screen_buffer(window) {}
+
+    virtual ~RHI_screen_buffer_OpenGL() {}
+
+    bool is_valid() const override {
+        return m_window != nullptr;
+    }
 };
 
 } // namespace rtr

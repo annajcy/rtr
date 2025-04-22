@@ -18,7 +18,7 @@ protected:
     std::shared_ptr<RHI_device> m_device{};
     std::shared_ptr<RHI_window> m_window{};
 
-    std::shared_ptr<RHI_frame_buffer> m_screen_buffer{};
+    std::shared_ptr<RHI_screen_buffer> m_screen_buffer{};
     std::shared_ptr<RHI_renderer> m_renderer{};
     std::shared_ptr<RHI_memory_buffer_binder> m_memory_binder{};
 
@@ -30,7 +30,7 @@ public:
         const std::shared_ptr<RHI_window>& window
     ) : m_device(device), 
         m_window(window),
-        m_screen_buffer(device->create_screen_frame_buffer(window)),
+        m_screen_buffer(device->create_screen_buffer(window)),
         m_renderer(device->create_renderer(Clear_state::enabled())),
         m_memory_binder(device->create_memory_buffer_binder()) {
 
@@ -51,7 +51,7 @@ public:
     }
 
     std::shared_ptr<RHI_device>& device() { return m_device; }
-    std::shared_ptr<RHI_frame_buffer>& screen_buffer() { return m_screen_buffer; }
+    std::shared_ptr<RHI_screen_buffer>& screen_buffer() { return m_screen_buffer; }
     std::shared_ptr<RHI_renderer>& renderer() { return m_renderer; }
 
     void set_render_pipeline(const std::shared_ptr<Render_pipeline>& pipeline) {

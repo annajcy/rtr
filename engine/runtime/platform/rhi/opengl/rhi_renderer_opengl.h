@@ -11,7 +11,6 @@
 
 namespace rtr {
 class RHI_renderer_OpenGL : public RHI_renderer {
-
 public:
 
     RHI_renderer_OpenGL(const Clear_state& clear_state) : RHI_renderer(clear_state) {
@@ -22,18 +21,16 @@ public:
     void draw(
         const std::shared_ptr<RHI_shader_program>& shader_program,
         const std::shared_ptr<RHI_geometry>& geometry,
-        const std::shared_ptr<RHI_frame_buffer>& frame_buffer
+        const std::shared_ptr<RHI_frame_buffer_base>& frame_buffer
     ) override {
 
         if (m_frame_buffer != frame_buffer) {
             set_frame_buffer(frame_buffer);
-            if (auto gl_frame_buffer = std::dynamic_pointer_cast<RHI_frame_buffer_OpenGL>(m_frame_buffer)) {
+
+            if (auto gl_frame_buffer = std::dynamic_pointer_cast<RHI_frame_buffer_base_OpenGL>(m_frame_buffer)) {
                 gl_frame_buffer->bind();
-                if (!gl_frame_buffer->is_screen())
-                    set_viewport({0, 0, gl_frame_buffer->width(), gl_frame_buffer->height()});
-                else
-                    set_viewport({0, 0, gl_frame_buffer->window()->width(), gl_frame_buffer->window()->height()});
             }
+            set_viewport({0, 0, m_frame_buffer->width(), m_frame_buffer->height()});
         }
 
         if (m_shader_program != shader_program) {
@@ -60,19 +57,16 @@ public:
     void draw_instanced(
         const std::shared_ptr<RHI_shader_program>& shader_program,
         const std::shared_ptr<RHI_geometry>& geometry,
-        const std::shared_ptr<RHI_frame_buffer>& frame_buffer,
+        const std::shared_ptr<RHI_frame_buffer_base>& frame_buffer,
         unsigned int instance_count
     ) override {
 
         if (m_frame_buffer != frame_buffer) {
             set_frame_buffer(frame_buffer);
-            if (auto gl_frame_buffer = std::dynamic_pointer_cast<RHI_frame_buffer_OpenGL>(m_frame_buffer)) {
+            if (auto gl_frame_buffer = std::dynamic_pointer_cast<RHI_frame_buffer_base_OpenGL>(m_frame_buffer)) {
                 gl_frame_buffer->bind();
-                if (!gl_frame_buffer->is_screen())
-                    set_viewport({0, 0, gl_frame_buffer->width(), gl_frame_buffer->height()});
-                else
-                    set_viewport({0, 0, gl_frame_buffer->window()->width(), gl_frame_buffer->window()->height()});
             }
+            set_viewport({0, 0, m_frame_buffer->width(), m_frame_buffer->height()});
         }
 
         if (m_shader_program != shader_program) {
@@ -110,18 +104,15 @@ public:
     }
 
     void clear(
-        const std::shared_ptr<RHI_frame_buffer>& frame_buffer
+        const std::shared_ptr<RHI_frame_buffer_base>& frame_buffer
     ) override {
 
         if (m_frame_buffer != frame_buffer) {
             set_frame_buffer(frame_buffer);
-            if (auto gl_frame_buffer = std::dynamic_pointer_cast<RHI_frame_buffer_OpenGL>(m_frame_buffer)) {
+            if (auto gl_frame_buffer = std::dynamic_pointer_cast<RHI_frame_buffer_base_OpenGL>(m_frame_buffer)) {
                 gl_frame_buffer->bind();
-                if (!gl_frame_buffer->is_screen())
-                    set_viewport({0, 0, gl_frame_buffer->width(), gl_frame_buffer->height()});
-                else
-                    set_viewport({0, 0, gl_frame_buffer->window()->width(), gl_frame_buffer->window()->height()});
             }
+            set_viewport({0, 0, m_frame_buffer->width(), m_frame_buffer->height()});
         }
 
         unsigned int clear_mask = 0;
