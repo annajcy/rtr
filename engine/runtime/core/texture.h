@@ -52,7 +52,7 @@ public:
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
             }, 
             std::unordered_map<Texture_filter_target, Texture_filter>{
-                {Texture_filter_target::MIN, Texture_filter::LINEAR},
+                {Texture_filter_target::MIN, Texture_filter::LINEAR_MIPMAP_LINEAR},
                 {Texture_filter_target::MAG, Texture_filter::LINEAR}
             }, 
             Image_data{

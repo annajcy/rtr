@@ -11,6 +11,7 @@ namespace rtr {
 class RHI_texture_OpenGL : public RHI_texture {
 protected:
     unsigned int m_texture_id{};
+
 public:
     RHI_texture_OpenGL(
         int width,
@@ -30,10 +31,9 @@ public:
         filters
     ) {
         glCreateTextures(gl_texture_type(m_type), 1, &m_texture_id);
-        
         glTextureStorage2D(
             m_texture_id, 
-            mipmap_levels, 
+            m_mipmap_levels, 
             gl_texture_internal_format(m_internal_format), 
             m_width, 
             m_height
@@ -46,7 +46,6 @@ public:
         for (const auto& [target, filter] : filters) {
             set_filter(target, filter);
         }
-
     }
         
     virtual ~RHI_texture_OpenGL() {
@@ -134,6 +133,8 @@ public:
             gl_texture_buffer_type(image.buffer_type), 
             image.data
         );
+
+        if (m_mipmap_levels > 1) generate_mipmap();
     }  
 };
 
@@ -164,6 +165,7 @@ public:
     virtual ~RHI_texture_cubemap_OpenGL() {}
 
     void upload_data(const std::unordered_map<Texture_cubemap_face, Image_data>& images) override {
+        
         for (const auto& [face, image] : images) {
             glTextureSubImage3D(
                 m_texture_id,
@@ -175,6 +177,8 @@ public:
                 image.data
             );
         }
+
+        if (m_mipmap_levels > 1) generate_mipmap();
     }
 };
 
