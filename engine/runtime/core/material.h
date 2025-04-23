@@ -53,6 +53,7 @@ public:
 class Test_material : public Material {
 public:
     std::shared_ptr<Texture> albedo_map{};
+    std::shared_ptr<Texture> specular_map{};
 
     float transparency{1.0f};
     glm::vec3 ka = glm::vec3(0.2f);     // 环境反射系数
@@ -72,16 +73,21 @@ public:
         if (albedo_map) {
             feature_set.set(static_cast<size_t>(Shader_feature::ALBEDO_MAP));
         }
+        if (specular_map) {
+            feature_set.set(static_cast<size_t>(Shader_feature::SPECULAR_MAP));
+        }
         return feature_set;
     }
 
     std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
+        std::unordered_map<unsigned int, std::shared_ptr<Texture>> texture_map{};
         if (albedo_map) {
-            return {
-                {0, albedo_map}
-            };
+            texture_map[0] = albedo_map;
         }
-        return {};
+        if (specular_map) {
+            texture_map[1] = specular_map;
+        }
+        return texture_map;
     }
 
     Pipeline_state get_pipeline_state() const override {

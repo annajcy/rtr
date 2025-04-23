@@ -115,7 +115,14 @@ layout(std140, binding = 3) uniform Spot_light_array_ubo {
 out vec4 frag_color;
 
 // 纹理采样器
-layout(binding = 0) uniform sampler2D albedo_map;
+#ifdef ENABLE_ALBEDO_MAP
+    layout(binding = 0) uniform sampler2D albedo_map;
+#endif
+
+#ifdef ENABLE_SPECULAR_MAP
+    layout(binding = 1) uniform sampler2D specular_map;
+#endif
+
 uniform float transparency;
 uniform vec3 ka;     // 环境反射系数
 uniform vec3 kd;     // 漫反射系数 (或使用 albedo_map)
@@ -133,6 +140,12 @@ void main() {
     vec4 albedo = vec4((normalized_normal + 1.0) / 2.0, 1.0);
 #endif
 
+#ifdef ENABLE_SPECULAR_MAP
+    vec3 specular_mask = texture(specular_map, v_uv).rrr;
+#else
+    vec3 specular_mask = vec3(1.0);
+#endif
+    
     vec3 ambient = vec3(0.0);
     vec3 diffuse = vec3(0.0);
     vec3 specular = vec3(0.0);
@@ -148,7 +161,7 @@ void main() {
         float diffuse_factor = max(dot(normalized_normal, light_direction), 0.0);
         float specular_factor = pow(max(dot(normalized_normal, halfway_direction), 0.0), shininess);
         diffuse += kd * dl_lights[i].intensity * dl_lights[i].color * diffuse_factor * albedo.rgb;
-        specular += ks * dl_lights[i].intensity * dl_lights[i].color * specular_factor * albedo.rgb;
+        specular += ks * dl_lights[i].intensity * dl_lights[i].color * specular_factor * albedo.rgb * specular_mask;
     }
 
     // 计算点光源
@@ -160,7 +173,7 @@ void main() {
         float distance = length(pl_lights[i].position - v_frag_position);
         float attenuation = 1.0 / (pl_lights[i].attenuation.x + pl_lights[i].attenuation.y * distance + pl_lights[i].attenuation.z * distance * distance);
         diffuse += kd * pl_lights[i].intensity * pl_lights[i].color * diffuse_factor * albedo.rgb * attenuation;
-        specular += ks * pl_lights[i].intensity * pl_lights[i].color * specular_factor * albedo.rgb * attenuation;
+        specular += ks * pl_lights[i].intensity * pl_lights[i].color * specular_factor * albedo.rgb * attenuation * specular_mask;
     }
 
     for (int i = 0; i < spl_count; i++) {
@@ -174,7 +187,7 @@ void main() {
         float intensity = clamp((theta - spl_lights[i].outer_angle_cos) / epsilon, 0.0, 1.0);
 
         diffuse += kd * spl_lights[i].intensity * spl_lights[i].color * diffuse_factor * albedo.rgb  * intensity;
-        specular += ks * spl_lights[i].intensity * spl_lights[i].color * specular_factor * albedo.rgb  * intensity;
+        specular += ks * spl_lights[i].intensity * spl_lights[i].color * specular_factor * albedo.rgb  * intensity * specular_mask;
     }
 
 
@@ -186,12 +199,17 @@ int main() {
 
     auto bk_image = Image_loader::load_from_path(
         Image_format::RGB_ALPHA, 
-         "assets/image/bk.jpg"
+         "assets/image/skybox/spherical/bk.jpg"
     );
 
-    auto image = Image_loader::load_from_path(
+    auto sp_mask = Image_loader::load_from_path(
+        Image_format::RGB_ALPHA,
+        "assets/image/box/sp_mask.png"
+    );
+
+    auto main_tex = Image_loader::load_from_path(
         Image_format::RGB_ALPHA, 
-        "assets/image/earth.png"
+        "assets/image/box/box.png"
     );
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
@@ -201,18 +219,18 @@ int main() {
     auto scene = world->add_scene(Scene::create("scene1"));
     world->set_current_scene(scene);
 
-    auto spherical = Skybox::create(Texture_image::create(bk_image));
-    scene->set_skybox(spherical);
+    // auto spherical = Skybox::create(Texture_image::create(bk_image));
+    // scene->set_skybox(spherical);
 
-    // auto cubemap = Skybox::create(Texture_cubemap::create(std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
-    //     {Texture_cubemap_face::BACK, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/back.jpg", false)},
-    //     {Texture_cubemap_face::BOTTOM, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/bottom.jpg", false)},
-    //     {Texture_cubemap_face::FRONT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/front.jpg", false)},
-    //     {Texture_cubemap_face::LEFT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/left.jpg", false)},
-    //     {Texture_cubemap_face::RIGHT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/right.jpg", false)},
-    //     {Texture_cubemap_face::TOP, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/top.jpg", false)}
-    // }));
-    // scene->set_skybox(cubemap);
+    auto cubemap = Skybox::create(Texture_cubemap::create(std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
+        {Texture_cubemap_face::BACK, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/back.jpg", false)},
+        {Texture_cubemap_face::BOTTOM, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/bottom.jpg", false)},
+        {Texture_cubemap_face::FRONT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/front.jpg", false)},
+        {Texture_cubemap_face::LEFT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/left.jpg", false)},
+        {Texture_cubemap_face::RIGHT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/right.jpg", false)},
+        {Texture_cubemap_face::TOP, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/top.jpg", false)}
+    }));
+    scene->set_skybox(cubemap);
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
     auto camera_node = camera_game_object->add_component<Node_component>();
@@ -240,7 +258,8 @@ int main() {
                 {"shininess", Uniform_entry<float>::create(32.0f)}
             }), 
         Shader::get_shader_feature_set(std::vector<Shader_feature> {
-            Shader_feature::ALBEDO_MAP
+            Shader_feature::ALBEDO_MAP,
+            Shader_feature::SPECULAR_MAP
         })
     );
 
@@ -248,11 +267,13 @@ int main() {
     shader->link_all_shader_variants(runtime->rhi_device());
 
     auto material = Test_material::create(shader);
-    material->albedo_map = std::make_shared<Texture_image>(image);
+    material->albedo_map = Texture_image::create(main_tex);
+    material->specular_map = Texture_image::create(sp_mask);
     // material->ka = glm::vec3(0.0);
     // material->kd = glm::vec3(0.0);
-    // material->ks = glm::vec3(1.0);
+    // material->ks = glm::vec3(1.5);
     // material->transparency = 0.5;
+    material->shininess = 16.0;
 
     auto game_object = scene->add_game_object(Game_object::create("go1"));
     auto node = game_object->add_component<Node_component>();
