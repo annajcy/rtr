@@ -8,6 +8,6 @@ RTR 是一个实时渲染引擎，它可以在运行时生成场景并渲染出�
 
 RTR 项目的整体架构如下：
 
-![arch](docs/image/arch.jpg)
+![arch](docs/image/arch_fig.jpg)
 
 
