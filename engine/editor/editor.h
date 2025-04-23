@@ -2,6 +2,7 @@
 
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
+#include "engine/runtime/framework/component/light/light_component.h"
 #include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 #include "engine/runtime/platform/rhi/rhi_imgui.h"
@@ -72,6 +73,8 @@ private:
         if (m_imgui->button("change", 50.0, 30.0)) {
             m_engine_runtime->render_system()->global_render_resource().renderer->apply_clear_state();
         }
+        m_imgui->color_edit("directional light color", glm::value_ptr(m_engine_runtime->world()->current_scene()->get_game_object("go3")->get_component<Directional_light_component>()->color()));
+        
         for (auto& gos : m_engine_runtime->world()->current_scene()->game_objects()) {
             m_imgui->text("game object", gos->name());
             for (auto& component : gos->component_list()->components()) {

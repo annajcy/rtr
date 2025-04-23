@@ -123,6 +123,7 @@ public:
             m_rhi_global_render_resource.pipeline_state->pipeline_state = swap_object.material->get_pipeline_state();
             m_rhi_global_render_resource.pipeline_state->apply();
 
+            swap_object.material->modify_shader_uniform(shader->rhi_resource());
             shader->rhi_resource()->modify_uniform("model", swap_object.model_matrix);
             shader->rhi_resource()->update_uniforms();
 

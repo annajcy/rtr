@@ -5,6 +5,7 @@
 #include "engine/runtime/function/render/render_resource.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
+#include "engine/runtime/platform/rhi/rhi_shader_program.h"
 #include <memory>
 #include <unordered_map>
 
@@ -42,9 +43,9 @@ public:
         return Pipeline_state::opaque_pipeline_state();
     }
 
-    virtual std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() {
-        return {};
-    }
+    virtual std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() { return {}; }
+
+    virtual void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) {}
 };
 
 //TEST
@@ -52,6 +53,13 @@ public:
 class Test_material : public Material {
 public:
     std::shared_ptr<Texture> albedo_map{};
+
+    float transparency{1.0f};
+    glm::vec3 ka = glm::vec3(0.2f);     // 环境反射系数
+    glm::vec3 kd = glm::vec3(1.0f);     // 漫反射系数 (或使用 albedo_map)
+    glm::vec3 ks = glm::vec3(0.5f);    // 镜面反射系数
+    float shininess = 32.0f;    
+    
     Test_material(const std::shared_ptr<Shader>& shader) : Material(
         Material_type::TEST,
         shader
@@ -76,10 +84,43 @@ public:
         return {};
     }
 
+    Pipeline_state get_pipeline_state() const override {
+        if (transparency < 1.0) {
+            return Pipeline_state::translucent_pipeline_state();
+        } else {
+            return Pipeline_state::opaque_pipeline_state();
+        }
+    }
+
     static std::shared_ptr<Test_material> create(
         const std::shared_ptr<Shader>& shader
     ) {
         return std::make_shared<Test_material>(shader);
+    }
+
+    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) override {
+        
+        shader_program->modify_uniform<float>(
+            "transparency", 
+            transparency
+        );
+        shader_program->modify_uniform<glm::vec3>(
+            "ka",
+            ka
+        );
+        shader_program->modify_uniform<glm::vec3>(
+            "kd",
+            kd
+        );
+        shader_program->modify_uniform<glm::vec3>(
+            "ks",
+            ks
+        );
+        shader_program->modify_uniform<float>(
+            "shininess",
+            shininess
+        );
+
     }
 };
 
@@ -122,6 +163,31 @@ public:
         } else {
             return Pipeline_state::opaque_pipeline_state();
         }
+    }
+
+    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) override {
+        
+        shader_program->modify_uniform<float>(
+            "u_transparency", 
+            transparency
+        );
+        shader_program->modify_uniform<glm::vec3>(
+            "u_ambient",
+            ambient
+        );
+        shader_program->modify_uniform<glm::vec3>(
+            "u_diffuse",
+            diffuse
+        );
+        shader_program->modify_uniform<glm::vec3>(
+            "u_specular",
+            specular
+        );
+        shader_program->modify_uniform<float>(
+            "u_shininess",
+            shininess
+        );
+
     }
 
     std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
@@ -244,6 +310,27 @@ public:
         }
 
         return feature_set;
+    }
+
+    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) override {
+        
+        shader_program->modify_uniform<float>(
+            "u_transparency", 
+            transparency
+        );
+        shader_program->modify_uniform<glm::vec3>(
+            "u_base_color",
+            base_color
+        );
+        shader_program->modify_uniform<float>(
+            "u_metallic_factor",
+            metallic_factor
+        );
+        shader_program->modify_uniform<float>(
+            "u_roughness_factor",
+            roughness_factor
+        );
+
     }
 
     std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {

@@ -115,14 +115,20 @@ layout(std140, binding = 3) uniform Spot_light_array_ubo {
 out vec4 frag_color;
 
 // 纹理采样器
-layout(binding = 0) uniform sampler2D u_albedo_map;
+layout(binding = 0) uniform sampler2D albedo_map;
+uniform float transparency;
+uniform vec3 ka;     // 环境反射系数
+uniform vec3 kd;     // 漫反射系数 (或使用 albedo_map)
+uniform vec3 ks;    // 镜面反射系数
+uniform float shininess;  
+
 
 void main() {
 
     vec3 normalized_normal = normalize(v_normal);
 
 #ifdef ENABLE_ALBEDO_MAP
-    vec4 albedo = texture(u_albedo_map, v_uv);
+    vec4 albedo = texture(albedo_map, v_uv);
 #else
     vec4 albedo = vec4((normalized_normal + 1.0) / 2.0, 1.0);
 #endif
@@ -130,11 +136,6 @@ void main() {
     vec3 ambient = vec3(0.0);
     vec3 diffuse = vec3(0.0);
     vec3 specular = vec3(0.0);
-
-    vec3 ka = vec3(0.01);
-    vec3 kd = vec3(0.5);
-    vec3 ks = vec3(0.1);
-    float shininess = 32.0;
 
     vec3 view_direction = normalize(camera_position - v_frag_position);
 
@@ -172,16 +173,12 @@ void main() {
         float epsilon = spl_lights[i].inner_angle_cos - spl_lights[i].outer_angle_cos;
         float intensity = clamp((theta - spl_lights[i].outer_angle_cos) / epsilon, 0.0, 1.0);
 
-        // float theta = dot(-light_direction, normalize(spl_lights[i].direction));
-        // float epsilon = 0.05;
-        // float intensity = clamp((theta - 0.93) / 0.05, 0.0, 1.0);
-
         diffuse += kd * spl_lights[i].intensity * spl_lights[i].color * diffuse_factor * albedo.rgb  * intensity;
         specular += ks * spl_lights[i].intensity * spl_lights[i].color * specular_factor * albedo.rgb  * intensity;
     }
 
 
-    frag_color = vec4(ambient + diffuse + specular, 1.0);
+    frag_color = vec4(ambient + diffuse + specular, transparency);
 }
 )";
 
@@ -216,7 +213,6 @@ int main() {
     //     {Texture_cubemap_face::TOP, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/top.jpg", false)}
     // }));
     // scene->set_skybox(cubemap);
-    
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
     auto camera_node = camera_game_object->add_component<Node_component>();
@@ -236,7 +232,12 @@ int main() {
                 {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, fragment_shader_source)}
             }, 
             std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
-                {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))}
+                {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
+                {"transparency", Uniform_entry<float>::create(1.0f)},
+                {"ka", Uniform_entry<glm::vec3>::create(glm::vec3(0.1, 0.1, 0.1))},
+                {"kd", Uniform_entry<glm::vec3>::create(glm::vec3(0.5, 0.5, 0.5))},
+                {"ks", Uniform_entry<glm::vec3>::create(glm::vec3(1.0, 1.0, 1.0))},
+                {"shininess", Uniform_entry<float>::create(32.0f)}
             }), 
         Shader::get_shader_feature_set(std::vector<Shader_feature> {
             Shader_feature::ALBEDO_MAP
@@ -248,6 +249,10 @@ int main() {
 
     auto material = Test_material::create(shader);
     material->albedo_map = std::make_shared<Texture_image>(image);
+    // material->ka = glm::vec3(0.0);
+    // material->kd = glm::vec3(0.0);
+    // material->ks = glm::vec3(1.0);
+    // material->transparency = 0.5;
 
     auto game_object = scene->add_game_object(Game_object::create("go1"));
     auto node = game_object->add_component<Node_component>();
