@@ -2,7 +2,6 @@
 
 #include "engine/runtime/function/render/render_resource.h"
 #include "engine/runtime/global/enum.h"
-#include "engine/runtime/global/guid.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_shader_code.h"
@@ -69,7 +68,7 @@ inline constexpr const char* shader_feature_to_defines(Shader_feature feature) {
     }
 }
 
-class Shader_code : public GUID, public RHI_linker<RHI_shader_code> {
+class Shader_code : public RHI_linker<RHI_shader_code> {
 protected:
     std::string m_code{};
     Shader_type m_shader_code_type{};
@@ -93,7 +92,7 @@ public:
     }
 };
 
-class Shader_program : public GUID, public RHI_linker<RHI_shader_program> {
+class Shader_program : public RHI_linker<RHI_shader_program> {
 private:
     std::string m_name{};
     std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> m_shader_codes{};
@@ -137,7 +136,7 @@ public:
     }
 };
 
-class Shader : public GUID {
+class Shader  {
 public:
     using feature_set = std::bitset<static_cast<size_t>(Shader_feature::MAX_FEATURES)>;
 

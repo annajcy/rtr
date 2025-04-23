@@ -6,7 +6,7 @@
 
 namespace rtr {
 
-class World : public GUID {
+class World {
 protected:
     std::string m_name{};
     std::vector<std::shared_ptr<Scene>> m_scenes{};
@@ -43,27 +43,9 @@ public:
         return nullptr;
     }
 
-    std::shared_ptr<Scene> get_scene(GUID guid) {
-        for (auto& scene : m_scenes) {
-            if (scene->guid() == guid) {
-                return scene;
-            }
-        }
-        return nullptr;
-    }
-
     void remove_scene(const std::string& name) {
         for (auto it = m_scenes.begin(); it != m_scenes.end(); ++it) {
             if ((*it)->name() == name) {
-                m_scenes.erase(it);
-                return;
-            }
-        }
-    }
-
-    void remove_scene(GUID guid) {
-        for (auto it = m_scenes.begin(); it!= m_scenes.end(); ++it) {
-            if ((*it)->guid() == guid) {
                 m_scenes.erase(it);
                 return;
             }
@@ -85,17 +67,6 @@ public:
         unsigned int index = 0;
         for (auto& scene : m_scenes) {
             if (scene->name() == name) {
-                m_current_scene_index = index;
-                return;
-            }
-            index ++;
-        }
-    }
-
-    void set_current_scene(GUID guid) {
-        unsigned int index = 0;
-        for (auto& scene : m_scenes) {
-            if (scene->guid() == guid) {
                 m_current_scene_index = index;
                 return;
             }

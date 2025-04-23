@@ -13,7 +13,7 @@
 
 namespace rtr {
 
-class Geometry : public GUID, public RHI_linker<RHI_geometry>, public Render_resource {
+class Geometry : public RHI_linker<RHI_geometry>, public Render_resource {
 protected:
     std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> m_vertex_attributes{};
     std::shared_ptr<Element_atrribute> m_element_attribute{};

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "engine/runtime/context/engine_tick_context.h"
-#include "engine/runtime/core/memory_buffer.h"
-#include "engine/runtime/core/texture.h"
+#include "engine/runtime/function/render/core/memory_buffer.h"
+#include "engine/runtime/function/render/core/texture.h"
 #include "engine/runtime/function/render/render_pass.h"
 #include "engine/runtime/function/render/render_resource.h"
 #include "engine/runtime/function/render/render_struct.h"

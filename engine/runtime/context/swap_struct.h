@@ -1,8 +1,8 @@
 #pragma once
 
-#include "engine/runtime/core/geometry.h"
-#include "engine/runtime/core/material.h"
-#include "engine/runtime/core/skybox.h"
+#include "engine/runtime/function/render/core/geometry.h"
+#include "engine/runtime/function/render/core/material.h"
+#include "engine/runtime/function/render/core/skybox.h"
 #include <memory>
 #include <vector>
 

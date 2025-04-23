@@ -21,7 +21,7 @@ inline constexpr Buffer_data_type get_buffer_atrribute_type() {
     }
 }
 
-class Attribute_base : public GUID, public RHI_linker<RHI_buffer> {
+class Attribute_base : public RHI_linker<RHI_buffer> {
 protected:
     Buffer_usage m_usage{};
     Buffer_data_type m_type{}; 
@@ -30,8 +30,7 @@ public:
     Attribute_base(
         Buffer_data_type type, 
         Buffer_usage usage
-    ) : GUID(), 
-        m_type(type), 
+    ) : m_type(type), 
         m_usage(usage) {}
 
     virtual ~Attribute_base() = default;

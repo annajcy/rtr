@@ -1,14 +1,13 @@
 #pragma once
 
 #include "engine/runtime/context/swap_struct.h"
-#include "engine/runtime/core/skybox.h"
 #include "game_object.h"
 #include <memory>
 #include <vector>
 
 namespace rtr {
     
-class Scene : public GUID {
+class Scene {
 
 protected:
     std::string m_name{};
@@ -50,27 +49,10 @@ public:
         return nullptr;
     }
 
-    std::shared_ptr<Game_object> get_game_object(GUID guid) {
-        for (auto& game_object : m_game_objects) {
-            if (game_object->guid() == guid) {
-                return game_object;
-            }
-        }
-        return nullptr;
-    }
 
     void remove_game_object(const std::string& name) {
         for (auto it = m_game_objects.begin(); it != m_game_objects.end(); ++it) {
             if ((*it)->name() == name) {
-                m_game_objects.erase(it);
-                return;
-            }
-        }
-    }
-
-    void remove_game_object(GUID guid) {
-        for (auto it = m_game_objects.begin(); it!= m_game_objects.end(); ++it) {
-            if ((*it)->guid() == guid) {
                 m_game_objects.erase(it);
                 return;
             }

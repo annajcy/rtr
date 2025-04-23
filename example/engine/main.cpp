@@ -1,9 +1,9 @@
 #include "engine/editor/editor.h"
-#include "engine/runtime/core/material.h"
-#include "engine/runtime/core/memory_buffer.h"
-#include "engine/runtime/core/shader.h"
-#include "engine/runtime/core/texture.h"
-#include "engine/runtime/core/skybox.h"
+#include "engine/runtime/function/render/core/material.h"
+#include "engine/runtime/function/render/core/memory_buffer.h"
+#include "engine/runtime/function/render/core/shader.h"
+#include "engine/runtime/function/render/core/texture.h"
+#include "engine/runtime/function/render/core/skybox.h"
 
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
@@ -14,7 +14,7 @@
 #include "engine/runtime/framework/game_object.h"
 #include "engine/runtime/framework/scene.h"
 #include "engine/runtime/framework/world.h"
-#include "engine/runtime/core/geometry.h"
+#include "engine/runtime/function/render/core/geometry.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
 #include "engine/runtime/resource/loader/image_loader.h"
@@ -317,12 +317,14 @@ int main() {
 
     auto material = Test_material::create(shader);
     material->albedo_map = Texture_image::create(main_tex);
-    //material->alpha_map = Texture_image::create(alpha_map);
-    //material->normal_map = Texture_image::create(normal_map);
+    material->alpha_map = Texture_image::create(alpha_map);
+
+    // material->normal_map = Texture_image::create(normal_map);
     // material->ka = glm::vec3(0.0);
     // material->kd = glm::vec3(0.0);
     // material->ks = glm::vec3(1.5);
     // material->transparency = 0.5;
+
     material->shininess = 16.0;
 
     auto game_object = scene->add_game_object(Game_object::create("go1"));

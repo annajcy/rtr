@@ -1,7 +1,6 @@
 #pragma once
 
-#include "engine/runtime/core/texture.h"
-#include "engine/runtime/global/guid.h"
+#include "engine/runtime/function/render/core/texture.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_frame_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
@@ -10,7 +9,7 @@
 
 namespace rtr {
 
-class Frame_buffer : public GUID, public RHI_linker<RHI_frame_buffer> {
+class Frame_buffer : public RHI_linker<RHI_frame_buffer> {
 protected:
     int m_width{};
     int m_height{};

@@ -3,7 +3,6 @@
 
 #include "engine/runtime/function/render/render_resource.h"
 #include "engine/runtime/global/enum.h"
-#include "engine/runtime/global/guid.h"
 #include "engine/runtime/platform/rhi/rhi_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
@@ -12,7 +11,7 @@
 
 namespace rtr {
 
-class Memory_buffer : public GUID, public RHI_linker<RHI_buffer>, public Render_resource {
+class Memory_buffer : public RHI_linker<RHI_buffer>, public Render_resource {
 protected:
     Buffer_type m_type{};
     Buffer_usage m_usage{};

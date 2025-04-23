@@ -1,7 +1,6 @@
 #pragma once
 
 #include "engine/runtime/context/engine_tick_context.h"
-#include "engine/runtime/global/guid.h"
 #include <memory>
 #include <vector>
 
@@ -79,7 +78,7 @@ public:
 
 };
 
-class Component_base : public GUID {
+class Component_base {
 
 protected:
     Component_type m_component_type{};

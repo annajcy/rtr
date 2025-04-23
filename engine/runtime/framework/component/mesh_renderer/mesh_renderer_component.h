@@ -1,9 +1,9 @@
 #pragma once
 
 #include "engine/runtime/context/swap_struct.h"
-#include "engine/runtime/core/geometry.h"
-#include "engine/runtime/core/material.h"
-#include "engine/runtime/core/texture.h"
+#include "engine/runtime/function/render/core/geometry.h"
+#include "engine/runtime/function/render/core/material.h"
+#include "engine/runtime/function/render/core/texture.h"
 #include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 #include "engine/runtime/global/enum.h"

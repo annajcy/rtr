@@ -32,7 +32,6 @@
 #include <chrono>
 
 #include "event.h"
-#include "guid.h"
 #include "logger.h"
 #include "singleton.h"
 #include "math.h"

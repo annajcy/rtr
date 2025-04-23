@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/runtime/core/shader.h"
-#include "engine/runtime/core/texture.h"
+#include "engine/runtime/function/render/core/shader.h"
+#include "engine/runtime/function/render/core/texture.h"
 #include "engine/runtime/function/render/render_resource.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"

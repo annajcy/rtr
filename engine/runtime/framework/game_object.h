@@ -1,17 +1,11 @@
 #pragma once
 
-#include "engine/runtime/framework/component/camera/camera_component.h"
-#include "engine/runtime/framework/component/camera/camera_control_component.h"
-
-#include "engine/runtime/framework/component/node/node_component.h"
 #include "engine/runtime/framework/component/component_base.h"
-#include "engine/runtime/global/guid.h"
 #include <memory>
-#include <vector>
 
 namespace rtr {
 
-class Game_object : public std::enable_shared_from_this<Game_object>, public GUID {
+class Game_object : public std::enable_shared_from_this<Game_object>{
 
 protected:
     std::string m_name{};
