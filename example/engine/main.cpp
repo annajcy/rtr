@@ -135,6 +135,10 @@ layout(binding = 1) uniform sampler2D specular_map;
 layout(binding = 2) uniform sampler2D normal_map;
 #endif
 
+#ifdef ENABLE_ALPHA_MAP
+layout(binding = 3) uniform sampler2D alpha_map;
+#endif
+
 uniform float transparency;
 uniform vec3 ka;     // 环境反射系数
 uniform vec3 kd;     // 漫反射系数 (或使用 albedo_map)
@@ -142,6 +146,12 @@ uniform vec3 ks;    // 镜面反射系数
 uniform float shininess;  
 
 void main() {
+
+#ifdef ENABLE_ALPHA_MAP
+    float alpha = texture(alpha_map, v_uv).r * transparency;
+#else
+    float alpha = transparency;
+#endif
 
 #ifdef ENABLE_NORMAL_MAP
     vec3 normal_map_normal = texture(normal_map, v_uv).rgb * 2.0 - vec3(1.0);
@@ -208,7 +218,7 @@ void main() {
     }
 
 
-    frag_color = vec4(ambient + diffuse + specular, transparency);
+    frag_color = vec4(ambient + diffuse + specular, alpha);
 }
 )";
 
@@ -229,14 +239,24 @@ int main() {
     //     "assets/image/box/box.png"
     // );
 
-    auto normal_map = Image_loader::load_from_path(
-        Image_format::RGB_ALPHA,
-        "assets/image/brickwall/normal_map.png"
-    );
+    // auto normal_map = Image_loader::load_from_path(
+    //     Image_format::RGB_ALPHA,
+    //     "assets/image/brickwall/normal_map.png"
+    // );
+
+    // auto main_tex = Image_loader::load_from_path(
+    //     Image_format::RGB_ALPHA, 
+    //     "assets/image/brickwall/brickwall.jpg"
+    // );
 
     auto main_tex = Image_loader::load_from_path(
         Image_format::RGB_ALPHA, 
-        "assets/image/brickwall/brickwall.jpg"
+        "assets/image/grass/grass.jpg"
+    );
+
+    auto alpha_map = Image_loader::load_from_path(
+        Image_format::RGB_ALPHA,
+        "assets/image/grass/grassMask.png"
     );
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
@@ -287,7 +307,8 @@ int main() {
         Shader::get_shader_feature_set(std::vector<Shader_feature> {
             Shader_feature::ALBEDO_MAP,
             Shader_feature::SPECULAR_MAP,
-            Shader_feature::NORMAL_MAP
+            Shader_feature::NORMAL_MAP,
+            Shader_feature::ALPHA_MAP
         })
     );
 
@@ -296,7 +317,8 @@ int main() {
 
     auto material = Test_material::create(shader);
     material->albedo_map = Texture_image::create(main_tex);
-    material->normal_map = Texture_image::create(normal_map);
+    //material->alpha_map = Texture_image::create(alpha_map);
+    //material->normal_map = Texture_image::create(normal_map);
     // material->ka = glm::vec3(0.0);
     // material->kd = glm::vec3(0.0);
     // material->ks = glm::vec3(1.5);

@@ -55,6 +55,7 @@ public:
     std::shared_ptr<Texture> albedo_map{};
     std::shared_ptr<Texture> specular_map{};
     std::shared_ptr<Texture> normal_map{};
+    std::shared_ptr<Texture> alpha_map{};
 
     float transparency{1.0f};
     glm::vec3 ka = glm::vec3(0.2f);     // 环境反射系数
@@ -80,6 +81,9 @@ public:
         if (normal_map) {
             feature_set.set(static_cast<size_t>(Shader_feature::NORMAL_MAP));
         }
+        if (alpha_map) {
+            feature_set.set(static_cast<size_t>(Shader_feature::ALPHA_MAP));
+        }
         return feature_set;
     }
 
@@ -94,11 +98,14 @@ public:
         if (normal_map) {
             texture_map[2] = normal_map;
         }
+        if (alpha_map) {
+            texture_map[3] = alpha_map;
+        }
         return texture_map;
     }
 
     Pipeline_state get_pipeline_state() const override {
-        if (transparency < 1.0) {
+        if (transparency < 1.0 || alpha_map) {
             return Pipeline_state::translucent_pipeline_state();
         } else {
             return Pipeline_state::opaque_pipeline_state();
