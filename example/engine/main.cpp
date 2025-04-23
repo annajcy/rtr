@@ -44,6 +44,7 @@ out vec2 v_uv;
 out vec3 v_normal;
 out vec3 v_frag_position;
 out vec3 v_tangent;
+out mat3 v_tbn;
 
 void main() {
     gl_Position = projection * view * model * vec4(a_position, 1.0);
@@ -52,6 +53,12 @@ void main() {
     v_normal = mat3(transpose(inverse(model))) * a_normal;
     v_frag_position = vec3(model * vec4(a_position, 1.0));
     v_tangent = mat3(model) * a_tangent;
+
+    vec3 T = normalize(v_tangent);
+    vec3 N = normalize(v_normal);
+    vec3 B = normalize(cross(N, T));
+    v_tbn = mat3(T, B, N);
+
 }
 
 )";
@@ -62,6 +69,7 @@ in vec2 v_uv;
 in vec3 v_normal;
 in vec3 v_frag_position;
 in vec3 v_tangent;
+in mat3 v_tbn;
 
 #define MAX_DIRECTIONAL_LIGHT 2
 #define MAX_SPOT_LIGHT 8
@@ -116,11 +124,15 @@ out vec4 frag_color;
 
 // 纹理采样器
 #ifdef ENABLE_ALBEDO_MAP
-    layout(binding = 0) uniform sampler2D albedo_map;
+layout(binding = 0) uniform sampler2D albedo_map;
 #endif
 
 #ifdef ENABLE_SPECULAR_MAP
-    layout(binding = 1) uniform sampler2D specular_map;
+layout(binding = 1) uniform sampler2D specular_map;
+#endif
+
+#ifdef ENABLE_NORMAL_MAP
+layout(binding = 2) uniform sampler2D normal_map;
 #endif
 
 uniform float transparency;
@@ -129,10 +141,15 @@ uniform vec3 kd;     // 漫反射系数 (或使用 albedo_map)
 uniform vec3 ks;    // 镜面反射系数
 uniform float shininess;  
 
-
 void main() {
 
+#ifdef ENABLE_NORMAL_MAP
+    vec3 normal_map_normal = texture(normal_map, v_uv).rgb * 2.0 - vec3(1.0);
+    vec3 normal = normalize(v_tbn * normal_map_normal);
+    vec3 normalized_normal = normalize(normal);
+#else
     vec3 normalized_normal = normalize(v_normal);
+#endif
 
 #ifdef ENABLE_ALBEDO_MAP
     vec4 albedo = texture(albedo_map, v_uv);
@@ -202,14 +219,24 @@ int main() {
          "assets/image/skybox/spherical/bk.jpg"
     );
 
-    auto sp_mask = Image_loader::load_from_path(
+    // auto sp_mask = Image_loader::load_from_path(
+    //     Image_format::RGB_ALPHA,
+    //     "assets/image/box/sp_mask.png"
+    // );
+
+    // auto main_tex = Image_loader::load_from_path(
+    //     Image_format::RGB_ALPHA, 
+    //     "assets/image/box/box.png"
+    // );
+
+    auto normal_map = Image_loader::load_from_path(
         Image_format::RGB_ALPHA,
-        "assets/image/box/sp_mask.png"
+        "assets/image/brickwall/normal_map.png"
     );
 
     auto main_tex = Image_loader::load_from_path(
         Image_format::RGB_ALPHA, 
-        "assets/image/box/box.png"
+        "assets/image/brickwall/brickwall.jpg"
     );
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
@@ -259,7 +286,8 @@ int main() {
             }), 
         Shader::get_shader_feature_set(std::vector<Shader_feature> {
             Shader_feature::ALBEDO_MAP,
-            Shader_feature::SPECULAR_MAP
+            Shader_feature::SPECULAR_MAP,
+            Shader_feature::NORMAL_MAP
         })
     );
 
@@ -268,7 +296,7 @@ int main() {
 
     auto material = Test_material::create(shader);
     material->albedo_map = Texture_image::create(main_tex);
-    material->specular_map = Texture_image::create(sp_mask);
+    material->normal_map = Texture_image::create(normal_map);
     // material->ka = glm::vec3(0.0);
     // material->kd = glm::vec3(0.0);
     // material->ks = glm::vec3(1.5);
@@ -287,8 +315,8 @@ int main() {
     auto node2 = game_object2->add_component<Node_component>();
     node2->set_position(glm::vec3(0, 0, 0));
 
-    auto rotate_component = game_object2->add_component<Rotate_component>();
-    rotate_component->speed() = 0.1f;
+    // auto rotate_component = game_object2->add_component<Rotate_component>();
+    // rotate_component->speed() = 0.1f;
 
     auto mesh_renderer2 = game_object2->add_component<Mesh_renderer_component>();
     mesh_renderer2->set_geometry(Geometry::create_box(1.0));

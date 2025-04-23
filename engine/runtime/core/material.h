@@ -54,6 +54,7 @@ class Test_material : public Material {
 public:
     std::shared_ptr<Texture> albedo_map{};
     std::shared_ptr<Texture> specular_map{};
+    std::shared_ptr<Texture> normal_map{};
 
     float transparency{1.0f};
     glm::vec3 ka = glm::vec3(0.2f);     // 环境反射系数
@@ -76,6 +77,9 @@ public:
         if (specular_map) {
             feature_set.set(static_cast<size_t>(Shader_feature::SPECULAR_MAP));
         }
+        if (normal_map) {
+            feature_set.set(static_cast<size_t>(Shader_feature::NORMAL_MAP));
+        }
         return feature_set;
     }
 
@@ -86,6 +90,9 @@ public:
         }
         if (specular_map) {
             texture_map[1] = specular_map;
+        }
+        if (normal_map) {
+            texture_map[2] = normal_map;
         }
         return texture_map;
     }

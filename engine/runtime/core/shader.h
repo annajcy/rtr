@@ -232,7 +232,6 @@ public:
         return permutations;
     }
 
-    // 替代原来的空实现
     void premake_shader_variants() {
         auto permutations = get_shader_variants_permutation();
         for (const auto& perm : permutations) {
