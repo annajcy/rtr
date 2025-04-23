@@ -33,7 +33,7 @@ public:
 class Test_render_pipeline : public Render_pipeline {
 private:
     std::shared_ptr<Uniform_buffer<Camera_ubo>> m_camera_ubo{};
-    std::shared_ptr<Uniform_buffer<Directional_light_ubo>> m_directional_light_ubo{};
+    std::shared_ptr<Uniform_buffer<Directional_light_ubo_array>> m_directional_light_ubo_array{};
     std::shared_ptr<Uniform_buffer<Point_light_ubo_array>> m_point_light_ubo_array{};
     std::shared_ptr<Uniform_buffer<Spot_light_ubo_array>> m_spot_light_ubo_array{};
 
@@ -70,9 +70,9 @@ public:
         if (!m_camera_ubo->is_linked()) m_camera_ubo->link(m_rhi_global_render_resource.device);
         m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_camera_ubo->rhi_resource(), 0);
 
-        m_directional_light_ubo = Uniform_buffer<Directional_light_ubo>::create(Directional_light_ubo{});
-        if (!m_directional_light_ubo->is_linked()) m_directional_light_ubo->link(m_rhi_global_render_resource.device);
-        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_directional_light_ubo->rhi_resource(), 1);
+        m_directional_light_ubo_array = Uniform_buffer<Directional_light_ubo_array>::create(Directional_light_ubo_array{});
+        if (!m_directional_light_ubo_array->is_linked()) m_directional_light_ubo_array->link(m_rhi_global_render_resource.device);
+        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_directional_light_ubo_array->rhi_resource(), 1);
 
         m_point_light_ubo_array = Uniform_buffer<Point_light_ubo_array>::create(Point_light_ubo_array{});
         if (!m_point_light_ubo_array->is_linked()) m_point_light_ubo_array->link(m_rhi_global_render_resource.device);
@@ -113,6 +113,7 @@ public:
     }
 
     void update_ubo(const Render_tick_context& tick_context) override {
+
         m_camera_ubo->set_data(Camera_ubo{
             .view_matrix = tick_context.render_swap_data.camera.view_matrix,
             .projection_matrix = tick_context.render_swap_data.camera.projection_matrix,
@@ -120,12 +121,18 @@ public:
         });
         m_camera_ubo->push_to_rhi();
 
-        m_directional_light_ubo->set_data(Directional_light_ubo{
-            .intensity = tick_context.render_swap_data.directional_light.intensity,
-            .color = tick_context.render_swap_data.directional_light.color,
-            .direction = tick_context.render_swap_data.directional_light.direction,
-        });
-        m_directional_light_ubo->push_to_rhi();
+        auto dl_ubo_arr = Directional_light_ubo_array{};
+        dl_ubo_arr.count = tick_context.render_swap_data.directional_lights.size();
+        dl_ubo_arr.main_light_index = tick_context.render_swap_data.main_directional_light_index;
+        for (size_t i = 0; i < tick_context.render_swap_data.directional_lights.size(); i++) {
+            dl_ubo_arr.directional_light_ubo[i] = Directional_light_ubo{
+                .intensity = tick_context.render_swap_data.directional_lights[i].intensity,
+                .color = tick_context.render_swap_data.directional_lights[i].color,
+                .direction = tick_context.render_swap_data.directional_lights[i].direction,
+            };
+        }
+        m_directional_light_ubo_array->set_data(dl_ubo_arr);
+        m_directional_light_ubo_array->push_to_rhi();
 
         auto pl_ubo_arr = Point_light_ubo_array{};
         pl_ubo_arr.count = tick_context.render_swap_data.point_lights.size();

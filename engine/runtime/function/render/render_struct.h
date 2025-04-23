@@ -27,6 +27,13 @@ struct Directional_light_ubo {
     float padding3[1];         
 }; 
 
+struct Directional_light_ubo_array {
+    int count{};
+    int main_light_index{};
+    float padding1[2];
+    Directional_light_ubo directional_light_ubo[MAX_SPOT_LIGHT];
+};
+
 struct Point_light_ubo {
     float intensity{};             
     float padding1[3];            
@@ -42,7 +49,7 @@ struct Point_light_ubo {
 }; 
 
 struct Point_light_ubo_array {
-    float count{};
+    int count{};
     float padding1[3];
     Point_light_ubo point_light_ubo[MAX_POINT_LIGHT];
 };
@@ -64,7 +71,7 @@ struct Spot_light_ubo {
 }; 
 
 struct Spot_light_ubo_array {
-    float count{};
+    int count{};
     float padding1[3];
     Spot_light_ubo spot_light_ubo[MAX_SPOT_LIGHT];
 };

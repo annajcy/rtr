@@ -4,6 +4,7 @@
 #include "engine/runtime/core/material.h"
 #include "engine/runtime/core/skybox.h"
 #include <memory>
+#include <vector>
 
 namespace rtr {
 
@@ -42,20 +43,20 @@ struct Swap_camera {
 };
 
 struct Swap_data {
+    
     std::vector<Swap_object> render_objects{};
+    std::vector<Swap_directional_light> directional_lights{};
     std::vector<Swap_point_light> point_lights{};
     std::vector<Swap_spot_light> spot_lights{};
-
-    Swap_directional_light directional_light{};
     Swap_camera camera{};
-
     std::shared_ptr<Skybox> skybox{};
+    int main_directional_light_index{0};
 
     void clear() {
         render_objects.clear();
         point_lights.clear();
         spot_lights.clear();
-        directional_light = Swap_directional_light{};
+        directional_lights.clear();
         camera = Swap_camera{};
         skybox.reset();
     }

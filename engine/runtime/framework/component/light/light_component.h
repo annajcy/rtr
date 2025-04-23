@@ -47,6 +47,9 @@ public:
 };
 
 class Directional_light_component : public Light_component {
+protected:
+    bool m_is_main_light{false};
+
 public:
     Directional_light_component() : Light_component(Light_type::DIRECTIONAL) { }
     ~Directional_light_component() = default;
@@ -57,13 +60,19 @@ public:
         return std::make_shared<Directional_light_component>();
     }
 
+    bool& is_main_light() { return m_is_main_light; }
+    const bool is_main_light() const { return m_is_main_light; }
+
     void tick(const Logic_tick_context& tick_context) override {
         auto& data = tick_context.logic_swap_data;
         Swap_directional_light directional_light{};
         directional_light.color = color();
         directional_light.direction = direction();
         directional_light.intensity = intensity();
-        data.directional_light = directional_light;
+        if (m_is_main_light) {
+            data.main_directional_light_index = data.directional_lights.size();
+        }
+        data.directional_lights.push_back(directional_light);
     }
 
 };

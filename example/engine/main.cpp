@@ -63,6 +63,7 @@ in vec3 v_normal;
 in vec3 v_frag_position;
 in vec3 v_tangent;
 
+#define MAX_DIRECTIONAL_LIGHT 2
 #define MAX_SPOT_LIGHT 8
 #define MAX_POINT_LIGHT 8
 
@@ -78,8 +79,10 @@ struct Directional_light {
     vec3 direction;
 };
 
-layout(std140, binding = 1) uniform Directional_light_ubo {
-    Directional_light dl;
+layout(std140, binding = 1) uniform Directional_light_array_ubo {
+    int dl_count;
+    int main_light_index;
+    Directional_light dl_lights[MAX_DIRECTIONAL_LIGHT];
 };
 
 struct Point_light {
@@ -90,7 +93,7 @@ struct Point_light {
 };
 
 layout(std140, binding = 2) uniform Point_light_array_ubo {
-    float pl_count;
+    int pl_count;
     Point_light pl_lights[MAX_POINT_LIGHT];
 };
 
@@ -104,7 +107,7 @@ struct Spot_light {
 };
 
 layout(std140, binding = 3) uniform Spot_light_array_ubo {
-    float spl_count;
+    int spl_count;
     Spot_light spl_lights[MAX_SPOT_LIGHT];
 };
 
@@ -135,18 +138,20 @@ void main() {
 
     vec3 view_direction = normalize(camera_position - v_frag_position);
 
-    // 计算方向光
-    vec3 light_direction = normalize(-dl.direction);
-    vec3 halfway_direction = normalize(light_direction + view_direction);
-    float diffuse_factor = max(dot(normalized_normal, light_direction), 0.0);
-    float specular_factor = pow(max(dot(normalized_normal, halfway_direction), 0.0), shininess);
-    
     ambient += ka * albedo.rgb;
-    diffuse += kd * dl.intensity * dl.color * diffuse_factor * albedo.rgb;
-    specular += ks * dl.intensity * dl.color * specular_factor * albedo.rgb;
+
+    // 计算方向光
+    for (int i = 0; i < dl_count; i++) {
+        vec3 light_direction = normalize(-dl_lights[i].direction);
+        vec3 halfway_direction = normalize(light_direction + view_direction);
+        float diffuse_factor = max(dot(normalized_normal, light_direction), 0.0);
+        float specular_factor = pow(max(dot(normalized_normal, halfway_direction), 0.0), shininess);
+        diffuse += kd * dl_lights[i].intensity * dl_lights[i].color * diffuse_factor * albedo.rgb;
+        specular += ks * dl_lights[i].intensity * dl_lights[i].color * specular_factor * albedo.rgb;
+    }
 
     // 计算点光源
-    for (int i = 0; i < int(pl_count); i++) {
+    for (int i = 0; i < pl_count; i++) {
         vec3 light_direction = normalize(pl_lights[i].position - v_frag_position);
         vec3 halfway_direction = normalize(light_direction + view_direction);
         float diffuse_factor = max(dot(normalized_normal, light_direction), 0.0);
@@ -157,7 +162,7 @@ void main() {
         specular += ks * pl_lights[i].intensity * pl_lights[i].color * specular_factor * albedo.rgb * attenuation;
     }
 
-    for (int i = 0; i < int(spl_count) ; i++) {
+    for (int i = 0; i < spl_count; i++) {
         vec3 light_direction = normalize(spl_lights[i].position - v_frag_position);
         vec3 halfway_direction = normalize(light_direction + view_direction);
         float diffuse_factor = max(dot(normalized_normal, light_direction), 0.0);
@@ -199,8 +204,8 @@ int main() {
     auto scene = world->add_scene(Scene::create("scene1"));
     world->set_current_scene(scene);
 
-    // auto spherical = Skybox::create(Texture_image::create(bk_image));
-    // scene->set_skybox(spherical);
+    auto spherical = Skybox::create(Texture_image::create(bk_image));
+    scene->set_skybox(spherical);
 
     // auto cubemap = Skybox::create(Texture_cubemap::create(std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
     //     {Texture_cubemap_face::BACK, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/back.jpg", false)},
@@ -244,27 +249,27 @@ int main() {
     auto material = Test_material::create(shader);
     material->albedo_map = std::make_shared<Texture_image>(image);
 
-    // auto game_object = scene->add_game_object(Game_object::create("go1"));
-    // auto node = game_object->add_component<Node_component>();
-    // node->set_position(glm::vec3(-1, 0, 0));
+    auto game_object = scene->add_game_object(Game_object::create("go1"));
+    auto node = game_object->add_component<Node_component>();
+    node->set_position(glm::vec3(-2, 0, 0));
 
-    // auto mesh_renderer = game_object->add_component<Mesh_renderer_component>();
-    // mesh_renderer->set_geometry(Geometry::create_sphere());
-    // mesh_renderer->set_material(material);
+    auto mesh_renderer = game_object->add_component<Mesh_renderer_component>();
+    mesh_renderer->set_geometry(Geometry::create_sphere());
+    mesh_renderer->set_material(material);
 
     auto game_object2 = scene->add_game_object(Game_object::create("go2"));
     auto node2 = game_object2->add_component<Node_component>();
     node2->set_position(glm::vec3(0, 0, 0));
 
-    // auto rotate_component = game_object2->add_component<Rotate_component>();
-    // rotate_component->speed() = 0.1f;
+    auto rotate_component = game_object2->add_component<Rotate_component>();
+    rotate_component->speed() = 0.1f;
 
     auto mesh_renderer2 = game_object2->add_component<Mesh_renderer_component>();
-    mesh_renderer2->set_geometry(Geometry::create_box(1.5));
+    mesh_renderer2->set_geometry(Geometry::create_box(1.0));
     mesh_renderer2->set_material(material);
 
-    //node2->add_child(node, true);
-    // node2->add_child(camera_node, true);
+    node2->add_child(node, true);
+    //node2->add_child(camera_node, true);
 
     auto game_object3 = scene->add_game_object(Game_object::create("go3"));
     auto node3 = game_object3->add_component<Node_component>();
@@ -293,6 +298,8 @@ int main() {
     sl0->outer_angle() = 20.0f;
     sl0->color() = glm::vec3(1, 1, 0);
     sl0->intensity() = 0.5f;
+
+    node2->add_child(node6, true);
     
     auto go7 = scene->add_game_object(Game_object::create("go7"));
     auto node7 = go7->add_component<Node_component>();
