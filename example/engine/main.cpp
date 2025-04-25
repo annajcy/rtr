@@ -166,10 +166,59 @@ float calculate_spot_intensity(vec3 light_dir, vec3 spot_dir, float inner_cos, f
 }
 
 #ifdef ENABLE_HEIGHT_MAP
-vec2 parallax_uv(vec2 uv, vec3 view_dir, float height, float height_scale, mat3 tbn) {
+vec2 parallax_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tbn, float scale) {
 	view_dir = normalize(transpose(tbn) * view_dir);
-	vec2 offset = view_dir.xy / view_dir.z * height * height_scale;
-	return uv - offset; 
+    view_dir.xy /= -view_dir.z;
+
+    vec2 offset = view_dir.xy * texture(height_map, uv).r * scale;
+    return uv + offset;
+}
+
+vec2 parallax_steep_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tbn, float scale, float layer_count) {
+	view_dir = normalize(transpose(tbn) * view_dir);
+    view_dir.xy /= -view_dir.z;
+
+    float layer_depth = 1.0 / layer_count;
+    vec2 delta_uv = view_dir.xy * scale / layer_count;
+
+    vec2 current_uv = uv;
+    float current_height = texture(height_map, current_uv).r;
+    float current_depth = 0.0;
+
+    while (current_height > current_depth) {
+        current_uv += delta_uv;
+        current_height = texture(height_map, current_uv).r;
+        current_depth += layer_depth;
+    }
+
+    return current_uv;
+}
+
+vec2 parallax_occlusion_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tbn, float scale, float layer_count) {
+	view_dir = normalize(transpose(tbn) * view_dir);
+    view_dir.xy /= -view_dir.z;
+
+    float layer_depth = 1.0 / layer_count;
+    vec2 delta_uv = view_dir.xy * scale / layer_count;
+
+    vec2 current_uv = uv;
+    float current_height = texture(height_map, current_uv).r;
+    float current_depth = 0.0;
+
+    while (current_height > current_depth) {
+        current_uv += delta_uv;
+        current_height = texture(height_map, current_uv).r;
+        current_depth += layer_depth;
+    }
+
+    vec2 prev_uv = current_uv - delta_uv;
+    float prev_height = texture(height_map, prev_uv).r;
+    float prev_depth = current_depth - layer_depth;
+    float prev_distance = prev_height - prev_depth;
+    float current_distance = current_depth - current_height;
+
+    float weight = current_distance / (current_distance + prev_distance);
+    return mix(current_uv, prev_uv, weight);
 }
 #endif
 
@@ -178,8 +227,14 @@ void main() {
     vec3 view_direction = normalize(camera_position - v_frag_position);
 
 #ifdef ENABLE_HEIGHT_MAP
-    float height = texture(height_map, v_uv).r;
-    vec2 uv = parallax_uv(v_uv, -view_direction, height, 0.1, v_tbn);
+    vec2 uv = parallax_occlusion_uv(
+        v_uv, 
+        -view_direction, 
+        height_map, 
+        v_tbn, 
+        0.1,
+        10
+    );
 #else
     vec2 uv = v_uv;
 #endif
