@@ -1,9 +1,10 @@
+#include "engine/runtime/global/enum.h"
 #include "engine/editor/editor.h"
 #include "engine/runtime/function/render/core/material.h"
-#include "engine/runtime/function/render/core/memory_buffer.h"
 #include "engine/runtime/function/render/core/shader.h"
 #include "engine/runtime/function/render/core/texture.h"
 #include "engine/runtime/function/render/core/skybox.h"
+#include "engine/runtime/function/render/core/geometry.h"
 
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
@@ -14,11 +15,10 @@
 #include "engine/runtime/framework/game_object.h"
 #include "engine/runtime/framework/scene.h"
 #include "engine/runtime/framework/world.h"
-#include "engine/runtime/function/render/core/geometry.h"
-#include "engine/runtime/global/enum.h"
-#include "engine/runtime/platform/rhi/rhi_shader_program.h"
+
 #include "engine/runtime/resource/loader/image_loader.h"
 #include "engine/runtime/runtime.h"
+
 #include "glm/fwd.hpp"
 #include <memory>
 #include <vector>
@@ -40,9 +40,9 @@ layout(std140, binding = 0) uniform Camera_ubo {
 
 uniform mat4 model;
 
+out vec3 v_frag_position;
 out vec2 v_uv;
 out vec3 v_normal;
-out vec3 v_frag_position;
 out vec3 v_tangent;
 out mat3 v_tbn;
 
@@ -58,7 +58,6 @@ void main() {
     vec3 N = normalize(v_normal);
     vec3 B = normalize(cross(N, T));
     v_tbn = mat3(T, B, N);
-
 }
 
 )";
@@ -139,22 +138,60 @@ layout(binding = 2) uniform sampler2D normal_map;
 layout(binding = 3) uniform sampler2D alpha_map;
 #endif
 
+#ifdef ENABLE_HEIGHT_MAP
+layout(binding = 4) uniform sampler2D height_map;
+#endif
+
 uniform float transparency;
 uniform vec3 ka;     // 环境反射系数
 uniform vec3 kd;     // 漫反射系数 (或使用 albedo_map)
 uniform vec3 ks;    // 镜面反射系数
 uniform float shininess;  
 
+vec3 calculate_diffuse(vec3 normal, vec3 light_dir, float intensity, vec3 light_color, vec3 albedo) {
+    float diffuse_factor = max(dot(normal, light_dir), 0.0);
+    return kd * intensity * light_color * diffuse_factor * albedo;
+}
+
+vec3 calculate_specular(vec3 normal, vec3 view_dir, vec3 light_dir, float intensity, vec3 light_color, vec3 albedo, vec3 spec_mask) {
+    vec3 halfway_dir = normalize(light_dir + view_dir);
+    float specular_factor = pow(max(dot(normal, halfway_dir), 0.0), shininess);
+    return ks * intensity * light_color * specular_factor * albedo * spec_mask;
+}
+
+float calculate_spot_intensity(vec3 light_dir, vec3 spot_dir, float inner_cos, float outer_cos) {
+    float theta = dot(-light_dir, normalize(spot_dir));
+    float epsilon = inner_cos - outer_cos;
+    return clamp((theta - outer_cos) / epsilon, 0.0, 1.0);
+}
+
+#ifdef ENABLE_HEIGHT_MAP
+vec2 parallax_uv(vec2 uv, vec3 view_dir, float height, float height_scale, mat3 tbn) {
+	view_dir = normalize(transpose(tbn) * view_dir);
+	vec2 offset = view_dir.xy / view_dir.z * height * height_scale;
+	return uv - offset; 
+}
+#endif
+
 void main() {
 
+    vec3 view_direction = normalize(camera_position - v_frag_position);
+
+#ifdef ENABLE_HEIGHT_MAP
+    float height = texture(height_map, v_uv).r;
+    vec2 uv = parallax_uv(v_uv, -view_direction, height, 0.1, v_tbn);
+#else
+    vec2 uv = v_uv;
+#endif
+
 #ifdef ENABLE_ALPHA_MAP
-    float alpha = texture(alpha_map, v_uv).r * transparency;
+    float alpha = texture(alpha_map, uv).r * transparency;
 #else
     float alpha = transparency;
 #endif
 
 #ifdef ENABLE_NORMAL_MAP
-    vec3 normal_map_normal = texture(normal_map, v_uv).rgb * 2.0 - vec3(1.0);
+    vec3 normal_map_normal = texture(normal_map, uv).rgb * 2.0 - vec3(1.0);
     vec3 normal = normalize(v_tbn * normal_map_normal);
     vec3 normalized_normal = normalize(normal);
 #else
@@ -162,59 +199,101 @@ void main() {
 #endif
 
 #ifdef ENABLE_ALBEDO_MAP
-    vec4 albedo = texture(albedo_map, v_uv);
+    vec4 albedo = texture(albedo_map, uv);
 #else
     vec4 albedo = vec4((normalized_normal + 1.0) / 2.0, 1.0);
 #endif
 
 #ifdef ENABLE_SPECULAR_MAP
-    vec3 specular_mask = texture(specular_map, v_uv).rrr;
+    vec3 specular_mask = texture(specular_map, uv).rrr;
 #else
     vec3 specular_mask = vec3(1.0);
 #endif
-    
+
     vec3 ambient = vec3(0.0);
     vec3 diffuse = vec3(0.0);
     vec3 specular = vec3(0.0);
-
-    vec3 view_direction = normalize(camera_position - v_frag_position);
 
     ambient += ka * albedo.rgb;
 
     // 计算方向光
     for (int i = 0; i < dl_count; i++) {
-        vec3 light_direction = normalize(-dl_lights[i].direction);
-        vec3 halfway_direction = normalize(light_direction + view_direction);
-        float diffuse_factor = max(dot(normalized_normal, light_direction), 0.0);
-        float specular_factor = pow(max(dot(normalized_normal, halfway_direction), 0.0), shininess);
-        diffuse += kd * dl_lights[i].intensity * dl_lights[i].color * diffuse_factor * albedo.rgb;
-        specular += ks * dl_lights[i].intensity * dl_lights[i].color * specular_factor * albedo.rgb * specular_mask;
+        vec3 light_dir = normalize(-dl_lights[i].direction);
+        
+        diffuse += calculate_diffuse(
+            normalized_normal, 
+            light_dir, 
+            dl_lights[i].intensity, 
+            dl_lights[i].color, 
+            albedo.rgb
+        );
+
+        specular += calculate_specular(
+            normalized_normal, 
+            view_direction, 
+            light_dir, 
+            dl_lights[i].intensity, 
+            dl_lights[i].color, 
+            albedo.rgb, 
+            specular_mask
+        );
     }
 
     // 计算点光源
     for (int i = 0; i < pl_count; i++) {
-        vec3 light_direction = normalize(pl_lights[i].position - v_frag_position);
-        vec3 halfway_direction = normalize(light_direction + view_direction);
-        float diffuse_factor = max(dot(normalized_normal, light_direction), 0.0);
-        float specular_factor = pow(max(dot(normalized_normal, halfway_direction), 0.0), shininess);
+        vec3 light_dir = normalize(pl_lights[i].position - v_frag_position);
         float distance = length(pl_lights[i].position - v_frag_position);
-        float attenuation = 1.0 / (pl_lights[i].attenuation.x + pl_lights[i].attenuation.y * distance + pl_lights[i].attenuation.z * distance * distance);
-        diffuse += kd * pl_lights[i].intensity * pl_lights[i].color * diffuse_factor * albedo.rgb * attenuation;
-        specular += ks * pl_lights[i].intensity * pl_lights[i].color * specular_factor * albedo.rgb * attenuation * specular_mask;
+        float attenuation = 1.0 / 
+            (pl_lights[i].attenuation.x + 
+            pl_lights[i].attenuation.y * distance + 
+            pl_lights[i].attenuation.z * distance * distance);
+        
+        diffuse += calculate_diffuse(
+            normalized_normal, 
+            light_dir, 
+            pl_lights[i].intensity, 
+            pl_lights[i].color, 
+            albedo.rgb
+        ) * attenuation;
+
+        specular += calculate_specular(
+            normalized_normal, 
+            view_direction, 
+            light_dir, 
+            pl_lights[i].intensity, 
+            pl_lights[i].color, 
+            albedo.rgb, 
+            specular_mask
+        ) * attenuation;
     }
 
+    // 计算聚光灯
     for (int i = 0; i < spl_count; i++) {
-        vec3 light_direction = normalize(spl_lights[i].position - v_frag_position);
-        vec3 halfway_direction = normalize(light_direction + view_direction);
-        float diffuse_factor = max(dot(normalized_normal, light_direction), 0.0);
-        float specular_factor = pow(max(dot(normalized_normal, halfway_direction), 0.0), shininess);
+        vec3 light_dir = normalize(spl_lights[i].position - v_frag_position);
+        float intensity = calculate_spot_intensity(
+            light_dir, 
+            spl_lights[i].direction, 
+            spl_lights[i].inner_angle_cos, 
+            spl_lights[i].outer_angle_cos
+        );
+        
+        diffuse += calculate_diffuse(
+            normalized_normal, 
+            light_dir, 
+            spl_lights[i].intensity, 
+            spl_lights[i].color, 
+            albedo.rgb
+        ) * intensity;
 
-        float theta = dot(-light_direction, normalize(spl_lights[i].direction));
-        float epsilon = spl_lights[i].inner_angle_cos - spl_lights[i].outer_angle_cos;
-        float intensity = clamp((theta - spl_lights[i].outer_angle_cos) / epsilon, 0.0, 1.0);
-
-        diffuse += kd * spl_lights[i].intensity * spl_lights[i].color * diffuse_factor * albedo.rgb  * intensity;
-        specular += ks * spl_lights[i].intensity * spl_lights[i].color * specular_factor * albedo.rgb  * intensity * specular_mask;
+        specular += calculate_specular(
+            normalized_normal, 
+            view_direction, 
+            light_dir, 
+            spl_lights[i].intensity, 
+            spl_lights[i].color, 
+            albedo.rgb, 
+            specular_mask
+        ) * intensity;
     }
 
 
@@ -229,6 +308,7 @@ int main() {
          "assets/image/skybox/spherical/bk.jpg"
     );
 
+    //specular
     // auto sp_mask = Image_loader::load_from_path(
     //     Image_format::RGB_ALPHA,
     //     "assets/image/box/sp_mask.png"
@@ -239,6 +319,7 @@ int main() {
     //     "assets/image/box/box.png"
     // );
 
+    // normal
     // auto normal_map = Image_loader::load_from_path(
     //     Image_format::RGB_ALPHA,
     //     "assets/image/brickwall/normal_map.png"
@@ -249,14 +330,31 @@ int main() {
     //     "assets/image/brickwall/brickwall.jpg"
     // );
 
-    auto main_tex = Image_loader::load_from_path(
-        Image_format::RGB_ALPHA, 
-        "assets/image/grass/grass.jpg"
+    //alpha
+    // auto main_tex = Image_loader::load_from_path(
+    //     Image_format::RGB_ALPHA, 
+    //     "assets/image/grass/grass.jpg"
+    // );
+
+    // auto alpha_map = Image_loader::load_from_path(
+    //     Image_format::RGB_ALPHA,
+    //     "assets/image/grass/grassMask.png"
+    // );
+
+    //parallax
+    
+    auto height_map = Image_loader::load_from_path(
+        Image_format::RGB_ALPHA,
+        "assets/image/bricks/disp.jpg"
+    );
+    auto normal_map = Image_loader::load_from_path(
+        Image_format::RGB_ALPHA,
+        "assets/image/bricks/bricks_normal.jpg"
     );
 
-    auto alpha_map = Image_loader::load_from_path(
-        Image_format::RGB_ALPHA,
-        "assets/image/grass/grassMask.png"
+    auto main_tex = Image_loader::load_from_path(
+        Image_format::RGB_ALPHA, 
+        "assets/image/bricks/bricks.jpg"
     );
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
@@ -308,7 +406,8 @@ int main() {
             Shader_feature::ALBEDO_MAP,
             Shader_feature::SPECULAR_MAP,
             Shader_feature::NORMAL_MAP,
-            Shader_feature::ALPHA_MAP
+            Shader_feature::ALPHA_MAP,
+            Shader_feature::HEIGHT_MAP
         })
     );
 
@@ -317,15 +416,16 @@ int main() {
 
     auto material = Test_material::create(shader);
     material->albedo_map = Texture_image::create(main_tex);
-    material->alpha_map = Texture_image::create(alpha_map);
-
+    material->height_map = Texture_image::create(height_map);
+    material->normal_map = Texture_image::create(normal_map);
+    //material->specular_map = Texture_image::create(sp_mask);
+    //material->alpha_map = Texture_image::create(alpha_map);
     // material->normal_map = Texture_image::create(normal_map);
     // material->ka = glm::vec3(0.0);
     // material->kd = glm::vec3(0.0);
     // material->ks = glm::vec3(1.5);
     // material->transparency = 0.5;
-
-    material->shininess = 16.0;
+    //material->shininess = 16.0;
 
     auto game_object = scene->add_game_object(Game_object::create("go1"));
     auto node = game_object->add_component<Node_component>();

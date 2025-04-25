@@ -56,6 +56,7 @@ public:
     std::shared_ptr<Texture> specular_map{};
     std::shared_ptr<Texture> normal_map{};
     std::shared_ptr<Texture> alpha_map{};
+    std::shared_ptr<Texture> height_map{};
 
     float transparency{1.0f};
     glm::vec3 ka = glm::vec3(0.2f);     // 环境反射系数
@@ -84,6 +85,9 @@ public:
         if (alpha_map) {
             feature_set.set(static_cast<size_t>(Shader_feature::ALPHA_MAP));
         }
+        if (height_map) {
+            feature_set.set(static_cast<size_t>(Shader_feature::HEIGHT_MAP));
+        }
         return feature_set;
     }
 
@@ -100,6 +104,9 @@ public:
         }
         if (alpha_map) {
             texture_map[3] = alpha_map;
+        }
+        if (height_map) {
+            texture_map[4] = height_map;
         }
         return texture_map;
     }

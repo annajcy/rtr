@@ -23,10 +23,12 @@ public:
     virtual ~Render_pipeline() {}
 
     virtual void execute(const Render_tick_context& tick_context) = 0;
-    virtual void update_ubo(const Render_tick_context& tick_context) = 0;
+    
     virtual void init_render_resource() = 0;
     virtual void init_ubo() = 0;
+    virtual void update_ubo(const Render_tick_context& tick_context) = 0;
     virtual void init_render_passes() = 0;
+    virtual void update_render_pass(const Render_tick_context& tick_context) = 0;
 };
 
 
@@ -100,16 +102,15 @@ public:
     ~Test_render_pipeline() {}
 
     void execute(const Render_tick_context& tick_context) override {
-        auto& skybox = tick_context.render_swap_data.skybox;
-        auto& render_objects = tick_context.render_swap_data.render_objects;
-
-        m_main_pass->set_context(Main_pass::Execution_context{
-            .skybox = skybox,
-            .render_swap_objects = render_objects
-        });
-
         m_main_pass->excute();
         m_gamma_pass->excute();
+    }
+
+    void update_render_pass(const Render_tick_context& tick_context) override {
+        m_main_pass->set_context(Main_pass::Execution_context{
+            .skybox = tick_context.render_swap_data.skybox,
+            .render_swap_objects = tick_context.render_swap_data.render_objects
+        });
     }
 
     void update_ubo(const Render_tick_context& tick_context) override {
