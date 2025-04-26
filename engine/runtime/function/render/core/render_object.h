@@ -7,7 +7,7 @@
 
 namespace rtr {
 
-struct RHI_global_render_resource {
+struct RHI_global_render_object {
     std::shared_ptr<RHI_device> device{};
     std::shared_ptr<RHI_window> window{};
     std::shared_ptr<RHI_renderer> renderer{};
@@ -16,7 +16,7 @@ struct RHI_global_render_resource {
     std::shared_ptr<RHI_pipeline_state> pipeline_state{};
 };
 
-enum class Render_resource_type {
+enum class Render_object_type {
     SHADER,
     MATERIAL,
     GEOMETRY,
@@ -24,14 +24,14 @@ enum class Render_resource_type {
     MEMORY_BUFFER,
 };
 
-class Render_resource {
+class Render_object {
 protected:
-    Render_resource_type m_resource_type{};
+    Render_object_type m_resource_type{};
 
 public:
-    Render_resource(Render_resource_type resource_type) : m_resource_type(resource_type) {}
-    virtual ~Render_resource() = default;
-    Render_resource_type resource_type() const { return m_resource_type; }
+    Render_object(Render_object_type resource_type) : m_resource_type(resource_type) {}
+    virtual ~Render_object() = default;
+    Render_object_type resource_type() const { return m_resource_type; }
 };
 
 };

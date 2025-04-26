@@ -6,7 +6,7 @@
 #include "engine/runtime/function/render/object/material.h"
 #include "engine/runtime/function/render/object/skybox.h"
 #include "engine/runtime/function/render/object/texture.h"
-#include "engine/runtime/function/render/core/render_resource.h"
+#include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/resource/resource_base.h"
 #include <memory>
 #include <string>
@@ -16,11 +16,11 @@ namespace rtr {
     
 class Render_pass {
 protected:
-    RHI_global_render_resource& m_rhi_global_render_resource;
+    RHI_global_render_object& m_rhi_global_render_resource;
 
 public:
     Render_pass(
-        RHI_global_render_resource& rhi_global_render_resource
+        RHI_global_render_object& rhi_global_render_resource
     ) : m_rhi_global_render_resource(rhi_global_render_resource) {}
 
     virtual ~Render_pass() {}
@@ -47,7 +47,7 @@ protected:
     
 public:
     Main_pass(
-        RHI_global_render_resource& rhi_global_render_resource
+        RHI_global_render_object& rhi_global_render_resource
     ) : Render_pass(rhi_global_render_resource) {}
 
     ~Main_pass() {}
@@ -74,7 +74,7 @@ public:
     }
 
     static std::shared_ptr<Main_pass> create(
-        RHI_global_render_resource& rhi_global_render_resource
+        RHI_global_render_object& rhi_global_render_resource
     ) {
         return std::make_shared<Main_pass>(rhi_global_render_resource);
     }
@@ -140,7 +140,7 @@ class Gamma_pass : public Render_pass {
 public:
 
     struct Resource_flow {
-        std::shared_ptr<Texture> color_attachment_in{};
+        std::shared_ptr<Texture> texture_in{};
     };
 
 protected:
@@ -149,9 +149,11 @@ protected:
 
     Resource_flow m_resource_input{};
 
+    std::shared_ptr<Frame_buffer> m_frame_buffer{};
+
 public:
     Gamma_pass(
-        RHI_global_render_resource& rhi_global_render_resource
+        RHI_global_render_object& rhi_global_render_resource
     ) : Render_pass(rhi_global_render_resource) {
         m_gamma_material = Gamma_material::create();
         
@@ -162,14 +164,14 @@ public:
     ~Gamma_pass() {}
 
     static std::shared_ptr<Gamma_pass> create(
-        RHI_global_render_resource& rhi_global_render_resource
+        RHI_global_render_object& rhi_global_render_resource
     ) {
         return std::make_shared<Gamma_pass>(rhi_global_render_resource);
     }
 
     void set_resource_flow(const Resource_flow& input) {
         m_resource_input = input;
-        m_gamma_material->screen_map = m_resource_input.color_attachment_in;
+        m_gamma_material->screen_map = m_resource_input.texture_in;
     }
 
     void excute() {

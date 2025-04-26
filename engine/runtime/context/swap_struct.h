@@ -12,6 +12,8 @@ struct Swap_object {
     std::shared_ptr<Material> material{};
     std::shared_ptr<Geometry> geometry{};
     glm::mat4 model_matrix{1.0f};
+    bool is_cast_shadow{false};
+    bool is_receive_shadow{false};
 };
 
 struct Swap_directional_light {

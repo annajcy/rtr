@@ -36,6 +36,7 @@ private:
     std::shared_ptr<Window_system> m_window_system{};
     std::shared_ptr<File_service> m_file_service{};
     std::shared_ptr<World> m_world{};
+    std::shared_ptr<Timer> m_timer{};
 
 public:
 
@@ -59,6 +60,9 @@ public:
         m_input_system = input_system;
         m_file_service = file_service;
         m_render_system = render_system;
+
+        m_timer = std::make_shared<Timer>();
+        m_timer->start();
 
         auto test_render_pipeline = Test_render_pipeline::create(render_system->global_render_resource());
         render_system->set_render_pipeline(test_render_pipeline);
@@ -84,21 +88,17 @@ public:
     bool is_active() const { return m_window_system->window()->is_active(); }
 
     void run() {
-
-        auto timer = std::make_shared<Timer>();
-        timer->start();
-
         while (m_window_system->window()->is_active()) {
-            tick(get_delta_time(timer));
+            tick(get_delta_time());
         }
     }
 
     float get_fps() const { return 1000.0f / m_delta_time; }
 
-    float get_delta_time(const std::shared_ptr<Timer>& timer) {
-        timer->pause();
-        m_delta_time = timer->elapsed_ms();
-        timer->start();
+    float get_delta_time() {
+        m_timer->pause();
+        m_delta_time = m_timer->elapsed_ms();
+        m_timer->start();
         return m_delta_time;
     }
 

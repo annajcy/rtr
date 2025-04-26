@@ -54,7 +54,7 @@ public:
     Directional_light_component() : Light_component(Light_type::DIRECTIONAL) { }
     ~Directional_light_component() = default;
 
-    glm::vec3 direction() const { return node()->world_rotation() * glm::vec3(0.0f, 0.0f, 1.0);  }
+    glm::vec3 direction() const { return node()->world_front(); }
 
     static std::shared_ptr<Directional_light_component> create() {
         return std::make_shared<Directional_light_component>();

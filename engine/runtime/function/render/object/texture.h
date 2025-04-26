@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/function/render/core/render_resource.h"
+#include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_texture.h"
@@ -9,12 +9,12 @@
 #include <unordered_map>
 namespace rtr {
 
-class Texture : public GUID, public RHI_linker<RHI_texture>, public Render_resource {
+class Texture : public GUID, public RHI_linker<RHI_texture>, public Render_object {
 protected:
     Texture_type m_texture_type{};
 public:
     Texture(Texture_type texture_type) : 
-    Render_resource(Render_resource_type::TEXTURE),
+    Render_object(Render_object_type::TEXTURE),
     m_texture_type(texture_type) {}
     virtual ~Texture() {}
     Texture_type texture_type() const { return m_texture_type; }

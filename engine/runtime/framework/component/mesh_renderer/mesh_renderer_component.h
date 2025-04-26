@@ -17,6 +17,8 @@ protected:
     std::shared_ptr<Node_component> m_node{};
     std::shared_ptr<Geometry> m_geometry{};
     std::shared_ptr<Material> m_material{};
+    bool is_cast_shadow{false};
+    bool is_receive_shadow{false};
 
 public:
     Mesh_renderer_component() : Component_base(Component_type::MESH_RENDERER) {}
@@ -68,7 +70,9 @@ public:
         data.render_objects.push_back(Swap_object{
             .material = m_material,
             .geometry = m_geometry,
-            .model_matrix = node()->model_matrix()
+            .model_matrix = node()->model_matrix(),
+            .is_cast_shadow = is_cast_shadow,
+            .is_receive_shadow = is_receive_shadow
         });
     }
     

@@ -2,7 +2,7 @@
 
 #include "engine/runtime/function/render/object/shader.h"
 #include "engine/runtime/function/render/object/texture.h"
-#include "engine/runtime/function/render/core/render_resource.h"
+#include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
@@ -11,7 +11,7 @@
 
 namespace rtr {
 
-class Material : public Render_resource {
+class Material : public Render_object {
     
 protected:
     Material_type m_material_type{};
@@ -21,7 +21,7 @@ public:
     Material(
         Material_type material_type, 
         const std::shared_ptr<Shader>& shader
-    ) : Render_resource(Render_resource_type::MATERIAL),
+    ) : Render_object(Render_object_type::MATERIAL),
         m_material_type(material_type),
         m_shader(shader) {}
     virtual ~Material() = default;
@@ -59,8 +59,8 @@ public:
     std::shared_ptr<Texture> height_map{};
 
     float transparency{1.0f};
-    glm::vec3 ka = glm::vec3(0.2f);     // 环境反射系数
-    glm::vec3 kd = glm::vec3(1.0f);     // 漫反射系数 (或使用 albedo_map)
+    glm::vec3 ka = glm::vec3(0.1f);     // 环境反射系数
+    glm::vec3 kd = glm::vec3(0.7f);     // 漫反射系数 (或使用 albedo_map)
     glm::vec3 ks = glm::vec3(0.5f);    // 镜面反射系数
     float shininess = 32.0f;    
 

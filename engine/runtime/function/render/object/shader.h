@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/function/render/core/render_resource.h"
+#include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"

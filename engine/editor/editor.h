@@ -6,7 +6,6 @@
 #include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 #include "engine/runtime/platform/rhi/rhi_imgui.h"
-#include "engine/runtime/platform/rhi/rhi_window.h"
 #include "engine/runtime/runtime.h"
 #include "glm/gtc/type_ptr.hpp"
 #include <memory>
@@ -38,21 +37,16 @@ public:
     }
 
     void gui_tick(float delta_time) {
-        if (m_imgui) {
-            m_imgui->begin_frame();
-            render_main_menu();
-            render_parallax_map();
-            //render_inspector();
-            m_imgui->end_frame();
-        }
+        m_imgui->begin_frame();
+        render_main_menu();
+        render_parallax_map();
+        //render_inspector();
+        m_imgui->end_frame();
     }
 
     void run() {
-        auto timer = std::make_shared<Timer>();
-        timer->start();
-
         while (m_engine_runtime->is_active()) {
-            tick(m_engine_runtime->get_delta_time(timer));
+            tick(m_engine_runtime->get_delta_time());
         }
     }
 

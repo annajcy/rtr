@@ -56,12 +56,12 @@ out mat3 v_tbn;
 void main() {
     gl_Position = projection * view * model * vec4(a_position, 1.0);
 
-    v_uv = a_uv;
-   
     v_frag_position = vec3(model * vec4(a_position, 1.0));
+    v_uv = a_uv;
+    v_normal = mat3(transpose(inverse(model))) * a_normal;
 
 #ifdef ENABLE_NORMAL_MAP
-    v_normal = mat3(transpose(inverse(model))) * a_normal;
+    
     v_tangent = mat3(model) * a_tangent;
 
     vec3 T = normalize(v_tangent);
@@ -370,6 +370,12 @@ void main() {
 )";
 
 int main() {
+    Engine_runtime_descriptor engine_runtime_descriptor{};
+    auto runtime = Engine_runtime::create(engine_runtime_descriptor);
+    auto editor = editor::Editor::create(runtime);
+
+    auto world = World::create("world1");
+    runtime->world() = world;
 
     auto bk_image = Image_loader::load_from_path(
         Image_format::RGB_ALPHA, 
@@ -425,35 +431,10 @@ int main() {
         "assets/image/bricks/bricks.jpg"
     );
 
-    Engine_runtime_descriptor engine_runtime_descriptor{};
-    auto runtime = Engine_runtime::create(engine_runtime_descriptor);
-
-    auto world = World::create("world1");
-    auto scene = world->add_scene(Scene::create("scene1"));
-    world->set_current_scene(scene);
-
-    // auto spherical = Skybox::create(Texture_image::create(bk_image));
-    // scene->set_skybox(spherical);
-
-    auto cubemap = Skybox::create(Texture_cubemap::create(std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
-        {Texture_cubemap_face::BACK, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/back.jpg", false)},
-        {Texture_cubemap_face::BOTTOM, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/bottom.jpg", false)},
-        {Texture_cubemap_face::FRONT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/front.jpg", false)},
-        {Texture_cubemap_face::LEFT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/left.jpg", false)},
-        {Texture_cubemap_face::RIGHT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/right.jpg", false)},
-        {Texture_cubemap_face::TOP, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/top.jpg", false)}
-    }));
-    scene->set_skybox(cubemap);
-
-    auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
-    auto camera_node = camera_game_object->add_component<Node_component>();
-    camera_node->set_position(glm::vec3(0, 0, 5));
-    camera_node->look_at_point(glm::vec3(0, 0, 0));
-
-    auto camera = camera_game_object->add_component<Perspective_camera_component>();
-    camera->add_resize_callback(runtime->window_system()->window());
-
-    auto camera_control = camera_game_object->add_component<Trackball_camera_control_component>();
+    auto plane_main_tex = Image_loader::load_from_path(
+        Image_format::RGB_ALPHA, 
+        "assets/image/grass/grass.jpg"
+    );
 
     auto shader = Shader::create(
         "test", 
@@ -496,6 +477,7 @@ int main() {
     material->albedo_map = Texture_image::create(main_tex);
     material->height_map = Texture_image::create(height_map);
     material->normal_map = Texture_image::create(normal_map);
+    
     //material->specular_map = Texture_image::create(sp_mask);
     //material->alpha_map = Texture_image::create(alpha_map);
     // material->normal_map = Texture_image::create(normal_map);
@@ -505,69 +487,102 @@ int main() {
     // material->transparency = 0.5;
     //material->shininess = 16.0;
 
-    auto game_object = scene->add_game_object(Game_object::create("go1"));
-    auto node = game_object->add_component<Node_component>();
-    node->set_position(glm::vec3(-2, 0, 0));
+    auto plane_material = Test_material::create(shader);
+    plane_material->albedo_map = Texture_image::create(plane_main_tex);
 
-    auto mesh_renderer = game_object->add_component<Mesh_renderer_component>();
-    mesh_renderer->set_geometry(Geometry::create_sphere());
-    mesh_renderer->set_material(material);
+    auto scene = world->add_scene(Scene::create("scene1"));
+    world->set_current_scene(scene);
 
-    auto game_object2 = scene->add_game_object(Game_object::create("go2"));
-    auto node2 = game_object2->add_component<Node_component>();
-    node2->set_position(glm::vec3(0, 0, 0));
+    auto spherical = Skybox::create(Texture_image::create(bk_image));
+    scene->set_skybox(spherical);
 
-    // auto rotate_component = game_object2->add_component<Rotate_component>();
+    // auto cubemap = Skybox::create(Texture_cubemap::create(std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
+    //     {Texture_cubemap_face::BACK, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/back.jpg", false)},
+    //     {Texture_cubemap_face::BOTTOM, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/bottom.jpg", false)},
+    //     {Texture_cubemap_face::FRONT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/front.jpg", false)},
+    //     {Texture_cubemap_face::LEFT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/left.jpg", false)},
+    //     {Texture_cubemap_face::RIGHT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/right.jpg", false)},
+    //     {Texture_cubemap_face::TOP, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/top.jpg", false)}
+    // }));
+    // scene->set_skybox(cubemap);
+
+    auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
+    auto camera_node = camera_game_object->add_component<Node_component>();
+    camera_node->set_position(glm::vec3(0, 0, 5));
+    camera_node->look_at_point(glm::vec3(0, 0, 0));
+
+    auto camera = camera_game_object->add_component<Perspective_camera_component>();
+    camera->add_resize_callback(runtime->window_system()->window());
+
+    auto camera_control = camera_game_object->add_component<Trackball_camera_control_component>();
+
+    auto sphere = scene->add_game_object(Game_object::create("go1"));
+    auto sphere_node = sphere->add_component<Node_component>();
+    sphere_node->set_position(glm::vec3(-2, 0, 0));
+
+    auto sphere_mesh_renderer = sphere->add_component<Mesh_renderer_component>();
+    sphere_mesh_renderer->set_geometry(Geometry::create_sphere());
+    sphere_mesh_renderer->set_material(material);
+
+    auto box = scene->add_game_object(Game_object::create("go2"));
+    auto box_node = box->add_component<Node_component>();
+    box_node->set_position(glm::vec3(0, 0, 0));
+
+    // auto rotate_component = box->add_component<Rotate_component>();
     // rotate_component->speed() = 0.1f;
 
-    auto mesh_renderer2 = game_object2->add_component<Mesh_renderer_component>();
-    mesh_renderer2->set_geometry(Geometry::create_box(1.0));
-    mesh_renderer2->set_material(material);
+    auto box_mesh_renderer = box->add_component<Mesh_renderer_component>();
+    box_mesh_renderer->set_geometry(Geometry::create_box(1.0));
+    box_mesh_renderer->set_material(material);
 
-    node2->add_child(node, true);
-    //node2->add_child(camera_node, true);
+    auto dl_game_object = scene->add_game_object(Game_object::create("dl"));
+    auto dl_node = dl_game_object->add_component<Node_component>();
+    auto dl = dl_game_object->add_component<Directional_light_component>();
+    dl_node->look_at_direction(glm::vec3(0, -1, -1));
 
-    auto game_object3 = scene->add_game_object(Game_object::create("go3"));
-    auto node3 = game_object3->add_component<Node_component>();
-    auto directional_light = game_object3->add_component<Directional_light_component>();
-    //directional_light->color() = glm::vec3(1, 0, 0);
-    node3->look_at_direction(glm::vec3(0, 0, -1));
-
-    auto go4 = scene->add_game_object(Game_object::create("go4"));
-    auto node4 = go4->add_component<Node_component>();
-    node4->set_position(glm::vec3(1, 0, 0));
-    auto pl0 = go4->add_component<Point_light_component>();
+    auto pl0_game_object = scene->add_game_object(Game_object::create("pl0"));
+    auto pl0_node = pl0_game_object->add_component<Node_component>();
+    pl0_node->set_position(glm::vec3(1, 0, 0));
+    auto pl0 = pl0_game_object->add_component<Point_light_component>();
     pl0->color() = glm::vec3(0, 1, 0);
 
-    auto go5 = scene->add_game_object(Game_object::create("go5"));
-    auto node5 = go5->add_component<Node_component>();
-    node5->set_position(glm::vec3(-1, 0, 0));
-    auto pl1 = go5->add_component<Point_light_component>();
+    auto pl1_game_object = scene->add_game_object(Game_object::create("pl1"));
+    auto pl1_node = pl1_game_object->add_component<Node_component>();
+    pl1_node->set_position(glm::vec3(-1, 0, 0));
+    auto pl1 = pl1_game_object->add_component<Point_light_component>();
     pl1->color() = glm::vec3(0, 0, 1);
 
-    auto go6 = scene->add_game_object(Game_object::create("go6"));
-    auto node6 = go6->add_component<Node_component>();
-    node6->set_position(glm::vec3(0, 0, 1.0));
-    node6->look_at_direction(glm::vec3(0, 0, -1));
-    auto sl0 = go6->add_component<Spot_light_component>();
+    auto sl0_game_object = scene->add_game_object(Game_object::create("sl0"));
+    auto sl0_node = sl0_game_object->add_component<Node_component>();
+    sl0_node->set_position(glm::vec3(0, 0, 1.0));
+    sl0_node->look_at_direction(glm::vec3(0, 0, -1));
+    auto sl0 = sl0_game_object->add_component<Spot_light_component>();
     sl0->inner_angle() = 15.0f;
     sl0->outer_angle() = 20.0f;
     sl0->color() = glm::vec3(1, 1, 0);
     sl0->intensity() = 0.5f;
 
-    node2->add_child(node6, true);
-    
-    auto go7 = scene->add_game_object(Game_object::create("go7"));
-    auto node7 = go7->add_component<Node_component>();
-    node7->set_position(glm::vec3(0.0, 1.0, 0.0));
-    node7->look_at_direction(glm::vec3(0.0, -1.0, 0.0));
-    auto sl1 = go7->add_component<Spot_light_component>();
+    auto sl1_game_object = scene->add_game_object(Game_object::create("sl1"));
+    auto sl1_node = sl1_game_object->add_component<Node_component>();
+    sl1_node->set_position(glm::vec3(0.0, 1.0, 0.0));
+    sl1_node->look_at_direction(glm::vec3(0.0, -1.0, 0.0));
+    auto sl1 = sl1_game_object->add_component<Spot_light_component>();
     sl1->color() = glm::vec3(1, 1, 0);
     sl1->intensity() = 0.5f;
-    
-    runtime->world() = world;
 
-    auto editor = editor::Editor::create(runtime);
+    auto plane = scene->add_game_object(Game_object::create("plane"));
+    auto plane_node = plane->add_component<Node_component>();
+    plane_node->set_position(glm::vec3(0, -1, 0));
+    plane_node->look_at_direction(glm::vec3(0, 1, 0));
+    plane_node->set_scale(glm::vec3(5.0));
+    auto plane_mesh_renderer = plane->add_component<Mesh_renderer_component>();
+    plane_mesh_renderer->set_geometry(Geometry::create_plane());
+    plane_mesh_renderer->set_material(plane_material);
+
+    box_node->add_child(sphere_node, true);
+    //box_node->add_child(camera_node, true);
+    //box_node->add_child(sl0_node, true);
+    
     editor->run();
 
     return 0;

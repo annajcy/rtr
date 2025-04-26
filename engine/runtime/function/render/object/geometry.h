@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/function/render/core/render_resource.h"
+#include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/global/base.h" 
 #include "engine/runtime/platform/rhi/rhi_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
@@ -13,7 +13,7 @@
 
 namespace rtr {
 
-class Geometry : public RHI_linker<RHI_geometry>, public Render_resource {
+class Geometry : public RHI_linker<RHI_geometry>, public Render_object {
 protected:
     std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> m_vertex_attributes{};
     std::shared_ptr<Element_atrribute> m_element_attribute{};
@@ -22,7 +22,7 @@ public:
     Geometry(
         const std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>>& vertex_attributes,
         const std::shared_ptr<Element_atrribute> & element_attribute
-    ) : Render_resource(Render_resource_type::GEOMETRY), 
+    ) : Render_object(Render_object_type::GEOMETRY), 
         m_vertex_attributes(vertex_attributes), 
         m_element_attribute(element_attribute) {}
 
