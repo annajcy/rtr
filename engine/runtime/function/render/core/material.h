@@ -34,8 +34,8 @@ public:
         return shader_variant;
     }
 
-    virtual Shader::feature_set get_shader_feature_set() const {
-        Shader::feature_set feature_set{};
+    virtual Shader::Shader_feature_set get_shader_feature_set() const {
+        Shader::Shader_feature_set feature_set{};
         return feature_set;
     }
 
@@ -63,6 +63,9 @@ public:
     glm::vec3 kd = glm::vec3(1.0f);     // 漫反射系数 (或使用 albedo_map)
     glm::vec3 ks = glm::vec3(0.5f);    // 镜面反射系数
     float shininess = 32.0f;    
+
+    float parallax_scale = 0.05f;
+    float parallax_layer_count = 10.0f;
     
     Test_material(const std::shared_ptr<Shader>& shader) : Material(
         Material_type::TEST,
@@ -71,8 +74,8 @@ public:
 
     ~Test_material() = default;
 
-    Shader::feature_set get_shader_feature_set() const override { 
-        Shader::feature_set feature_set{};
+    Shader::Shader_feature_set get_shader_feature_set() const override { 
+        Shader::Shader_feature_set feature_set{};
         if (albedo_map) {
             feature_set.set(static_cast<size_t>(Shader_feature::ALBEDO_MAP));
         }
@@ -148,6 +151,17 @@ public:
             shininess
         );
 
+        if (height_map) {
+            shader_program->modify_uniform<float>(
+                "parallax_scale",
+                parallax_scale
+            );
+            shader_program->modify_uniform<float>(
+                "parallax_layer_count",
+                parallax_layer_count
+            );
+        }
+        
     }
 };
 
@@ -237,8 +251,8 @@ public:
         return texture_map;
     }
 
-    Shader::feature_set get_shader_feature_set() const override {
-        Shader::feature_set feature_set{};
+    Shader::Shader_feature_set get_shader_feature_set() const override {
+        Shader::Shader_feature_set feature_set{};
         if (is_receive_shadows) {
             feature_set.set(static_cast<size_t>(Shader_feature::SHADOWS));
         }
@@ -306,8 +320,8 @@ public:
         }
     }
     
-    Shader::feature_set get_shader_feature_set() const override {
-        Shader::feature_set feature_set{};
+    Shader::Shader_feature_set get_shader_feature_set() const override {
+        Shader::Shader_feature_set feature_set{};
         if (is_receive_shadows) {
             feature_set.set(static_cast<size_t>(Shader_feature::SHADOWS));
         }

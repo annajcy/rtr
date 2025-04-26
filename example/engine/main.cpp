@@ -21,6 +21,7 @@
 
 #include "glm/fwd.hpp"
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 using namespace rtr;
@@ -30,7 +31,10 @@ const char* vertex_shader_source = R"(
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec2 a_uv;
 layout(location = 2) in vec3 a_normal;
+
+#ifdef ENABLE_NORMAL_MAP
 layout(location = 3) in vec3 a_tangent;
+#endif
 
 layout(std140, binding = 0) uniform Camera_ubo {
     mat4 view;
@@ -43,21 +47,29 @@ uniform mat4 model;
 out vec3 v_frag_position;
 out vec2 v_uv;
 out vec3 v_normal;
+
+#ifdef ENABLE_NORMAL_MAP
 out vec3 v_tangent;
 out mat3 v_tbn;
+#endif
 
 void main() {
     gl_Position = projection * view * model * vec4(a_position, 1.0);
 
     v_uv = a_uv;
-    v_normal = mat3(transpose(inverse(model))) * a_normal;
+   
     v_frag_position = vec3(model * vec4(a_position, 1.0));
+
+#ifdef ENABLE_NORMAL_MAP
+    v_normal = mat3(transpose(inverse(model))) * a_normal;
     v_tangent = mat3(model) * a_tangent;
 
     vec3 T = normalize(v_tangent);
     vec3 N = normalize(v_normal);
     vec3 B = normalize(cross(N, T));
     v_tbn = mat3(T, B, N);
+#endif
+
 }
 
 )";
@@ -65,10 +77,11 @@ void main() {
 const char* fragment_shader_source = R"(
 // 输入变量
 in vec2 v_uv;
-in vec3 v_normal;
 in vec3 v_frag_position;
-in vec3 v_tangent;
-in mat3 v_tbn;
+in vec3 v_normal;
+
+// 输出变量
+out vec4 frag_color;
 
 #define MAX_DIRECTIONAL_LIGHT 2
 #define MAX_SPOT_LIGHT 8
@@ -118,30 +131,6 @@ layout(std140, binding = 3) uniform Spot_light_array_ubo {
     Spot_light spl_lights[MAX_SPOT_LIGHT];
 };
 
-// 输出变量
-out vec4 frag_color;
-
-// 纹理采样器
-#ifdef ENABLE_ALBEDO_MAP
-layout(binding = 0) uniform sampler2D albedo_map;
-#endif
-
-#ifdef ENABLE_SPECULAR_MAP
-layout(binding = 1) uniform sampler2D specular_map;
-#endif
-
-#ifdef ENABLE_NORMAL_MAP
-layout(binding = 2) uniform sampler2D normal_map;
-#endif
-
-#ifdef ENABLE_ALPHA_MAP
-layout(binding = 3) uniform sampler2D alpha_map;
-#endif
-
-#ifdef ENABLE_HEIGHT_MAP
-layout(binding = 4) uniform sampler2D height_map;
-#endif
-
 uniform float transparency;
 uniform vec3 ka;     // 环境反射系数
 uniform vec3 kd;     // 漫反射系数 (或使用 albedo_map)
@@ -165,7 +154,31 @@ float calculate_spot_intensity(vec3 light_dir, vec3 spot_dir, float inner_cos, f
     return clamp((theta - outer_cos) / epsilon, 0.0, 1.0);
 }
 
+// 纹理采样器
+#ifdef ENABLE_ALBEDO_MAP
+layout(binding = 0) uniform sampler2D albedo_map;
+#endif
+
+#ifdef ENABLE_SPECULAR_MAP
+layout(binding = 1) uniform sampler2D specular_map;
+#endif
+
+#ifdef ENABLE_NORMAL_MAP
+in vec3 v_tangent;
+in mat3 v_tbn;
+layout(binding = 2) uniform sampler2D normal_map;
+#endif
+
+#ifdef ENABLE_ALPHA_MAP
+layout(binding = 3) uniform sampler2D alpha_map;
+#endif
+
 #ifdef ENABLE_HEIGHT_MAP
+layout(binding = 4) uniform sampler2D height_map;
+
+uniform float parallax_scale;
+uniform float parallax_layer_count;
+
 vec2 parallax_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tbn, float scale) {
 	view_dir = normalize(transpose(tbn) * view_dir);
     view_dir.xy /= -view_dir.z;
@@ -232,8 +245,8 @@ void main() {
         -view_direction, 
         height_map, 
         v_tbn, 
-        0.1,
-        10
+        parallax_scale,
+        parallax_layer_count
     );
 #else
     vec2 uv = v_uv;
@@ -443,30 +456,40 @@ int main() {
     auto camera_control = camera_game_object->add_component<Trackball_camera_control_component>();
 
     auto shader = Shader::create(
-        Shader_program::create(
-            "test", 
-            std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
-                {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, vertex_shader_source)},
-                {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, fragment_shader_source)}
-            }, 
-            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
-                {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
-                {"transparency", Uniform_entry<float>::create(1.0f)},
-                {"ka", Uniform_entry<glm::vec3>::create(glm::vec3(0.1, 0.1, 0.1))},
-                {"kd", Uniform_entry<glm::vec3>::create(glm::vec3(0.5, 0.5, 0.5))},
-                {"ks", Uniform_entry<glm::vec3>::create(glm::vec3(1.0, 1.0, 1.0))},
-                {"shininess", Uniform_entry<float>::create(32.0f)}
-            }), 
-        Shader::get_shader_feature_set(std::vector<Shader_feature> {
-            Shader_feature::ALBEDO_MAP,
-            Shader_feature::SPECULAR_MAP,
-            Shader_feature::NORMAL_MAP,
-            Shader_feature::ALPHA_MAP,
-            Shader_feature::HEIGHT_MAP
-        })
+        "test", 
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
+            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, vertex_shader_source)},
+            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, fragment_shader_source)}
+        }, 
+        std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+            {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
+            {"transparency", Uniform_entry<float>::create(1.0f)},
+            {"ka", Uniform_entry<glm::vec3>::create(glm::vec3(0.1, 0.1, 0.1))},
+            {"kd", Uniform_entry<glm::vec3>::create(glm::vec3(0.5, 0.5, 0.5))},
+            {"ks", Uniform_entry<glm::vec3>::create(glm::vec3(1.0, 1.0, 1.0))},
+            {"shininess", Uniform_entry<float>::create(32.0f)}
+        },
+        std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {
+            {
+                Shader_feature::HEIGHT_MAP, 
+                std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+                    {"parallax_scale", Uniform_entry<float>::create(0.05f)},
+                    {"parallax_layer_count", Uniform_entry<float>::create(10.0f)}
+                }
+            }
+        },
+        Shader::Shader_feature_set {
+        	Shader::get_shader_feature_set(std::vector<Shader_feature> {
+                Shader_feature::ALBEDO_MAP,
+                Shader_feature::SPECULAR_MAP,
+                Shader_feature::NORMAL_MAP,
+                Shader_feature::ALPHA_MAP,
+                Shader_feature::HEIGHT_MAP
+            })
+        }
     );
 
-    shader->premake_shader_variants();
+    shader->premake_all_shader_variants();
     shader->link_all_shader_variants(runtime->rhi_device());
 
     auto material = Test_material::create(shader);

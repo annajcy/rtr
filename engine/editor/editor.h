@@ -39,7 +39,8 @@ public:
         if (m_imgui) {
             m_imgui->begin_frame();
             render_main_menu();
-            render_inspector();
+            render_parallax_map();
+            //render_inspector();
             m_imgui->end_frame();
         }
         
@@ -60,6 +61,16 @@ public:
 
     
 private:
+
+    void render_parallax_map() {
+        m_imgui->begin_render("parallax map");
+        auto material = m_engine_runtime->world()->current_scene()->get_game_object("go1")->get_component<Mesh_renderer_component>()->material();
+        if (auto test_material = std::dynamic_pointer_cast<Test_material>(material)) {
+            m_imgui->slider_float("parallax_scale", &test_material->parallax_scale, 0.0, 1.0);
+            m_imgui->slider_float("parallax_layer_count", &test_material->parallax_layer_count, 0.0, 20.0);
+        }
+        m_imgui->end_render();
+    }
 
     void render_main_menu() {
         m_imgui->begin_render("main menu");
@@ -85,7 +96,7 @@ private:
                     m_imgui->text("scale", glm::to_string(node->scale()));
                 } else if (component->component_type() == Component_type::MESH_RENDERER) {
                     auto mesh_renderer = std::dynamic_pointer_cast<Mesh_renderer_component>(component);
-                    m_imgui->text("material", mesh_renderer->material()->shader()->get_main_shader()->name());
+                    m_imgui->text("material", mesh_renderer->material()->shader()->name());
                 } else if (component->component_type() == Component_type::CAMERA) {
                     auto camera = std::dynamic_pointer_cast<Camera_component>(component);
                     m_imgui->text("camera type", camera->camera_type() == Camera_type::PERSPECTIVE ? "perspective" : "orthographic");

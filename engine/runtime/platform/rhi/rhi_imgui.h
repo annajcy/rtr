@@ -24,6 +24,7 @@ public:
     virtual bool checkbox(const std::string& title, bool* value) = 0;
     virtual void text(const std::string& title, const std::string& text) = 0;
     virtual void text_edit(const std::string& title, std::string* text) = 0;
+    virtual bool slider_float(const std::string& title, float* value, float min, float max) = 0;
     virtual float frame_rate() = 0;
 
 };

@@ -136,28 +136,99 @@ public:
     }
 };
 
+class Shader_feature_dependency_graph {
+private:
+    std::unordered_map<Shader_feature, std::unordered_set<Shader_feature>> m_dependencies{};
+
+public:
+    Shader_feature_dependency_graph() = default;
+
+    Shader_feature_dependency_graph(std::initializer_list<std::pair<Shader_feature, Shader_feature>> dependencies) {
+        for (const auto& [feature, dependency] : dependencies) {
+            add_dependency(feature, dependency);
+        }
+    }
+
+    Shader_feature_dependency_graph(const Shader_feature_dependency_graph&) = delete;
+    Shader_feature_dependency_graph& operator=(const Shader_feature_dependency_graph&) = delete;
+    ~Shader_feature_dependency_graph() = default;
+
+    void add_dependency(Shader_feature feature, Shader_feature dependency) {
+        m_dependencies[feature].insert(dependency);
+    }
+
+    bool is_dependent(Shader_feature feature, Shader_feature dependency) const {
+        if (auto it = m_dependencies.find(feature); it != m_dependencies.end()) {
+            return it->second.find(dependency) != it->second.end();
+        }
+        return false;
+    }
+
+    std::unordered_set<Shader_feature> get_dependencies(Shader_feature feature) const {
+        if (auto it = m_dependencies.find(feature); it!= m_dependencies.end()) {
+            return it->second;
+        }
+        return {};
+    }  
+
+    std::unordered_set<Shader_feature> get_all_dependencies(Shader_feature feature) const {
+        std::unordered_set<Shader_feature> dependencies{};
+        std::function<void(Shader_feature)> dfs = [&](Shader_feature feature) {
+            for (const auto& dep : get_dependencies(feature)) {
+                if (dependencies.find(dep) == dependencies.end()) {
+                    dependencies.insert(dep);
+                    dfs(dep);
+                }
+            }
+        };
+        dfs(feature);
+        return dependencies;
+    }
+};
+
 class Shader  {
 public:
-    using feature_set = std::bitset<static_cast<size_t>(Shader_feature::MAX_FEATURES)>;
+    using Shader_feature_set = std::bitset<static_cast<size_t>(Shader_feature::MAX_FEATURES)>;
+    
+    inline static Shader_feature_dependency_graph g_shader_feature_dependency_graph {
+        {Shader_feature::HEIGHT_MAP, Shader_feature::NORMAL_MAP}
+    };
+
+    static void init_shader_feature_dependency_graph() {
+        g_shader_feature_dependency_graph.add_dependency(Shader_feature::HEIGHT_MAP, Shader_feature::NORMAL_MAP);
+    }
 
 protected:
-    std::shared_ptr<Shader_program> m_main_shader_program{};
-    feature_set m_shader_feature_whitelist{};
-    std::unordered_map<feature_set, std::shared_ptr<Shader_program>> m_variant_shader_programs{};
+    std::string m_shader_name{};
+    
+    Shader_feature_set m_shader_feature_whitelist{};
+    std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> m_main_shader_codes{};
+    std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> m_main_shader_uniforms{};
+    std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> m_feature_specific_shader_uniforms{};
+    std::unordered_map<Shader_feature_set, std::shared_ptr<Shader_program>> m_variant_shader_programs{};
 
 public:
     Shader(
-        const std::shared_ptr<Shader_program>& main_program, 
-        const feature_set& shader_feature_whitelist 
-    ) : m_main_shader_program(main_program),
+        const std::string name,
+        const std::unordered_map<Shader_type, std::shared_ptr<Shader_code>>& main_shader_codes,
+        const std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> main_shader_uniforms,
+        const std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> feature_specific_shader_uniforms,
+        const Shader_feature_set& shader_feature_whitelist 
+    ) : m_shader_name(name),
+        m_main_shader_codes(main_shader_codes),
+        m_main_shader_uniforms(main_shader_uniforms),
+        m_feature_specific_shader_uniforms(feature_specific_shader_uniforms),
         m_shader_feature_whitelist(shader_feature_whitelist) {}
+
     ~Shader() = default;
 
-    const std::shared_ptr<Shader_program>& get_main_shader() const { return m_main_shader_program; }
-    const std::unordered_map<feature_set, std::shared_ptr<Shader_program>> &get_variant_shader_programs() const { return m_variant_shader_programs; }
-    const feature_set& get_shader_feature_whitelist() const { return m_shader_feature_whitelist; }
+    const std::string& name() const { return m_shader_name; }
+    const std::unordered_map<Shader_type, std::shared_ptr<Shader_code>>& main_shader_codes() const { return m_main_shader_codes; }
 
-    const std::shared_ptr<Shader_program>& get_shader_variant(const feature_set& feature_set) {
+    const std::unordered_map<Shader_feature_set, std::shared_ptr<Shader_program>> &get_variant_shader_programs() const { return m_variant_shader_programs; }
+    const Shader_feature_set& get_shader_feature_whitelist() const { return m_shader_feature_whitelist; }
+
+    const std::shared_ptr<Shader_program>& get_shader_variant(const Shader_feature_set& feature_set) {
         if (auto it = m_variant_shader_programs.find(feature_set); it != m_variant_shader_programs.end()) {
             return it->second;
         }
@@ -166,8 +237,23 @@ public:
             throw std::invalid_argument("Invalid shader feature set");
         }
 
-        // 生成变体名称
-        std::string variant_name = m_main_shader_program->name();
+        auto [variant_name, shader_codes] = get_shader_codes(feature_set);
+
+        auto variant_shader_program = std::make_shared<Shader_program>(
+            variant_name,
+            shader_codes,
+            get_shader_uniforms(feature_set)
+        );
+
+        m_variant_shader_programs.emplace(feature_set, variant_shader_program);
+        return m_variant_shader_programs.at(feature_set);
+    }
+
+    std::pair<
+        std::string, 
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>>
+    > get_shader_codes(const Shader_feature_set& feature_set) {
+        std::string variant_name = m_shader_name;
 
         std::vector<std::string> active_features{};
         for (size_t i = 0; i < static_cast<size_t>(Shader_feature::MAX_FEATURES); ++i) {
@@ -192,47 +278,61 @@ public:
         std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
 
         // 处理着色器源码
-        for (const auto& [type, source] : m_main_shader_program->shader_codes()) {
+        for (const auto& [type, source] : m_main_shader_codes) {
             shader_codes[type] = Shader_code::create(type, "#version 460 core\n" + defines + source->code());
         }
-
-        auto variant_shader_program = std::make_shared<Shader_program>(
-            variant_name,
-            shader_codes,
-            m_main_shader_program->uniforms()
-        );
-
-        m_variant_shader_programs.emplace(feature_set, variant_shader_program);
-        return m_variant_shader_programs.at(feature_set);
+        return std::make_pair(variant_name, shader_codes);
     }
 
-    std::vector<feature_set> get_shader_variants_permutation() {
-        std::vector<feature_set> permutations{};
+    std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> get_shader_uniforms(const Shader_feature_set& feature_set) {
+        std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> uniforms = m_main_shader_uniforms;
+        for (size_t i = 0; i < static_cast<size_t>(Shader_feature::MAX_FEATURES); ++i) {
+            if (feature_set.test(i)) {
+                auto it = m_feature_specific_shader_uniforms.find(static_cast<Shader_feature>(i));
+                if (it != m_feature_specific_shader_uniforms.end()) {
+                    for (const auto& [name, uniform] : it->second) {
+                        uniforms.insert(std::make_pair(name, uniform));
+                    }
+                }
+            }
+        }
+        return uniforms;
+    }
 
-        std::function<void(size_t u, feature_set, std::vector<feature_set>&)> dfs = [&](size_t u, feature_set current, std::vector<feature_set>& permutations) {
+    std::vector<Shader_feature_set> get_all_shader_variants_permutation() {
+        std::vector<Shader_feature_set> permutations{};
+
+        std::function<void(size_t u, Shader_feature_set, std::vector<Shader_feature_set>&)> dfs = [&](size_t u, Shader_feature_set current, std::vector<Shader_feature_set>& permutations) {
+            
+            if ((current & ~m_shader_feature_whitelist).any()) {
+                return; // 如果当前组合不在白名单中，则返回
+            }
+
             if (u == static_cast<size_t>(Shader_feature::MAX_FEATURES)) {
                 permutations.push_back(current);
                 return;
             }
-            
-            if (m_shader_feature_whitelist.test(u)) {
-                // 情况1：该位为0
-                dfs(u + 1, current, permutations);
-                // 情况2：该位为1
-                current.set(u);
-                dfs(u + 1, current, permutations);
-            } else {
-                // 不在白名单则保持为0
-                dfs(u + 1, current, permutations);
+
+            // 情况1：该位为0
+            dfs(u + 1, current, permutations);
+
+            // 情况2：该位为1
+            auto dependencies = g_shader_feature_dependency_graph.get_all_dependencies(static_cast<Shader_feature>(u));
+            for (const auto& dep : dependencies) {
+                if (!current.test(static_cast<size_t>(dep))) {
+                    return; // 如果依赖的特征未启用，则返回
+                }
             }
+            current.set(u);
+            dfs(u + 1, current, permutations);
         };
 
-        dfs(0, feature_set{}, permutations);
+        dfs(0, Shader_feature_set{}, permutations);
         return permutations;
     }
 
-    void premake_shader_variants() {
-        auto permutations = get_shader_variants_permutation();
+    void premake_all_shader_variants() {
+        auto permutations = get_all_shader_variants_permutation();
         for (const auto& perm : permutations) {
             get_shader_variant(perm);  // 预生成所有变体
         }
@@ -246,10 +346,19 @@ public:
     }
 
     static std::shared_ptr<Shader> create(
-        const std::shared_ptr<Shader_program>& main_program,
-        const feature_set& shader_feature_whitelist
+        const std::string name,
+        const std::unordered_map<Shader_type, std::shared_ptr<Shader_code>>& main_shader_codes,
+        const std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> main_shader_uniforms,
+        const std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> feature_specific_shader_uniforms,
+        const Shader_feature_set& shader_feature_whitelist 
     ) {
-        return std::make_shared<Shader>(main_program, shader_feature_whitelist);
+        return std::make_shared<Shader>(
+            name,
+            main_shader_codes,
+            main_shader_uniforms,
+            feature_specific_shader_uniforms,
+            shader_feature_whitelist
+        );
     }
 
     static std::string get_shader_code_from_url(const std::string& url) {
@@ -257,8 +366,8 @@ public:
         return load_shader_code_with_includes(url, processed_files);
     }
 
-    static feature_set get_shader_feature_set(const std::vector<Shader_feature>& feature_list) {
-        feature_set feature_set{};
+    static Shader_feature_set get_shader_feature_set(const std::vector<Shader_feature>& feature_list) {
+        Shader_feature_set feature_set{};
         for (const auto& feature : feature_list) {
             feature_set.set(static_cast<size_t>(feature));
         }
@@ -277,26 +386,22 @@ public:
         shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
             Shader_type::FRAGMENT,
             get_shader_code_from_url("assets/shader/phong.frag")
-        );
+        );    
 
-
-        auto main_program = std::make_shared<Shader_program>(
-            "phong_shader",
-            shader_codes,
-            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>{}
-        );        
-
-        return std::make_shared<Shader>(
-            main_program,
-            get_shader_feature_set(std::vector<Shader_feature>{
-                Shader_feature::SHADOWS,
-                Shader_feature::ALBEDO_MAP,
-                Shader_feature::ALPHA_MAP,
-                Shader_feature::NORMAL_MAP,
-                Shader_feature::HEIGHT_MAP,
-                Shader_feature::SPECULAR_MAP
-            })
-        );
+        return Shader::create(
+            "phong_shader", 
+            shader_codes, 
+            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {}, 
+            std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {}, 
+            Shader_feature_set {
+                get_shader_feature_set(std::vector<Shader_feature> {
+                    Shader_feature::ALBEDO_MAP,
+                    Shader_feature::SPECULAR_MAP,
+                    Shader_feature::NORMAL_MAP,
+                    Shader_feature::ALPHA_MAP,
+                    Shader_feature::HEIGHT_MAP
+                })
+            });
     }
 
     static std::shared_ptr<Shader> create_pbr_shader() {
@@ -317,28 +422,32 @@ public:
             "pbr_shader",
             shader_codes,
             std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>{}
-        );        
-
-        return std::make_shared<Shader>(
-            main_program,
-            get_shader_feature_set(std::vector<Shader_feature>{
-                Shader_feature::SHADOWS,
-                Shader_feature::ALBEDO_MAP,
-                Shader_feature::ALPHA_MAP,
-                Shader_feature::NORMAL_MAP,
-                Shader_feature::HEIGHT_MAP,
-                Shader_feature::METALLIC_MAP,
-                Shader_feature::ROUGHNESS_MAP,
-                Shader_feature::AO_MAP,
-                Shader_feature::EMISSIVE_MAP
-            })
-        );
-
+        );   
+        
+        return Shader::create(
+            "pbr_shader",
+            shader_codes,
+            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {}, 
+            std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {}, 
+            Shader_feature_set {
+                get_shader_feature_set(std::vector<Shader_feature>{
+                    Shader_feature::SHADOWS,
+                    Shader_feature::ALBEDO_MAP,
+                    Shader_feature::ALPHA_MAP,
+                    Shader_feature::NORMAL_MAP,
+                    Shader_feature::HEIGHT_MAP,
+                    Shader_feature::METALLIC_MAP,
+                    Shader_feature::ROUGHNESS_MAP,
+                    Shader_feature::AO_MAP,
+                    Shader_feature::EMISSIVE_MAP
+                })
+            });
     }
 
     static std::shared_ptr<Shader> create_skybox_cubemap_shader() {
 
         std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
+
         shader_codes[Shader_type::VERTEX] = Shader_code::create(
             Shader_type::VERTEX,
             get_shader_code_from_url("assets/shader/skybox_cubemap.vert")
@@ -349,15 +458,12 @@ public:
             get_shader_code_from_url("assets/shader/skybox_cubemap.frag")
         );
 
-        auto main_program = std::make_shared<Shader_program>(
+        return Shader::create(
             "skybox_cubemap_shader",
             shader_codes,
-            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>{}
-        );     
-
-        return std::make_shared<Shader>(
-            main_program,
-            get_shader_feature_set({})
+            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {},
+            std::unordered_map<Shader_feature, std::unordered_map<std::string,std::shared_ptr<Uniform_entry_base>>> {},
+            Shader_feature_set {}
         );
         
     }
@@ -375,15 +481,12 @@ public:
             get_shader_code_from_url("assets/shader/skybox_spherical.frag")
         );
 
-        auto main_program = std::make_shared<Shader_program>(
-            "skybox_spherical_shader",
-            shader_codes,
-            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>{}
-        );
-
-        return std::make_shared<Shader>(
-            main_program,
-            get_shader_feature_set({})
+        return Shader::create(
+            "skybox_spherical_shader", 
+            shader_codes, 
+            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {}, 
+            std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {}, 
+            Shader_feature_set {}
         );
     }
 
@@ -397,14 +500,12 @@ public:
             Shader_type::FRAGMENT,
             get_shader_code_from_url("assets/shader/gamma.frag")
         );
-        auto main_program = std::make_shared<Shader_program>(
+        return Shader::create(
             "gamma_shader",
-            shader_codes,
-            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>{}
-        );
-        return std::make_shared<Shader>(
-            main_program,
-            get_shader_feature_set({})
+            shader_codes, 
+            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {}, 
+            std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {},
+            Shader_feature_set {}
         );
     }
 

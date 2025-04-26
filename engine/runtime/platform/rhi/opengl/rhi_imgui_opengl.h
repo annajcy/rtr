@@ -75,6 +75,10 @@ public:
         ImGui::InputText(title.c_str(), text->data(), text->size());
     }
 
+    bool slider_float(const std::string& title, float* value, float min, float max) override {
+        return ImGui::SliderFloat(title.c_str(), value, min, max);
+    }
+
     float frame_rate() override {
         return ImGui::GetIO().Framerate;
     }
