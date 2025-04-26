@@ -1,8 +1,8 @@
-#include "engine/runtime/function/render/core/frame_buffer.h"
-#include "engine/runtime/function/render/core/shader.h"
-#include "engine/runtime/function/render/core/texture.h"
+#include "engine/runtime/function/render/object/frame_buffer.h"
+#include "engine/runtime/function/render/object/shader.h"
+#include "engine/runtime/function/render/object/texture.h"
 #include "engine/runtime/global/base.h" 
-#include "engine/runtime/function/render/core/geometry.h"
+#include "engine/runtime/function/render/object/geometry.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 #include <memory>
 

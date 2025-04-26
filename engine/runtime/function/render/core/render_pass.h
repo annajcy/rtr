@@ -2,11 +2,11 @@
 
 
 #include "engine/runtime/context/swap_struct.h"
-#include "engine/runtime/function/render/core/frame_buffer.h"
-#include "engine/runtime/function/render/core/material.h"
-#include "engine/runtime/function/render/core/skybox.h"
-#include "engine/runtime/function/render/core/texture.h"
-#include "engine/runtime/function/render/render_resource.h"
+#include "engine/runtime/function/render/object/frame_buffer.h"
+#include "engine/runtime/function/render/object/material.h"
+#include "engine/runtime/function/render/object/skybox.h"
+#include "engine/runtime/function/render/object/texture.h"
+#include "engine/runtime/function/render/core/render_resource.h"
 #include "engine/runtime/resource/resource_base.h"
 #include <memory>
 #include <string>

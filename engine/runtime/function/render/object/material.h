@@ -1,8 +1,8 @@
 #pragma once
 
-#include "engine/runtime/function/render/core/shader.h"
-#include "engine/runtime/function/render/core/texture.h"
-#include "engine/runtime/function/render/render_resource.h"
+#include "engine/runtime/function/render/object/shader.h"
+#include "engine/runtime/function/render/object/texture.h"
+#include "engine/runtime/function/render/core/render_resource.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"

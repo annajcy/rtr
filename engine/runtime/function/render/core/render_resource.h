@@ -22,7 +22,6 @@ enum class Render_resource_type {
     GEOMETRY,
     TEXTURE,
     MEMORY_BUFFER,
-    
 };
 
 class Render_resource {

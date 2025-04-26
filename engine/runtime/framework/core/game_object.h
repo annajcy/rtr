@@ -10,6 +10,7 @@ class Game_object : public std::enable_shared_from_this<Game_object>{
 protected:
     std::string m_name{};
     std::shared_ptr<Component_list> m_component_list{};
+    
 public:
 
     Game_object(const std::string& name) : m_name(name), m_component_list(std::make_shared<Component_list>()) {}

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/runtime/context/swap_struct.h"
-#include "game_object.h"
+
+#include "engine/runtime/framework/core/game_object.h"
 #include <memory>
 #include <vector>
 

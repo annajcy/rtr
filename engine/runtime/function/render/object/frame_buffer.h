@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/function/render/core/texture.h"
+#include "engine/runtime/function/render/object/texture.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_frame_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
