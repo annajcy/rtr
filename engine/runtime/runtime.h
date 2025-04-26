@@ -81,6 +81,8 @@ public:
         Log_sys::get_instance()->log(Logging_system::Level::info, "Engine Runtime Destroyed");
     }
 
+    bool is_active() const { return m_window_system->window()->is_active(); }
+
     void run() {
 
         auto timer = std::make_shared<Timer>();

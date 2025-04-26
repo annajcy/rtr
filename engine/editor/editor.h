@@ -20,22 +20,24 @@ class Editor {
 
 private:
     std::shared_ptr<Engine_runtime> m_engine_runtime{};
-    std::shared_ptr<RHI_window> m_window{};
     std::shared_ptr<RHI_imgui> m_imgui{};
 
 public:
 
     Editor(const std::shared_ptr<Engine_runtime>& engine_runtime) : 
     m_engine_runtime(engine_runtime),
-    m_window(engine_runtime->window_system()->window()),
-    m_imgui(engine_runtime->rhi_device()->create_imgui(m_engine_runtime->window_system()->window())) {}
+    m_imgui(engine_runtime->rhi_device()->create_imgui(engine_runtime->window_system()->window())) {}
 
     void tick(float delta_time) {
+        runtime_tick(delta_time);
+        gui_tick(delta_time);
+    }
 
-        if (m_engine_runtime) {
-            m_engine_runtime->tick(delta_time);
-        }
+    void runtime_tick(float delta_time) {
+        m_engine_runtime->tick(delta_time);
+    }
 
+    void gui_tick(float delta_time) {
         if (m_imgui) {
             m_imgui->begin_frame();
             render_main_menu();
@@ -43,14 +45,13 @@ public:
             //render_inspector();
             m_imgui->end_frame();
         }
-        
     }
 
     void run() {
         auto timer = std::make_shared<Timer>();
         timer->start();
 
-        while (m_window->is_active()) {
+        while (m_engine_runtime->is_active()) {
             tick(m_engine_runtime->get_delta_time(timer));
         }
     }
