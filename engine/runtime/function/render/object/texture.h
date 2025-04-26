@@ -94,6 +94,31 @@ public:
     }
 };
 
+class Texture_depth_stencil_attachment : public Texture {
+protected:
+    int m_width{};
+    int m_height{};
+
+public:
+    Texture_depth_stencil_attachment(
+        int width,
+        int height
+    ) : Texture(Texture_type::TEXTURE_2D), m_width(width), m_height(height) {}
+    virtual ~Texture_depth_stencil_attachment() {}
+    int width() const { return m_width; }
+    int height() const { return m_height; }
+    void link(const std::shared_ptr<RHI_device>& device) override {
+        m_rhi_resource = device->create_texture_depth_stencil_attachment(
+            m_width, 
+            m_height
+        );
+    }
+
+    static std::shared_ptr<Texture_depth_stencil_attachment> create(int width, int height) {
+        return std::make_shared<Texture_depth_stencil_attachment>(width, height);
+    }
+};
+
 class Texture_depth_attachment : public Texture {
 protected:
     int m_width{};

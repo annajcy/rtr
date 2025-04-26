@@ -111,8 +111,7 @@ public:
                 draw_buffers.data()
             );
         } else {
-            // 无颜色附件时，显式设置不绘制颜色
-            glNamedFramebufferDrawBuffers(m_frame_buffer_id, 0, nullptr);
+            glNamedFramebufferDrawBuffer(m_frame_buffer_id, GL_NONE);
         }
     }
 

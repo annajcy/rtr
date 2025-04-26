@@ -3,6 +3,7 @@
 #include "engine/runtime/global/base.h" 
 
 #include "../rhi_texture.h"
+#include "glm/ext/vector_float4.hpp"
 #include "rhi_cast_opengl.h"
 #include "rhi_error_opengl.h"
 
@@ -79,6 +80,14 @@ public:
             m_texture_id, 
             gl_texture_warp_target(target), 
             gl_texture_wrap(wrap)
+        );
+    }
+
+    void on_set_border_color() override {
+        glTextureParameterfv(
+            m_texture_id,
+            GL_TEXTURE_BORDER_COLOR,
+            glm::value_ptr(m_border_color)
         );
     }
 

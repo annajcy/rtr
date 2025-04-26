@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/runtime/global/base.h" 
+#include "engine/runtime/global/enum.h"
 
 namespace rtr {
 
@@ -193,6 +194,10 @@ inline constexpr unsigned int gl_texture_internal_format(Texture_internal_format
             return GL_RGBA32F;
         case Texture_internal_format::DEPTH_STENCIL:
             return GL_DEPTH24_STENCIL8; // 更明确的深度格式
+        case rtr::Texture_internal_format::DEPTH:
+            return GL_DEPTH_COMPONENT24;
+        case Texture_internal_format::DEPTH_32F:
+            return GL_DEPTH_COMPONENT32F;
         case Texture_internal_format::SRGB_ALPHA:
             return GL_SRGB8_ALPHA8;  // 添加位数
         case Texture_internal_format::SRGB:
@@ -229,6 +234,8 @@ inline constexpr unsigned int gl_texture_buffer_type(Texture_buffer_type type) {
             return GL_UNSIGNED_INT;
         case Texture_buffer_type::UNSIGNED_INT_24_8:
             return GL_UNSIGNED_INT_24_8;
+        case Texture_buffer_type::FLOAT:
+            return GL_FLOAT;
         default:
             return GL_UNSIGNED_BYTE;
     }

@@ -156,6 +156,7 @@ enum class Texture_buffer_type {
     UNSIGNED_BYTE,
     UNSIGNED_INT,
     UNSIGNED_INT_24_8,
+    FLOAT
 };
 
 enum class Texture_type {
@@ -170,6 +171,8 @@ enum class Texture_internal_format {
     RGB_ALPHA_32F,
     DEPTH_STENCIL,
     DEPTH_STENCIL_24_8,
+    DEPTH,
+    DEPTH_32F,
     SRGB_ALPHA,
     SRGB
 };

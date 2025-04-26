@@ -19,6 +19,8 @@ protected:
     Texture_type m_type{};
     Texture_internal_format m_internal_format{};
     unsigned int m_mipmap_levels{};
+    glm::vec4 m_border_color{};
+    
     
 public:
     RHI_texture (
@@ -39,8 +41,16 @@ public:
     
     virtual void set_filter(Texture_filter_target target, Texture_filter filter) = 0;
     virtual void set_wrap(Texture_wrap_target target, Texture_wrap wrap) = 0;
+    
     virtual void generate_mipmap() = 0;
     virtual void bind_to_unit(unsigned int location) = 0;
+
+    virtual void on_set_border_color() = 0;
+
+    void set_border_color(const glm::vec4& color) {
+        m_border_color = color;
+        on_set_border_color();
+    }
    
     Texture_type type() const { return m_type; }
     Texture_internal_format internal_format() const { return m_internal_format; }

@@ -70,6 +70,9 @@ set(COMMON_LIBS
 add_executable(rhi_frame_buffer ${SOURCES} example/rhi/frame_buffer.cpp)
 target_link_libraries(rhi_frame_buffer ${COMMON_LIBS})
 
+add_executable(rhi_frame_buffer_depth ${SOURCES} example/rhi/frame_buffer_depth.cpp)
+target_link_libraries(rhi_frame_buffer_depth ${COMMON_LIBS})
+
 add_executable(rhi_compute ${SOURCES} example/rhi/compute.cpp)
 target_link_libraries(rhi_compute ${COMMON_LIBS})
 

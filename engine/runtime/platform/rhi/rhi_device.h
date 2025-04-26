@@ -104,7 +104,7 @@ public:
         );
     }
 
-    std::shared_ptr<RHI_texture> create_texture_depth_attachment(
+    std::shared_ptr<RHI_texture> create_texture_depth_stencil_attachment(
         int width,
         int height
     ) {
@@ -119,6 +119,27 @@ public:
             },
             std::unordered_map<Texture_filter_target, Texture_filter>{
                 // 修改过滤模式为NEAREST
+                {Texture_filter_target::MIN, Texture_filter::NEAREST},
+                {Texture_filter_target::MAG, Texture_filter::NEAREST}
+            },
+            Image_data{}
+        );
+    }
+
+    std::shared_ptr<RHI_texture> create_texture_depth_attachment(
+        int width,
+        int height
+    ) {
+        return create_texture_2D(
+            width,
+            height,
+            1,
+            Texture_internal_format::DEPTH_32F,
+            std::unordered_map<Texture_wrap_target, Texture_wrap>{
+                {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_BORDER},
+                {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_BORDER}
+            },
+            std::unordered_map<Texture_filter_target, Texture_filter>{
                 {Texture_filter_target::MIN, Texture_filter::NEAREST},
                 {Texture_filter_target::MAG, Texture_filter::NEAREST}
             },
