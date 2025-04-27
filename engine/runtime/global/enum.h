@@ -341,6 +341,7 @@ enum class Material_type {
     SKYBOX_CUBEMAP,
     SKYBOX_SPHERICAL,
     GAMMA,
+    SHADOW_CASTER,
     TEST
 };
 

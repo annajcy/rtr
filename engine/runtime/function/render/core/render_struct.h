@@ -8,6 +8,11 @@
 
 namespace rtr {
 
+struct Light_matrix_ubo {
+    glm::mat4 light_matrix{};
+    glm::vec3 light_camera_direction{};
+};
+
 struct Camera_ubo {
     glm::mat4 view_matrix{};      
     glm::mat4 projection_matrix{}; 
@@ -29,8 +34,7 @@ struct Directional_light_ubo {
 
 struct Directional_light_ubo_array {
     int count{};
-    int main_light_index{};
-    float padding1[2];
+    float padding1[3];
     Directional_light_ubo directional_light_ubo[MAX_SPOT_LIGHT];
 };
 

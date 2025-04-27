@@ -17,7 +17,6 @@ struct RHI_global_render_object {
 };
 
 enum class Render_object_type {
-    SHADER,
     MATERIAL,
     GEOMETRY,
     TEXTURE,

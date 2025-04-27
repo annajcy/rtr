@@ -8,6 +8,7 @@
 #include "engine/runtime/function/render/object/texture.h"
 #include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/resource/resource_base.h"
+#include "glm/fwd.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -27,23 +28,109 @@ public:
     virtual void excute() = 0;
 };
 
+class Shadow_pass : public Render_pass {
+public:
+
+    struct Execution_context {
+        std::vector<Swap_shadow_caster_object> shadow_caster_swap_objects{};
+    };
+
+    struct Resource_flow {
+        std::shared_ptr<Texture> depth_attachment_in_out{};
+    };
+
+    static std::shared_ptr<Shadow_pass> create(
+        RHI_global_render_object& rhi_global_render_resource
+    ) {
+        return std::make_shared<Shadow_pass>(rhi_global_render_resource);
+    }
+
+protected:
+    std::shared_ptr<Shadow_caster_material> m_shadow_caster_material{}; 
+    std::shared_ptr<Frame_buffer> m_frame_buffer{};
+
+    Execution_context m_context{};
+    Resource_flow m_resource_flow{};
+
+public:
+
+    Shadow_pass(
+        RHI_global_render_object& rhi_global_render_resource
+    ) : Render_pass(rhi_global_render_resource), 
+        m_shadow_caster_material(Shadow_caster_material::create()) {}
+
+    ~Shadow_pass() {}
+
+    void set_resource_flow(const Resource_flow& flow) {
+        m_resource_flow = flow;
+
+        auto depth_attachment = m_resource_flow.depth_attachment_in_out;
+        if (!depth_attachment->is_linked()) depth_attachment->link(m_rhi_global_render_resource.device);
+        
+        m_frame_buffer = Frame_buffer::create(
+            depth_attachment->rhi_resource()->width(), depth_attachment->rhi_resource()->width(),
+            std::vector<std::shared_ptr<Texture>> {}, 
+            depth_attachment
+        );
+
+        m_frame_buffer->link(m_rhi_global_render_resource.device);
+    }
+
+    void set_context(const Execution_context& context) {
+        m_context = context;
+    }
+
+    void excute() {
+
+        m_rhi_global_render_resource.renderer->clear(m_frame_buffer->rhi_resource());
+
+        m_rhi_global_render_resource.pipeline_state->pipeline_state = m_shadow_caster_material->get_pipeline_state();
+        m_rhi_global_render_resource.pipeline_state->apply();
+
+        auto shader = m_shadow_caster_material->get_shader_program();
+        if (!shader->is_linked()) shader->link(m_rhi_global_render_resource.device);
+
+        for (auto& swap_object : m_context.shadow_caster_swap_objects) {
+            
+            auto geometry = swap_object.geometry;
+            if (!geometry->is_linked()) geometry->link(m_rhi_global_render_resource.device);
+
+            shader->rhi_resource()->modify_uniform("model", swap_object.model_matrix);
+            shader->rhi_resource()->update_uniforms();
+
+            m_rhi_global_render_resource.renderer->draw(
+                shader->rhi_resource(),
+                geometry->rhi_resource(),
+                m_frame_buffer->rhi_resource()
+            );
+        }
+    }
+};
+
 class Main_pass : public Render_pass {
 public:
 
-struct Execution_context {
-    std::shared_ptr<Skybox> skybox{};
-    std::vector<Swap_object> render_swap_objects{};
-};
+    struct Execution_context {
+        std::shared_ptr<Skybox> skybox{};
+        std::vector<Swap_object> render_swap_objects{};
+    };
 
-struct Resource_flow {
-    std::shared_ptr<Texture> color_attachment_in_out{};
-    std::shared_ptr<Texture> depth_attachment_in{};
-};
+    struct Resource_flow {
+        std::shared_ptr<Texture> color_attachment_in_out{};
+        std::shared_ptr<Texture> depth_attachment_in{};
+        std::shared_ptr<Texture> shadow_map_in{};
+    };
+
+    static std::shared_ptr<Main_pass> create(
+        RHI_global_render_object& rhi_global_render_resource
+    ) {
+        return std::make_shared<Main_pass>(rhi_global_render_resource);
+    }
 
 protected:
     std::shared_ptr<Frame_buffer> m_frame_buffer{};
     Execution_context m_context{};
-    Resource_flow m_resource_input{};
+    Resource_flow m_resource_flow{};
     
 public:
     Main_pass(
@@ -52,13 +139,13 @@ public:
 
     ~Main_pass() {}
 
-    void set_resource_flow(const Resource_flow& input) {
-        m_resource_input = input;
+    void set_resource_flow(const Resource_flow& flow) {
+        m_resource_flow = flow;
         int width = m_rhi_global_render_resource.window->width();
         int height = m_rhi_global_render_resource.window->height();
 
-        auto color_attachment = m_resource_input.color_attachment_in_out;
-        auto depth_attachment = m_resource_input.depth_attachment_in;
+        auto color_attachment = m_resource_flow.color_attachment_in_out;
+        auto depth_attachment = m_resource_flow.depth_attachment_in;
 
         m_frame_buffer = Frame_buffer::create(
             width, height, 
@@ -73,13 +160,7 @@ public:
         m_context = context;
     }
 
-    static std::shared_ptr<Main_pass> create(
-        RHI_global_render_object& rhi_global_render_resource
-    ) {
-        return std::make_shared<Main_pass>(rhi_global_render_resource);
-    }
-
-    void excute() {
+    void excute() override {
 
         m_rhi_global_render_resource.renderer->clear(m_frame_buffer->rhi_resource());
 
@@ -143,6 +224,12 @@ public:
         std::shared_ptr<Texture> texture_in{};
     };
 
+    static std::shared_ptr<Gamma_pass> create(
+        RHI_global_render_object& rhi_global_render_resource
+    ) {
+        return std::make_shared<Gamma_pass>(rhi_global_render_resource);
+    }
+
 protected:
     std::shared_ptr<Gamma_material> m_gamma_material{};
     std::shared_ptr<Geometry> m_screen_geometry{};
@@ -163,18 +250,12 @@ public:
 
     ~Gamma_pass() {}
 
-    static std::shared_ptr<Gamma_pass> create(
-        RHI_global_render_object& rhi_global_render_resource
-    ) {
-        return std::make_shared<Gamma_pass>(rhi_global_render_resource);
-    }
-
     void set_resource_flow(const Resource_flow& input) {
         m_resource_input = input;
         m_gamma_material->screen_map = m_resource_input.texture_in;
     }
 
-    void excute() {
+    void excute() override {
         m_rhi_global_render_resource.renderer->clear(m_rhi_global_render_resource.screen_buffer);
 
         auto shader = m_gamma_material->get_shader_program();

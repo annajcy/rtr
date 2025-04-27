@@ -1,6 +1,7 @@
 #pragma once
 #include "../node/node_component.h"
 
+#include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/global/enum.h"
 
@@ -10,11 +11,13 @@
 namespace rtr {
 
 class Light_component : public Component_base {
+
 protected:
     glm::vec3 m_color{1.0f};
     float m_intensity{1.0f};
     Light_type m_light_type{};
     std::shared_ptr<Node_component> m_node{};
+    bool m_is_main_light{false};
 
 public:
     Light_component(
@@ -29,6 +32,8 @@ public:
     }
 
     Light_type light_type() const { return m_light_type; }
+    bool& is_main_light() { return m_is_main_light; }
+    const bool is_main_light() const { return m_is_main_light; }
     glm::vec3& color() { return m_color; }
     float& intensity() { return m_intensity; }
 
@@ -44,11 +49,18 @@ public:
         return m_node;
     }
 
+    virtual glm::mat4 get_light_matrix() { return glm::mat4{0.0}; }
+
+    virtual void tick(const Logic_tick_context& tick_context) override {
+        if (m_is_main_light) {
+            tick_context.logic_swap_data.light_matrix = get_light_matrix();
+            tick_context.logic_swap_data.light_camera_direction = node()->world_front();
+        }
+    }
+
 };
 
 class Directional_light_component : public Light_component {
-protected:
-    bool m_is_main_light{false};
 
 public:
     Directional_light_component() : Light_component(Light_type::DIRECTIONAL) { }
@@ -60,19 +72,22 @@ public:
         return std::make_shared<Directional_light_component>();
     }
 
-    bool& is_main_light() { return m_is_main_light; }
-    const bool is_main_light() const { return m_is_main_light; }
-
     void tick(const Logic_tick_context& tick_context) override {
+        Light_component::tick(tick_context);
+
         auto& data = tick_context.logic_swap_data;
         Swap_directional_light directional_light{};
         directional_light.color = color();
         directional_light.direction = direction();
         directional_light.intensity = intensity();
-        if (m_is_main_light) {
-            data.main_directional_light_index = data.directional_lights.size();
-        }
         data.directional_lights.push_back(directional_light);
+    }
+
+    glm::mat4 get_light_matrix() override {
+        auto ortho_cam = add_component<Orthographic_camera_component>();
+        auto light_matrix = ortho_cam->projection_matrix() * ortho_cam->view_matrix();
+        remove_component(ortho_cam);
+        return light_matrix;
     }
 
 };
@@ -103,6 +118,8 @@ public:
     float outer_angle_cos() const { return glm::cos(glm::radians(m_outer_angle)); }
 
     void tick(const Logic_tick_context& tick_context) override {
+        Light_component::tick(tick_context);
+
         auto& data = tick_context.logic_swap_data;
         Swap_spot_light spot_light{};
         spot_light.color = color();
@@ -141,6 +158,8 @@ public:
     float kc() const { return m_kc; }
 
     void tick(const Logic_tick_context& tick_context) override {
+        Light_component::tick(tick_context);
+
         auto& data = tick_context.logic_swap_data;
         Swap_point_light point_light{};
         point_light.attenuation = glm::vec3(kc(), k1(), k2());

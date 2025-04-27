@@ -10,6 +10,12 @@
 #include <memory>
 #include <unordered_map>
 
+struct Shadow_setting {
+    bool is_cast_shadow{false};
+    bool is_receive_shadow{false};
+    float bias{0.005};
+};
+
 namespace rtr {
 class Mesh_renderer_component : public Component_base {
 
@@ -19,6 +25,8 @@ protected:
     std::shared_ptr<Material> m_material{};
     bool is_cast_shadow{false};
     bool is_receive_shadow{false};
+
+    Shadow_setting m_shadow_setting{};
 
 public:
     Mesh_renderer_component() : Component_base(Component_type::MESH_RENDERER) {}
@@ -71,8 +79,11 @@ public:
             .material = m_material,
             .geometry = m_geometry,
             .model_matrix = node()->model_matrix(),
-            .is_cast_shadow = is_cast_shadow,
-            .is_receive_shadow = is_receive_shadow
+            .shadow_setting = Swap_shadow_setting{
+                .is_cast_shadow = m_shadow_setting.is_cast_shadow,
+                .is_receive_shadow = m_shadow_setting.is_receive_shadow,
+                .bias = m_shadow_setting.bias
+            }
         });
     }
     

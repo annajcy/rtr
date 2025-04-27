@@ -42,11 +42,17 @@ layout(std140, binding = 0) uniform Camera_ubo {
     vec3 camera_position;
 };
 
+layout(std140, binding = 0) uniform Light_matrix_ubo {
+    mat4 light_matrix;
+};
+
+uniform mat4 light_matrix;
 uniform mat4 model;
 
 out vec3 v_frag_position;
 out vec2 v_uv;
 out vec3 v_normal;
+out vec4 v_light_camera_clip_space_position;
 
 #ifdef ENABLE_NORMAL_MAP
 out vec3 v_tangent;
@@ -59,6 +65,7 @@ void main() {
     v_frag_position = vec3(model * vec4(a_position, 1.0));
     v_uv = a_uv;
     v_normal = mat3(transpose(inverse(model))) * a_normal;
+    v_light_camera_clip_space_position = light_matrix * model * vec4(a_position, 1.0)
 
 #ifdef ENABLE_NORMAL_MAP
     
@@ -101,7 +108,6 @@ struct Directional_light {
 
 layout(std140, binding = 1) uniform Directional_light_array_ubo {
     int dl_count;
-    int main_light_index;
     Directional_light dl_lights[MAX_DIRECTIONAL_LIGHT];
 };
 
@@ -235,6 +241,39 @@ vec2 parallax_occlusion_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tb
 }
 #endif
 
+layout(std140, binding = 0) uniform Light_matrix_ubo {
+    mat4 light_matrix;
+    vec3 light_camera_direction;
+};
+
+out vec4 v_light_camera_clip_space_position;
+layout(binding = 5) uniform sampler2D shadow_map;
+uniform float shadow_bias;
+
+float get_bias(float base_bias, vec3 normal, vec3 light_dir) {
+    normal = normalize(normal);
+    light_dir = normalize(light_dir);
+    return max(base_bias * (1.0 - dot(normal, light_dir)), 0.0005);
+}
+
+float is_shadowed(
+    sampler2D shadow_map, 
+    vec4 light_camera_clip_space_position, 
+    float base_bias, 
+    vec3 normal, 
+    vec3 light_dir
+) {
+    vec3 light_camera_ndc = light_camera_clip_space_position.xyz / light_camera_clip_space_position.w;
+    vec3 projected_position = light_camera_ndc * 0.5 + 0.5;
+    vec2 uv = projected_position.xy;
+
+    float closest_depth = texture(shadow_map, uv).r;
+    float self_depth = projected_position.z;
+
+    return (self_depth - get_bias(base_bias, normal, light_dir)) > closest_depth ? 1.0 : 0.0;
+}
+
+
 void main() {
 
     vec3 view_direction = normalize(camera_position - v_frag_position);
@@ -364,12 +403,20 @@ void main() {
         ) * intensity;
     }
 
+    float shadow = is_shadowed(
+        shadow_map, 
+        v_light_camera_clip_space_position, 
+        shadow_bias, 
+        normalized_normal, 
+        light_camera_direction
+    );
 
-    frag_color = vec4(ambient + diffuse + specular, alpha);
+    frag_color = vec4(ambient + (diffuse + specular) * (1.0 - shadow), alpha);
 }
 )";
 
 int main() {
+
     Engine_runtime_descriptor engine_runtime_descriptor{};
     auto runtime = Engine_runtime::create(engine_runtime_descriptor);
     auto editor = editor::Editor::create(runtime);
@@ -416,11 +463,14 @@ int main() {
     // );
 
     //parallax
+
+    auto tex = Texture_color_attachment::create(100, 100);
     
     auto height_map = Image_loader::load_from_path(
         Image_format::RGB_ALPHA,
         "assets/image/bricks/disp.jpg"
     );
+
     auto normal_map = Image_loader::load_from_path(
         Image_format::RGB_ALPHA,
         "assets/image/bricks/bricks_normal.jpg"
@@ -444,6 +494,7 @@ int main() {
         }, 
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
             {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
+            {"light_matrix", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
             {"transparency", Uniform_entry<float>::create(1.0f)},
             {"ka", Uniform_entry<glm::vec3>::create(glm::vec3(0.1, 0.1, 0.1))},
             {"kd", Uniform_entry<glm::vec3>::create(glm::vec3(0.5, 0.5, 0.5))},
@@ -538,6 +589,7 @@ int main() {
     auto dl_game_object = scene->add_game_object(Game_object::create("dl"));
     auto dl_node = dl_game_object->add_component<Node_component>();
     auto dl = dl_game_object->add_component<Directional_light_component>();
+    dl->is_main_light() = true;
     dl_node->look_at_direction(glm::vec3(0, -1, -1));
 
     auto pl0_game_object = scene->add_game_object(Game_object::create("pl0"));

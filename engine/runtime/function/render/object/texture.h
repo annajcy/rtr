@@ -7,6 +7,7 @@
 #include "engine/runtime/resource/loader/image_loader.h"
 #include <memory>
 #include <unordered_map>
+
 namespace rtr {
 
 class Texture : public GUID, public RHI_linker<RHI_texture>, public Render_object {

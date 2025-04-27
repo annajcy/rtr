@@ -6,6 +6,7 @@
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_shader_code.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
+#include "glm/fwd.hpp"
 #include <bitset>
 #include <cstddef>
 #include <functional>
@@ -509,6 +510,27 @@ public:
         );
     }
 
+    static std::shared_ptr<Shader> create_shadow_caster_shader() {
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
+        shader_codes[Shader_type::VERTEX] = Shader_code::create(
+            Shader_type::VERTEX,
+            get_shader_code_from_url("assets/shader/shadow_caster.vert")
+        );
+        shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
+            Shader_type::FRAGMENT,
+            get_shader_code_from_url("assets/shader/shadow_caster.frag")
+        );
+        return Shader::create(
+            "shadow_caster_shader",
+            shader_codes, 
+            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+                {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))}
+            }, 
+            std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {},
+            Shader_feature_set {}
+        );
+    }
+
     static std::string load_shader_code_with_includes(
         const std::string& file_path,
         std::unordered_set<std::string>& processed
@@ -548,6 +570,8 @@ public:
         }
         return buffer.str();
     }
+
+    
 };
 
 }
