@@ -3,6 +3,7 @@
 
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/component_base.h"
+#include "engine/runtime/framework/object/light.h"
 #include "engine/runtime/global/enum.h"
 
 #include "glm/fwd.hpp"
@@ -13,160 +14,106 @@ namespace rtr {
 class Light_component : public Component_base {
 
 protected:
-    glm::vec3 m_color{1.0f};
-    float m_intensity{1.0f};
-    Light_type m_light_type{};
-    std::shared_ptr<Node_component> m_node{};
-    bool m_is_main_light{false};
+    std::shared_ptr<Light> m_light{};
 
 public:
-    Light_component(
-        Light_type light_type
-    ) : Component_base(Component_type::LIGHT), 
-        m_light_type(light_type) {}
+    Light_component() : Component_base(Component_type::LIGHT) {}
 
     virtual ~Light_component() = default;
-
-    void on_add_to_game_object() override {
-        m_node = component_list()->get_component<Node_component>();
-    }
-
-    Light_type light_type() const { return m_light_type; }
-    bool& is_main_light() { return m_is_main_light; }
-    const bool is_main_light() const { return m_is_main_light; }
-    glm::vec3& color() { return m_color; }
-    float& intensity() { return m_intensity; }
-
-    glm::vec3 color() const { return m_color; }
-    float intensity() const { return m_intensity; }
-
-    void set_node(const std::shared_ptr<Node_component>& node) { 
-        m_node = node; 
-        set_priority(node->priority() + 1);
-    }
-
-    std::shared_ptr<Node_component> node() const {
-        return m_node;
-    }
-
-    virtual glm::mat4 get_light_matrix() { return glm::mat4{0.0}; }
-
-    virtual void tick(const Logic_tick_context& tick_context) override {
-        if (m_is_main_light) {
-            tick_context.logic_swap_data.light_matrix = get_light_matrix();
-            tick_context.logic_swap_data.light_camera_direction = node()->world_front();
-        }
-    }
+    const std::shared_ptr<Light>& light() const { return m_light; }
+    std::shared_ptr<Light>& light() { return m_light; }
 
 };
 
 class Directional_light_component : public Light_component {
 
 public:
-    Directional_light_component() : Light_component(Light_type::DIRECTIONAL) { }
+    Directional_light_component() {}
     ~Directional_light_component() = default;
-
-    glm::vec3 direction() const { return node()->world_front(); }
 
     static std::shared_ptr<Directional_light_component> create() {
         return std::make_shared<Directional_light_component>();
     }
 
+    std::shared_ptr<Directional_light> directional_light() { 
+        return std::dynamic_pointer_cast<Directional_light>(m_light); 
+    }
+
     void tick(const Logic_tick_context& tick_context) override {
-        Light_component::tick(tick_context);
-
         auto& data = tick_context.logic_swap_data;
-        Swap_directional_light directional_light{};
-        directional_light.color = color();
-        directional_light.direction = direction();
-        directional_light.intensity = intensity();
-        data.directional_lights.push_back(directional_light);
+        Swap_directional_light dl{};
+        dl.color = directional_light()->color();
+        dl.direction = directional_light()->direction();
+        dl.intensity = directional_light()->intensity();
+        data.directional_lights.push_back(dl);
     }
 
-    glm::mat4 get_light_matrix() override {
-        auto ortho_cam = add_component<Orthographic_camera_component>();
-        auto light_matrix = ortho_cam->projection_matrix() * ortho_cam->view_matrix();
-        remove_component(ortho_cam);
-        return light_matrix;
+    void on_add_to_game_object() override {
+        auto node = get_component<Node_component>()->node();
+        m_light = Directional_light::create(node);
     }
-
 };
 
 class Spot_light_component : public Light_component {
-protected:
-    float m_inner_angle{10.0f};
-    float m_outer_angle{20.0f};
 
 public:
-    Spot_light_component() : Light_component(Light_type::SPOT) {}
+    Spot_light_component() : Light_component() {}
     ~Spot_light_component() = default;
     
-    glm::vec3 direction() const { return node()->world_front(); }
-    glm::vec3 position() const { return node()->world_position(); }
-
     static std::shared_ptr<Spot_light_component> create() {
         return std::make_shared<Spot_light_component>();
     }
 
-    float& inner_angle() { return m_inner_angle; }
-    float& outer_angle() { return m_outer_angle; }
-
-    float inner_angle() const { return m_inner_angle; }
-    float outer_angle() const { return m_outer_angle; }
-
-    float inner_angle_cos() const { return glm::cos(glm::radians(m_inner_angle)); }
-    float outer_angle_cos() const { return glm::cos(glm::radians(m_outer_angle)); }
+    std::shared_ptr<Spot_light> spot_light() {
+        return std::dynamic_pointer_cast<Spot_light>(m_light);
+    }
 
     void tick(const Logic_tick_context& tick_context) override {
-        Light_component::tick(tick_context);
-
         auto& data = tick_context.logic_swap_data;
-        Swap_spot_light spot_light{};
-        spot_light.color = color();
-        spot_light.direction = direction();
-        spot_light.intensity = intensity();
-        spot_light.position = position();
-        spot_light.inner_angle_cos = inner_angle_cos();
-        spot_light.outer_angle_cos = outer_angle_cos();
-        data.spot_lights.push_back(spot_light);
+        Swap_spot_light spl{};
+        spl.color = spot_light()->color();
+        spl.direction = spot_light()->direction();
+        spl.intensity = spot_light()->intensity();
+        spl.position = spot_light()->position();
+        spl.inner_angle_cos = spot_light()->inner_angle_cos();
+        spl.outer_angle_cos = spot_light()->outer_angle_cos();
+        data.spot_lights.push_back(spl);
+    }
+
+    void on_add_to_game_object() override {
+        auto node = get_component<Node_component>()->node();
+        m_light = Spot_light::create(node);
     }
 
 };
 
 class Point_light_component : public Light_component {
-protected:
-    float m_k1{1.0f};
-    float m_k2{1.0f};
-    float m_kc{1.0f};
 
 public:
-    Point_light_component() : Light_component(Light_type::POINT) {}
+    Point_light_component() {}
     ~Point_light_component() = default;
    
-    glm::vec3 position() const { return node()->world_position(); }
-
     static std::shared_ptr<Point_light_component> create() {
         return std::make_shared<Point_light_component>();
     }
 
-    float& k1() { return m_k1; }
-    float& k2() { return m_k2; }
-    float& kc() { return m_kc; }
-
-    float k1() const { return m_k1; }
-    float k2() const { return m_k2; }
-    float kc() const { return m_kc; }
+    std::shared_ptr<Point_light> point_light() {
+        return std::dynamic_pointer_cast<Point_light>(m_light);
+    }
 
     void tick(const Logic_tick_context& tick_context) override {
-        Light_component::tick(tick_context);
-
         auto& data = tick_context.logic_swap_data;
-        Swap_point_light point_light{};
-        point_light.attenuation = glm::vec3(kc(), k1(), k2());
-        point_light.color = color();
-        point_light.intensity = intensity();
-        point_light.position = position();
-        data.point_lights.push_back(point_light);
+        Swap_point_light pl{};
+        pl.attenuation = glm::vec3(point_light()->kc(), point_light()->k1(), point_light()->k2());
+        pl.color = point_light()->color();
+        pl.intensity = point_light()->intensity();
+        pl.position = point_light()->position();
+        data.point_lights.push_back(pl);
+    }
+
+    void on_add_to_game_object() override {
+        auto node = get_component<Node_component>()->node();
+        m_light = Point_light::create(node);
     }
 
 };

@@ -6,7 +6,7 @@
 
 namespace rtr {
 
-struct Input_system_state {
+struct Input_state {
 
     std::unordered_map<Key_mod, Key_action> key_mods{};
     std::unordered_map<Key_code, Key_action> keys{};
@@ -21,8 +21,8 @@ struct Input_system_state {
     double mouse_scroll_dx{};
     double mouse_scroll_dy{};
 
-    Input_system_state() = default;
-    ~Input_system_state() = default;
+    Input_state() = default;
+    ~Input_state() = default;
 
     Key_action key_mod(Key_mod mod) const {
         if (key_mods.find(mod) == key_mods.end()) {
@@ -50,7 +50,7 @@ struct Input_system_state {
 class Input_system {
 
 private:
-    Input_system_state m_state{};
+    Input_state m_state{};
 
 public:
     Input_system(const std::shared_ptr<RHI_window>& window) {
@@ -115,7 +115,7 @@ public:
         m_state.mouse_scroll_dy = 0.0;
     }
     
-    const Input_system_state& state() const {
+    const Input_state& state() const {
         return m_state;
     }
 

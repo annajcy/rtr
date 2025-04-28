@@ -59,7 +59,7 @@ public:
     std::shared_ptr<Texture> alpha_map{};
     std::shared_ptr<Texture> height_map{};
 
-    float shadow_bias{0.005};
+    float shadow_bias{0.0005};
 
     float transparency{1.0f};
     glm::vec3 ka = glm::vec3(0.1f);     // 环境反射系数
@@ -494,13 +494,12 @@ public:
 };
 
 class Shadow_caster_material : public Material {
+public:
     Shadow_caster_material() : Material(
         Material_type::SHADOW_CASTER,
         Shader::create_shadow_caster_shader()
     ) {}
     ~Shadow_caster_material() = default;
-
-public:
 
     static std::shared_ptr<Shadow_caster_material> create() {
         return std::make_shared<Shadow_caster_material>();

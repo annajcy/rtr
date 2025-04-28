@@ -36,7 +36,7 @@ class Test_render_pipeline : public Render_pipeline {
 private:
 
     std::shared_ptr<Uniform_buffer<Camera_ubo>> m_camera_ubo{};
-    std::shared_ptr<Uniform_buffer<Light_matrix_ubo>> m_light_matrix_ubo{};
+    std::shared_ptr<Uniform_buffer<Light_camera_ubo>> m_light_camera_ubo{};
     std::shared_ptr<Uniform_buffer<Directional_light_ubo_array>> m_directional_light_ubo_array{};
     std::shared_ptr<Uniform_buffer<Point_light_ubo_array>> m_point_light_ubo_array{};
     std::shared_ptr<Uniform_buffer<Spot_light_ubo_array>> m_spot_light_ubo_array{};
@@ -94,9 +94,9 @@ public:
         if (!m_spot_light_ubo_array->is_linked()) m_spot_light_ubo_array->link(m_rhi_global_render_resource.device);
         m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_spot_light_ubo_array->rhi_resource(), 3);
 
-        m_light_matrix_ubo = Uniform_buffer<Light_matrix_ubo>::create(Light_matrix_ubo{});
-        if (!m_light_matrix_ubo->is_linked()) m_light_matrix_ubo->link(m_rhi_global_render_resource.device);
-        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_light_matrix_ubo->rhi_resource(), 4);
+        m_light_camera_ubo = Uniform_buffer<Light_camera_ubo>::create(Light_camera_ubo{});
+        if (!m_light_camera_ubo->is_linked()) m_light_camera_ubo->link(m_rhi_global_render_resource.device);
+        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_light_camera_ubo->rhi_resource(), 4);
     }
 
     void init_render_passes() override {
@@ -188,11 +188,11 @@ public:
         m_spot_light_ubo_array->set_data(sl_ubo_arr);
         m_spot_light_ubo_array->push_to_rhi();
         
-        m_light_matrix_ubo->set_data(Light_matrix_ubo{
+        m_light_camera_ubo->set_data(Light_camera_ubo{
            .light_matrix = tick_context.render_swap_data.light_matrix,
            .light_camera_direction = tick_context.render_swap_data.light_camera_direction
         });
-        m_light_matrix_ubo->push_to_rhi();
+        m_light_camera_ubo->push_to_rhi();
     }
 
     static std::shared_ptr<Test_render_pipeline> create(RHI_global_render_object& global_render_resource) {

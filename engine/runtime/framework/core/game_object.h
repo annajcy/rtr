@@ -45,6 +45,10 @@ public:
     template<typename T>
     std::shared_ptr<T> add_component() {
         auto component = std::make_shared<T>();
+        if (component == nullptr) {
+            std::cerr << "Failed to create component of type: " << typeid(T).name() << std::endl;
+            return nullptr;
+        }
         m_component_list->add_component(component);
         component->set_component_list(m_component_list);
         component->on_add_to_game_object();

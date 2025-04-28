@@ -42,11 +42,11 @@ layout(std140, binding = 0) uniform Camera_ubo {
     vec3 camera_position;
 };
 
-layout(std140, binding = 0) uniform Light_matrix_ubo {
+layout(std140, binding = 4) uniform Light_camera_ubo {
     mat4 light_matrix;
+    vec3 light_camera_direction;
 };
 
-uniform mat4 light_matrix;
 uniform mat4 model;
 
 out vec3 v_frag_position;
@@ -65,7 +65,7 @@ void main() {
     v_frag_position = vec3(model * vec4(a_position, 1.0));
     v_uv = a_uv;
     v_normal = mat3(transpose(inverse(model))) * a_normal;
-    v_light_camera_clip_space_position = light_matrix * model * vec4(a_position, 1.0)
+    v_light_camera_clip_space_position = light_matrix * model * vec4(a_position, 1.0);
 
 #ifdef ENABLE_NORMAL_MAP
     
@@ -241,12 +241,13 @@ vec2 parallax_occlusion_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tb
 }
 #endif
 
-layout(std140, binding = 0) uniform Light_matrix_ubo {
+layout(std140, binding = 4) uniform Light_camera_ubo {
     mat4 light_matrix;
     vec3 light_camera_direction;
 };
 
 out vec4 v_light_camera_clip_space_position;
+
 layout(binding = 5) uniform sampler2D shadow_map;
 uniform float shadow_bias;
 
@@ -270,9 +271,10 @@ float is_shadowed(
     float closest_depth = texture(shadow_map, uv).r;
     float self_depth = projected_position.z;
 
-    return (self_depth - get_bias(base_bias, normal, light_dir)) > closest_depth ? 1.0 : 0.0;
+    //return get_bias(base_bias, normal, light_dir);
+    //return (self_depth - base_bias) > closest_depth ? 1.0 : 0.0;
+    return closest_depth;
 }
-
 
 void main() {
 
@@ -411,7 +413,14 @@ void main() {
         light_camera_direction
     );
 
-    frag_color = vec4(ambient + (diffuse + specular) * (1.0 - shadow), alpha);
+    vec3 light_camera_ndc = v_light_camera_clip_space_position.xyz / v_light_camera_clip_space_position.w;
+    vec3 projected_position = light_camera_ndc * 0.5 + 0.5;
+
+    //frag_color = vec4(projected_position, 1.0);
+    //frag_color = vec4(vec3(is_shadowed), 1.0);
+    //frag_color = vec4(vec3(shadow_bias * 1000), 1.0);
+    //frag_color = vec4(light_camera_direction, 1.0);
+    frag_color = vec4(ambient + diffuse + specular, alpha);
 }
 )";
 
@@ -494,7 +503,7 @@ int main() {
         }, 
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
             {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
-            {"light_matrix", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
+            {"shadow_bias", Uniform_entry<float>::create(1.0f)},
             {"transparency", Uniform_entry<float>::create(1.0f)},
             {"ka", Uniform_entry<glm::vec3>::create(glm::vec3(0.1, 0.1, 0.1))},
             {"kd", Uniform_entry<glm::vec3>::create(glm::vec3(0.5, 0.5, 0.5))},
@@ -528,7 +537,7 @@ int main() {
     material->albedo_map = Texture_image::create(main_tex);
     material->height_map = Texture_image::create(height_map);
     material->normal_map = Texture_image::create(normal_map);
-    
+    //material->shadow_bias = 0.5f;
     //material->specular_map = Texture_image::create(sp_mask);
     //material->alpha_map = Texture_image::create(alpha_map);
     // material->normal_map = Texture_image::create(normal_map);
@@ -540,6 +549,7 @@ int main() {
 
     auto plane_material = Test_material::create(shader);
     plane_material->albedo_map = Texture_image::create(plane_main_tex);
+    //plane_material->shadow_bias = 0.5f;
 
     auto scene = world->add_scene(Scene::create("scene1"));
     world->set_current_scene(scene);
@@ -558,78 +568,80 @@ int main() {
     // scene->set_skybox(cubemap);
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
-    auto camera_node = camera_game_object->add_component<Node_component>();
+    auto camera_node = camera_game_object->add_component<Node_component>()->node();
     camera_node->set_position(glm::vec3(0, 0, 5));
     camera_node->look_at_point(glm::vec3(0, 0, 0));
 
-    auto camera = camera_game_object->add_component<Perspective_camera_component>();
-    camera->add_resize_callback(runtime->window_system()->window());
-
-    auto camera_control = camera_game_object->add_component<Trackball_camera_control_component>();
+    auto camera_component = camera_game_object->add_component<Perspective_camera_component>();
+    camera_component->add_resize_callback(runtime->window_system()->window());
+    
+    auto camera_control_component = camera_game_object->add_component<Trackball_camera_control_component>();
 
     auto sphere = scene->add_game_object(Game_object::create("go1"));
-    auto sphere_node = sphere->add_component<Node_component>();
+    auto sphere_node = sphere->add_component<Node_component>()->node();
     sphere_node->set_position(glm::vec3(-2, 0, 0));
 
-    auto sphere_mesh_renderer = sphere->add_component<Mesh_renderer_component>();
-    sphere_mesh_renderer->set_geometry(Geometry::create_sphere());
-    sphere_mesh_renderer->set_material(material);
+    auto sphere_mesh_renderer = sphere->add_component<Mesh_renderer_component>()->mesh_renderer();
+    sphere_mesh_renderer->geometry() = Geometry::create_sphere();
+    sphere_mesh_renderer->material() = material;
 
     auto box = scene->add_game_object(Game_object::create("go2"));
-    auto box_node = box->add_component<Node_component>();
+    auto box_node = box->add_component<Node_component>()->node();
     box_node->set_position(glm::vec3(0, 0, 0));
 
-    // auto rotate_component = box->add_component<Rotate_component>();
-    // rotate_component->speed() = 0.1f;
+    auto rotate_component = box->add_component<Rotate_component>();
+    rotate_component->speed() = 0.1f;
 
-    auto box_mesh_renderer = box->add_component<Mesh_renderer_component>();
-    box_mesh_renderer->set_geometry(Geometry::create_box(1.0));
-    box_mesh_renderer->set_material(material);
+    auto box_mesh_renderer = box->add_component<Mesh_renderer_component>()->mesh_renderer();
+    box_mesh_renderer->geometry() = Geometry::create_box(1.0);
+    box_mesh_renderer->material() = material;
 
     auto dl_game_object = scene->add_game_object(Game_object::create("dl"));
-    auto dl_node = dl_game_object->add_component<Node_component>();
+    auto dl_node = dl_game_object->add_component<Node_component>()->node();
+    dl_node->look_at_direction(glm::vec3(0, -1, 0));
     auto dl = dl_game_object->add_component<Directional_light_component>();
-    dl->is_main_light() = true;
-    dl_node->look_at_direction(glm::vec3(0, -1, -1));
+
+    // auto camera = dl_game_object->add_component<Orthographic_camera_component>();
+    // auto camera_control = dl_game_object->add_component<Trackball_camera_control_component>();
 
     auto pl0_game_object = scene->add_game_object(Game_object::create("pl0"));
-    auto pl0_node = pl0_game_object->add_component<Node_component>();
+    auto pl0_node = pl0_game_object->add_component<Node_component>()->node();
     pl0_node->set_position(glm::vec3(1, 0, 0));
-    auto pl0 = pl0_game_object->add_component<Point_light_component>();
+    auto pl0 = pl0_game_object->add_component<Point_light_component>()->point_light();
     pl0->color() = glm::vec3(0, 1, 0);
 
     auto pl1_game_object = scene->add_game_object(Game_object::create("pl1"));
-    auto pl1_node = pl1_game_object->add_component<Node_component>();
+    auto pl1_node = pl1_game_object->add_component<Node_component>()->node();
     pl1_node->set_position(glm::vec3(-1, 0, 0));
-    auto pl1 = pl1_game_object->add_component<Point_light_component>();
+    auto pl1 = pl1_game_object->add_component<Point_light_component>()->point_light();
     pl1->color() = glm::vec3(0, 0, 1);
 
     auto sl0_game_object = scene->add_game_object(Game_object::create("sl0"));
-    auto sl0_node = sl0_game_object->add_component<Node_component>();
+    auto sl0_node = sl0_game_object->add_component<Node_component>()->node();
     sl0_node->set_position(glm::vec3(0, 0, 1.0));
     sl0_node->look_at_direction(glm::vec3(0, 0, -1));
-    auto sl0 = sl0_game_object->add_component<Spot_light_component>();
+    auto sl0 = sl0_game_object->add_component<Spot_light_component>()->spot_light();
     sl0->inner_angle() = 15.0f;
     sl0->outer_angle() = 20.0f;
     sl0->color() = glm::vec3(1, 1, 0);
     sl0->intensity() = 0.5f;
 
     auto sl1_game_object = scene->add_game_object(Game_object::create("sl1"));
-    auto sl1_node = sl1_game_object->add_component<Node_component>();
+    auto sl1_node = sl1_game_object->add_component<Node_component>()->node();
     sl1_node->set_position(glm::vec3(0.0, 1.0, 0.0));
     sl1_node->look_at_direction(glm::vec3(0.0, -1.0, 0.0));
-    auto sl1 = sl1_game_object->add_component<Spot_light_component>();
+    auto sl1 = sl1_game_object->add_component<Spot_light_component>()->spot_light();
     sl1->color() = glm::vec3(1, 1, 0);
     sl1->intensity() = 0.5f;
 
     auto plane = scene->add_game_object(Game_object::create("plane"));
-    auto plane_node = plane->add_component<Node_component>();
+    auto plane_node = plane->add_component<Node_component>()->node();
     plane_node->set_position(glm::vec3(0, -1, 0));
     plane_node->look_at_direction(glm::vec3(0, 1, 0));
     plane_node->set_scale(glm::vec3(5.0));
-    auto plane_mesh_renderer = plane->add_component<Mesh_renderer_component>();
-    plane_mesh_renderer->set_geometry(Geometry::create_plane());
-    plane_mesh_renderer->set_material(plane_material);
+    auto plane_mesh_renderer = plane->add_component<Mesh_renderer_component>()->mesh_renderer();
+    plane_mesh_renderer->geometry() = Geometry::create_plane();
+    plane_mesh_renderer->material() = plane_material;
 
     box_node->add_child(sphere_node, true);
     //box_node->add_child(camera_node, true);
