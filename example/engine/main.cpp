@@ -262,31 +262,6 @@ out vec4 v_light_camera_clip_space_position;
 layout(binding = 5) uniform sampler2D shadow_map;
 uniform float shadow_bias;
 
-float get_bias(float base_bias, vec3 normal, vec3 light_dir) {
-    normal = normalize(normal);
-    light_dir = normalize(light_dir);
-    return max(base_bias * (1.0 - dot(normal, light_dir)), 0.0005);
-}
-
-float is_shadowed(
-    sampler2D shadow_map, 
-    vec4 light_camera_clip_space_position, 
-    float base_bias, 
-    vec3 normal, 
-    vec3 light_dir
-) {
-    vec3 light_camera_ndc = light_camera_clip_space_position.xyz / light_camera_clip_space_position.w;
-    vec3 projected_position = light_camera_ndc * 0.5 + 0.5;
-    vec2 uv = projected_position.xy;
-
-    float closest_depth = texture(shadow_map, uv).r;
-    float self_depth = projected_position.z;
-
-    //return get_bias(base_bias, normal, light_dir);
-    //return (self_depth - base_bias) > closest_depth ? 1.0 : 0.0;
-    return closest_depth;
-}
-
 void main() {
 
     vec3 view_direction = normalize(camera_position - v_frag_position);
@@ -424,19 +399,12 @@ void main() {
     float projected_frag_depth = projected_position.z;
     float shadow_map_depth = texture(shadow_map, projected_position.xy).r;
 
-    float shadow = is_shadowed(
-        shadow_map, 
-        light_camera_clip_space_position, 
-        shadow_bias, 
-        normalized_normal, 
-        light_camera_direction
-    );
+    if (projected_frag_depth - shadow_bias > shadow_map_depth) {
+        frag_color = vec4(vec3(ambient), 1.0);
+        return;
+    }
 
-    frag_color = vec4(vec3(shadow_map_depth), 1.0);
-    //frag_color = vec4(vec3(is_shadowed), 1.0);
-    //frag_color = vec4(vec3(shadow_bias * 1000), 1.0);
-    //frag_color = vec4(light_camera_direction, 1.0);
-    //frag_color = vec4(ambient + diffuse + specular, alpha);
+    frag_color = vec4(ambient + diffuse + specular, alpha);
 }
 )";
 
@@ -603,22 +571,22 @@ int main() {
     auto box_node = box->add_component<Node_component>()->node();
     box_node->set_position(glm::vec3(0, 0, 0));
 
-    // auto rotate_component = box->add_component<Rotate_component>();
-    // rotate_component->speed() = 0.1f;
+    auto rotate_component = box->add_component<Rotate_component>();
+    rotate_component->speed() = 0.1f;
 
     auto box_mesh_renderer = box->add_component<Mesh_renderer_component>()->mesh_renderer();
-    box_mesh_renderer->geometry() = Geometry::create_box(1.0);
+    box_mesh_renderer->geometry() = Geometry::create_box();
     box_mesh_renderer->material() = material;
 
     auto dl_game_object = scene->add_game_object(Game_object::create("dl"));
     auto dl_node = dl_game_object->add_component<Node_component>()->node();
-    dl_node->look_at_direction(glm::vec3(1, 0, 1));
+    dl_node->look_at_direction(glm::vec3(1, -1, 1));
     auto dl = dl_game_object->add_component<Directional_light_component>();
     auto dl_camera_component = dl_game_object->add_component<Orthographic_camera_component>();
     dl_camera_component->is_shadow_caster() = true;
 
     auto dl_camera = dl_camera_component->orthographic_camera();
-    dl_camera->set_orthographic_size(5.0f);
+    dl_camera->set_orthographic_size(15.0f);
 
     auto pl0_game_object = scene->add_game_object(Game_object::create("pl0"));
     auto pl0_node = pl0_game_object->add_component<Node_component>()->node();

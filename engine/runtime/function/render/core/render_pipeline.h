@@ -73,7 +73,7 @@ public:
             4096, 4096
         );
         shadow_map->link(m_rhi_global_render_resource.device);
-        //shadow_map->rhi_resource()->set_border_color(glm::vec4(1.0f));
+        shadow_map->rhi_resource()->set_border_color(glm::vec4(1.0f));
 
         m_render_resource_manager.add("main_color_attachment", color_attachment);
         m_render_resource_manager.add("main_depth_attachment", depth_stencil_attachment);

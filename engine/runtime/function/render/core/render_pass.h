@@ -84,7 +84,7 @@ public:
 
         m_rhi_global_render_resource.renderer->clear(m_frame_buffer->rhi_resource());
 
-        m_rhi_global_render_resource.pipeline_state->pipeline_state = m_shadow_caster_material->get_pipeline_state();
+        m_rhi_global_render_resource.pipeline_state->state = m_shadow_caster_material->get_pipeline_state();
         m_rhi_global_render_resource.pipeline_state->apply();
 
         auto shader = m_shadow_caster_material->get_shader_program();
@@ -178,7 +178,7 @@ public:
                 tex->rhi_resource()->bind_to_unit(location);
             }
 
-            m_rhi_global_render_resource.pipeline_state->pipeline_state = m_context.skybox->material()->get_pipeline_state();
+            m_rhi_global_render_resource.pipeline_state->state = m_context.skybox->material()->get_pipeline_state();
             m_rhi_global_render_resource.pipeline_state->apply();
 
             m_rhi_global_render_resource.renderer->draw(
@@ -203,7 +203,7 @@ public:
                 tex->rhi_resource()->bind_to_unit(location);
             }
 
-            m_rhi_global_render_resource.pipeline_state->pipeline_state = swap_object.material->get_pipeline_state();
+            m_rhi_global_render_resource.pipeline_state->state = swap_object.material->get_pipeline_state();
             m_rhi_global_render_resource.pipeline_state->apply();
 
             swap_object.material->modify_shader_uniform(shader->rhi_resource());
@@ -269,7 +269,7 @@ public:
             tex->rhi_resource()->bind_to_unit(location);
         }
 
-        m_rhi_global_render_resource.pipeline_state->pipeline_state = m_gamma_material->get_pipeline_state();
+        m_rhi_global_render_resource.pipeline_state->state = m_gamma_material->get_pipeline_state();
         m_rhi_global_render_resource.pipeline_state->apply();
 
         m_rhi_global_render_resource.renderer->draw(

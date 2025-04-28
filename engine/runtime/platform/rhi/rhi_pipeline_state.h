@@ -205,7 +205,7 @@ struct Pipeline_state {
             Blend_state::disabled(),
             Polygon_offset_state::disabled(),
             Stencil_state::disabled(),
-            Cull_state::back()
+            Cull_state::disabled()
         };
     }
    
@@ -253,10 +253,10 @@ struct Pipeline_state {
 class RHI_pipeline_state {
 
 public:
-    Pipeline_state pipeline_state{};
+    Pipeline_state state{};
 
     RHI_pipeline_state() { }
-    RHI_pipeline_state(const Pipeline_state& pipeline) : pipeline_state(pipeline) {}
+    RHI_pipeline_state(const Pipeline_state& pipeline) : state(pipeline) {}
     
     virtual ~RHI_pipeline_state() = default;
     

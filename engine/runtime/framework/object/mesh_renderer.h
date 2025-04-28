@@ -7,7 +7,7 @@
 struct Shadow_setting {
     bool is_cast_shadow{true};
     bool is_receive_shadow{true};
-    float bias{0.005};
+    float bias{0.008f};
 };
 
 namespace rtr {
