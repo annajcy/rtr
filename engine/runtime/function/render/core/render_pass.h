@@ -36,7 +36,7 @@ public:
     };
 
     struct Resource_flow {
-        std::shared_ptr<Texture> depth_attachment_in_out{};
+        std::shared_ptr<Texture> shadow_map_out{};
     };
 
     static std::shared_ptr<Shadow_pass> create(
@@ -64,7 +64,7 @@ public:
     void set_resource_flow(const Resource_flow& flow) {
         m_resource_flow = flow;
 
-        auto depth_attachment = m_resource_flow.depth_attachment_in_out;
+        auto depth_attachment = m_resource_flow.shadow_map_out;
         if (!depth_attachment->is_linked()) depth_attachment->link(m_rhi_global_render_resource.device);
         
         m_frame_buffer = Frame_buffer::create(
@@ -116,8 +116,8 @@ public:
     };
 
     struct Resource_flow {
-        std::shared_ptr<Texture> color_attachment_in_out{};
-        std::shared_ptr<Texture> depth_attachment_in{};
+        std::shared_ptr<Texture> color_attachment_out{};
+        std::shared_ptr<Texture> depth_attachment_aux{};
         std::shared_ptr<Texture> shadow_map_in{};
     };
 
@@ -144,8 +144,8 @@ public:
         int width = m_rhi_global_render_resource.window->width();
         int height = m_rhi_global_render_resource.window->height();
 
-        auto color_attachment = m_resource_flow.color_attachment_in_out;
-        auto depth_attachment = m_resource_flow.depth_attachment_in;
+        auto color_attachment = m_resource_flow.color_attachment_out;
+        auto depth_attachment = m_resource_flow.depth_attachment_aux;
 
         m_frame_buffer = Frame_buffer::create(
             width, height, 
@@ -187,6 +187,8 @@ public:
                 m_frame_buffer->rhi_resource()
             );
         }
+
+        m_resource_flow.shadow_map_in->rhi_resource()->bind_to_unit(5);
 
         for (auto& swap_object : m_context.render_swap_objects) {
             auto shader = swap_object.material->get_shader_program();

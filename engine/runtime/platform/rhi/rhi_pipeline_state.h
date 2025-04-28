@@ -136,19 +136,7 @@ struct Blend_state {
         };
     }
 
-    static Blend_state opaque() {
-        return {
-            false,
-            Blend_factor::ONE,
-            Blend_factor::ZERO,
-            Blend_factor::ONE,
-            Blend_factor::ZERO,
-            Blend_operation::ADD,
-            Blend_operation::ADD
-        };
-    }
-
-    static Blend_state translucent() {
+    static Blend_state enabled() {
         return {
             true,
             Blend_factor::SRC_ALPHA,
@@ -209,11 +197,22 @@ struct Pipeline_state {
     Polygon_offset_state polygon_offset_state{};
     Stencil_state stencil_state{};
     Cull_state cull_state{};
+
+
+    static Pipeline_state shadow_pipeline_state() {
+        return Pipeline_state{
+            Depth_state::opaque(),
+            Blend_state::disabled(),
+            Polygon_offset_state::disabled(),
+            Stencil_state::disabled(),
+            Cull_state::back()
+        };
+    }
    
     static Pipeline_state opaque_pipeline_state() {
         return Pipeline_state{
             Depth_state::opaque(),
-            Blend_state::opaque(),
+            Blend_state::disabled(),
             Polygon_offset_state::disabled(),
             Stencil_state::opaque(),
             Cull_state::back()
@@ -223,7 +222,7 @@ struct Pipeline_state {
     static Pipeline_state translucent_pipeline_state() {
         return Pipeline_state{
             Depth_state::translucent(),
-            Blend_state::translucent(),
+            Blend_state::enabled(),
             Polygon_offset_state::disabled(),
             Stencil_state::disabled(),
             Cull_state::back()
@@ -233,7 +232,7 @@ struct Pipeline_state {
     static Pipeline_state edge_pipeline_state() {
         return Pipeline_state{
             Depth_state::opaque(),
-            Blend_state::opaque(),
+            Blend_state::disabled(),
             Polygon_offset_state::disabled(),
             Stencil_state::edge(),
             Cull_state::back()
@@ -243,7 +242,7 @@ struct Pipeline_state {
     static Pipeline_state skybox_pipeline_state() {
         return Pipeline_state{
             Depth_state::skybox(),
-            Blend_state::opaque(),
+            Blend_state::disabled(),
             Polygon_offset_state::disabled(),
             Stencil_state::disabled(),
             Cull_state::disabled(),

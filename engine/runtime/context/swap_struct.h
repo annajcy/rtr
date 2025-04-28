@@ -53,6 +53,9 @@ struct Swap_camera {
     glm::mat4 view_matrix{1.0f};
     glm::mat4 projection_matrix{1.0f};
     glm::vec3 camera_position{1.0f};
+    glm::vec3 camera_direction{1.0f};
+    float near;
+    float far;
 };
 
 struct Swap_data {
@@ -61,17 +64,17 @@ struct Swap_data {
     std::vector<Swap_directional_light> directional_lights{};
     std::vector<Swap_point_light> point_lights{};
     std::vector<Swap_spot_light> spot_lights{};
-    Swap_camera camera{};
     std::shared_ptr<Skybox> skybox{};
-    glm::mat4 light_matrix{};
-    glm::vec3 light_camera_direction{};
-
+    Swap_camera camera{};
+    Swap_camera light_camera{};
+    
     void clear() {
         render_objects.clear();
         point_lights.clear();
         spot_lights.clear();
         directional_lights.clear();
         camera = Swap_camera{};
+        light_camera = Swap_camera{};
         skybox.reset();
     }
 

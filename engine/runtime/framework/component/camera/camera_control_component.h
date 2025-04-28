@@ -1,10 +1,7 @@
 #pragma once
 
 #include "engine/runtime/framework/object/camera/camera_control.h"
-#include "engine/runtime/function/input/input_system.h"
 #include "camera_component.h"
-
-#include <iostream>
 #include <memory>
 
 namespace rtr {
@@ -22,6 +19,9 @@ public:
         auto &input_state = tick_context.input_state;
         m_camera_control->tick(input_state);
     }
+
+    const std::shared_ptr<Camera_control>& camera_control() const { return m_camera_control; }
+    std::shared_ptr<Camera_control>& camera_control() { return m_camera_control; }
 };
 
 class Trackball_camera_control_component : public Camera_control_component {
@@ -37,6 +37,10 @@ public:
     void on_add_to_game_object() override {
         auto camera = get_component<Camera_component>()->camera();
         m_camera_control = Trackball_Camera_control::create(camera); 
+    }
+
+    std::shared_ptr<Trackball_Camera_control> trackball_camera_control() {
+        return std::dynamic_pointer_cast<Trackball_Camera_control>(m_camera_control);
     }
 };
 
@@ -54,6 +58,10 @@ public:
     void on_add_to_game_object() override {
         auto camera = get_component<Camera_component>()->camera();
         m_camera_control = Game_Camera_control::create(camera);
+    }
+
+    std::shared_ptr<Game_Camera_control> game_camera_control() {
+        return std::dynamic_pointer_cast<Game_Camera_control>(m_camera_control); 
     }
 
 };

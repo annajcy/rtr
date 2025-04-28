@@ -1,10 +1,7 @@
 #pragma once
 #include "../node/node_component.h"
-
-#include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/framework/object/light.h"
-#include "engine/runtime/global/enum.h"
 
 #include "glm/fwd.hpp"
 #include <memory>
@@ -43,7 +40,7 @@ public:
         auto& data = tick_context.logic_swap_data;
         Swap_directional_light dl{};
         dl.color = directional_light()->color();
-        dl.direction = directional_light()->direction();
+        dl.direction = directional_light()->node()->world_front();
         dl.intensity = directional_light()->intensity();
         data.directional_lights.push_back(dl);
     }
@@ -72,9 +69,9 @@ public:
         auto& data = tick_context.logic_swap_data;
         Swap_spot_light spl{};
         spl.color = spot_light()->color();
-        spl.direction = spot_light()->direction();
+        spl.direction = spot_light()->node()->world_front();
         spl.intensity = spot_light()->intensity();
-        spl.position = spot_light()->position();
+        spl.position = spot_light()->node()->world_position();
         spl.inner_angle_cos = spot_light()->inner_angle_cos();
         spl.outer_angle_cos = spot_light()->outer_angle_cos();
         data.spot_lights.push_back(spl);
@@ -107,7 +104,7 @@ public:
         pl.attenuation = glm::vec3(point_light()->kc(), point_light()->k1(), point_light()->k2());
         pl.color = point_light()->color();
         pl.intensity = point_light()->intensity();
-        pl.position = point_light()->position();
+        pl.position = point_light()->node()->world_position();
         data.point_lights.push_back(pl);
     }
 

@@ -2,14 +2,9 @@
 
 #include "engine/runtime/context/swap_struct.h"
 #include "engine/runtime/framework/object/mesh_renderer.h"
-#include "engine/runtime/function/render/object/geometry.h"
-#include "engine/runtime/function/render/object/material.h"
-#include "engine/runtime/function/render/object/texture.h"
 #include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/framework/component/node/node_component.h"
-#include "engine/runtime/global/enum.h"
 #include <memory>
-#include <unordered_map>
 
 namespace rtr {
 class Mesh_renderer_component : public Component_base {

@@ -45,6 +45,7 @@ public:
 
     virtual glm::mat4 projection_matrix() const = 0;
     virtual void adjust_zoom(float delta_zoom) = 0;
+    virtual void set_aspect_ratio(float aspect_ratio) = 0;
     
 };
 
@@ -87,6 +88,10 @@ public:
         );
     }
 
+    void set_aspect_ratio(float aspect_ratio) override {
+        m_aspect_ratio = aspect_ratio;
+    }
+
 };
 
 class Orthographic_camera : public Camera {
@@ -121,6 +126,21 @@ public:
     const float& right_bound() const { return m_right_bound; }
     const float& top_bound() const { return m_top_bound; }
     const float& bottom_bound() const { return m_bottom_bound; }
+
+    void set_aspect_ratio(float aspect_ratio) override {
+        float width = (m_right_bound - m_left_bound) / 2.0f;
+        float height = width / aspect_ratio;
+        m_top_bound = m_bottom_bound + height;
+    }
+
+    void set_orthographic_size(float size) {
+        m_top_bound = size / 2.0f;
+        m_bottom_bound = -size / 2.0f;
+        m_right_bound = size / 2.0f;
+        m_left_bound = -size / 2.0f;
+        m_near_bound = -size / 2.0f;
+        m_far_bound = size / 2.0f;
+    }
 
     glm::mat4 projection_matrix() const override {
         return glm::ortho(

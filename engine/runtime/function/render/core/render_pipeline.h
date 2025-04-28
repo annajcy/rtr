@@ -7,6 +7,7 @@
 #include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/function/render/core/render_struct.h"
 #include "engine/runtime/resource/resource_base.h"
+#include "glm/fwd.hpp"
 #include <memory>
 
 namespace rtr {
@@ -36,14 +37,13 @@ class Test_render_pipeline : public Render_pipeline {
 private:
 
     std::shared_ptr<Uniform_buffer<Camera_ubo>> m_camera_ubo{};
-    std::shared_ptr<Uniform_buffer<Light_camera_ubo>> m_light_camera_ubo{};
+    std::shared_ptr<Uniform_buffer<Camera_ubo>> m_light_camera_ubo{};
     std::shared_ptr<Uniform_buffer<Directional_light_ubo_array>> m_directional_light_ubo_array{};
     std::shared_ptr<Uniform_buffer<Point_light_ubo_array>> m_point_light_ubo_array{};
     std::shared_ptr<Uniform_buffer<Spot_light_ubo_array>> m_spot_light_ubo_array{};
 
     std::shared_ptr<Main_pass> m_main_pass{};
     std::shared_ptr<Gamma_pass> m_gamma_pass{};
-
     std::shared_ptr<Shadow_pass> m_shadow_pass{};
     
 public:
@@ -52,6 +52,8 @@ public:
         init_ubo();
         init_render_passes();
     }
+
+    ~Test_render_pipeline() {}
 
     void init_render_resource() override {
 
@@ -71,6 +73,7 @@ public:
             4096, 4096
         );
         shadow_map->link(m_rhi_global_render_resource.device);
+        //shadow_map->rhi_resource()->set_border_color(glm::vec4(1.0f));
 
         m_render_resource_manager.add("main_color_attachment", color_attachment);
         m_render_resource_manager.add("main_depth_attachment", depth_stencil_attachment);
@@ -94,17 +97,17 @@ public:
         if (!m_spot_light_ubo_array->is_linked()) m_spot_light_ubo_array->link(m_rhi_global_render_resource.device);
         m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_spot_light_ubo_array->rhi_resource(), 3);
 
-        m_light_camera_ubo = Uniform_buffer<Light_camera_ubo>::create(Light_camera_ubo{});
+        m_light_camera_ubo = Uniform_buffer<Camera_ubo>::create(Camera_ubo{});
         if (!m_light_camera_ubo->is_linked()) m_light_camera_ubo->link(m_rhi_global_render_resource.device);
         m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_light_camera_ubo->rhi_resource(), 4);
     }
 
     void init_render_passes() override {
-        
+
         m_main_pass = Main_pass::create(m_rhi_global_render_resource);
         m_main_pass->set_resource_flow(Main_pass::Resource_flow{
-            .color_attachment_in_out = m_render_resource_manager.get<Texture_color_attachment>("main_color_attachment"),
-            .depth_attachment_in = m_render_resource_manager.get<Texture_depth_stencil_attachment>("main_depth_attachment"),
+            .color_attachment_out = m_render_resource_manager.get<Texture_color_attachment>("main_color_attachment"),
+            .depth_attachment_aux = m_render_resource_manager.get<Texture_depth_stencil_attachment>("main_depth_attachment"),
             .shadow_map_in = m_render_resource_manager.get<Texture_depth_attachment>("shadow map")
         });
 
@@ -115,25 +118,7 @@ public:
 
         m_shadow_pass = Shadow_pass::create(m_rhi_global_render_resource);
         m_shadow_pass->set_resource_flow(Shadow_pass::Resource_flow{
-            .depth_attachment_in_out = m_render_resource_manager.get<Texture_depth_attachment>("shadow map")
-        });
-    }
-
-    ~Test_render_pipeline() {}
-
-    void execute(const Render_tick_context& tick_context) override {
-        m_shadow_pass->excute();
-        m_main_pass->excute();
-        m_gamma_pass->excute();
-    }
-
-    void update_render_pass(const Render_tick_context& tick_context) override {
-        m_main_pass->set_context(Main_pass::Execution_context{
-            .skybox = tick_context.render_swap_data.skybox,
-            .render_swap_objects = tick_context.render_swap_data.render_objects
-        });
-        m_shadow_pass->set_context(Shadow_pass::Execution_context{
-           .shadow_caster_swap_objects = tick_context.render_swap_data.get_shadow_casters(),
+            .shadow_map_out = m_render_resource_manager.get<Texture_depth_attachment>("shadow map")
         });
     }
 
@@ -142,7 +127,10 @@ public:
         m_camera_ubo->set_data(Camera_ubo{
             .view_matrix = tick_context.render_swap_data.camera.view_matrix,
             .projection_matrix = tick_context.render_swap_data.camera.projection_matrix,
-            .camera_position = tick_context.render_swap_data.camera.camera_position
+            .camera_position = tick_context.render_swap_data.camera.camera_position,
+            .camera_direction = tick_context.render_swap_data.camera.camera_direction,
+            .near = tick_context.render_swap_data.camera.near,
+            .far = tick_context.render_swap_data.camera.far
         });
         m_camera_ubo->push_to_rhi();
 
@@ -188,11 +176,31 @@ public:
         m_spot_light_ubo_array->set_data(sl_ubo_arr);
         m_spot_light_ubo_array->push_to_rhi();
         
-        m_light_camera_ubo->set_data(Light_camera_ubo{
-           .light_matrix = tick_context.render_swap_data.light_matrix,
-           .light_camera_direction = tick_context.render_swap_data.light_camera_direction
+        m_light_camera_ubo->set_data(Camera_ubo{
+            .view_matrix = tick_context.render_swap_data.light_camera.view_matrix,
+            .projection_matrix = tick_context.render_swap_data.light_camera.projection_matrix,
+            .camera_position = tick_context.render_swap_data.light_camera.camera_position,
+            .camera_direction = tick_context.render_swap_data.light_camera.camera_direction,
+            .near = tick_context.render_swap_data.light_camera.near,
+            .far = tick_context.render_swap_data.light_camera.far
         });
         m_light_camera_ubo->push_to_rhi();
+    }
+
+    void update_render_pass(const Render_tick_context& tick_context) override {
+        m_main_pass->set_context(Main_pass::Execution_context{
+            .skybox = tick_context.render_swap_data.skybox,
+            .render_swap_objects = tick_context.render_swap_data.render_objects
+        });
+        m_shadow_pass->set_context(Shadow_pass::Execution_context{
+           .shadow_caster_swap_objects = tick_context.render_swap_data.get_shadow_casters(),
+        });
+    }
+
+    void execute(const Render_tick_context& tick_context) override {
+        m_shadow_pass->excute();
+        m_main_pass->excute();
+        m_gamma_pass->excute();
     }
 
     static std::shared_ptr<Test_render_pipeline> create(RHI_global_render_object& global_render_resource) {

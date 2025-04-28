@@ -5,8 +5,8 @@
 #include "engine/runtime/function/render/object/material.h"
 
 struct Shadow_setting {
-    bool is_cast_shadow{false};
-    bool is_receive_shadow{false};
+    bool is_cast_shadow{true};
+    bool is_receive_shadow{true};
     float bias{0.005};
 };
 

@@ -8,18 +8,17 @@
 
 namespace rtr {
 
-struct Light_camera_ubo {
-    glm::mat4 light_matrix{};
-    glm::vec3 light_camera_direction{};
-    float padding1[1];
-};
-
 struct Camera_ubo {
     glm::mat4 view_matrix{};      
     glm::mat4 projection_matrix{}; 
 
     glm::vec3 camera_position{}; 
     float padding1[1];
+    glm::vec3 camera_direction{};
+    float padding2[1];
+    float near{};
+    float far{};
+    float padding3[2];
 }; 
 
 struct Directional_light_ubo {

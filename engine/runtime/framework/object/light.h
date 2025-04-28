@@ -32,7 +32,6 @@ public:
 
     const glm::vec3& color() const { return m_color; }
     const float& intensity() const { return m_intensity; }
-
     const std::shared_ptr<Node>& node() const { return m_node; }
     std::shared_ptr<Node>& node() { return m_node; }
 
@@ -45,8 +44,6 @@ public:
         const std::shared_ptr<Node>& node
     ) : Light(Light_type::DIRECTIONAL, node) { }
     ~Directional_light() = default;
-
-    glm::vec3 direction() const { return node()->world_front(); }
 
     static std::shared_ptr<Directional_light> create(
         const std::shared_ptr<Node>& node
@@ -67,8 +64,6 @@ public:
         const std::shared_ptr<Node>& node
     ) : Light(Light_type::POINT, node) {}
     ~Point_light() = default;
-    
-    glm::vec3 position() const { return node()->world_position(); }
 
     static std::shared_ptr<Point_light> create(
         const std::shared_ptr<Node>& node
@@ -95,9 +90,6 @@ public:
         const std::shared_ptr<Node>& node
     ) : Light(Light_type::SPOT, node) {}
     ~Spot_light() = default;
-    
-    glm::vec3 direction() const { return node()->world_front(); }
-    glm::vec3 position() const { return node()->world_position(); }
 
     float& inner_angle() { return m_inner_angle; }
     float& outer_angle() { return m_outer_angle; }

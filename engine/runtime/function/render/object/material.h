@@ -505,6 +505,10 @@ public:
         return std::make_shared<Shadow_caster_material>();
     }
 
+    Pipeline_state get_pipeline_state() const override {
+        return Pipeline_state::shadow_pipeline_state();
+    }
+
 };
 
 }

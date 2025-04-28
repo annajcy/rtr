@@ -2,8 +2,6 @@
 
 #include "../component_base.h"
 #include "engine/runtime/framework/object/node.h"
-#include "glm/fwd.hpp"
-#include <iostream>
 #include <memory>
 
 namespace rtr {
