@@ -2,6 +2,7 @@
 
 #include "engine/runtime/global/base.h" 
 #include "engine/runtime/global/logger.h"
+#include <memory>
 
 namespace rtr {
 

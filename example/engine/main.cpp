@@ -630,7 +630,6 @@ int main() {
     sl1->intensity() = 0.5f;
 
     
-
     box_node->add_child(sphere_node, true);
     //box_node->add_child(camera_node, true);
     //box_node->add_child(sl0_node, true);
