@@ -40,8 +40,6 @@ public:
             .model_matrix = m_mesh_renderer->node()->model_matrix(),
             .shadow_setting = Swap_shadow_setting{
                 .is_cast_shadow = m_mesh_renderer->shadow_setting().is_cast_shadow,
-                .is_receive_shadow = m_mesh_renderer->shadow_setting().is_receive_shadow,
-                .bias = m_mesh_renderer->shadow_setting().bias
             }
         });
     }

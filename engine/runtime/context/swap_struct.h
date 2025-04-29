@@ -11,8 +11,6 @@ namespace rtr {
 
 struct Swap_shadow_setting {
     bool is_cast_shadow{false};
-    bool is_receive_shadow{false};
-    float bias{0.005f};
 };
 
 struct Swap_object {

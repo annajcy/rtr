@@ -1,6 +1,12 @@
 #pragma once
 
-#include "engine/runtime/global/base.h" 
+#include "engine/runtime/global/math.h"
+#include "glm/ext/matrix_float4x4.hpp"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/fwd.hpp"
+#include "glm/gtc/quaternion.hpp"
+#include <iostream>
+#include <memory>
 
 namespace rtr {
 

@@ -38,8 +38,9 @@ public:
 
     void gui_tick(float delta_time) {
         m_imgui->begin_frame();
-        render_main_menu();
-        render_parallax_map();
+        main_menu();
+        parallax_map();
+        shadow_map();
         m_imgui->end_frame();
     }
 
@@ -56,7 +57,20 @@ public:
     
 private:
 
-    void render_parallax_map() {
+    void shadow_map() {
+        m_imgui->begin_render("shadow map");
+        auto go_material = m_engine_runtime->world()->current_scene()->get_game_object("go1")->get_component<Mesh_renderer_component>()->mesh_renderer()->material();
+        if (auto test_material = std::dynamic_pointer_cast<Test_material>(go_material)) {
+            m_imgui->slider_float("go shadow bias", &test_material->shadow_bias, 0.0, 0.01);
+        }
+        auto plane_material = m_engine_runtime->world()->current_scene()->get_game_object("plane")->get_component<Mesh_renderer_component>()->mesh_renderer()->material();
+        if (auto test_material = std::dynamic_pointer_cast<Test_material>(plane_material)) {
+            m_imgui->slider_float("plane shadow bias", &test_material->shadow_bias, 0.0, 0.01);
+        }
+        m_imgui->end_render();
+    }
+
+    void parallax_map() {
         m_imgui->begin_render("parallax map");
         auto material = m_engine_runtime->world()->current_scene()->get_game_object("go1")->get_component<Mesh_renderer_component>()->mesh_renderer()->material();
         if (auto test_material = std::dynamic_pointer_cast<Test_material>(material)) {
@@ -66,7 +80,7 @@ private:
         m_imgui->end_render();
     }
 
-    void render_main_menu() {
+    void main_menu() {
         m_imgui->begin_render("main menu");
         m_imgui->text("fps", std::to_string(m_engine_runtime->get_fps()));
         m_imgui->end_render();

@@ -399,7 +399,9 @@ void main() {
     float projected_frag_depth = projected_position.z;
     float shadow_map_depth = texture(shadow_map, projected_position.xy).r;
 
-    if (projected_frag_depth - shadow_bias > shadow_map_depth) {
+    float bias = max(0.0005, shadow_bias * (1.0 - dot(normalized_normal, -light_camera_direction)));
+
+    if (projected_frag_depth - bias > shadow_map_depth) {
         frag_color = vec4(vec3(ambient), 1.0);
         return;
     }
@@ -578,6 +580,15 @@ int main() {
     box_mesh_renderer->geometry() = Geometry::create_box();
     box_mesh_renderer->material() = material;
 
+    auto plane = scene->add_game_object(Game_object::create("plane"));
+    auto plane_node = plane->add_component<Node_component>()->node();
+    plane_node->set_position(glm::vec3(0, -1, 0));
+    plane_node->look_at_direction(glm::vec3(0, 1, 0));
+    plane_node->set_scale(glm::vec3(5.0));
+    auto plane_mesh_renderer = plane->add_component<Mesh_renderer_component>()->mesh_renderer();
+    plane_mesh_renderer->geometry() = Geometry::create_plane();
+    plane_mesh_renderer->material() = plane_material;
+
     auto dl_game_object = scene->add_game_object(Game_object::create("dl"));
     auto dl_node = dl_game_object->add_component<Node_component>()->node();
     dl_node->look_at_direction(glm::vec3(1, -1, 1));
@@ -618,14 +629,7 @@ int main() {
     sl1->color() = glm::vec3(1, 1, 0);
     sl1->intensity() = 0.5f;
 
-    auto plane = scene->add_game_object(Game_object::create("plane"));
-    auto plane_node = plane->add_component<Node_component>()->node();
-    plane_node->set_position(glm::vec3(0, -1, 0));
-    plane_node->look_at_direction(glm::vec3(0, 1, 0));
-    plane_node->set_scale(glm::vec3(5.0));
-    auto plane_mesh_renderer = plane->add_component<Mesh_renderer_component>()->mesh_renderer();
-    plane_mesh_renderer->geometry() = Geometry::create_plane();
-    plane_mesh_renderer->material() = plane_material;
+    
 
     box_node->add_child(sphere_node, true);
     //box_node->add_child(camera_node, true);

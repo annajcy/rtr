@@ -1,13 +1,12 @@
 #pragma once
 
 #include "engine/runtime/function/render/core/render_object.h"
-#include "engine/runtime/global/base.h" 
 #include "engine/runtime/platform/rhi/rhi_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "attribute_buffer.h"
 #include <memory>
-#include <string>
+
 #include <unordered_map>
 
 

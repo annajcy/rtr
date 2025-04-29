@@ -1,14 +1,11 @@
 #pragma once
 
-
 #include "engine/runtime/context/swap_struct.h"
 #include "engine/runtime/function/render/object/frame_buffer.h"
 #include "engine/runtime/function/render/object/material.h"
 #include "engine/runtime/function/render/object/skybox.h"
 #include "engine/runtime/function/render/object/texture.h"
 #include "engine/runtime/function/render/core/render_object.h"
-#include "engine/runtime/resource/resource_base.h"
-#include "glm/fwd.hpp"
 #include <memory>
 #include <string>
 #include <vector>

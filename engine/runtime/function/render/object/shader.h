@@ -2,6 +2,7 @@
 
 #include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/global/enum.h"
+#include "engine/runtime/global/logger.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_shader_code.h"
@@ -115,6 +116,8 @@ public:
     const std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>& uniforms() const { return m_uniforms; }
 
     virtual void link(const std::shared_ptr<RHI_device>& device) override {
+
+        Log_sys::get_instance()->log(Logging_system::Level::info, "shader {} trys to link to rhi", m_name);
 
         std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>> rhi_shader_codes{};
         for (const auto& [type, code] : m_shader_codes) {
