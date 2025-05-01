@@ -1,7 +1,8 @@
 #pragma once
 
-#include "engine/runtime/framework/object/camera/camera_control.h"
-#include "camera_component.h"
+#include "engine/runtime/framework/component/camera/camera_component.h"
+#include "engine/runtime/framework/component/camera/camera_control.h"
+#include "engine/runtime/framework/component/component_base.h"
 #include <memory>
 
 namespace rtr {

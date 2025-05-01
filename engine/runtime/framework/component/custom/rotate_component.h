@@ -1,8 +1,7 @@
 #pragma once
 #include "../component_base.h"
-#include "../node/node_component.h"
-#include "engine/runtime/framework/object/node/node.h"
-
+#include "engine/runtime/framework/component/node/node.h"
+#include "engine/runtime/framework/component/node/node_component.h"
 
 namespace rtr {
 

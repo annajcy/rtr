@@ -1,8 +1,8 @@
 #pragma once
 
 #include "engine/runtime/context/swap_struct.h"
-#include "engine/runtime/framework/object/mesh_renderer/mesh_renderer.h"
 #include "engine/runtime/framework/component/component_base.h"
+#include "engine/runtime/framework/component/mesh_renderer/mesh_renderer.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 #include <memory>
 
@@ -31,7 +31,6 @@ public:
     const std::shared_ptr<Mesh_renderer>& mesh_renderer() const { return m_mesh_renderer; }
     std::shared_ptr<Mesh_renderer>& mesh_renderer() { return m_mesh_renderer; }
 
-    
     void tick(const Logic_tick_context& tick_context) override {
         auto& data = tick_context.logic_swap_data;
         data.render_objects.push_back(Swap_object{

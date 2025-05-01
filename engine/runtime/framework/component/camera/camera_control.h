@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/framework/object/camera/camera.h"
+#include "engine/runtime/framework/component/camera/camera.h"
 #include "engine/runtime/function/input/input_system.h"
 
 #include <memory>

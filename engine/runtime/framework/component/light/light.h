@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "engine/runtime/framework/object/node/node.h"
+#include "engine/runtime/framework/component/node/node.h"
 #include "engine/runtime/global/enum.h"
 #include "glm/fwd.hpp"
 #include "glm/trigonometric.hpp"
