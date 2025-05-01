@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/framework/object/node.h"
+#include "engine/runtime/framework/object/node/node.h"
 #include <memory>
 
 namespace rtr {

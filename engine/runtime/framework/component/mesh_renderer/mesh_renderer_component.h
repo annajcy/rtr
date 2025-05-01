@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/runtime/context/swap_struct.h"
-#include "engine/runtime/framework/object/mesh_renderer.h"
+#include "engine/runtime/framework/object/mesh_renderer/mesh_renderer.h"
 #include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 #include <memory>

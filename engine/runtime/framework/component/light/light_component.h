@@ -1,7 +1,7 @@
 #pragma once
 #include "../node/node_component.h"
 #include "engine/runtime/framework/component/component_base.h"
-#include "engine/runtime/framework/object/light.h"
+#include "engine/runtime/framework/object/light/light.h"
 
 #include "glm/fwd.hpp"
 #include <memory>
