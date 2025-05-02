@@ -177,6 +177,8 @@ inline constexpr unsigned int gl_texture_type(Texture_type type) {
             return GL_TEXTURE_2D;
         case Texture_type::TEXTURE_CUBEMAP:
             return GL_TEXTURE_CUBE_MAP;
+        case Texture_type::TEXTURE_2D_ARRAY:
+            return GL_TEXTURE_2D_ARRAY;
         default:
             return GL_TEXTURE_2D;
     }

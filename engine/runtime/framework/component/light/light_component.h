@@ -1,8 +1,8 @@
 #pragma once
-#include "../node/node_component.h"
-#include "engine/runtime/framework/component/component_base.h"
 
+#include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/framework/component/light/light.h"
+#include "engine/runtime/framework/component/node/node_component.h"
 #include "glm/fwd.hpp"
 #include <memory>
 

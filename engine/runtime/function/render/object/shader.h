@@ -1,6 +1,5 @@
 #pragma once
 
-#include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/global/logger.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"

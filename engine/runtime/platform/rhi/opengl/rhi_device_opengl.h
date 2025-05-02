@@ -8,6 +8,7 @@
 #include "../rhi_renderer.h"
 #include "../rhi_window.h"
 
+#include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "rhi_compute_opengl.h"
 #include "rhi_error_opengl.h"
 #include "rhi_renderer_opengl.h"
@@ -167,6 +168,26 @@ public:
         );
     }
 
+    std::shared_ptr<RHI_texture> create_texture_2D_array(
+        int width,
+        int height,
+        unsigned int mipmap_levels,
+        Texture_internal_format internal_format,
+        const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
+        const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
+        const std::vector<Image_data>& images
+    ) override {
+        return std::make_shared<RHI_texture_2D_array_OpenGL>(
+            width,
+            height,
+            mipmap_levels,
+            internal_format,
+            wraps,
+            filters,
+            images
+        );
+    }
+
     std::shared_ptr<RHI_screen_buffer> create_screen_buffer(
         const std::shared_ptr<RHI_window>& window
     ) override {
@@ -195,6 +216,10 @@ public:
 
     std::shared_ptr<RHI_memory_buffer_binder> create_memory_buffer_binder() override {
         return std::make_shared<RHI_memory_binder_OpenGL>();
+    }
+
+    std::shared_ptr<RHI_texture_builder> create_texture_builder() override {
+        return std::make_shared<RHI_texture_builder_OpenGL>();
     }
 
     std::shared_ptr<RHI_renderer> create_renderer(const Clear_state& clear_state) override {

@@ -148,6 +148,7 @@ public:
 class Texture_cubemap : public Texture {
 protected:
     std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>> m_images{};
+
 public:
     Texture_cubemap(
         std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>> images
@@ -162,9 +163,9 @@ public:
             return;
         }
 
-        std::unordered_map<Texture_cubemap_face, Image_data> image_datas{};
+        std::unordered_map<Texture_cubemap_face, Image_data> images{};
         for (const auto& [face, image] : m_images) {
-            image_datas[face] = Image_data{
+            images[face] = Image_data{
                 image->width(),
                 image->height(),
                 image->data_ptr(),
@@ -186,7 +187,7 @@ public:
                 {Texture_filter_target::MIN, Texture_filter::LINEAR},
                 {Texture_filter_target::MAG, Texture_filter::LINEAR}
             },
-            image_datas
+            images
         );
 
     }

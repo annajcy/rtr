@@ -80,10 +80,8 @@ public:
             }
         }
 
-        auto depth_attachment = std::dynamic_pointer_cast<RHI_texture_2D_OpenGL>(m_depth_attachment);
-
         // 附加深度附件
-        if (depth_attachment != nullptr) {
+        if (auto depth_attachment = std::dynamic_pointer_cast<RHI_texture_2D_OpenGL>(m_depth_attachment)) {
             if (glIsTexture(depth_attachment->texture_id())) {
                 glNamedFramebufferTexture(
                     m_frame_buffer_id,

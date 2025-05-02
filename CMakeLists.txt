@@ -70,6 +70,9 @@ set(COMMON_LIBS
 add_executable(rhi_frame_buffer ${SOURCES} example/rhi/frame_buffer.cpp)
 target_link_libraries(rhi_frame_buffer ${COMMON_LIBS})
 
+add_executable(rhi_texture_array ${SOURCES} example/rhi/texture_array.cpp)
+target_link_libraries(rhi_texture_array ${COMMON_LIBS})
+
 add_executable(rhi_frame_buffer_depth ${SOURCES} example/rhi/frame_buffer_depth.cpp)
 target_link_libraries(rhi_frame_buffer_depth ${COMMON_LIBS})
 

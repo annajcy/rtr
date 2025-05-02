@@ -66,11 +66,13 @@ const char* fragment_shader_source1 = R"(
 out vec4 FragColor;
 in vec2 TexCoords;
 
-uniform sampler2D depth_texture;
+//uniform sampler2D depth_texture;
+uniform sampler2DArray depth_arr_texture;
 
 void main()
 {
-    float depthValue = texture(depth_texture, TexCoords).r;
+    //float depthValue = texture(depth_texture, TexCoords).r;
+    float depthValue = texture(depth_arr_texture, vec3(TexCoords, 0)).r;
     FragColor = vec4(vec3(depthValue), 1.0);
 }
 )";
@@ -115,6 +117,14 @@ int main() {
     fb->link(device);
     auto frame_buffer = fb->rhi_resource();
 
+    auto tex_builder = device->create_texture_builder();
+    auto texture_array_dep = device->create_texture_depth_attachment_array(
+        window->width(),
+        window->height(),
+        1
+    );
+    //texture_array_dep->bind_to_unit(3);
+
     // 后处理着色器
     auto screen_vertex_shader = Shader_code::create(Shader_type::VERTEX, vertex_shader_source1);
     auto screen_fragment_shader = Shader_code::create(Shader_type::FRAGMENT, fragment_shader_source1);
@@ -122,7 +132,8 @@ int main() {
         {Shader_type::VERTEX, screen_vertex_shader},
         {Shader_type::FRAGMENT, screen_fragment_shader}
     }, {
-        {"depth_texture", Uniform_entry<int>::create(0)}
+      //  {"depth_texture", Uniform_entry<int>::create(0)},
+        {"depth_arr_texture", Uniform_entry<int>::create(3)}
     });
     screen_sp->link(device);
     auto screen_shader = screen_sp->rhi_resource();
@@ -148,7 +159,11 @@ int main() {
         renderer->draw(depth_shader, geometry, frame_buffer);
 
         // 第二阶段：显示深度缓冲
-        dpa->rhi_resource()->bind_to_unit(0);
+        //dpa->rhi_resource()->bind_to_unit(0);
+        tex_builder->build_texure_2D_array(texture_array_dep, std::vector<std::shared_ptr<RHI_texture>>{
+            dpa->rhi_resource()
+        });
+        texture_array_dep->bind_to_unit(3);
         renderer->clear(screen_frame_buffer);
         renderer->draw(screen_shader, screen_geometry, screen_frame_buffer);
 

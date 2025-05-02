@@ -1,5 +1,6 @@
 #pragma once
-#include "../component_base.h"
+
+
 #include "engine/runtime/framework/component/node/node.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 

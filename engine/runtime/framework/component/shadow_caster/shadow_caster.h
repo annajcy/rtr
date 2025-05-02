@@ -1,6 +1,5 @@
 #pragma once
 #include "engine/runtime/framework/component/camera/camera.h"
-#include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/function/render/object/texture.h"
 #include <memory>
 

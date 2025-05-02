@@ -79,6 +79,10 @@ public:
         return ImGui::SliderFloat(title.c_str(), value, min, max);
     }
 
+    bool is_io_captured() override {
+        return ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard;
+    }
+    
     float frame_rate() override {
         return ImGui::GetIO().Framerate;
     }

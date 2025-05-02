@@ -83,6 +83,16 @@ public:
         const Image_data& image
     ) = 0;
 
+    virtual std::shared_ptr<RHI_texture> create_texture_2D_array(
+        int width,
+        int height,
+        unsigned int mipmap_levels,
+        Texture_internal_format internal_format,
+        const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
+        const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
+        const std::vector<Image_data>& images
+    ) = 0;
+
     std::shared_ptr<RHI_texture> create_texture_color_attachment(
         int width,
         int height
@@ -147,6 +157,28 @@ public:
         );
     }
 
+    std::shared_ptr<RHI_texture> create_texture_depth_attachment_array(
+        int width,
+        int height,
+        int array_size
+    ) {
+        return create_texture_2D_array(
+            width,
+            height,
+            1,
+            Texture_internal_format::DEPTH_32F,
+            std::unordered_map<Texture_wrap_target, Texture_wrap>{
+                {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_BORDER},
+                {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_BORDER}
+            },
+            std::unordered_map<Texture_filter_target, Texture_filter>{
+                {Texture_filter_target::MIN, Texture_filter::NEAREST},
+                {Texture_filter_target::MAG, Texture_filter::NEAREST}
+            },
+            std::vector<Image_data>(array_size)
+        );
+    }
+
     virtual std::shared_ptr<RHI_texture> create_texture_cubemap(
         int width,
         int height,
@@ -173,6 +205,8 @@ public:
     ) = 0;
 
     virtual std::shared_ptr<RHI_memory_buffer_binder> create_memory_buffer_binder() = 0;
+   
+    virtual std::shared_ptr<RHI_texture_builder> create_texture_builder() = 0;
 
     virtual std::shared_ptr<RHI_renderer> create_renderer(const Clear_state& clear_state) = 0;
 

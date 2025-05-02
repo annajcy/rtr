@@ -1,6 +1,5 @@
 #pragma once
 #include "engine/runtime/framework/component/component_base.h"
-#include "engine/runtime/global/base.h"
 
 namespace rtr {
     

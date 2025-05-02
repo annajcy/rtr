@@ -161,7 +161,8 @@ enum class Texture_buffer_type {
 
 enum class Texture_type {
     TEXTURE_2D,
-    TEXTURE_CUBEMAP
+    TEXTURE_CUBEMAP,
+    TEXTURE_2D_ARRAY
 };
 
 enum class Texture_internal_format {

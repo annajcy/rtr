@@ -43,7 +43,6 @@ protected:
     unsigned int m_data_size{};
 
 public:
-    
     RHI_buffer(
         Buffer_type type, 
         Buffer_usage usage,
