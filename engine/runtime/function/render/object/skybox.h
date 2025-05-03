@@ -21,7 +21,7 @@ public:
             mat->spherical_map = texture_2d;
             m_skybox_material = mat;
         } else {
-            auto texture_cubemap = std::dynamic_pointer_cast<Texture_cubemap>(texture);
+            auto texture_cubemap = std::dynamic_pointer_cast<Texture_image_cubemap>(texture);
             auto mat = Skybox_cubemap_material::create();
             mat->cube_map = texture_cubemap;
             m_skybox_material = mat;

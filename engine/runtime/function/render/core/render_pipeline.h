@@ -6,7 +6,6 @@
 #include "engine/runtime/function/render/core/render_pass.h"
 #include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/function/render/core/render_struct.h"
-#include "engine/runtime/platform/rhi/opengl/rhi_error_opengl.h"
 #include "engine/runtime/resource/resource_base.h"
 #include "glm/fwd.hpp"
 #include <memory>

@@ -156,15 +156,15 @@ public:
     }
 };
 
-class Texture_cubemap : public Texture {
+class Texture_image_cubemap : public Texture {
 protected:
     std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>> m_images{};
 
 public:
-    Texture_cubemap(
+    Texture_image_cubemap(
         std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>> images
     ) : Texture(Texture_type::TEXTURE_CUBEMAP), m_images(images) {}
-    virtual ~Texture_cubemap() {}
+    virtual ~Texture_image_cubemap() {}
     const std::shared_ptr<Image>& image(Texture_cubemap_face face) const { return m_images.at(face); }
     void set_image(Texture_cubemap_face face, const std::shared_ptr<Image>& image) { m_images[face] = image; }
 
@@ -204,12 +204,11 @@ public:
         texture_builder->build_texture_cubemap(m_rhi_resource, images);
     }
 
-    static std::shared_ptr<Texture_cubemap> create(
+    static std::shared_ptr<Texture_image_cubemap> create(
         std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>> images
     ) {
-        return std::make_shared<Texture_cubemap>(images);
+        return std::make_shared<Texture_image_cubemap>(images);
     }
-
 };
 
 };

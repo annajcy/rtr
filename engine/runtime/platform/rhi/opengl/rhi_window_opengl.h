@@ -3,13 +3,13 @@
 #include "engine/runtime/global/base.h" 
 
 #include "../rhi_window.h"
+#include "engine/runtime/platform/rhi/opengl/rhi_imgui_opengl.h"
 #include "rhi_cast_opengl.h"
 
 
 namespace rtr {
 
 class RHI_window_OpenGL : public RHI_window {
-
 protected:
     GLFWwindow* m_window{};
 
@@ -48,6 +48,8 @@ public:
 
         glfwGetFramebufferSize(window(), &m_width, &m_height);
         set_viewport(0, 0, m_width, m_height);
+
+        m_imgui = RHI_imgui_OpenGL::create(m_window);
         
     }
 
@@ -82,6 +84,9 @@ public:
     static void window_resize_callback(GLFWwindow* window, int width, int height) {
         auto* self = static_cast<RHI_window_OpenGL*>(glfwGetWindowUserPointer(window));
         if (self) {
+            if (self->imgui()->is_io_captured()) {
+                return;
+            }
             self->m_width = width;
             self->m_height = height;
             self->m_window_resize_event.execute(width, height);
@@ -91,6 +96,9 @@ public:
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
         auto* self = static_cast<RHI_window_OpenGL*>(glfwGetWindowUserPointer(window));
         if (self) {
+            if (self->imgui()->is_io_captured()) {
+                return;
+            }
             self->m_mouse_button_event.execute(gl_to_rhi_mouse_button_map(button), gl_to_rhi_key_action_map(action), mods);
         }
     }
@@ -98,6 +106,9 @@ public:
     static void mouse_move_callback(GLFWwindow* window, double xpos, double ypos) {
         auto* self = static_cast<RHI_window_OpenGL*>(glfwGetWindowUserPointer(window));
         if (self) {
+            if (self->imgui()->is_io_captured()) {
+                return;
+            }
             self->m_mouse_move_event.execute(xpos, ypos);
         }   
     }
@@ -105,6 +116,9 @@ public:
     static void mouse_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
         auto* self = static_cast<RHI_window_OpenGL*>(glfwGetWindowUserPointer(window));
         if (self) {
+            if (self->imgui()->is_io_captured()) {
+                return;
+            }
             self->m_mouse_scroll_event.execute(xoffset, yoffset);
         }
     }
@@ -112,6 +126,9 @@ public:
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
         auto* self = static_cast<RHI_window_OpenGL*>(glfwGetWindowUserPointer(window));
         if (self) {
+            if (self->imgui()->is_io_captured()) {
+                return;
+            }
             self->m_key_event.execute(gl_to_rhi_key_map(key), gl_to_rhi_key_action_map(action), mods);
         }
     }

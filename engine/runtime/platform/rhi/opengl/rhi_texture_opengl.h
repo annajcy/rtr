@@ -4,9 +4,7 @@
 
 #include "../rhi_texture.h"
 #include "engine/runtime/global/enum.h"
-#include "glm/ext/vector_float4.hpp"
 #include "rhi_cast_opengl.h"
-#include <exception>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -172,7 +170,7 @@ public:
                 static_cast<GLsizei>(m_width * m_height * 4),
                 data
             );
-            
+
             return Image_data{
                 .width = m_width,
                 .height = m_height,

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "engine/runtime/global/base.h" 
-
 #include "../rhi_device.h"
 #include "../rhi_frame_buffer.h"
 #include "../rhi_pipeline_state.h"
@@ -12,7 +10,6 @@
 #include "rhi_compute_opengl.h"
 #include "rhi_error_opengl.h"
 #include "rhi_renderer_opengl.h"
-#include "rhi_imgui_opengl.h"
 #include "rhi_buffer_opengl.h"
 #include "rhi_geometry_opengl.h"
 #include "rhi_window_opengl.h"
@@ -228,10 +225,6 @@ public:
 
     std::shared_ptr<RHI_pipeline_state> create_pipeline_state() override {
         return std::make_shared<RHI_pipeline_state_OpenGL>();
-    }
-
-    std::shared_ptr<RHI_imgui> create_imgui(const std::shared_ptr<RHI_window>& window) override {
-        return std::make_shared<RHI_imgui_OpenGL>(window);
     }
 
 };

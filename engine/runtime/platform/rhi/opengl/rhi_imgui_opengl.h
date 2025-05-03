@@ -1,11 +1,13 @@
 #pragma once
 
-#include "engine/runtime/global/base.h" 
 
-#include "../rhi_window.h"
 #include "../rhi_imgui.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include <memory>
 
-#include "rhi_window_opengl.h"
+class GLFWwindow;
 
 namespace rtr {
 
@@ -13,22 +15,20 @@ class RHI_imgui_OpenGL : public RHI_imgui {
 
 public:
 
-    static std::shared_ptr<RHI_imgui_OpenGL> create(const std::shared_ptr<RHI_window>& window) {
-        return std::make_shared<RHI_imgui_OpenGL>(window);
+    static std::shared_ptr<RHI_imgui_OpenGL> create(GLFWwindow* window, float dpi_scale = 1.0f) {
+        return std::make_shared<RHI_imgui_OpenGL>(window, dpi_scale);
     }
     
-    RHI_imgui_OpenGL(const std::shared_ptr<RHI_window>& window, float dpi_scale = 1.0f) : RHI_imgui(window) {
-        if (auto gl_window = std::dynamic_pointer_cast<RHI_window_OpenGL>(m_window)) {
-            IMGUI_CHECKVERSION();
-            ImGui::CreateContext();
+    RHI_imgui_OpenGL(GLFWwindow* window, float dpi_scale) : RHI_imgui() {
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
 
-            ImGuiIO& io = ImGui::GetIO();
-            io.FontGlobalScale = dpi_scale;
+        ImGuiIO& io = ImGui::GetIO();
+        io.FontGlobalScale = dpi_scale;
 
-            ImGui::StyleColorsDark();
-            ImGui_ImplGlfw_InitForOpenGL(gl_window->window(), true);
-            ImGui_ImplOpenGL3_Init("#version 460");
-        }
+        ImGui::StyleColorsDark();
+        ImGui_ImplGlfw_InitForOpenGL(window, true);
+        ImGui_ImplOpenGL3_Init("#version 460");
     }
    
     ~RHI_imgui_OpenGL() {

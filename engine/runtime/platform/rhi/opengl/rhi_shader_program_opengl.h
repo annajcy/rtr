@@ -5,7 +5,6 @@
 #include "../rhi_shader_code.h"
 #include "../rhi_shader_program.h"
 
-#include "rhi_error_opengl.h"
 #include "rhi_shader_code_opengl.h"
 #include <memory>
 

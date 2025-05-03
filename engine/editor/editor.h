@@ -1,13 +1,8 @@
 #pragma once
 
-#include "engine/runtime/framework/component/camera/camera_component.h"
-#include "engine/runtime/framework/component/camera/camera_control_component.h"
-#include "engine/runtime/framework/component/light/light_component.h"
 #include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
-#include "engine/runtime/framework/component/node/node_component.h"
 #include "engine/runtime/platform/rhi/rhi_imgui.h"
 #include "engine/runtime/runtime.h"
-#include "glm/gtc/type_ptr.hpp"
 #include <memory>
 #include <string>
 
@@ -25,7 +20,7 @@ public:
 
     Editor(const std::shared_ptr<Engine_runtime>& engine_runtime) : 
     m_engine_runtime(engine_runtime),
-    m_imgui(engine_runtime->rhi_device()->create_imgui(engine_runtime->window_system()->window())) {}
+    m_imgui(engine_runtime->window_system()->window()->imgui()) {}
 
     void tick(float delta_time) {
         runtime_tick(delta_time);

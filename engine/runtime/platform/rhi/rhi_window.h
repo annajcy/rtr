@@ -1,7 +1,9 @@
 #pragma once
 
-#include "engine/runtime/global/base.h" 
+#include "engine/runtime/global/enum.h"
+#include "engine/runtime/global/event.h"
 #include "engine/runtime/global/logger.h"
+#include "engine/runtime/platform/rhi/rhi_imgui.h"
 #include <memory>
 
 namespace rtr {
@@ -18,6 +20,7 @@ protected:
     int m_width{};
     int m_height{};
     std::string m_title{};
+    std::shared_ptr<RHI_imgui> m_imgui{};
 
     Window_resize_event m_window_resize_event{[&](int width, int height) {
         Log_sys::get_instance()->log(Logging_system::Level::info, "Window resized: {} {}", width, height);
@@ -67,6 +70,7 @@ public:
     const int& width() { return m_width; }
     const int& height() { return m_height; }
     const std::string& title() { return m_title; }
+    std::shared_ptr<RHI_imgui>& imgui() { return m_imgui; }
 
     Window_resize_event& window_resize_event() { return m_window_resize_event; }
     Mouse_button_event& mouse_button_event() { return m_mouse_button_event; }

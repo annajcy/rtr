@@ -1,7 +1,5 @@
 #pragma once
 
-#include "engine/runtime/global/base.h" 
-#include "rhi_imgui.h"
 #include "rhi_buffer.h"
 #include "rhi_compute.h"
 #include "rhi_frame_buffer.h"
@@ -100,6 +98,27 @@ public:
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters
     ) = 0;
+
+    std::shared_ptr<RHI_texture> create_depth_attachment_cubemap(
+        int width,
+        int height
+    ) {
+        return create_texture_cubemap(
+            width,
+            height,
+            1,
+            Texture_internal_format::DEPTH_32F,
+            {
+                {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_BORDER},
+                {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_BORDER},
+                {Texture_wrap_target::W, Texture_wrap::CLAMP_TO_BORDER}
+            },
+            {
+                {Texture_filter_target::MIN, Texture_filter::NEAREST},
+                {Texture_filter_target::MAG, Texture_filter::NEAREST}
+            }
+        );
+    }
 
     std::shared_ptr<RHI_texture> create_texture_color_attachment(
         int width,
@@ -207,9 +226,7 @@ public:
 
     virtual std::shared_ptr<RHI_pipeline_state> create_pipeline_state() = 0;
 
-    virtual std::shared_ptr<RHI_pipeline_state> create_pipeline_state(const Pipeline_state& pipeline_state) = 0;
-
-    virtual std::shared_ptr<RHI_imgui> create_imgui(const std::shared_ptr<RHI_window>& window) = 0;   
+    virtual std::shared_ptr<RHI_pipeline_state> create_pipeline_state(const Pipeline_state& pipeline_state) = 0; 
 
 };
 

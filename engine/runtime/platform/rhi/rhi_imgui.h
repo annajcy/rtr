@@ -1,17 +1,13 @@
 #pragma once
 
-#include "engine/runtime/global/base.h" 
-#include "rhi_window.h"
-#include <memory>
 
+#include <string>
 namespace rtr {
-class RHI_imgui {
-protected:
-    std::shared_ptr<RHI_window> m_window{};
 
+class RHI_imgui {
 public:
 
-    RHI_imgui(const std::shared_ptr<RHI_window>& window) : m_window(window) {}
+    RHI_imgui() {}
     ~RHI_imgui() = default;
 
     virtual void begin_frame() = 0;
