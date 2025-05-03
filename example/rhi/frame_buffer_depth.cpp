@@ -160,7 +160,7 @@ int main() {
 
         // 第二阶段：显示深度缓冲
         //dpa->rhi_resource()->bind_to_unit(0);
-        tex_builder->build_texure_2D_array(texture_array_dep, std::vector<std::shared_ptr<RHI_texture>>{
+        tex_builder->build_texture_2D_array(texture_array_dep, std::vector<std::shared_ptr<RHI_texture>>{
             dpa->rhi_resource()
         });
         texture_array_dep->bind_to_unit(3);

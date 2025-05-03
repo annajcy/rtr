@@ -219,6 +219,8 @@ inline constexpr unsigned int gl_texture_external_format(Texture_external_format
             return GL_RGBA;
         case Texture_external_format::DEPTH_STENCIL:
             return GL_DEPTH_STENCIL;
+        case Texture_external_format::DEPTH:
+            return GL_DEPTH_COMPONENT;
         case Texture_external_format::SRGB_ALPHA:
             return GL_SRGB_ALPHA;
         case Texture_external_format::SRGB:

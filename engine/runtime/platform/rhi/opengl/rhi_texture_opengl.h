@@ -7,8 +7,10 @@
 #include "glm/ext/vector_float4.hpp"
 #include "rhi_cast_opengl.h"
 #include <exception>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <vector>
 
 namespace rtr {
 
@@ -87,10 +89,8 @@ public:
         unsigned int mipmap_levels,
         Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
-        const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
-        const Image_data& image
-    ) : IRHI_texture_2D(image),
-        RHI_texture_OpenGL(
+        const std::unordered_map<Texture_filter_target, Texture_filter>& filters
+    ) : RHI_texture_OpenGL(
         width,
         height,
         mipmap_levels,
@@ -111,16 +111,15 @@ public:
 
         apply_filters();
         apply_wraps();
-        upload_data(image);
     }
 
     virtual ~RHI_texture_2D_OpenGL() {}
 
-    void upload_data(const Image_data& image) override {
+    bool upload_data(const Image_data& image) override {
 
         if (image.data == nullptr) {
             std::cout << "[RHI_texture_2D_OpenGL] Image data is nullptr" << std::endl;
-            return;
+            return false;
         }
 
         glTextureSubImage2D(
@@ -134,46 +133,73 @@ public:
         );
 
         if (m_mipmap_levels > 1) generate_mipmap();
-        m_is_sync_image_data = true;
+        return true;
     }  
 
-    void sync_image_data() override {
-        if (m_is_sync_image_data) return;
-        m_is_sync_image_data = true;
-        if (m_image.buffer_type == Texture_buffer_type::UNSIGNED_BYTE) {
+    bool upload_data(const std::shared_ptr<RHI_texture>& image) override {
+        if (auto gl_image = std::dynamic_pointer_cast<RHI_texture_2D_OpenGL>(image)) {
+            glCopyImageSubData(
+                gl_image->texture_id(),
+                gl_texture_type(gl_image->type()),
+                0,
+                0, 0, 0,
+                m_texture_id,
+                gl_texture_type(m_type),
+                0,
+                0, 0, 0,
+                m_width,
+                m_height,
+                1
+            );
+            if (m_mipmap_levels > 1) generate_mipmap();
+            return true;
+        } else {
+            std::cerr << "Unsupported texture type or invaild texture" << std::endl;
+            return false;
+        }
+    }
+
+    Image_data get_image_data() override {
+        
+        if (m_internal_format == Texture_internal_format::SRGB_ALPHA) {
             auto data = new unsigned char[m_width * m_height * 4];
+
             glGetTextureImage(
                 m_texture_id,
                 0,
-                gl_texture_external_format(m_image.external_format),
-                gl_texture_buffer_type(m_image.buffer_type),
+                gl_texture_external_format(Texture_external_format::RGB_ALPHA),
+                gl_texture_buffer_type(Texture_buffer_type::UNSIGNED_BYTE),
                 static_cast<GLsizei>(m_width * m_height * 4),
                 data
             );
-
-            m_image = Image_data{
+            
+            return Image_data{
                 .width = m_width,
-               .height = m_height,
-               .data = data,
-               .buffer_type = m_image.buffer_type,
-               .external_format = m_image.external_format
+                .height = m_height,
+                .data = data,
+                .buffer_type = Texture_buffer_type::UNSIGNED_BYTE,
+                .external_format = Texture_external_format::RGB_ALPHA,
+                .has_ownership = true
             };
-        } else if (m_image.buffer_type == Texture_buffer_type::FLOAT) {
+
+        } else if (m_internal_format == Texture_internal_format::DEPTH_32F) {
             auto data = new float[m_width * m_height];
             glGetTextureImage(
                 m_texture_id,
                 0,
-                gl_texture_external_format(m_image.external_format),
-                gl_texture_buffer_type(m_image.buffer_type),
+                gl_texture_external_format(Texture_external_format::DEPTH),
+                gl_texture_buffer_type(Texture_buffer_type::FLOAT),
                 static_cast<GLsizei>(m_width * m_height),
                 data
             );
-            m_image = Image_data{
+
+            return Image_data{
                 .width = m_width,
                 .height = m_height,
                 .data = reinterpret_cast<unsigned char*>(data),
-                .buffer_type = m_image.buffer_type,
-                .external_format = m_image.external_format
+                .buffer_type = Texture_buffer_type::FLOAT,
+                .external_format = Texture_external_format::DEPTH,
+                .has_ownership = true
             };
         } else {
             throw std::runtime_error("Unsupported texture buffer type");
@@ -191,9 +217,8 @@ public:
         unsigned int mipmap_levels,
         Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
-        const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
-        const std::unordered_map<Texture_cubemap_face, Image_data>& images
-    ) : IRHI_texture_cubemap(images),
+        const std::unordered_map<Texture_filter_target, Texture_filter>& filters
+    ) : IRHI_texture_cubemap(),
         RHI_texture_OpenGL(
         width,
         height,
@@ -214,18 +239,17 @@ public:
 
         apply_filters();
         apply_wraps();
-        upload_data(images);
     }
 
     virtual ~RHI_texture_cubemap_OpenGL() {}
 
-    void upload_data(const std::unordered_map<Texture_cubemap_face, Image_data>& images) override {
+    bool upload_data(const std::unordered_map<Texture_cubemap_face, Image_data>& images) override {
         
         for (const auto& [face, image] : images) {
     
             if (image.data == nullptr) {
                 std::cout << "[RHI_texture_cubemap_OpenGL] Image data is nullptr" << std::endl;
-                return;
+                return false;
             }
 
             glTextureSubImage3D(
@@ -240,12 +264,94 @@ public:
         }
 
         if (m_mipmap_levels > 1) generate_mipmap();
-        m_is_sync_image_data = true;
+        return true;
     }
 
-    void sync_image_data() override {
-        std::runtime_error("Cubemap texture does not support sync image data");
+    bool upload_data(const std::unordered_map<Texture_cubemap_face, std::shared_ptr<RHI_texture>>& images) override {
+        for (const auto& [face, image] : images) {
+            if (auto gl_image = std::dynamic_pointer_cast<RHI_texture_2D_OpenGL>(image)) {
+                glCopyImageSubData(
+                    gl_image->texture_id(),
+                    gl_texture_type(gl_image->type()),
+                    0,
+                    0, 0, 0,
+                    m_texture_id,
+                    gl_texture_type(m_type),
+                    0,
+                    0, 0, static_cast<unsigned int>(face),
+                    m_width,
+                    m_height,
+                    1
+                );
+            } else {
+                std::cerr << "Unsupported texture type or invaild texture" << std::endl;
+                return false;
+            }
+        }
+        if (m_mipmap_levels > 1) generate_mipmap();
+        return true;
     }
+
+    std::unordered_map<Texture_cubemap_face, Image_data> get_image_data() override {
+        std::unordered_map<Texture_cubemap_face, Image_data> images{};
+        const std::vector<Texture_cubemap_face> faces = {
+            Texture_cubemap_face::FRONT,
+            Texture_cubemap_face::BACK,
+            Texture_cubemap_face::LEFT,
+            Texture_cubemap_face::RIGHT,
+            Texture_cubemap_face::TOP,
+            Texture_cubemap_face::BOTTOM
+        };
+
+        for (const auto& face : faces) {
+            if (m_internal_format == Texture_internal_format::SRGB_ALPHA) {
+                auto data = new unsigned char[m_width * m_height * 4];
+                glGetTextureSubImage(
+                    m_texture_id,
+                    0,
+                    0, 0, static_cast<unsigned int>(face),
+                    m_width, m_height, 1,
+                    gl_texture_external_format(Texture_external_format::RGB_ALPHA),
+                    gl_texture_buffer_type(Texture_buffer_type::UNSIGNED_BYTE),
+                    static_cast<GLsizei>(m_width * m_height * 4),
+                    data
+                );
+                
+                images[face] = Image_data{
+                    .width = m_width,
+                    .height = m_height,
+                    .data = data,
+                    .buffer_type = Texture_buffer_type::UNSIGNED_BYTE,
+                    .external_format = Texture_external_format::RGB_ALPHA,
+                    .has_ownership = true
+                };
+            } else if (m_internal_format == Texture_internal_format::DEPTH_32F) {
+                auto data = new float[m_width * m_height];
+                glGetTextureSubImage(
+                    m_texture_id,
+                    0,
+                    0, 0, static_cast<unsigned int>(face),
+                    m_width, m_height, 1,
+                    gl_texture_external_format(Texture_external_format::DEPTH),
+                    gl_texture_buffer_type(Texture_buffer_type::FLOAT),
+                    static_cast<GLsizei>(m_width * m_height),
+                    data
+                );
+                images[face] = Image_data{
+                    .width = m_width,
+                    .height = m_height,
+                    .data = reinterpret_cast<unsigned char*>(data),
+                    .buffer_type = Texture_buffer_type::FLOAT,
+                    .external_format = Texture_external_format::DEPTH,
+                    .has_ownership = true
+                };
+            } else {
+                throw std::runtime_error("Unsupported texture buffer type");
+            }
+        }
+        return images;
+    }
+
 };
 
 class RHI_texture_2D_array_OpenGL : public RHI_texture_OpenGL, public IRHI_texture_2D_array {
@@ -257,8 +363,8 @@ public:
         Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
-        const std::vector<Image_data>& images
-    ) : IRHI_texture_2D_array(images),
+        const unsigned int layer_count
+    ) : IRHI_texture_2D_array(layer_count),
         RHI_texture_OpenGL(
         width,
         height,
@@ -275,19 +381,21 @@ public:
             gl_texture_internal_format(m_internal_format),
             m_width,
             m_height,
-            m_images.size()
+            m_layer_count
         );
 
         apply_filters();
         apply_wraps();
-
-        upload_data(images);
     }
 
     virtual ~RHI_texture_2D_array_OpenGL() {}
 
-    void upload_data_from_rhi(const std::vector<std::shared_ptr<RHI_texture>>& images) override {
-        m_images.resize(images.size());
+    bool upload_data(const std::vector<std::shared_ptr<RHI_texture>>& images) override {
+        if (images.size() != m_layer_count) {
+            std::cerr << "Image count does not match layer count" << std::endl;
+            return false;
+        }
+
         for (size_t i = 0; i < images.size(); i++) {
             auto& image = images[i];
             if (auto gl_image = std::dynamic_pointer_cast<RHI_texture_2D_OpenGL>(image)) {
@@ -305,21 +413,26 @@ public:
                     1
                 );
             } else {
-                throw std::runtime_error("Unsupported texture type or invaild texture");
+                std::cerr << "Unsupported texture type or invaild texture" << std::endl;
+                return false;
             }
         }
         if (m_mipmap_levels > 1) generate_mipmap();
-        m_is_sync_image_data = false;
+        return true;
     }
 
-    void upload_data(const std::vector<Image_data>& images) override {
-        m_images = images;
+    bool upload_data(const std::vector<Image_data>& images) override {
+        if (images.size() != m_layer_count) {
+            std::cerr << "Image count does not match layer count" << std::endl;
+            return false;
+        }
+
         for (size_t i = 0; i < images.size(); i++) {
             const auto& image = images[i];
     
             if (image.data == nullptr) {
                 std::cout << "[RHI_texture_2D_array_OpenGL] Image data is nullptr" << std::endl;
-                return;
+                return false;
             }
             
             glTextureSubImage3D(
@@ -334,68 +447,125 @@ public:
         }
 
         if (m_mipmap_levels > 1) generate_mipmap();
-        m_is_sync_image_data = true;
+        return true;
     }
 
-    void sync_image_data() override {
-        if (m_is_sync_image_data) return;
-        m_is_sync_image_data = true;
-        for (size_t i = 0; i < m_images.size(); i++) {
-            auto& image = m_images[i];
-            if (image.buffer_type == Texture_buffer_type::UNSIGNED_BYTE) {
+    std::vector<Image_data> get_image_data() override {
+        std::vector<Image_data> images{};
+        for (size_t i = 0; i < m_layer_count; i++) {
+            if (m_internal_format == Texture_internal_format::SRGB_ALPHA) {
                 auto data = new unsigned char[m_width * m_height * 4];
-                glGetTextureImage(
+                glGetTextureSubImage(
                     m_texture_id,
                     0,
-                    gl_texture_external_format(image.external_format),
-                    gl_texture_buffer_type(image.buffer_type),
+                    0, 0, static_cast<unsigned int>(i),
+                    m_width, m_height, 1,
+                    gl_texture_external_format(Texture_external_format::RGB_ALPHA),
+                    gl_texture_buffer_type(Texture_buffer_type::UNSIGNED_BYTE),
                     static_cast<GLsizei>(m_width * m_height * 4),
                     data
                 );
-                image = Image_data{
-                   .width = m_width,
-                  .height = m_height,
-                  .data = data,
-                  .buffer_type = image.buffer_type,
-                  .external_format = image.external_format
-                };
-            } else if (image.buffer_type == Texture_buffer_type::FLOAT) {
+                images.push_back(Image_data{
+                    .width = m_width,
+                    .height = m_height,
+                    .data = data,
+                    .buffer_type = Texture_buffer_type::UNSIGNED_BYTE,
+                    .external_format = Texture_external_format::RGB_ALPHA,
+                    .has_ownership = true
+                });
+            } else if (m_internal_format == Texture_internal_format::DEPTH_32F) {
                 auto data = new float[m_width * m_height];
-                glGetTextureImage(
+                glGetTextureSubImage(
                     m_texture_id,
                     0,
-                    gl_texture_external_format(image.external_format),
-                    gl_texture_buffer_type(image.buffer_type),
+                    0, 0, static_cast<unsigned int>(i),
+                    m_width, m_height, 1,
+                    gl_texture_external_format(Texture_external_format::DEPTH),
+                    gl_texture_buffer_type(Texture_buffer_type::FLOAT),
                     static_cast<GLsizei>(m_width * m_height),
                     data
                 );
-                image = Image_data{
-                    .width = m_width,
-                    .height = m_height,
-                    .data = reinterpret_cast<unsigned char*>(data),
-                    .buffer_type = image.buffer_type,
-                    .external_format = image.external_format
-                };
-            } else {
-                throw std::runtime_error("Unsupported texture buffer type");
+                images.push_back(Image_data{
+                   .width = m_width,
+                   .height = m_height,
+                   .data = reinterpret_cast<unsigned char*>(data),
+                   .buffer_type = Texture_buffer_type::FLOAT,
+                   .external_format = Texture_external_format::DEPTH,
+                   .has_ownership = true
+                });
             }
         }
+        return images;
     }
 };
 
 class RHI_texture_builder_OpenGL : public RHI_texture_builder {
 public:
-    void build_texure_2D_array(
+    RHI_texture_builder_OpenGL() {}
+    
+    virtual ~RHI_texture_builder_OpenGL() {}
+
+    bool build_texture_2D(
+        std::shared_ptr<RHI_texture>& texture_2D,
+        const std::shared_ptr<RHI_texture>& texture_2D_source
+    ) override {
+        if (auto gl_texture_2D = std::dynamic_pointer_cast<RHI_texture_2D_OpenGL>(texture_2D)) {
+            return gl_texture_2D->upload_data(texture_2D_source);
+        }
+        return false;
+    }
+
+    bool build_texture_2D(
+        std::shared_ptr<RHI_texture>& texture_2D,
+        const Image_data& image
+    ) override {
+        if (auto gl_texture_2D = std::dynamic_pointer_cast<RHI_texture_2D_OpenGL>(texture_2D)) {
+            return  gl_texture_2D->upload_data(image);
+        }
+        return false;
+    }
+
+    bool build_texture_cubemap(
+        std::shared_ptr<RHI_texture>& texture_cubemap,
+        const std::unordered_map<Texture_cubemap_face, std::shared_ptr<RHI_texture>>& texture_cubemaps
+    ) override {
+        if (auto gl_texture_cubemap = std::dynamic_pointer_cast<RHI_texture_cubemap_OpenGL>(texture_cubemap)) {
+           return gl_texture_cubemap->upload_data(texture_cubemaps);
+        }
+        return false;
+    }
+
+    bool build_texture_cubemap(
+        std::shared_ptr<RHI_texture>& texture_cubemap,
+        const std::unordered_map<Texture_cubemap_face, Image_data>& images
+    ) override {
+        if (auto gl_texture_cubemap = std::dynamic_pointer_cast<RHI_texture_cubemap_OpenGL>(texture_cubemap)) {
+            gl_texture_cubemap->upload_data(images);
+            return true;
+        }
+        return false;
+    }
+
+    bool build_texture_2D_array(
         std::shared_ptr<RHI_texture>& texture_2D_array, 
         const std::vector<std::shared_ptr<RHI_texture>>& texture_2Ds
     ) override {
         if (auto gl_texture_2D_array = std::dynamic_pointer_cast<RHI_texture_2D_array_OpenGL>(texture_2D_array)) {
-            gl_texture_2D_array->upload_data_from_rhi(texture_2Ds);
-            return;
+            return gl_texture_2D_array->upload_data(texture_2Ds);
         }
+        return false;
+    }
+    
+    bool build_texure_2D_array(
+        std::shared_ptr<RHI_texture>& texture_2D_array,
+        const std::vector<Image_data>& images
+    ) override {
+        if (auto gl_texture_2D_array = std::dynamic_pointer_cast<RHI_texture_2D_array_OpenGL>(texture_2D_array)) {
+            return  gl_texture_2D_array->upload_data(images);
+        }
+        return false;
     }
 
-    virtual ~RHI_texture_builder_OpenGL() {}
 };
 
 

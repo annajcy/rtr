@@ -2,6 +2,7 @@
 
 #include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/global/enum.h"
+#include "engine/runtime/platform/rhi/opengl/rhi_error_opengl.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "engine/runtime/resource/loader/image_loader.h"
@@ -55,7 +56,12 @@ public:
             std::unordered_map<Texture_filter_target, Texture_filter>{
                 {Texture_filter_target::MIN, Texture_filter::LINEAR_MIPMAP_LINEAR},
                 {Texture_filter_target::MAG, Texture_filter::LINEAR}
-            }, 
+            }
+        );
+
+        auto texture_builder = device->create_texture_builder();
+        texture_builder->build_texture_2D(
+            m_rhi_resource, 
             Image_data{
                 m_image->width(),
                 m_image->height(),
@@ -64,6 +70,8 @@ public:
                 Texture_external_format::RGB_ALPHA
             }
         );
+
+        gl_check_error();
     }
 
     static std::shared_ptr<Texture_image> create(const std::shared_ptr<Image>& image) {
@@ -87,7 +95,10 @@ public:
     int height() const { return m_height; }
 
     void link(const std::shared_ptr<RHI_device>& device) override {
-        m_rhi_resource = device->create_texture_color_attachment(m_width, m_height);
+        m_rhi_resource = device->create_texture_color_attachment(
+            m_width, 
+            m_height
+        );
     }
 
     static std::shared_ptr<Texture_color_attachment> create(int width, int height) {
@@ -186,10 +197,11 @@ public:
             std::unordered_map<Texture_filter_target, Texture_filter>{
                 {Texture_filter_target::MIN, Texture_filter::LINEAR},
                 {Texture_filter_target::MAG, Texture_filter::LINEAR}
-            },
-            images
+            }
         );
 
+        auto texture_builder = device->create_texture_builder();
+        texture_builder->build_texture_cubemap(m_rhi_resource, images);
     }
 
     static std::shared_ptr<Texture_cubemap> create(

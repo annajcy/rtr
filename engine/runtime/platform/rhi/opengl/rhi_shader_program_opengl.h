@@ -89,8 +89,6 @@ public:
         if (!success) {
             glGetProgramInfoLog(m_program_id, LOG_STR_LEN, nullptr, info_log);
             std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << info_log << std::endl;
-        } else {   
-            std::cout << "INFO::SHADER::PROGRAM::LINKING_SUCCESS" << std::endl;
         }
         return success;
     }

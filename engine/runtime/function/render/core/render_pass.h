@@ -6,6 +6,7 @@
 #include "engine/runtime/function/render/object/skybox.h"
 #include "engine/runtime/function/render/object/texture.h"
 #include "engine/runtime/function/render/core/render_object.h"
+#include "engine/runtime/platform/rhi/opengl/rhi_error_opengl.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -158,7 +159,7 @@ public:
     }
 
     void excute() override {
-
+        
         m_rhi_global_render_resource.renderer->clear(m_frame_buffer->rhi_resource());
 
         if (m_context.skybox != nullptr) {
@@ -170,10 +171,13 @@ public:
             if (!geometry->is_linked()) geometry->link(m_rhi_global_render_resource.device);
 
             auto texture_map = m_context.skybox->material()->get_texture_map();
+            gl_check_error();
             for (auto &[location, tex] : texture_map) {
                 if (!tex->is_linked()) tex->link(m_rhi_global_render_resource.device);
                 tex->rhi_resource()->bind_to_unit(location);
             }
+
+            
 
             m_rhi_global_render_resource.pipeline_state->state = m_context.skybox->material()->get_pipeline_state();
             m_rhi_global_render_resource.pipeline_state->apply();

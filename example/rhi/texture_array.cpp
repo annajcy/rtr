@@ -155,7 +155,7 @@ int main() {
             {Texture_filter_target::MIN, Texture_filter::LINEAR},
             {Texture_filter_target::MAG, Texture_filter::LINEAR}
         },
-        std::vector<Image_data>(2)
+        2
     );
 
     fb->link(device);
@@ -201,7 +201,7 @@ int main() {
         ca0->rhi_resource()->bind_to_unit(0);
         ca1->rhi_resource()->bind_to_unit(1);
 
-        text_arr_builder->build_texure_2D_array(
+        text_arr_builder->build_texture_2D_array(
             texture_array, 
             std::vector<std::shared_ptr<RHI_texture>> {
                 ca0->rhi_resource(),

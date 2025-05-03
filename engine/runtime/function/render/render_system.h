@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/runtime/function/render/core/render_pipeline.h"
+#include "engine/runtime/platform/rhi/opengl/rhi_error_opengl.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_renderer.h"
 #include "engine/runtime/platform/rhi/rhi_window.h"

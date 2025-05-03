@@ -633,6 +633,7 @@ int main() {
     box_node->add_child(sphere_node, true);
     //box_node->add_child(camera_node, true);
     //box_node->add_child(sl0_node, true);
+    gl_check_error();
     
     editor->run();
 

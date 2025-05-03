@@ -79,8 +79,7 @@ public:
         unsigned int mipmap_levels,
         Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
-        const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
-        const Image_data& image
+        const std::unordered_map<Texture_filter_target, Texture_filter>& filters
     ) = 0;
 
     virtual std::shared_ptr<RHI_texture> create_texture_2D_array(
@@ -90,7 +89,16 @@ public:
         Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
-        const std::vector<Image_data>& images
+        unsigned int layer_count
+    ) = 0;
+
+    virtual std::shared_ptr<RHI_texture> create_texture_cubemap(
+        int width,
+        int height,
+        unsigned int mipmap_levels,
+        Texture_internal_format internal_format,
+        const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
+        const std::unordered_map<Texture_filter_target, Texture_filter>& filters
     ) = 0;
 
     std::shared_ptr<RHI_texture> create_texture_color_attachment(
@@ -109,8 +117,7 @@ public:
             {
                 {Texture_filter_target::MIN, Texture_filter::LINEAR},
                 {Texture_filter_target::MAG, Texture_filter::LINEAR}
-            },
-            Image_data{}
+            }
         );
     }
 
@@ -131,8 +138,7 @@ public:
                 // 修改过滤模式为NEAREST
                 {Texture_filter_target::MIN, Texture_filter::NEAREST},
                 {Texture_filter_target::MAG, Texture_filter::NEAREST}
-            },
-            Image_data{}
+            }
         );
     }
 
@@ -152,8 +158,7 @@ public:
             std::unordered_map<Texture_filter_target, Texture_filter>{
                 {Texture_filter_target::MIN, Texture_filter::NEAREST},
                 {Texture_filter_target::MAG, Texture_filter::NEAREST}
-            },
-            Image_data{}
+            }
         );
     }
 
@@ -175,20 +180,10 @@ public:
                 {Texture_filter_target::MIN, Texture_filter::NEAREST},
                 {Texture_filter_target::MAG, Texture_filter::NEAREST}
             },
-            std::vector<Image_data>(array_size)
+            array_size
         );
     }
-
-    virtual std::shared_ptr<RHI_texture> create_texture_cubemap(
-        int width,
-        int height,
-        unsigned int mipmap_levels,
-        Texture_internal_format internal_format,
-        const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
-        const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
-        const std::unordered_map<Texture_cubemap_face, Image_data>& images
-    ) = 0;
-
+    
     virtual std::shared_ptr<RHI_frame_buffer> create_frame_buffer(
         int width, 
         int height,
@@ -214,9 +209,7 @@ public:
 
     virtual std::shared_ptr<RHI_pipeline_state> create_pipeline_state(const Pipeline_state& pipeline_state) = 0;
 
-    virtual std::shared_ptr<RHI_imgui> create_imgui(const std::shared_ptr<RHI_window>& window) = 0;
-    
-
+    virtual std::shared_ptr<RHI_imgui> create_imgui(const std::shared_ptr<RHI_window>& window) = 0;   
 
 };
 

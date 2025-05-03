@@ -21,12 +21,9 @@ public:
 
         if (!compile()) {
             std::cout << "ERROR::SHADER::COMPILE_FAILED" << std::endl;
-
             std::cout << code << std::endl;
             glDeleteShader(m_code_id);
             assert(false);
-        } else {
-            std::cout << "INFO::SHADER::COMPILE_SUCCESS" << std::endl;
         }
     }
 
@@ -47,11 +44,7 @@ public:
         glGetShaderiv(m_code_id, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(m_code_id, LOG_STR_LEN, nullptr, info_log);
-            std::cerr << "Shader compiled failed" << " --" << gl_shader_type_str(m_shader_type) << " " <<  m_code_id << std::endl;
             std::cerr << info_log << std::endl;
-            //assert(false);
-        } else {
-            std::cout << "Shader compiled successfully" << " --" << gl_shader_type_str(m_shader_type) << " " << m_code_id << std::endl;
         }
         return success;
     }

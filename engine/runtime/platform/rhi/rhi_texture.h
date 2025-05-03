@@ -14,6 +14,13 @@ struct Image_data {
     const unsigned char* data{ nullptr };
     Texture_buffer_type buffer_type{ Texture_buffer_type::UNSIGNED_BYTE };
     Texture_external_format external_format{ Texture_external_format::RGB_ALPHA };
+    bool has_ownership{ false };
+
+    ~Image_data() {
+        if (has_ownership) {
+            delete[] data;
+        }
+    }
 
     std::shared_ptr<Image> create_image() const {
         if (buffer_type == Texture_buffer_type::FLOAT) {
@@ -37,7 +44,6 @@ protected:
     std::unordered_map<Texture_filter_target, Texture_filter> m_filters{};
     unsigned int m_mipmap_levels{};
     glm::vec4 m_border_color{};
-    bool m_is_sync_image_data{ false };
     
 public:
     RHI_texture (
@@ -65,9 +71,6 @@ public:
     virtual void bind_to_unit(unsigned int location) = 0;
 
     virtual void on_set_border_color() = 0;
-    virtual void sync_image_data() = 0; 
-
-    bool is_sync_image_data() const { return m_is_sync_image_data; }
 
     void set_border_color(const glm::vec4& color) {
         m_border_color = color;
@@ -97,51 +100,50 @@ public:
 };
 
 class IRHI_texture_2D {
-protected:
-    Image_data m_image{};
-
 public:
-    IRHI_texture_2D(
-        const Image_data& image
-    ) : m_image(image) {}
+    IRHI_texture_2D() {}
     virtual ~IRHI_texture_2D() {}
-    virtual void upload_data(const Image_data& image) = 0;
-    const Image_data& image() const { return m_image; }
+    virtual bool upload_data(const Image_data& image) = 0;
+    virtual bool upload_data(const std::shared_ptr<RHI_texture>& image) = 0;
+    virtual Image_data get_image_data() = 0;
 };
 
 class IRHI_texture_cubemap {
-protected:
-    std::unordered_map<Texture_cubemap_face, Image_data> m_images{};
 
 public:
-    IRHI_texture_cubemap(
-        const std::unordered_map<Texture_cubemap_face, Image_data>& images
-    ) : m_images(images) {}
+    IRHI_texture_cubemap() {}
     virtual ~IRHI_texture_cubemap() {}
-    virtual void upload_data(const std::unordered_map<Texture_cubemap_face, Image_data>& images) = 0;
-    const std::unordered_map<Texture_cubemap_face, Image_data>& images() const { return m_images; }
+    virtual bool upload_data(const std::unordered_map<Texture_cubemap_face, Image_data>& images) = 0;
+    virtual bool upload_data(const std::unordered_map<Texture_cubemap_face, std::shared_ptr<RHI_texture>>& images) = 0;
+    virtual std::unordered_map<Texture_cubemap_face, Image_data> get_image_data() = 0;
 };
 
 class IRHI_texture_2D_array {
 protected:
-    std::vector<Image_data> m_images{};
+    unsigned int m_layer_count{};
 
 public:
     IRHI_texture_2D_array(
-        const std::vector<Image_data>& images
-    ) : m_images(images) {}
+        unsigned int layer_count
+    ) : m_layer_count(layer_count) {}
 
     virtual ~IRHI_texture_2D_array() {}
-    virtual void upload_data(const std::vector<Image_data>& images) = 0;
-    virtual void upload_data_from_rhi(const std::vector<std::shared_ptr<RHI_texture>>& images) = 0;
-
-    const std::vector<Image_data>& images() const { return m_images; }
+    virtual bool upload_data(const std::vector<Image_data>& images) = 0;
+    virtual bool upload_data(const std::vector<std::shared_ptr<RHI_texture>>& images) = 0;
+    virtual std::vector<Image_data> get_image_data() = 0;
 };
 
 class RHI_texture_builder {
 public:
-    virtual void build_texure_2D_array(std::shared_ptr<RHI_texture>& texture_2D_array, const std::vector<std::shared_ptr<RHI_texture>>& texture_2Ds) = 0;
+    RHI_texture_builder() {}
     virtual ~RHI_texture_builder() {}
+    
+    virtual bool build_texture_2D(std::shared_ptr<RHI_texture>& texture_2D, const Image_data& image) = 0;
+    virtual bool build_texture_2D(std::shared_ptr<RHI_texture>& texture_2D, const std::shared_ptr<RHI_texture>& image) = 0;
+    virtual bool build_texture_cubemap(std::shared_ptr<RHI_texture>& texture_cubemap, const std::unordered_map<Texture_cubemap_face, Image_data>& images) = 0;
+    virtual bool build_texture_cubemap(std::shared_ptr<RHI_texture>& texture_cubemap, const std::unordered_map<Texture_cubemap_face, std::shared_ptr<RHI_texture>>& images) = 0;
+    virtual bool build_texure_2D_array(std::shared_ptr<RHI_texture>& texture_2D_array, const std::vector<Image_data>& texture_2Ds) = 0;
+    virtual bool build_texture_2D_array(std::shared_ptr<RHI_texture>& texture_2D_array, const std::vector<std::shared_ptr<RHI_texture>>& texture_2Ds) = 0;
 };
 
 };

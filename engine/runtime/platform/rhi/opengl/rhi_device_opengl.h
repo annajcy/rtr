@@ -134,8 +134,7 @@ public:
         unsigned int mipmap_levels,
         Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
-        const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
-        const Image_data& image
+        const std::unordered_map<Texture_filter_target, Texture_filter>& filters
     ) override {
         return std::make_shared<RHI_texture_2D_OpenGL>(
             width,
@@ -143,8 +142,7 @@ public:
             mipmap_levels,
             internal_format,
             wraps,
-            filters,
-            image
+            filters
         );
     }
 
@@ -154,8 +152,7 @@ public:
         unsigned int mipmap_levels,
         Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
-        const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
-        const std::unordered_map<Texture_cubemap_face, Image_data>& images
+        const std::unordered_map<Texture_filter_target, Texture_filter>& filters
     ) override {
         return std::make_shared<RHI_texture_cubemap_OpenGL>(
             width,
@@ -163,8 +160,7 @@ public:
             mipmap_levels,
             internal_format,
             wraps,
-            filters,
-            images
+            filters
         );
     }
 
@@ -175,7 +171,7 @@ public:
         Texture_internal_format internal_format,
         const std::unordered_map<Texture_wrap_target, Texture_wrap>& wraps,
         const std::unordered_map<Texture_filter_target, Texture_filter>& filters,
-        const std::vector<Image_data>& images
+        unsigned int layer_count
     ) override {
         return std::make_shared<RHI_texture_2D_array_OpenGL>(
             width,
@@ -184,7 +180,7 @@ public:
             internal_format,
             wraps,
             filters,
-            images
+            layer_count
         );
     }
 

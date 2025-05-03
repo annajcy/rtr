@@ -182,6 +182,7 @@ enum class Texture_external_format {
     RGB,
     RGB_ALPHA,
     DEPTH_STENCIL,
+    DEPTH,
     SRGB_ALPHA,
     SRGB
 };
