@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include "engine/runtime/context/swap_struct.h"
 #include "engine/runtime/framework/core/game_object.h"
 #include <memory>
 #include <vector>
@@ -74,6 +74,7 @@ public:
 
     void tick(const Logic_tick_context& tick_context) {
         tick_context.logic_swap_data.skybox = m_skybox;
+
         for (auto& game_object : m_game_objects) {
             game_object->tick(tick_context);
         }

@@ -11,6 +11,7 @@ class Mesh_renderer_component : public Component_base {
 
 protected:
     std::shared_ptr<Mesh_renderer> m_mesh_renderer{};
+    bool m_is_cast_shadow{false};
 
 public:
 
@@ -31,15 +32,16 @@ public:
     const std::shared_ptr<Mesh_renderer>& mesh_renderer() const { return m_mesh_renderer; }
     std::shared_ptr<Mesh_renderer>& mesh_renderer() { return m_mesh_renderer; }
 
+    bool is_cast_shadow() const { return m_is_cast_shadow; }
+    bool& is_cast_shadow() { return m_is_cast_shadow; }
+
     void tick(const Logic_tick_context& tick_context) override {
         auto& data = tick_context.logic_swap_data;
         data.render_objects.push_back(Swap_object{
             .material = m_mesh_renderer->material(),
             .geometry = m_mesh_renderer->geometry(),
             .model_matrix = m_mesh_renderer->node()->model_matrix(),
-            .shadow_setting = Swap_shadow_setting{
-                .is_cast_shadow = m_mesh_renderer->shadow_setting().is_cast_shadow,
-            }
+            .is_cast_shadow = m_is_cast_shadow
         });
     }
     

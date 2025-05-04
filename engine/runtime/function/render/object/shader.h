@@ -197,8 +197,43 @@ public:
         {Shader_feature::HEIGHT_MAP, Shader_feature::NORMAL_MAP}
     };
 
-    static void init_shader_feature_dependency_graph() {
-        g_shader_feature_dependency_graph.add_dependency(Shader_feature::HEIGHT_MAP, Shader_feature::NORMAL_MAP);
+    inline static std::unordered_map<std::string, std::shared_ptr<Shader>> g_shader_cache{};
+
+    static bool is_cached( 
+        const std::string shader_name
+    ) {
+        return g_shader_cache.find(shader_name) != g_shader_cache.end();
+    }
+
+    template<typename T>
+    static std::shared_ptr<T> get_cached_shader(
+        const std::string shader_name
+    ) {
+        if (auto it = g_shader_cache.find(shader_name); it!= g_shader_cache.end()) {
+            if (auto shader = std::dynamic_pointer_cast<T>(it->second)) {
+                return shader;
+            } else {
+                throw std::runtime_error("Shader type mismatch");
+            }
+        }
+        return nullptr;
+    }
+
+    static void delete_cache(
+        const std::string shader_name
+    ) {
+        g_shader_cache.erase(shader_name);
+    }
+
+    static void add_shader_to_cache(
+        const std::string shader_name,
+        const std::shared_ptr<Shader>& shader
+    ) {
+        g_shader_cache[shader_name] = shader;
+    }
+
+    static void clear_cache() {
+        g_shader_cache.clear();
     }
 
 protected:
@@ -223,7 +258,7 @@ public:
         m_feature_specific_shader_uniforms(feature_specific_shader_uniforms),
         m_shader_feature_whitelist(shader_feature_whitelist) {}
 
-    ~Shader() = default;
+    virtual ~Shader() = default;
 
     const std::string& name() const { return m_shader_name; }
     const std::unordered_map<Shader_type, std::shared_ptr<Shader_code>>& main_shader_codes() const { return m_main_shader_codes; }
@@ -334,7 +369,7 @@ public:
         return permutations;
     }
 
-    void premake_all_shader_variants() {
+    void generate_all_shader_variants() {
         auto permutations = get_all_shader_variants_permutation();
         for (const auto& perm : permutations) {
             get_shader_variant(perm);  // 预生成所有变体
@@ -377,162 +412,6 @@ public:
         return feature_set;
     }
 
-    static std::shared_ptr<Shader> create_phong_shader() {
-
-        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
-
-        shader_codes[Shader_type::VERTEX] = Shader_code::create(
-            Shader_type::VERTEX,
-            get_shader_code_from_url("assets/shader/phong.vert")
-        ); 
-
-        shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
-            Shader_type::FRAGMENT,
-            get_shader_code_from_url("assets/shader/phong.frag")
-        );    
-
-        return Shader::create(
-            "phong_shader", 
-            shader_codes, 
-            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {}, 
-            std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {}, 
-            Shader_feature_set {
-                get_shader_feature_set(std::vector<Shader_feature> {
-                    Shader_feature::ALBEDO_MAP,
-                    Shader_feature::SPECULAR_MAP,
-                    Shader_feature::NORMAL_MAP,
-                    Shader_feature::ALPHA_MAP,
-                    Shader_feature::HEIGHT_MAP
-                })
-            });
-    }
-
-    static std::shared_ptr<Shader> create_pbr_shader() {
-
-        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
-
-        shader_codes[Shader_type::VERTEX] = Shader_code::create(
-            Shader_type::VERTEX,
-            get_shader_code_from_url("assets/shader/pbr.vert")
-        ); 
-
-        shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
-            Shader_type::FRAGMENT,
-            get_shader_code_from_url("assets/shader/pbr.frag")
-        );
-
-        auto main_program = std::make_shared<Shader_program>(
-            "pbr_shader",
-            shader_codes,
-            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>{}
-        );   
-        
-        return Shader::create(
-            "pbr_shader",
-            shader_codes,
-            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {}, 
-            std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {}, 
-            Shader_feature_set {
-                get_shader_feature_set(std::vector<Shader_feature>{
-                    Shader_feature::SHADOWS,
-                    Shader_feature::ALBEDO_MAP,
-                    Shader_feature::ALPHA_MAP,
-                    Shader_feature::NORMAL_MAP,
-                    Shader_feature::HEIGHT_MAP,
-                    Shader_feature::METALLIC_MAP,
-                    Shader_feature::ROUGHNESS_MAP,
-                    Shader_feature::AO_MAP,
-                    Shader_feature::EMISSIVE_MAP
-                })
-            });
-    }
-
-    static std::shared_ptr<Shader> create_skybox_cubemap_shader() {
-
-        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
-
-        shader_codes[Shader_type::VERTEX] = Shader_code::create(
-            Shader_type::VERTEX,
-            get_shader_code_from_url("assets/shader/skybox_cubemap.vert")
-        );
-
-        shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
-            Shader_type::FRAGMENT,
-            get_shader_code_from_url("assets/shader/skybox_cubemap.frag")
-        );
-
-        return Shader::create(
-            "skybox_cubemap_shader",
-            shader_codes,
-            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {},
-            std::unordered_map<Shader_feature, std::unordered_map<std::string,std::shared_ptr<Uniform_entry_base>>> {},
-            Shader_feature_set {}
-        );
-        
-    }
-
-    static std::shared_ptr<Shader> create_skybox_spherical_shader() {
-
-        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
-        shader_codes[Shader_type::VERTEX] = Shader_code::create(
-            Shader_type::VERTEX,
-            get_shader_code_from_url("assets/shader/skybox_spherical.vert")
-        );
-
-        shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
-            Shader_type::FRAGMENT,
-            get_shader_code_from_url("assets/shader/skybox_spherical.frag")
-        );
-
-        return Shader::create(
-            "skybox_spherical_shader", 
-            shader_codes, 
-            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {}, 
-            std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {}, 
-            Shader_feature_set {}
-        );
-    }
-
-    static std::shared_ptr<Shader> create_gamma_shader() {
-        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
-        shader_codes[Shader_type::VERTEX] = Shader_code::create(
-            Shader_type::VERTEX,
-            get_shader_code_from_url("assets/shader/gamma.vert")
-        );
-        shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
-            Shader_type::FRAGMENT,
-            get_shader_code_from_url("assets/shader/gamma.frag")
-        );
-        return Shader::create(
-            "gamma_shader",
-            shader_codes, 
-            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {}, 
-            std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {},
-            Shader_feature_set {}
-        );
-    }
-
-    static std::shared_ptr<Shader> create_shadow_caster_shader() {
-        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> shader_codes{};
-        shader_codes[Shader_type::VERTEX] = Shader_code::create(
-            Shader_type::VERTEX,
-            get_shader_code_from_url("assets/shader/shadow_caster.vert")
-        );
-        shader_codes[Shader_type::FRAGMENT] = Shader_code::create(
-            Shader_type::FRAGMENT,
-            get_shader_code_from_url("assets/shader/shadow_caster.frag")
-        );
-        return Shader::create(
-            "shadow_caster_shader",
-            shader_codes, 
-            std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
-                {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))}
-            }, 
-            std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {},
-            Shader_feature_set {}
-        );
-    }
-
     static std::string load_shader_code_with_includes(
         const std::string& file_path,
         std::unordered_set<std::string>& processed
@@ -572,8 +451,167 @@ public:
         }
         return buffer.str();
     }
+};
 
-    
+
+class Phong_shader : public Shader {
+public:
+    Phong_shader() : Shader(
+        "phong_shader", 
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
+            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url("assets/shader/phong.vert"))},
+            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url("assets/shader/phong.frag"))}
+        }, 
+        std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+            {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
+            {"transparency", Uniform_entry<float>::create(1.0f)},
+            {"ka", Uniform_entry<glm::vec3>::create(glm::vec3(0.1, 0.1, 0.1))},
+            {"kd", Uniform_entry<glm::vec3>::create(glm::vec3(0.5, 0.5, 0.5))},
+            {"ks", Uniform_entry<glm::vec3>::create(glm::vec3(1.0, 1.0, 1.0))},
+            {"shininess", Uniform_entry<float>::create(32.0f)}
+        },
+        std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {
+            {
+                Shader_feature::HEIGHT_MAP, 
+                std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+                    {"parallax_scale", Uniform_entry<float>::create(0.05f)},
+                    {"parallax_layer_count", Uniform_entry<float>::create(10.0f)}
+                }
+            },
+            {
+                Shader_feature::SHADOWS,
+                std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+                    {"shadow_bias", Uniform_entry<float>::create(1.0f)},
+                    {"pcf_radius", Uniform_entry<int>::create(5)},
+                    {"pcf_tightness", Uniform_entry<int>::create(100)},
+                    {"pcf_sample_count", Uniform_entry<int>::create(100)},
+                }
+            }
+        },
+        Shader::Shader_feature_set {
+        	Shader::get_shader_feature_set(std::vector<Shader_feature> {
+                Shader_feature::ALBEDO_MAP,
+                Shader_feature::SPECULAR_MAP,
+                Shader_feature::NORMAL_MAP,
+                Shader_feature::ALPHA_MAP,
+                Shader_feature::HEIGHT_MAP,
+                Shader_feature::SHADOWS
+            })
+        }
+    ) {}
+    ~Phong_shader() = default;
+    static std::shared_ptr<Phong_shader> create() {
+        if (Shader::is_cached("phong_shader")) {
+            return Shader::get_cached_shader<Phong_shader>("phong_shader");
+        } else {
+            auto shader = std::make_shared<Phong_shader>();
+            Shader::add_shader_to_cache("phong_shader", shader);
+            return shader;
+        }
+    }
+};
+
+class Skybox_cubemap_shader : public Shader {
+public:
+    Skybox_cubemap_shader() : Shader(
+        "skybox_cubemap_shader",
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
+            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url("assets/shader/skybox_cubemap.vert"))},
+            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url("assets/shader/skybox_cubemap.frag"))}
+        },
+        std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {},
+        std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {},
+        Shader::Shader_feature_set {}
+    ) {}
+
+    ~Skybox_cubemap_shader() = default;
+    static std::shared_ptr<Skybox_cubemap_shader> create() {
+        if (Shader::is_cached("skybox_cubemap_shader")) {
+            return Shader::get_cached_shader<Skybox_cubemap_shader>("skybox_cubemap_shader");
+        }
+        else {
+            auto shader = std::make_shared<Skybox_cubemap_shader>();
+            Shader::add_shader_to_cache("skybox_cubemap_shader", shader);
+            return shader;
+        }
+    }
+};
+
+class Skybox_spherical_shader : public Shader {
+public:
+    Skybox_spherical_shader() : Shader(
+        "skybox_spherical_shader",
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
+            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url("assets/shader/skybox_spherical.vert"))},
+            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url("assets/shader/skybox_spherical.frag"))}
+        },
+        std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {},
+        std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {},
+        Shader::Shader_feature_set {}
+    ) {}
+
+    ~Skybox_spherical_shader() = default;
+    static std::shared_ptr<Skybox_spherical_shader> create() {
+        if (Shader::is_cached("skybox_spherical_shader")) {
+            return Shader::get_cached_shader<Skybox_spherical_shader>("skybox_spherical_shader");
+        }
+        else {
+            auto shader = std::make_shared<Skybox_spherical_shader>();
+            Shader::add_shader_to_cache("skybox_spherical_shader", shader);
+            return shader;
+        }
+    }
+};
+
+class Gamma_shader : public Shader {
+public:
+    Gamma_shader() : Shader(
+        "gamma_shader",
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
+            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url("assets/shader/gamma.vert"))},
+            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url("assets/shader/gamma.frag"))}
+        },
+        std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {},
+        std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {},
+        Shader::Shader_feature_set {}
+    ) {}
+    ~Gamma_shader() = default;
+    static std::shared_ptr<Gamma_shader> create() {
+        if (Shader::is_cached("gamma_shader")) {
+            return Shader::get_cached_shader<Gamma_shader>("gamma_shader");
+        } else {
+            auto shader = std::make_shared<Gamma_shader>();
+            Shader::add_shader_to_cache("gamma_shader", shader);
+            return shader;
+        }
+    }
+};
+
+class Shadow_caster_shader : public Shader {
+public:
+    Shadow_caster_shader() : Shader(
+        "shadow_caster_shader",
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
+            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url("assets/shader/shadow_caster.vert"))},
+            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url("assets/shader/shadow_caster.frag"))}
+        },
+        std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+            {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
+            {"invocation_id", Uniform_entry<int>::create(0)}
+        },
+        std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {},
+        Shader::Shader_feature_set {}
+    ) {}
+    ~Shadow_caster_shader() = default;
+    static std::shared_ptr<Shadow_caster_shader> create() {
+        if (Shader::is_cached("shadow_caster_shader")) {
+            return Shader::get_cached_shader<Shadow_caster_shader>("shadow_caster_shader");
+        } else {
+            auto shader = std::make_shared<Shadow_caster_shader>();
+            Shader::add_shader_to_cache("shadow_caster_shader", shader);
+            return shader;
+        }
+    }
 };
 
 }

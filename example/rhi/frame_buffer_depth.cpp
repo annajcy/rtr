@@ -103,7 +103,7 @@ int main() {
     auto depth_shader = sp->rhi_resource();
 
     // 深度附件配置
-    auto dpa = Texture_depth_attachment::create(window->width(), window->height());
+    auto dpa = Texture_2D::create_depth_attachemnt(window->width(), window->height());
     if (!dpa->is_linked()) dpa->link(device);
     dpa->rhi_resource()->set_border_color(glm::vec4(1.0));
 
@@ -118,11 +118,15 @@ int main() {
     auto frame_buffer = fb->rhi_resource();
 
     auto tex_builder = device->create_texture_builder();
-    auto texture_array_dep = device->create_texture_depth_attachment_array(
+    
+    auto tex_depth_arr = Texture_2D_array::create_depth_attachemnt(
         window->width(),
         window->height(),
         1
     );
+    
+    if (!tex_depth_arr->is_linked()) tex_depth_arr->link(device);
+    auto texture_array_dep = tex_depth_arr->rhi_resource();
     //texture_array_dep->bind_to_unit(3);
 
     // 后处理着色器
@@ -163,6 +167,7 @@ int main() {
         tex_builder->build_texture_2D_array(texture_array_dep, std::vector<std::shared_ptr<RHI_texture>>{
             dpa->rhi_resource()
         });
+
         texture_array_dep->bind_to_unit(3);
         renderer->clear(screen_frame_buffer);
         renderer->draw(screen_shader, screen_geometry, screen_frame_buffer);

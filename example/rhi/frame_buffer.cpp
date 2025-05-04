@@ -109,17 +109,17 @@ int main() {
     sp->link(device);
     auto shader_program = sp->rhi_resource();
 
-    auto ca0 = Texture_color_attachment::create(
+    auto ca0 = Texture_2D::create_color_attachemnt(
         window->width(),
         window->height()
     );
 
-    auto ca1 = Texture_color_attachment::create(
+    auto ca1 = Texture_2D::create_color_attachemnt(
         window->width(),
         window->height()
     );
 
-    auto da = Texture_depth_attachment::create(
+    auto da = Texture_2D::create_depth_attachemnt(
         window->width(),
         window->height()
     );

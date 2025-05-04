@@ -11,7 +11,6 @@ namespace rtr {
 class Camera_component : public Component_base {
 protected:
     std::shared_ptr<Camera> m_camera{};
-    bool m_is_shadow_caster{false};
 
 public:
     Camera_component() : Component_base(Component_type::CAMERA) {}
@@ -21,32 +20,19 @@ public:
     const std::shared_ptr<Camera>& camera() const { return m_camera; }
     std::shared_ptr<Camera>& camera() { return m_camera; }
 
-    const bool& is_shadow_caster() const { return m_is_shadow_caster; }
-    bool& is_shadow_caster() { return m_is_shadow_caster; }
-
     void tick(const Logic_tick_context& tick_context) override {
     
         auto& data = tick_context.logic_swap_data;
 
-        if (m_is_shadow_caster) {
-            data.light_camera = Swap_camera{
-                .view_matrix = m_camera->view_matrix(),
-                .projection_matrix = m_camera->projection_matrix(),
-                .camera_position = m_camera->node()->world_position(),
-                .camera_direction = m_camera->node()->world_front(),
-                .near = m_camera->near_bound(),
-                .far = m_camera->far_bound()
-            };
-        } else {
-            data.camera = Swap_camera{
-                .view_matrix = m_camera->view_matrix(),
-                .projection_matrix = m_camera->projection_matrix(),
-                .camera_position = m_camera->node()->world_position(),
-                .camera_direction = m_camera->node()->world_front(),
-                .near = m_camera->near_bound(),
-                .far = m_camera->far_bound()
-            };
-        }
+        data.camera = Swap_camera{
+            .view_matrix = m_camera->view_matrix(),
+            .projection_matrix = m_camera->projection_matrix(),
+            .camera_position = m_camera->node()->world_position(),
+            .camera_direction = m_camera->node()->world_front(),
+            .near = m_camera->near_bound(),
+            .far = m_camera->far_bound()
+        };
+        
     }
 
     void add_resize_callback(const std::shared_ptr<RHI_window>& window) {
@@ -56,8 +42,6 @@ public:
         });
     }
 
-    
-    
 };
 
 class Perspective_camera_component : public Camera_component {

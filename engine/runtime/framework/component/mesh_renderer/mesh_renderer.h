@@ -4,10 +4,6 @@
 #include "engine/runtime/function/render/object/geometry.h"
 #include "engine/runtime/function/render/object/material.h"
 
-struct Shadow_setting {
-    bool is_cast_shadow{true};
-};
-
 namespace rtr {
 
 class Mesh_renderer {
@@ -16,7 +12,6 @@ protected:
     std::shared_ptr<Node> m_node{};
     std::shared_ptr<Geometry> m_geometry{};
     std::shared_ptr<Material> m_material{};
-    Shadow_setting m_shadow_setting{};
 
 public:
     Mesh_renderer() {}
@@ -38,8 +33,6 @@ public:
     std::shared_ptr<Geometry>& geometry() { return m_geometry; }
     const std::shared_ptr<Material>& material() const { return m_material; }
     std::shared_ptr<Material>& material() { return m_material; }
-    const Shadow_setting& shadow_setting() const { return m_shadow_setting; }
-    Shadow_setting& shadow_setting() { return m_shadow_setting; }
     
 };
 }

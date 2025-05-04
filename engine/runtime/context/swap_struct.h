@@ -3,21 +3,18 @@
 #include "engine/runtime/function/render/object/geometry.h"
 #include "engine/runtime/function/render/object/material.h"
 #include "engine/runtime/function/render/object/skybox.h"
+#include "engine/runtime/function/render/object/texture.h"
 #include "glm/fwd.hpp"
 #include <memory>
 #include <vector>
 
 namespace rtr {
 
-struct Swap_shadow_setting {
-    bool is_cast_shadow{false};
-};
-
 struct Swap_object {
     std::shared_ptr<Material> material{};
     std::shared_ptr<Geometry> geometry{};
     glm::mat4 model_matrix{1.0f};
-    Swap_shadow_setting shadow_setting{};
+    bool is_cast_shadow{false};
 };
 
 struct Swap_shadow_caster_object {
@@ -56,30 +53,53 @@ struct Swap_camera {
     float far;
 };
 
+struct Swap_shadow_map {
+    std::shared_ptr<Texture_2D> shadow_map{};
+    Swap_camera shadow_camera{};
+};
+
+struct Swap_PCSS_settings{
+    float light_size{};
+    float frustrum_size{};
+    float near_plane{};
+};
+
+struct Swap_PCF_settings{
+    float radius{};
+    float tightness{};
+    int sample_count{};
+};
+
+struct Swap_shadow_settings {
+    float shadow_bias{0.005f};
+    float pcf_radius{1.0f};
+    float pcf_tightness{0.001f};  
+};
+
 struct Swap_data {
     
     std::vector<Swap_object> render_objects{};
     std::vector<Swap_directional_light> directional_lights{};
     std::vector<Swap_point_light> point_lights{};
     std::vector<Swap_spot_light> spot_lights{};
-    std::shared_ptr<Skybox> skybox{};
+    std::vector<Swap_shadow_map> csm_shadow_maps{};
+    std::shared_ptr<Skybox> skybox{};    
     Swap_camera camera{};
-    Swap_camera light_camera{};
-    
+
     void clear() {
         render_objects.clear();
         point_lights.clear();
         spot_lights.clear();
         directional_lights.clear();
+        csm_shadow_maps.clear();
         camera = Swap_camera{};
-        light_camera = Swap_camera{};
         skybox.reset();
     }
 
     std::vector<Swap_shadow_caster_object> get_shadow_casters() const {
         std::vector<Swap_shadow_caster_object> shadow_casters{};
         for (const auto& obj : render_objects) {
-            if (obj.shadow_setting.is_cast_shadow) {
+            if (obj.is_cast_shadow) {
                 shadow_casters.push_back({
                     .geometry = obj.geometry,
                     .model_matrix = obj.model_matrix

@@ -25,6 +25,7 @@ public:
     ) : Render_object(Render_object_type::MATERIAL),
         m_material_type(material_type),
         m_shader(shader) {}
+
     virtual ~Material() = default;
 
     Material_type material_type() const { return m_material_type; }
@@ -51,372 +52,171 @@ public:
 
 //TEST
 
-class Test_material : public Material {
-public:
+struct Shadow_settings {
+    float shadow_bias{0.005f};
+    float pcf_radius{1.0f};
+    float pcf_tightness{0.001f};
+    float pcf_sample_count{10.0f};
+
+    Shadow_settings() = default;
+
+    static std::shared_ptr<Shadow_settings> create() {
+        return std::make_shared<Shadow_settings>();
+    }
+
+    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) {
+        shader_program->modify_uniform("shadow_bias", shadow_bias);
+        shader_program->modify_uniform("pcf_radius", pcf_radius);
+        shader_program->modify_uniform("pcf_tightness", pcf_tightness);
+        shader_program->modify_uniform("pcf_sample_count", pcf_sample_count);
+    }
+};
+
+struct Phong_material_settings {
+    float transparency{1.0f};
+    glm::vec3 ka = glm::vec3(0.1f);    
+    glm::vec3 kd = glm::vec3(0.7f);
+    glm::vec3 ks = glm::vec3(0.5f);    
+    float shininess = 32.0f;    
+    static std::shared_ptr<Phong_material_settings> create() {
+        return std::make_shared<Phong_material_settings>();
+    }
+
+    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) {
+        shader_program->modify_uniform("transparency", transparency);
+        shader_program->modify_uniform("ka", ka);
+        shader_program->modify_uniform("kd", kd);
+        shader_program->modify_uniform("ks", ks);
+        shader_program->modify_uniform("shininess", shininess);
+    }
+};
+
+struct Parallax_settings {
+    float parallax_scale = 0.05f;
+    float parallax_layer_count = 10.0f;
+    static std::shared_ptr<Parallax_settings> create() {
+        return std::make_shared<Parallax_settings>();
+    }
+    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) {
+        shader_program->modify_uniform("parallax_scale", parallax_scale);
+        shader_program->modify_uniform("parallax_layer_count", parallax_layer_count);
+    }
+};
+
+struct Phong_texture_settings {
     std::shared_ptr<Texture> albedo_map{};
     std::shared_ptr<Texture> specular_map{};
     std::shared_ptr<Texture> normal_map{};
     std::shared_ptr<Texture> alpha_map{};
     std::shared_ptr<Texture> height_map{};
 
-    float shadow_bias{0.0005};
-
-    float transparency{1.0f};
-    glm::vec3 ka = glm::vec3(0.1f);     // 环境反射系数
-    glm::vec3 kd = glm::vec3(0.7f);     // 漫反射系数 (或使用 albedo_map)
-    glm::vec3 ks = glm::vec3(0.5f);    // 镜面反射系数
-    float shininess = 32.0f;    
-
-    float parallax_scale = 0.05f;
-    float parallax_layer_count = 10.0f;
-    
-    Test_material(const std::shared_ptr<Shader>& shader) : Material(
-        Material_type::TEST,
-        shader
-    ) {}
-
-    ~Test_material() = default;
-
-    Shader::Shader_feature_set get_shader_feature_set() const override { 
-        Shader::Shader_feature_set feature_set{};
-        if (albedo_map) {
-            feature_set.set(static_cast<size_t>(Shader_feature::ALBEDO_MAP));
-        }
-        if (specular_map) {
-            feature_set.set(static_cast<size_t>(Shader_feature::SPECULAR_MAP));
-        }
-        if (normal_map) {
-            feature_set.set(static_cast<size_t>(Shader_feature::NORMAL_MAP));
-        }
-        if (alpha_map) {
-            feature_set.set(static_cast<size_t>(Shader_feature::ALPHA_MAP));
-        }
-        if (height_map) {
-            feature_set.set(static_cast<size_t>(Shader_feature::HEIGHT_MAP));
-        }
-        return feature_set;
-    }
-
-    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
-        std::unordered_map<unsigned int, std::shared_ptr<Texture>> texture_map{};
-        if (albedo_map) {
-            texture_map[0] = albedo_map;
-        }
-        if (specular_map) {
-            texture_map[1] = specular_map;
-        }
-        if (normal_map) {
-            texture_map[2] = normal_map;
-        }
-        if (alpha_map) {
-            texture_map[3] = alpha_map;
-        }
-        if (height_map) {
-            texture_map[4] = height_map;
-        }
-        return texture_map;
-    }
-
-    Pipeline_state get_pipeline_state() const override {
-        if (transparency < 1.0 || alpha_map) {
-            return Pipeline_state::translucent_pipeline_state();
-        } else {
-            return Pipeline_state::opaque_pipeline_state();
-        }
-    }
-
-    static std::shared_ptr<Test_material> create(
-        const std::shared_ptr<Shader>& shader
-    ) {
-        return std::make_shared<Test_material>(shader);
-    }
-
-    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) override {
-        
-        shader_program->modify_uniform<float>(
-            "transparency", 
-            transparency
-        );
-        shader_program->modify_uniform<glm::vec3>(
-            "ka",
-            ka
-        );
-        shader_program->modify_uniform<glm::vec3>(
-            "kd",
-            kd
-        );
-        shader_program->modify_uniform<glm::vec3>(
-            "ks",
-            ks
-        );
-        shader_program->modify_uniform<float>(
-            "shininess",
-            shininess
-        );
-        shader_program->modify_uniform<float>(
-            "shadow_bias",
-            shadow_bias
-        );
-
-        if (height_map) {
-            shader_program->modify_uniform<float>(
-                "parallax_scale",
-                parallax_scale
-            );
-            shader_program->modify_uniform<float>(
-                "parallax_layer_count",
-                parallax_layer_count
-            );
-        }
-        
+    static std::shared_ptr<Phong_texture_settings> create() {
+        return std::make_shared<Phong_texture_settings>();
     }
 };
 
 class Phong_material : public Material {
 public:
-    bool is_receive_shadows{false};
-    std::shared_ptr<Texture> albedo_map{};
-    std::shared_ptr<Texture> alpha_map{};
-    std::shared_ptr<Texture> normal_map{};
-    std::shared_ptr<Texture> height_map{};
-    std::shared_ptr<Texture> specular_map{};
 
-    float transparency{1.0f};
-    glm::vec3 ambient = glm::vec3(0.2f);     // 环境反射系数
-    glm::vec3 diffuse = glm::vec3(1.0f);     // 漫反射系数 (或使用 albedo_map)
-    glm::vec3 specular = glm::vec3(0.5f);    // 镜面反射系数
-    float shininess = 32.0f;          
-
-public:
-    Phong_material() : Material(
-        Material_type::PHONG, 
-        Shader::create_phong_shader()
+    std::shared_ptr<Shadow_settings> shadow_settings{};
+    std::shared_ptr<Phong_texture_settings> phong_texture_settings{};
+    std::shared_ptr<Phong_material_settings> phong_material_settings{};
+    std::shared_ptr<Parallax_settings> parallax_settings{};
+    
+    Phong_material(
+        const std::shared_ptr<Phong_shader> &shader
+    ) : Material(
+        Material_type::PHONG,
+        shader
     ) {}
+
     ~Phong_material() = default;
 
-    bool is_transparent() const { return transparency < 1.0f || has_alpha_map(); }
-    bool has_albedo_map() const { return albedo_map != nullptr; }
-    bool has_alpha_map() const { return alpha_map != nullptr; }
-    bool has_height_map() const { return height_map != nullptr; }
-    bool has_specular_map() const { return specular_map != nullptr; }
-    bool has_normal_map() const { return normal_map != nullptr; }
-
-    static std::shared_ptr<Phong_material> create() {
-        return std::make_shared<Phong_material>();
-    }
-
-    Pipeline_state get_pipeline_state() const override {
-        if (is_transparent()) {
-            return Pipeline_state::translucent_pipeline_state();
-        } else {
-            return Pipeline_state::opaque_pipeline_state();
-        }
-    }
-
-    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) override {
-        
-        shader_program->modify_uniform<float>(
-            "u_transparency", 
-            transparency
-        );
-        shader_program->modify_uniform<glm::vec3>(
-            "u_ambient",
-            ambient
-        );
-        shader_program->modify_uniform<glm::vec3>(
-            "u_diffuse",
-            diffuse
-        );
-        shader_program->modify_uniform<glm::vec3>(
-            "u_specular",
-            specular
-        );
-        shader_program->modify_uniform<float>(
-            "u_shininess",
-            shininess
-        );
-
-    }
-
-    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
-        std::unordered_map<unsigned int, std::shared_ptr<Texture>> texture_map{};
-        if (has_albedo_map()) {
-            texture_map[0] = albedo_map;
-        }
-        if (has_alpha_map()) {
-            texture_map[1] = alpha_map;
-        }
-        if (has_normal_map()) {
-            texture_map[2] = normal_map;
-        }
-        if (has_height_map()) {
-            texture_map[3] = height_map;
-        }
-        if (has_specular_map()) {
-            texture_map[4] = specular_map;
-        }
-        return texture_map;
-    }
-
-    Shader::Shader_feature_set get_shader_feature_set() const override {
+    Shader::Shader_feature_set get_shader_feature_set() const override { 
         Shader::Shader_feature_set feature_set{};
-        if (is_receive_shadows) {
-            feature_set.set(static_cast<size_t>(Shader_feature::SHADOWS));
-        }
-        if (has_normal_map()) {
-            feature_set.set(static_cast<size_t>(Shader_feature::NORMAL_MAP));
-        }
-        if (has_albedo_map()) {
+
+        if (phong_texture_settings->albedo_map) {
             feature_set.set(static_cast<size_t>(Shader_feature::ALBEDO_MAP));
         }
-        if (has_height_map()) {
-            feature_set.set(static_cast<size_t>(Shader_feature::HEIGHT_MAP));
-        }
-        if (has_alpha_map()) {
-            feature_set.set(static_cast<size_t>(Shader_feature::ALPHA_MAP));
-        }
-        if (has_specular_map()) {
+
+        if (phong_texture_settings->specular_map) {
             feature_set.set(static_cast<size_t>(Shader_feature::SPECULAR_MAP));
         }
+
+        if (phong_texture_settings->normal_map) {
+            feature_set.set(static_cast<size_t>(Shader_feature::NORMAL_MAP));
+        }
+
+        if (phong_texture_settings->alpha_map) {
+            feature_set.set(static_cast<size_t>(Shader_feature::ALPHA_MAP));
+        }
+
+        if (phong_texture_settings->height_map && parallax_settings) {
+            feature_set.set(static_cast<size_t>(Shader_feature::HEIGHT_MAP));
+        }
+        
+        if (shadow_settings) {
+            feature_set.set(static_cast<size_t>(Shader_feature::SHADOWS));
+        }
+
         return feature_set;
     }
-};
 
-class PBR_material : public Material {
-public:
-    bool is_receive_shadows{false};
-    std::shared_ptr<Texture> albedo_map{};
-    std::shared_ptr<Texture> alpha_map{};
-    std::shared_ptr<Texture> normal_map{};
-    std::shared_ptr<Texture> height_map{};
-    
-    std::shared_ptr<Texture> metallic_map{};
-    std::shared_ptr<Texture> roughness_map{};
-    std::shared_ptr<Texture> ao_map{};
-    std::shared_ptr<Texture> emissive_map{}; // 新增自发光贴图
-
-    glm::vec3 base_color{};
-    float metallic_factor = {1.0f};      // 金属度系数
-    float roughness_factor = {0.5f};       // 粗糙度系数
-    float transparency {1.0f};
-
-public:
-
-    PBR_material() : Material(Material_type::PBR, Shader::create_pbr_shader()) {}
-    ~PBR_material() = default;
-
-    bool is_transparent() const { return transparency < 1.0f || has_alpha_map(); }
-    bool has_height_map() const { return height_map!= nullptr; }
-    bool has_normal_map() const { return normal_map != nullptr; }
-    bool has_emissive_map() const { return emissive_map != nullptr; }
-    bool has_metallic_map() const { return metallic_map!= nullptr; }
-    bool has_roughness_map() const { return roughness_map!= nullptr; }
-    bool has_ao_map() const { return ao_map != nullptr; }
-    bool has_albedo_map() const { return albedo_map != nullptr; }
-    bool has_alpha_map() const { return alpha_map != nullptr; }
-
-    static std::shared_ptr<PBR_material> create() {
-        return std::make_shared<PBR_material>();
+    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
+        std::unordered_map<unsigned int, std::shared_ptr<Texture>> texture_map{};
+            if (phong_texture_settings->albedo_map) {
+                texture_map[0] = phong_texture_settings->albedo_map;
+            }
+            if (phong_texture_settings->specular_map) {
+                texture_map[1] = phong_texture_settings->specular_map;
+            }
+            if (phong_texture_settings->normal_map) {
+                texture_map[2] = phong_texture_settings->normal_map;
+            }
+            if (phong_texture_settings->alpha_map) {
+                texture_map[3] = phong_texture_settings->alpha_map;
+            }
+            if (phong_texture_settings->height_map && parallax_settings) {
+                texture_map[4] = phong_texture_settings->height_map;
+            }
+            return texture_map;
     }
 
     Pipeline_state get_pipeline_state() const override {
-        if (is_transparent()) {
+        if (phong_material_settings->transparency < 1.0 || phong_texture_settings->alpha_map) {
             return Pipeline_state::translucent_pipeline_state();
         } else {
             return Pipeline_state::opaque_pipeline_state();
         }
     }
-    
-    Shader::Shader_feature_set get_shader_feature_set() const override {
-        Shader::Shader_feature_set feature_set{};
-        if (is_receive_shadows) {
-            feature_set.set(static_cast<size_t>(Shader_feature::SHADOWS));
-        }
-        if (has_albedo_map()) {
-            feature_set.set(static_cast<size_t>(Shader_feature::ALBEDO_MAP));
-        }
-        if (has_alpha_map()) {
-            feature_set.set(static_cast<size_t>(Shader_feature::ALPHA_MAP));
-        }
-        if (has_height_map()) {
-            feature_set.set(static_cast<size_t>(Shader_feature::HEIGHT_MAP));
-        }
-        if (has_metallic_map()) {
-            feature_set.set(static_cast<size_t>(Shader_feature::METALLIC_MAP));
-        }
-        if (has_roughness_map()) {
-            feature_set.set(static_cast<size_t>(Shader_feature::ROUGHNESS_MAP));
-        }
-        if (has_ao_map()) {
-            feature_set.set(static_cast<size_t>(Shader_feature::AO_MAP));
-        }
-        if (has_normal_map()) {
-            feature_set.set(static_cast<size_t>(Shader_feature::NORMAL_MAP));
-        }
-        if (has_emissive_map()) {
-            feature_set.set(static_cast<size_t>(Shader_feature::EMISSIVE_MAP));
-        }
 
-        return feature_set;
+    static std::shared_ptr<Phong_material> create(
+        const std::shared_ptr<Phong_shader> &shader
+    ) {
+        return std::make_shared<Phong_material>(
+            shader
+        );
     }
 
     void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) override {
-        
-        shader_program->modify_uniform<float>(
-            "u_transparency", 
-            transparency
-        );
-        shader_program->modify_uniform<glm::vec3>(
-            "u_base_color",
-            base_color
-        );
-        shader_program->modify_uniform<float>(
-            "u_metallic_factor",
-            metallic_factor
-        );
-        shader_program->modify_uniform<float>(
-            "u_roughness_factor",
-            roughness_factor
-        );
+        phong_material_settings->modify_shader_uniform(shader_program);
 
-    }
+        if (phong_texture_settings->height_map) 
+            parallax_settings->modify_shader_uniform(shader_program);
 
-    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
-        std::unordered_map<unsigned int, std::shared_ptr<Texture>> texture_map{};
-        if (has_albedo_map()) {
-            texture_map[0] = albedo_map;
-        }
-        if (has_alpha_map()) {
-            texture_map[1] = alpha_map;
-        }
-        if (has_normal_map()) {
-            texture_map[2] = normal_map;
-        }
-        if (has_height_map()) {
-            texture_map[3] = height_map;
-        }
-        if (has_metallic_map()) {
-            texture_map[4] = metallic_map;
-        }
-        if (has_roughness_map()) {
-            texture_map[5] = roughness_map;
-        }
-        if (has_ao_map()) {
-            texture_map[6] = ao_map;
-        }
-        if (has_emissive_map()) {
-            texture_map[7] = emissive_map;
-        }
-        return texture_map;
+        if (shadow_settings)
+            shadow_settings->modify_shader_uniform(shader_program);
     }
 };
 
 class Skybox_cubemap_material : public Material {
 public:
     std::shared_ptr<Texture> cube_map{};
-    Skybox_cubemap_material() : Material(
+    Skybox_cubemap_material(
+        const std::shared_ptr<Skybox_cubemap_shader> &shader
+    ) : Material(
         Material_type::SKYBOX_CUBEMAP, 
-        Shader::create_skybox_cubemap_shader()
+        shader
     ) {}
     ~Skybox_cubemap_material() = default;
 
@@ -433,8 +233,10 @@ public:
         return Pipeline_state::skybox_pipeline_state();
     }
 
-    static std::shared_ptr<Skybox_cubemap_material> create() {
-        return std::make_shared<Skybox_cubemap_material>();
+    static std::shared_ptr<Skybox_cubemap_material> create(
+        const std::shared_ptr<Skybox_cubemap_shader> &shader
+    ) {
+        return std::make_shared<Skybox_cubemap_material>(shader);
     }
 };
 
@@ -442,9 +244,11 @@ class Skybox_spherical_material : public Material {
 public:
     std::shared_ptr<Texture> spherical_map{};
 
-    Skybox_spherical_material() : Material(
+    Skybox_spherical_material(
+        const std::shared_ptr<Skybox_spherical_shader> &shader
+    ) : Material(
         Material_type::SKYBOX_SPHERICAL, 
-        Shader::create_skybox_spherical_shader()
+        shader
     ) {}
 
     ~Skybox_spherical_material() = default;
@@ -462,8 +266,12 @@ public:
         return Pipeline_state::skybox_pipeline_state();
     }
 
-    static std::shared_ptr<Skybox_spherical_material> create() {
-        return std::make_shared<Skybox_spherical_material>();
+    static std::shared_ptr<Skybox_spherical_material> create(
+        const std::shared_ptr<Skybox_spherical_shader> &shader
+    ) {
+        return std::make_shared<Skybox_spherical_material>(
+            shader
+        );
     }
 
 };
@@ -472,9 +280,11 @@ class Gamma_material : public Material {
 public:
     std::shared_ptr<Texture> screen_map{};
 
-    Gamma_material() : Material(
+    Gamma_material(
+        const std::shared_ptr<Gamma_shader> &shader
+    ) : Material(
         Material_type::GAMMA,
-        Shader::create_gamma_shader()
+        shader
     ) {}
 
     ~Gamma_material() = default;
@@ -488,21 +298,32 @@ public:
         return {};
     }
 
-    static std::shared_ptr<Gamma_material> create() {
-        return std::make_shared<Gamma_material>();
+    static std::shared_ptr<Gamma_material> create(
+        const std::shared_ptr<Gamma_shader> &shader
+    ) {
+        return std::make_shared<Gamma_material>(
+            shader
+        );
     }
 };
 
 class Shadow_caster_material : public Material {
 public:
-    Shadow_caster_material() : Material(
+    Shadow_caster_material(
+        const std::shared_ptr<Shadow_caster_shader> &shader
+    ) : Material(
         Material_type::SHADOW_CASTER,
-        Shader::create_shadow_caster_shader()
+        shader
     ) {}
+    
     ~Shadow_caster_material() = default;
 
-    static std::shared_ptr<Shadow_caster_material> create() {
-        return std::make_shared<Shadow_caster_material>();
+    static std::shared_ptr<Shadow_caster_material> create(
+        const std::shared_ptr<Shadow_caster_shader> &shader
+    ) {
+        return std::make_shared<Shadow_caster_material>(
+            shader
+        );
     }
 
     Pipeline_state get_pipeline_state() const override {

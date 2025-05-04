@@ -141,7 +141,7 @@ public:
     virtual bool build_texture_2D(std::shared_ptr<RHI_texture>& texture_2D, const std::shared_ptr<RHI_texture>& image) = 0;
     virtual bool build_texture_cubemap(std::shared_ptr<RHI_texture>& texture_cubemap, const std::unordered_map<Texture_cubemap_face, Image_data>& images) = 0;
     virtual bool build_texture_cubemap(std::shared_ptr<RHI_texture>& texture_cubemap, const std::unordered_map<Texture_cubemap_face, std::shared_ptr<RHI_texture>>& images) = 0;
-    virtual bool build_texure_2D_array(std::shared_ptr<RHI_texture>& texture_2D_array, const std::vector<Image_data>& texture_2Ds) = 0;
+    virtual bool build_texture_2D_array(std::shared_ptr<RHI_texture>& texture_2D_array, const std::vector<Image_data>& texture_2Ds) = 0;
     virtual bool build_texture_2D_array(std::shared_ptr<RHI_texture>& texture_2D_array, const std::vector<std::shared_ptr<RHI_texture>>& texture_2Ds) = 0;
 };
 

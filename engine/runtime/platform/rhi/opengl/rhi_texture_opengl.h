@@ -554,7 +554,7 @@ public:
         return false;
     }
     
-    bool build_texure_2D_array(
+    bool build_texture_2D_array(
         std::shared_ptr<RHI_texture>& texture_2D_array,
         const std::vector<Image_data>& images
     ) override {

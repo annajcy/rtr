@@ -12,6 +12,7 @@ enum class Component_type {
     CAMERA,
     CAMERA_CONTROL,
     LIGHT,
+    SHADOW_CASTER,
     CUSTOM
 };
 

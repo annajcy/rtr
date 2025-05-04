@@ -10,14 +10,13 @@
 
 namespace rtr {
 
-class Memory_buffer : public RHI_linker<RHI_buffer>, public Render_object {
+class Memory_buffer : public RHI_linker<RHI_buffer> {
 protected:
     Buffer_type m_type{};
     Buffer_usage m_usage{};
 
 public:
     Memory_buffer(Buffer_type type, Buffer_usage usage) : 
-    Render_object(Render_object_type::MEMORY_BUFFER),  
     m_type(type), m_usage(usage) {}
     ~Memory_buffer() = default;
     Buffer_type get_type() const { return m_type; }
@@ -40,7 +39,9 @@ public:
     ~Uniform_buffer() = default;
 
     T data() const { return m_data; }
-    void set_data(const T& data) { m_data = data; }
+    void set_data(const T& data) { 
+        m_data = data; 
+    }
 
     void link(const std::shared_ptr<RHI_device>& device) override {
         m_rhi_resource = device->create_memory_buffer(

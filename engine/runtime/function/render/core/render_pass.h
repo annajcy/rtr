@@ -3,6 +3,7 @@
 #include "engine/runtime/context/swap_struct.h"
 #include "engine/runtime/function/render/object/frame_buffer.h"
 #include "engine/runtime/function/render/object/material.h"
+#include "engine/runtime/function/render/object/shader.h"
 #include "engine/runtime/function/render/object/skybox.h"
 #include "engine/runtime/function/render/object/texture.h"
 #include "engine/runtime/function/render/core/render_object.h"
@@ -55,7 +56,7 @@ public:
     Shadow_pass(
         RHI_global_render_object& rhi_global_render_resource
     ) : Render_pass(rhi_global_render_resource), 
-        m_shadow_caster_material(Shadow_caster_material::create()) {}
+        m_shadow_caster_material(Shadow_caster_material::create(Shadow_caster_shader::create())) {}
 
     ~Shadow_pass() {}
 
@@ -245,7 +246,7 @@ public:
     Gamma_pass(
         RHI_global_render_object& rhi_global_render_resource
     ) : Render_pass(rhi_global_render_resource) {
-        m_gamma_material = Gamma_material::create();
+        m_gamma_material = Gamma_material::create(Gamma_shader::create());
         
         m_screen_geometry = Geometry::create_screen_plane();
         m_screen_geometry->link(m_rhi_global_render_resource.device);

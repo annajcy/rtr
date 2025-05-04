@@ -64,8 +64,8 @@ void main()
     // FragColor = mix(color0, color1, 0.5); // 混合两个缓冲区
     vec4 color0 = texture(textureArray, vec3(TexCoords, 0));
     vec4 color1 = texture(textureArray, vec3(TexCoords, 1));
-    //FragColor = mix(color0, color1, 0.5); // 混合两个缓冲区
-    FragColor = color1; // 混合两个缓冲区
+    FragColor = mix(color0, color1, 0.5); // 混合两个缓冲区
+    //FragColor = color1; // 混合两个缓冲区
 }
 )";
 
@@ -114,17 +114,17 @@ int main() {
     sp->link(device);
     auto shader_program = sp->rhi_resource();
 
-    auto ca0 = Texture_color_attachment::create(
+    auto ca0 = Texture_2D::create_color_attachemnt(
         window->width(),
         window->height()
     );
 
-    auto ca1 = Texture_color_attachment::create(
+    auto ca1 = Texture_2D::create_color_attachemnt(
         window->width(),
         window->height()
     );
 
-    auto da = Texture_depth_attachment::create(
+    auto da = Texture_2D::create_depth_attachemnt(
         window->width(),
         window->height()
     );
@@ -183,6 +183,8 @@ int main() {
     clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
     auto renderer = device->create_renderer(clear_state);
 
+    device->check_error();
+
     while (window->is_active()) {
         window->on_frame_begin();
 
@@ -208,7 +210,6 @@ int main() {
         });
 
         texture_array->bind_to_unit(2);
-    
         renderer->clear(screen_frame_buffer);
 
         renderer->draw(

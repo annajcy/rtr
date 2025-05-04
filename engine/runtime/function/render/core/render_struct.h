@@ -5,6 +5,8 @@
 
 #define MAX_SPOT_LIGHT 8
 #define MAX_POINT_LIGHT 8
+#define MAX_DIRECTIONAL_LIGHT 8
+#define MAX_CAMERA 8
 
 namespace rtr {
 
@@ -21,6 +23,12 @@ struct Camera_ubo {
     float padding3[2];
 }; 
 
+struct Camera_ubo_array {
+    int count{};
+    float padding1[3];
+    Camera_ubo camera_ubo[MAX_CAMERA];
+};
+
 struct Directional_light_ubo {
     float intensity{};             
     float padding1[3];          
@@ -35,7 +43,7 @@ struct Directional_light_ubo {
 struct Directional_light_ubo_array {
     int count{};
     float padding1[3];
-    Directional_light_ubo directional_light_ubo[MAX_SPOT_LIGHT];
+    Directional_light_ubo directional_light_ubo[MAX_DIRECTIONAL_LIGHT];
 };
 
 struct Point_light_ubo {
