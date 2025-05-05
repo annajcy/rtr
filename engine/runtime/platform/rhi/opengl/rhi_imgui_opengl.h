@@ -79,6 +79,10 @@ public:
         return ImGui::SliderFloat(title.c_str(), value, min, max);
     }
 
+    bool slider_int(const std::string& title, int* value, int min, int max) override {
+        return ImGui::SliderInt(title.c_str(), value, min, max);
+    }
+
     bool is_io_captured() override {
         return ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard;
     }

@@ -84,9 +84,6 @@ public:
     static void window_resize_callback(GLFWwindow* window, int width, int height) {
         auto* self = static_cast<RHI_window_OpenGL*>(glfwGetWindowUserPointer(window));
         if (self) {
-            if (self->imgui()->is_io_captured()) {
-                return;
-            }
             self->m_width = width;
             self->m_height = height;
             self->m_window_resize_event.execute(width, height);
@@ -126,9 +123,6 @@ public:
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
         auto* self = static_cast<RHI_window_OpenGL*>(glfwGetWindowUserPointer(window));
         if (self) {
-            if (self->imgui()->is_io_captured()) {
-                return;
-            }
             self->m_key_event.execute(gl_to_rhi_key_map(key), gl_to_rhi_key_action_map(action), mods);
         }
     }

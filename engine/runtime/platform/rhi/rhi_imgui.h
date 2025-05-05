@@ -21,6 +21,7 @@ public:
     virtual void text(const std::string& title, const std::string& text) = 0;
     virtual void text_edit(const std::string& title, std::string* text) = 0;
     virtual bool slider_float(const std::string& title, float* value, float min, float max) = 0;
+    virtual bool slider_int(const std::string& title, int* value, int min, int max) = 0;
     virtual bool is_io_captured() = 0;
     virtual float frame_rate() = 0;
 

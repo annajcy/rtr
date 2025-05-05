@@ -180,6 +180,10 @@ int main() {
     
     box_node->add_child(sphere_node, true);
 
+    editor->get_panel<editor::Parallax_settings_panel>("parallax settings")->set_parallax_settings(parallax_settings);
+    editor->get_panel<editor::Phong_material_settings_panel>("phong material settings")->set_phong_material_settings(phong_material_settings);
+    editor->get_panel<editor::Shadow_settings_panel>("shadow settings")->set_shadow_settings(shadow_settings);
+
     editor->run();
 
     return 0;
