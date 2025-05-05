@@ -242,6 +242,51 @@ void generate_poisson_disk_samples( // 更正函数名
     }
 }
 
+// 新增遮挡物搜索函数
+float find_blocker(
+    sampler2D shadow_map,
+    vec3 projected_position,
+    float search_radius,
+    float light_size,
+    float bias
+) {
+    int blocker_count = 0;
+    float blocker_depth_sum = 0.0;
+    
+    vec2 poisson_disk_samples[MAX_PCF_SAMPLE];
+    generate_poisson_disk_samples(
+        projected_position.xy,
+        pcf_sample_count,
+        pcf_tightness,
+        poisson_disk_samples
+    );
+
+    for(int i = 0; i < pcf_sample_count; i++) {
+        vec2 sample_uv = projected_position.xy + poisson_disk_samples[i] * search_radius;
+        float shadow_map_depth = texture(shadow_map, sample_uv).r;
+        
+        if(projected_position.z - bias > shadow_map_depth) {
+            blocker_depth_sum += shadow_map_depth;
+            blocker_count++;
+        }
+    }
+    
+    if(blocker_count == 0) return 0.0;
+    float avg_blocker_depth = blocker_depth_sum / float(blocker_count);
+    return avg_blocker_depth;
+}
+
+// 新增软阴影半径计算函数
+float calculate_pcf_radius(
+    float receiver_depth, 
+    float blocker_depth, 
+    float light_size
+) {
+    float w_penumbra = (receiver_depth - blocker_depth) * light_size / blocker_depth;
+    return clamp(w_penumbra, 0.0, 0.1);
+}
+
+// 修改原有 pcf 函数（参数列表保持不变）
 float pcf(
     vec3 projected_position,
     float pcf_radius,
@@ -250,10 +295,11 @@ float pcf(
     float bias,
     sampler2D shadow_map
 ) {
+    // 保持原有实现不变
     vec2 uv = projected_position.xy;
     float frag_depth = projected_position.z;
 
-    vec2 poisson_disk_samples[MAX_PCF_SAMPLE]; // 更正变量名
+    vec2 poisson_disk_samples[MAX_PCF_SAMPLE];
     generate_poisson_disk_samples(
         uv,
         pcf_sample_count,
@@ -422,18 +468,28 @@ void main() {
     vec3 light_camera_direction = light_camera.camera_direction; // 正确获取光源方向
     float bias = max(0.0005, shadow_bias * (1.0 - dot(normalized_normal, -light_camera_direction)));
 
+    float search_radius = light_size * (projected_position.z - 0.02) * 40.0;
+    float avg_blocker_depth = find_blocker(
+        dl_shadow_map,
+        projected_position,
+        search_radius,
+        light_size,
+        bias
+    );
+    
+    float pcss_radius = 0.0;
+    if(avg_blocker_depth > 0.0) {
+        pcss_radius = calculate_pcf_radius(projected_position.z, avg_blocker_depth, light_size);
+    }
+
     float shadow = pcf(
         projected_position,
-        pcf_radius,
+        pcss_radius * pcf_radius,
         pcf_tightness,
         pcf_sample_count,
         bias,
         dl_shadow_map
     );
-
-    // 调试阴影
-    // float shadow_depth = texture(dl_shadow_map, projected_position.xy).r;
-    // frag_color = vec4(vec3(shadow_depth), 1.0);
     
     frag_color = vec4(ambient + (1.0 - shadow) * (diffuse + specular), alpha);
 

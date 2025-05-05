@@ -31,7 +31,6 @@ public:
     virtual void init_render_passes() = 0;
     virtual void update_render_pass(const Render_tick_context& tick_context) = 0;
 
-    virtual void init_render_resource() = 0;
     virtual void update_render_resource(const Render_tick_context& tick_context) = 0;
 };
 
@@ -54,13 +53,12 @@ public:
         RHI_global_render_object& global_render_resource
     ) : Render_pipeline(global_render_resource) {
         init_ubo();
-        init_render_resource();
         init_render_passes();
     }
 
     ~Forward_render_pipeline() {}
 
-    void init_render_resource() override {
+    void update_render_resource(const Render_tick_context& tick_context) override {
 
         auto color_attachment = Texture_2D::create_color_attachemnt(
             m_rhi_global_render_resource.window->width(), 
@@ -74,16 +72,13 @@ public:
         );
         depth_stencil_attachment->link(m_rhi_global_render_resource.device);
 
-        m_render_resource_manager.add("main_color_attachment", color_attachment);
-        m_render_resource_manager.add("main_depth_attachment", depth_stencil_attachment);
-    }
-
-    void update_render_resource(const Render_tick_context& tick_context) override {
         auto dl_shadow_map = tick_context.render_swap_data.dl_shadow_casters.shadow_map;
        
         if (!dl_shadow_map->is_linked()) dl_shadow_map->link(m_rhi_global_render_resource.device);
         dl_shadow_map->rhi_resource()->set_border_color(glm::vec4(1.0f));
 
+        m_render_resource_manager.add("main_color_attachment", color_attachment);
+        m_render_resource_manager.add("main_depth_attachment", depth_stencil_attachment);
         m_render_resource_manager.add("shadow map", dl_shadow_map);
     }
 
