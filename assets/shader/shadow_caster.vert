@@ -1,26 +1,28 @@
-#define CAMERA_COUNT 10
+//shadow_caster.vert
 
 layout(location = 0) in vec3 a_pos;
 
-struct Camera {
-    mat4 light_view;
-    mat4 light_projection;
-    vec3 light_camera_position;
-    vec3 light_camera_direction;
-    float light_near;
-    float light_far;
+struct Orthographic_camera {
+    mat4 view;
+    mat4 projection;
+    vec3 camera_position;
+    vec3 camera_direction;
+    float near;
+    float far;
+    float left;
+    float right;
+    float bottom;
+    float top;
 };
 
 layout(std140, binding = 4) uniform Light_camera_ubo {
-    int count;
-    Camera light_cameras[CAMERA_COUNT];
+    Orthographic_camera light_camera;
 };
 
 uniform mat4 model;
-uniform int invocation_id;
 
 void main() {
-    mat4 light_projection = light_cameras[invocation_id].light_projection;
-    mat4 light_view = light_cameras[invocation_id].light_view;
-	gl_Position = light_projection * light_view * model * vec4(a_pos, 1.0);
+    mat4 view = light_camera.view;
+    mat4 projection = light_camera.projection;
+	gl_Position = projection * view * model * vec4(a_pos, 1.0);
 }

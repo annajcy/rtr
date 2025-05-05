@@ -14,13 +14,17 @@ in vec3 v_normal;
 
 out vec4 frag_color;
 
-layout(std140, binding = 0) uniform Camera_ubo {
+struct Camera {
     mat4 view;
     mat4 projection;
     vec3 camera_position;
     vec3 camera_direction;
     float near;
     float far;
+};
+
+layout(std140, binding = 0) uniform Camera_ubo {
+    Camera main_camera;
 };
 
 struct Directional_light {
@@ -60,12 +64,29 @@ layout(std140, binding = 3) uniform Spot_light_array_ubo {
     Spot_light spl_lights[MAX_SPOT_LIGHT];
 };
 
-vec3 calculate_diffuse(vec3 normal, vec3 light_dir, float intensity, vec3 light_color, vec3 albedo) {
+vec3 calculate_diffuse(
+    vec3 normal, 
+    vec3 light_dir, 
+    float intensity, 
+    vec3 light_color, 
+    vec3 albedo,
+    vec3 kd
+) {
     float diffuse_factor = max(dot(normal, light_dir), 0.0);
     return kd * intensity * light_color * diffuse_factor * albedo;
 }
 
-vec3 calculate_specular(vec3 normal, vec3 view_dir, vec3 light_dir, float intensity, vec3 light_color, vec3 albedo, vec3 spec_mask) {
+vec3 calculate_specular(
+    vec3 normal, 
+    vec3 view_dir, 
+    vec3 light_dir, 
+    float intensity, 
+    vec3 light_color, 
+    vec3 albedo, 
+    vec3 spec_mask,
+    float shininess,
+    vec3 ks
+) {
     vec3 halfway_dir = normalize(light_dir + view_dir);
     float specular_factor = pow(max(dot(normal, halfway_dir), 0.0), shininess);
     return ks * intensity * light_color * specular_factor * albedo * spec_mask;
@@ -166,62 +187,53 @@ vec2 parallax_occlusion_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tb
 
 #ifdef ENABLE_SHADOWS
 
-#define MAX_LIGHT_CAMERA_COUNT 10
-#define MAX_SAMPLE_COUNT 32
-#define MAX_CSM_LAYER_COUNT 10
+#define MAX_PCF_SAMPLE 32
 
-layout(binding = 5) uniform sampler2DArray csm_shadow_map;
+layout(binding = 5) uniform sampler2D dl_shadow_map;
 
-struct Camera {
+struct Orthographic_camera {
     mat4 view;
     mat4 projection;
     vec3 camera_position;
     vec3 camera_direction;
     float near;
     float far;
-};
-
-struct PCSS_data {
-    float light_size;
-    float frustum_size;
-    float near_plane;
+    float left;
+    float right;
+    float bottom;
+    float top;
 };
 
 layout(std140, binding = 4) uniform Light_camera_ubo {
-    int light_camera_count;
-    Camera light_cameras[MAX_LIGHT_CAMERA_COUNT];
-    PCSS_data pcss_data[MAX_LIGHT_CAMERA_COUNT];
-};
-
-
-layout(std140, binding = 6) uniform CSM_ubo {
-    int csm_layer_count;
-    float csm_layers[MAX_CSM_LAYER_COUNT + 1];
+    Orthographic_camera light_camera;
 };
 
 uniform float shadow_bias;
+uniform float light_size;
 uniform float pcf_radius;
 uniform float pcf_tightness;
-uniform float pcf_sample_count;
+uniform int pcf_sample_count;
 
 float rand_2to1(vec2 uv) { 
-	const highp float a = 12.9898, b = 78.233, c = 43758.5453;
-	highp float dt = dot(uv.xy, vec2(a, b)), sn = mod(dt, PI);
-	return fract(sin(sn) * c);
+    const highp float a = 12.9898, b = 78.233, c = 43758.5453;
+    highp float dt = dot(uv.xy, vec2(a, b)), sn = mod(dt, PI);
+    return fract(sin(sn) * c);
 }
 
-void generate_possion_disk_samples(
+void generate_poisson_disk_samples( // 更正函数名
     vec2 uv_seed,
     int pcf_sample_count,
     float pcf_tightness,
-    out vec2 samples[MAX_SAMPLE_COUNT]
+    out vec2 samples[MAX_PCF_SAMPLE]
 ) {
     float angle = rand_2to1(uv_seed) * PI2;
     float radius = 1.0 / float(pcf_sample_count);
     float radius_increment = radius;
     float angle_increment = (1.0 - 0.6180339887) * PI2;
 
-    for (int i = 0; i < sample_count; i++) {
+    pcf_sample_count = min(pcf_sample_count, MAX_PCF_SAMPLE); // 限制样本数量
+
+    for (int i = 0; i < pcf_sample_count; i++) {
         float x = cos(angle) * pow(radius, pcf_tightness);
         float y = sin(angle) * pow(radius, pcf_tightness);
         samples[i] = vec2(x, y);
@@ -231,201 +243,39 @@ void generate_possion_disk_samples(
 }
 
 float pcf(
-    vec3 frag_position,
-    vec3 light_matrix,
-    vec3 normal,
-    vec3 light_camera_direction,
+    vec3 projected_position,
     float pcf_radius,
-    int pcf_sample_count,
     float pcf_tightness,
-    float shadow_bias,
-    sampler2DArray shadow_map,
-    int light_camera_index
+    int pcf_sample_count,
+    float bias,
+    sampler2D shadow_map
 ) {
-
-    vec4 world_position = vec4(frag_position, 1.0);
-    vec4 light_camera_clip_space_position = light_matrix * world_position;
-    vec3 light_camera_ndc = light_camera_clip_space_position.xyz / light_camera_clip_space_position.w;
-    vec3 projected_position = light_camera_ndc * 0.5 + 0.5;
     vec2 uv = projected_position.xy;
+    float frag_depth = projected_position.z;
 
-    vec2 possion_disk_samples[MAX_SAMPLE_COUNT];
-    
-    generate_possion_disk_samples(
+    vec2 poisson_disk_samples[MAX_PCF_SAMPLE]; // 更正变量名
+    generate_poisson_disk_samples(
         uv,
         pcf_sample_count,
         pcf_tightness,
-        possion_disk_samples
+        poisson_disk_samples
     );
 
     float sum = 0.0;
+    pcf_sample_count = min(pcf_sample_count, MAX_PCF_SAMPLE);
     for (int i = 0; i < pcf_sample_count; i++) {
-    	float shadow_map_depth = texture(csm_shadow_map, vec3(uv + possion_disk_samples[i] * pcf_radius, light_camera_index)).r;
-        float bias = max(0.0005, shadow_bias * (1.0 - dot(normal, -light_camera_direction)));
-        if (projected_position.z - bias > shadow_map_depth) {
-            sum += 1.0;
-        }
+        float shadow_map_depth = texture(shadow_map, uv + poisson_disk_samples[i] * pcf_radius).r;
+        sum += (frag_depth - bias > shadow_map_depth) ? 1.0 : 0.0;
     }
-
     return sum / float(pcf_sample_count);
-}
-
-int get_current_light_camera_index(
-    vec3 frag_position,
-    mat4 main_camera_view,
-    int csm_layer_count,
-    in float csm_layers[MAX_CSM_LAYER_COUNT + 1]
-) {
-    int light_camera_index = -1;
-    vec3 camera_space_position = vec3(main_camera_view * vec4(frag_position, 1.0)); 
-    for (int i = 0; i <= csm_layer_count; i++) {
-        if (-camera_space_position.z < csm_layers[i]) {
-            light_camera_index = i - 1;
-            break;
-        }
-    }
-
-    return light_camera_index;
-}
-
-float find_blocker(
-    vec3 light_space_position,
-    vec2 uv,
-    vec3 normal, 
-    vec3 light_camera_direction,
-    float pcf_tightness,
-    int pcf_sample_count,
-    float pcss_light_size,
-    float pcss_frustum_size,
-    float pcss_near_plane,
-    float shadow_bias,
-    sampler2DArray shadow_map,
-    int light_camera_index
-) {
-    vec2 possion_disk_samples[MAX_SAMPLE_COUNT];
-    generate_possion_disk_samples(
-        uv,
-        pcf_sample_count,
-        pcf_tightness,
-        possion_disk_samples
-    );
-
-    float search_radius = (-light_space_position.z - pcss_near_plane) /
-                          (-light_camera_direction.z) * pcss_light_size;
-    float search_radius_uv = search_radius / pcss_frustum_size;
-    float blocker_count = 0.0;
-    float blocker_sum_depth = 0.0;
-
-    for (int i = 0; i < pcf_sample_count; i++) {
-        vec2 sample_uv = uv + possion_disk_samples[i] * search_radius_uv;
-        float shadow_map_depth = texture(csm_shadow_map, vec3(sample_uv, light_camera_index)).r;
-
-        float bias = max(0.0005, shadow_bias * (1.0 - dot(normal, -light_camera_direction)));
-        if (light_space_position.z - bias > shadow_map_depth) {
-            blocker_count += 1.0;
-            blocker_sum_depth += shadow_map_depth;
-        }
-    }
-
-    if (blocker_count == 0.0) {
-        return -1.0;
-    }
-
-    return blocker_sum_depth / blocker_count;
-}
-
-float pcss(
-    vec3 frag_position,
-    mat4 light_camera_view,
-    mat4 light_camera_projection,
-    vec3 normal,
-    vec3 light_camera_direction,
-    float pcf_radius,
-    int pcf_sample_count,
-    float pcf_tightness,
-    float shadow_bias,
-    sampler2DArray shadow_map,
-    int light_camera_index
-) {
-    vec4 world_position = vec4(frag_position, 1.0);
-    vec4 light_camera_clip_space_position = light_camera_projection * light_camera_view * world_position;
-    vec3 light_camera_ndc = light_camera_clip_space_position.xyz / light_camera_clip_space_position.w;
-    vec3 projected_position = light_camera_ndc * 0.5 + 0.5;
-    vec2 uv = projected_position.xy;
-    float blocker_depth = find_blocker(
-        light_camera_ndc,
-        uv,
-        normal,
-        light_camera_direction,
-        pcf_tightness,
-        pcf_sample_count,
-        pcss_light_size,
-        pcss_frustum_size,
-        pcss_near_plane,
-        shadow_bias,
-        shadow_map,
-        light_camera_index
-    );
-
-    if (blocker_depth == -1.0) {
-        return 0.0;
-    }
-    float light_space_depth = -light_camera_ndc.z;
-    float penumbra_size = (light_space_depth - blocker_depth) * pcss_light_size / pcss_frustum_size / blocker_depth;
-
-    return pcf(
-        frag_position,
-        light_camera_projection * light_camera_view,
-        normal,
-        light_camera_direction,
-        penumbra_size,
-        pcf_sample_count,
-        pcf_tightness,
-        shadow_bias,
-        shadow_map,
-        light_camera_index
-    );
-}
-
-float csm(
-    vec3 frag_position,
-    mat4 main_camera_view,
-    int csm_layer_count,
-    in float csm_layers[MAX_CSM_LAYER_COUNT + 1],
-    vec3 normal,
-    vec3 light_camera_direction,
-    float pcf_radius,
-    int pcf_sample_count,
-    float pcf_tightness,
-    sampler2DArray shadow_map
-) {
-    int light_camera_index = get_current_light_camera_index(
-    	frag_position,
-    	main_camera_view,
-    	csm_layer_count,
-    	csm_layers
-    );
-
-    mat4 light_camera_view = light_cameras[light_camera_index].view;
-    mat4 light_camera_projection = light_cameras[light_camera_index].projection;
-
-
-    return pcf(
-        frag_position,
-        light_camera_projection * light_camera_view,
-        normal,
-        light_camera_direction,
-        pcf_radius,
-        pcf_sample_count,
-        pcf_tightness,
-        shadow_map,
-        light_camera_index
-    );
 }
 
 #endif
 
 void main() {
+    vec3 camera_position = main_camera.camera_position;
+    vec3 camera_direction = main_camera.camera_direction;
+
 
     vec3 view_direction = normalize(camera_position - v_frag_position);
 
@@ -483,7 +333,8 @@ void main() {
             light_dir, 
             dl_lights[i].intensity, 
             dl_lights[i].color, 
-            albedo.rgb
+            albedo.rgb,
+            kd
         );
 
         specular += calculate_specular(
@@ -493,7 +344,9 @@ void main() {
             dl_lights[i].intensity, 
             dl_lights[i].color, 
             albedo.rgb, 
-            specular_mask
+            specular_mask,
+            shininess,
+            ks
         );
     }
 
@@ -511,7 +364,8 @@ void main() {
             light_dir, 
             pl_lights[i].intensity, 
             pl_lights[i].color, 
-            albedo.rgb
+            albedo.rgb,
+            kd
         ) * attenuation;
 
         specular += calculate_specular(
@@ -521,7 +375,9 @@ void main() {
             pl_lights[i].intensity, 
             pl_lights[i].color, 
             albedo.rgb, 
-            specular_mask
+            specular_mask,
+            shininess,
+            ks
         ) * attenuation;
     }
 
@@ -540,7 +396,8 @@ void main() {
             light_dir, 
             spl_lights[i].intensity, 
             spl_lights[i].color, 
-            albedo.rgb
+            albedo.rgb,
+            kd
         ) * intensity;
 
         specular += calculate_specular(
@@ -550,28 +407,39 @@ void main() {
             spl_lights[i].intensity, 
             spl_lights[i].color, 
             albedo.rgb, 
-            specular_mask
+            specular_mask,
+            shininess,
+            ks
         ) * intensity;
     }
 
 #ifdef ENABLE_SHADOWS
-
     vec4 world_position = vec4(v_frag_position, 1.0);
-    vec4 light_camera_clip_space_position = light_projection * light_view * world_position;
+    vec4 light_camera_clip_space_position = light_camera.projection * light_camera.view * world_position;
     vec3 light_camera_ndc = light_camera_clip_space_position.xyz / light_camera_clip_space_position.w;
     vec3 projected_position = light_camera_ndc * 0.5 + 0.5;
 
-    float projected_frag_depth = projected_position.z;
-    float shadow_map_depth = texture(shadow_map, projected_position.xy).r;
-
+    vec3 light_camera_direction = light_camera.camera_direction; // 正确获取光源方向
     float bias = max(0.0005, shadow_bias * (1.0 - dot(normalized_normal, -light_camera_direction)));
 
-    if (projected_frag_depth - bias > shadow_map_depth) {
-        frag_color = vec4(vec3(ambient), 1.0);
-        return;
-    }
+    float shadow = pcf(
+        projected_position,
+        pcf_radius,
+        pcf_tightness,
+        pcf_sample_count,
+        bias,
+        dl_shadow_map
+    );
+
+    // 调试阴影
+    // float shadow_depth = texture(dl_shadow_map, projected_position.xy).r;
+    // frag_color = vec4(vec3(shadow_depth), 1.0);
+    
+    frag_color = vec4(ambient + (1.0 - shadow) * (diffuse + specular), alpha);
+
+#else
+    frag_color = vec4(ambient + diffuse + specular, alpha);
 
 #endif
 
-    frag_color = vec4(ambient + diffuse + specular, alpha);
 }

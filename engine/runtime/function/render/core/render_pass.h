@@ -56,7 +56,9 @@ public:
     Shadow_pass(
         RHI_global_render_object& rhi_global_render_resource
     ) : Render_pass(rhi_global_render_resource), 
-        m_shadow_caster_material(Shadow_caster_material::create(Shadow_caster_shader::create())) {}
+        m_shadow_caster_material(
+            Shadow_caster_material::create(Shadow_caster_shader::create())
+        ) {}
 
     ~Shadow_pass() {}
 
@@ -116,7 +118,7 @@ public:
 
     struct Resource_flow {
         std::shared_ptr<Texture> color_attachment_out{};
-        std::shared_ptr<Texture> depth_attachment_aux{};
+        std::shared_ptr<Texture> depth_attachment_out{};
         std::shared_ptr<Texture> shadow_map_in{};
     };
 
@@ -144,7 +146,7 @@ public:
         int height = m_rhi_global_render_resource.window->height();
 
         auto color_attachment = m_resource_flow.color_attachment_out;
-        auto depth_attachment = m_resource_flow.depth_attachment_aux;
+        auto depth_attachment = m_resource_flow.depth_attachment_out;
 
         m_frame_buffer = Frame_buffer::create(
             width, height, 
@@ -177,8 +179,6 @@ public:
                 if (!tex->is_linked()) tex->link(m_rhi_global_render_resource.device);
                 tex->rhi_resource()->bind_to_unit(location);
             }
-
-            
 
             m_rhi_global_render_resource.pipeline_state->state = m_context.skybox->material()->get_pipeline_state();
             m_rhi_global_render_resource.pipeline_state->apply();
@@ -221,17 +221,19 @@ public:
     }
 };
 
-class Gamma_pass : public Render_pass {
+class Postprocess_pass : public Render_pass {
 public:
+
+    struct Execution_context {};
 
     struct Resource_flow {
         std::shared_ptr<Texture> texture_in{};
     };
 
-    static std::shared_ptr<Gamma_pass> create(
+    static std::shared_ptr<Postprocess_pass> create(
         RHI_global_render_object& rhi_global_render_resource
     ) {
-        return std::make_shared<Gamma_pass>(rhi_global_render_resource);
+        return std::make_shared<Postprocess_pass>(rhi_global_render_resource);
     }
 
 protected:
@@ -239,11 +241,12 @@ protected:
     std::shared_ptr<Geometry> m_screen_geometry{};
 
     Resource_flow m_resource_input{};
+    Execution_context m_context{};
 
     std::shared_ptr<Frame_buffer> m_frame_buffer{};
 
 public:
-    Gamma_pass(
+    Postprocess_pass(
         RHI_global_render_object& rhi_global_render_resource
     ) : Render_pass(rhi_global_render_resource) {
         m_gamma_material = Gamma_material::create(Gamma_shader::create());
@@ -252,11 +255,15 @@ public:
         m_screen_geometry->link(m_rhi_global_render_resource.device);
     }
 
-    ~Gamma_pass() {}
+    ~Postprocess_pass() {}
 
     void set_resource_flow(const Resource_flow& input) {
         m_resource_input = input;
         m_gamma_material->screen_map = m_resource_input.texture_in;
+    }
+
+    void set_context(const Execution_context& context) {
+        m_context = context;
     }
 
     void excute() override {

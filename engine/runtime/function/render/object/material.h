@@ -50,13 +50,13 @@ public:
     virtual void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) {}
 };
 
-//TEST
 
 struct Shadow_settings {
     float shadow_bias{0.005f};
-    float pcf_radius{1.0f};
-    float pcf_tightness{0.001f};
-    float pcf_sample_count{10.0f};
+    float light_size{10.0f};
+    float pcf_radius{0.01f};
+    float pcf_tightness{1.0f};
+    int pcf_sample_count{18};
 
     Shadow_settings() = default;
 
@@ -66,6 +66,7 @@ struct Shadow_settings {
 
     void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) {
         shader_program->modify_uniform("shadow_bias", shadow_bias);
+        shader_program->modify_uniform("light_size", light_size);
         shader_program->modify_uniform("pcf_radius", pcf_radius);
         shader_program->modify_uniform("pcf_tightness", pcf_tightness);
         shader_program->modify_uniform("pcf_sample_count", pcf_sample_count);

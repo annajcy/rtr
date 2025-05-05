@@ -53,46 +53,64 @@ struct Swap_camera {
     float far;
 };
 
-struct Swap_shadow_map {
+struct Swap_orthographic_camera {
+    glm::mat4 view_matrix{1.0f};
+    glm::mat4 projection_matrix{1.0f};
+    glm::vec3 camera_position{1.0f};
+    glm::vec3 camera_direction{1.0f};
+    float near;
+    float far;
+    float left{};
+    float right{};
+    float bottom{};
+    float top{};
+};
+
+struct Swap_perspective_camera {
+    glm::mat4 view_matrix{1.0f};
+    glm::mat4 projection_matrix{1.0f};
+    glm::vec3 camera_position{1.0f};
+    glm::vec3 camera_direction{1.0f};
+    float near;
+    float far;
+    float fov{};
+    float aspect_ratio{};
+};
+
+struct Swap_directional_light_shadow_caster  {
     std::shared_ptr<Texture_2D> shadow_map{};
-    Swap_camera shadow_camera{};
+    Swap_orthographic_camera shadow_camera{};
 };
 
-struct Swap_PCSS_settings{
-    float light_size{};
-    float frustrum_size{};
-    float near_plane{};
-};
-
-struct Swap_PCF_settings{
-    float radius{};
-    float tightness{};
-    int sample_count{};
-};
-
-struct Swap_shadow_settings {
-    float shadow_bias{0.005f};
-    float pcf_radius{1.0f};
-    float pcf_tightness{0.001f};  
+struct Swap_point_light_shadow_caster {
+    std::shared_ptr<Texture_2D> shadow_map{};
+    Swap_perspective_camera shadow_camera{};
 };
 
 struct Swap_data {
     
+    Swap_camera camera{};
     std::vector<Swap_object> render_objects{};
+
     std::vector<Swap_directional_light> directional_lights{};
     std::vector<Swap_point_light> point_lights{};
     std::vector<Swap_spot_light> spot_lights{};
-    std::vector<Swap_shadow_map> csm_shadow_maps{};
+
     std::shared_ptr<Skybox> skybox{};    
-    Swap_camera camera{};
+
+    Swap_directional_light_shadow_caster dl_shadow_casters{};
+    
+    bool enable_csm{false};
+    std::vector<Swap_directional_light_shadow_caster> csm_shadow_casters{};
 
     void clear() {
         render_objects.clear();
         point_lights.clear();
         spot_lights.clear();
         directional_lights.clear();
-        csm_shadow_maps.clear();
+        csm_shadow_casters.clear();
         camera = Swap_camera{};
+        dl_shadow_casters = Swap_directional_light_shadow_caster{};
         skybox.reset();
     }
 

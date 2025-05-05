@@ -26,13 +26,17 @@ public:
         m_global_render_resource.screen_buffer = device->create_screen_buffer(window);
         m_global_render_resource.memory_binder = device->create_memory_buffer_binder();
         m_global_render_resource.pipeline_state = device->create_pipeline_state();
+        m_global_render_resource.texture_builder = device->create_texture_builder();
     }
 
     static std::shared_ptr<Render_system> create(
         const std::shared_ptr<RHI_device>& device, 
         const std::shared_ptr<RHI_window>& window
     ) {
-        return std::make_shared<Render_system>(device, window);
+        return std::make_shared<Render_system>(
+            device, 
+            window
+        );
     }
 
     const RHI_global_render_object& global_render_resource() const {
@@ -48,8 +52,10 @@ public:
     }
 
     void tick(const Render_tick_context& tick_context) {
+        m_render_pipeline->update_render_resource(tick_context);
         m_render_pipeline->update_ubo(tick_context);
         m_render_pipeline->update_render_pass(tick_context);
+
         m_render_pipeline->execute(tick_context);
     }
 

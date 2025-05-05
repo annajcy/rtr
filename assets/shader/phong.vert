@@ -6,13 +6,17 @@ layout(location = 2) in vec3 a_normal;
 layout(location = 3) in vec3 a_tangent;
 #endif
 
-layout(std140, binding = 0) uniform Camera_ubo {
+struct Camera {
     mat4 view;
     mat4 projection;
     vec3 camera_position;
     vec3 camera_direction;
     float near;
     float far;
+};
+
+layout(std140, binding = 0) uniform Camera_ubo {
+    Camera main_camera;
 };
 
 uniform mat4 model;
@@ -27,6 +31,10 @@ out mat3 v_tbn;
 #endif
 
 void main() {
+
+    mat4 view = main_camera.view;
+    mat4 projection = main_camera.projection;
+
     gl_Position = projection * view * model * vec4(a_position, 1.0);
 
     v_frag_position = vec3(model * vec4(a_position, 1.0));

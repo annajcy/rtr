@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/runtime/global/base.h"
+#include "engine/runtime/global/singleton.h"
 #include <filesystem>
 #include <memory>
 #include <string>

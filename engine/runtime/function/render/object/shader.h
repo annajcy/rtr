@@ -482,8 +482,9 @@ public:
                 Shader_feature::SHADOWS,
                 std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
                     {"shadow_bias", Uniform_entry<float>::create(1.0f)},
-                    {"pcf_radius", Uniform_entry<int>::create(5)},
-                    {"pcf_tightness", Uniform_entry<int>::create(100)},
+                    {"light_size", Uniform_entry<float>::create(0)},
+                    {"pcf_radius", Uniform_entry<float>::create(5)},
+                    {"pcf_tightness", Uniform_entry<float>::create(100)},
                     {"pcf_sample_count", Uniform_entry<int>::create(100)},
                 }
             }
@@ -596,13 +597,13 @@ public:
             {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url("assets/shader/shadow_caster.frag"))}
         },
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
-            {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
-            {"invocation_id", Uniform_entry<int>::create(0)}
+            {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))}
         },
         std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {},
         Shader::Shader_feature_set {}
     ) {}
     ~Shadow_caster_shader() = default;
+    
     static std::shared_ptr<Shadow_caster_shader> create() {
         if (Shader::is_cached("shadow_caster_shader")) {
             return Shader::get_cached_shader<Shadow_caster_shader>("shadow_caster_shader");

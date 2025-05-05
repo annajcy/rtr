@@ -11,12 +11,11 @@ class Mesh_renderer_component : public Component_base {
 
 protected:
     std::shared_ptr<Mesh_renderer> m_mesh_renderer{};
-    bool m_is_cast_shadow{false};
+    bool m_is_cast_shadow{true};
 
 public:
 
-    Mesh_renderer_component(
-    ) : Component_base(Component_type::MESH_RENDERER) {}
+    Mesh_renderer_component() : Component_base(Component_type::MESH_RENDERER) {}
 
     virtual ~Mesh_renderer_component() = default;
 

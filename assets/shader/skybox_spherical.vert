@@ -1,4 +1,5 @@
 // skybox_spherical.vert
+
 layout(location = 0) in vec3 a_position;
 
 layout(std140, binding = 0) uniform Camera_ubo {

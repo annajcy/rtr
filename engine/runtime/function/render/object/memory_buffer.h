@@ -1,6 +1,5 @@
 #pragma once
 
-#include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/runtime/platform/rhi/rhi_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
@@ -16,8 +15,12 @@ protected:
     Buffer_usage m_usage{};
 
 public:
-    Memory_buffer(Buffer_type type, Buffer_usage usage) : 
-    m_type(type), m_usage(usage) {}
+    Memory_buffer(
+        Buffer_type type, 
+        Buffer_usage usage
+    ) : m_type(type), 
+        m_usage(usage) {}
+
     ~Memory_buffer() = default;
     Buffer_type get_type() const { return m_type; }
     Buffer_usage get_usage() const { return m_usage; }
@@ -33,9 +36,13 @@ protected:
     T m_data{};
 
 public:
-    Uniform_buffer(const T& data) : 
-    Memory_buffer(Buffer_type::UNIFORM, Buffer_usage::STATIC), 
-    m_data(data) {}
+    Uniform_buffer(
+        const T& data
+    ) : Memory_buffer(
+        Buffer_type::UNIFORM, 
+        Buffer_usage::STATIC
+    ),  m_data(data) {}
+    
     ~Uniform_buffer() = default;
 
     T data() const { return m_data; }

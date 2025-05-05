@@ -2,9 +2,9 @@
 
 #include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/global/enum.h"
-#include "engine/runtime/platform/rhi/opengl/rhi_error_opengl.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_texture.h"
+#include "engine/runtime/resource/guid.h"
 #include "engine/runtime/resource/loader/image_loader.h"
 #include <memory>
 #include <unordered_map>
@@ -158,7 +158,7 @@ public:
         return create(
             image,
             1,
-            Texture_internal_format::RGB_ALPHA,
+            Texture_internal_format::SRGB_ALPHA,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}

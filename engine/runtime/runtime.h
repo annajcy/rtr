@@ -67,7 +67,7 @@ public:
         m_timer = std::make_shared<Timer>();
         m_timer->start();
 
-        auto test_render_pipeline = Test_render_pipeline::create(render_system->global_render_resource());
+        auto test_render_pipeline = Forward_render_pipeline::create(render_system->global_render_resource());
         render_system->set_render_pipeline(test_render_pipeline);
 
         Log_sys::get_instance()->log(Logging_system::Level::info, "Engine Runtime Created");

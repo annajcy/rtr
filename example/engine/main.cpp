@@ -23,7 +23,6 @@
 #include "glm/fwd.hpp"
 #include <memory>
 #include <unordered_map>
-#include <vector>
 
 using namespace rtr;
 
@@ -146,6 +145,8 @@ int main() {
     auto dl_node = dl_game_object->add_component<Node_component>()->node();
     dl_node->look_at_direction(glm::vec3(1, -1, 1));
     auto dl = dl_game_object->add_component<Directional_light_component>();
+    auto dl_shadow_caster = dl_game_object->add_component<Directional_light_shadow_caster_component>();
+    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_depth_attachemnt(2048, 2048);
 
     auto pl0_game_object = scene->add_game_object(Game_object::create("pl0"));
     auto pl0_node = pl0_game_object->add_component<Node_component>()->node();
@@ -176,23 +177,9 @@ int main() {
     auto sl1 = sl1_game_object->add_component<Spot_light_component>()->spot_light();
     sl1->color() = glm::vec3(1, 1, 0);
     sl1->intensity() = 0.5f;
-
-    auto csm_game_object = scene->add_game_object(Game_object::create("csm"));
-    auto csm_component = csm_game_object->add_component<Directional_light_shadow_caster_component>(
-        Directional_light_shadow_caster_component::create(
-            dl->directional_light(),
-            camera_component->perspective_camera(), 
-            4, 
-            800, 
-            600
-        )
-    );
     
     box_node->add_child(sphere_node, true);
-    //box_node->add_child(camera_node, true);
-    //box_node->add_child(sl0_node, true);
-    gl_check_error();
-    
+
     editor->run();
 
     return 0;
