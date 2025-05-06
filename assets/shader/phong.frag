@@ -242,13 +242,24 @@ void generate_poisson_disk_samples( // 更正函数名
     }
 }
 
-// 新增遮挡物搜索函数
+float get_search_radius(
+    float light_space_depth,
+    float near_plane,
+    float light_size,
+    float frustum_size
+) {
+    return ((light_space_depth - near_plane) / light_space_depth) * 
+            (light_size / frustum_size);
+    
+}
+
 float find_blocker(
-    sampler2D shadow_map,
     vec3 projected_position,
     float search_radius,
-    float light_size,
-    float bias
+    float pcf_tightness,
+    int pcf_sample_count,
+    float bias,
+    sampler2D shadow_map
 ) {
     int blocker_count = 0;
     float blocker_depth_sum = 0.0;
@@ -271,22 +282,21 @@ float find_blocker(
         }
     }
     
-    if(blocker_count == 0) return 0.0;
+    if (blocker_count == 0) return -1.0;
     float avg_blocker_depth = blocker_depth_sum / float(blocker_count);
     return avg_blocker_depth;
 }
 
-// 新增软阴影半径计算函数
-float calculate_pcf_radius(
-    float receiver_depth, 
-    float blocker_depth, 
-    float light_size
+float get_penumbra_radius(
+    float receiver_depth,
+    float blocker_depth,
+    float light_size,
+    float frustum_size
 ) {
-    float w_penumbra = (receiver_depth - blocker_depth) * light_size / blocker_depth;
-    return clamp(w_penumbra, 0.0, 0.1);
+    return ((receiver_depth - blocker_depth) / receiver_depth) * 
+            (light_size / frustum_size);
 }
 
-// 修改原有 pcf 函数（参数列表保持不变）
 float pcf(
     vec3 projected_position,
     float pcf_radius,
@@ -468,23 +478,44 @@ void main() {
     vec3 light_camera_direction = light_camera.camera_direction; // 正确获取光源方向
     float bias = max(0.0005, shadow_bias * (1.0 - dot(normalized_normal, -light_camera_direction)));
 
-    float search_radius = light_size * (projected_position.z - 0.02) * 40.0;
-    float avg_blocker_depth = find_blocker(
-        dl_shadow_map,
+    vec3 light_space_position = vec3(light_camera.view * world_position);
+
+    float light_space_depth = -light_space_position.z;
+    float near_plane = light_camera.near;
+    float frustum_size = light_camera.right - light_camera.left;
+    
+    float search_radius = get_search_radius(
+        light_space_depth,
+        near_plane,
+        light_size,
+        frustum_size
+    );
+
+    float blocker_depth = find_blocker(
         projected_position,
         search_radius,
-        light_size,
-        bias
+        pcf_tightness,
+        pcf_sample_count,
+        bias,
+        dl_shadow_map
     );
-    
-    float pcss_radius = 0.0;
-    if(avg_blocker_depth > 0.0) {
-        pcss_radius = calculate_pcf_radius(projected_position.z, avg_blocker_depth, light_size);
+
+    float radius = pcf_radius;
+
+    if (blocker_depth != -1.0) {
+        float penumbra_radius = get_penumbra_radius(
+            projected_position.z,
+            blocker_depth,
+            light_size,
+            frustum_size
+        );
+
+        radius = pcf_radius * penumbra_radius;
     }
 
     float shadow = pcf(
         projected_position,
-        pcss_radius * pcf_radius,
+        radius,
         pcf_tightness,
         pcf_sample_count,
         bias,
