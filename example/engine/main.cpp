@@ -1,3 +1,4 @@
+#include "engine/runtime/framework/component/custom/ping_pong_component.h"
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
 #include "engine/runtime/global/enum.h"
 #include "engine/editor/editor.h"
@@ -139,6 +140,11 @@ int main() {
     auto rotate_component = box->add_component<Rotate_component>();
     rotate_component->speed() = 0.1f;
 
+    auto ping_pong_component = box->add_component<Ping_pong_component>();
+    ping_pong_component->position() = glm::vec3(0, 1, 0);
+    ping_pong_component->amplitude() = 0.05f;
+    ping_pong_component->speed() = 0.05f;
+
     auto box_mesh_renderer = box->add_component<Mesh_renderer_component>()->mesh_renderer();
     box_mesh_renderer->geometry() = Geometry::create_box();
     box_mesh_renderer->material() = go_material;
@@ -154,7 +160,8 @@ int main() {
 
     auto dl_game_object = scene->add_game_object(Game_object::create("dl"));
     auto dl_node = dl_game_object->add_component<Node_component>()->node();
-    dl_node->look_at_direction(glm::vec3(1, -1, 1));
+    dl_node->look_at_direction(glm::vec3(0, -1, 0));
+    dl_node->set_position(glm::vec3(0, 3, 0));
     auto dl = dl_game_object->add_component<Directional_light_component>();
     auto dl_shadow_caster = dl_game_object->add_component<Directional_light_shadow_caster_component>();
     dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_depth_attachemnt(2048, 2048);

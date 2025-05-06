@@ -162,6 +162,8 @@ public:
         auto dl_shadow_camera_ubo = Orthographic_camera_ubo{
             .view_matrix = tick_context.render_swap_data.dl_shadow_casters.shadow_camera.view_matrix,
             .projection_matrix = tick_context.render_swap_data.dl_shadow_casters.shadow_camera.projection_matrix,
+            .camera_position = tick_context.render_swap_data.dl_shadow_casters.shadow_camera.camera_position,
+            .camera_direction = tick_context.render_swap_data.dl_shadow_casters.shadow_camera.camera_direction,
             .near = tick_context.render_swap_data.dl_shadow_casters.shadow_camera.near,
             .far = tick_context.render_swap_data.dl_shadow_casters.shadow_camera.far,
             .left = tick_context.render_swap_data.dl_shadow_casters.shadow_camera.left,

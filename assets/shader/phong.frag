@@ -19,6 +19,7 @@ struct Camera {
     mat4 projection;
     vec3 camera_position;
     vec3 camera_direction;
+    float padding;
     float near;
     float far;
 };
@@ -187,7 +188,7 @@ vec2 parallax_occlusion_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tb
 
 #ifdef ENABLE_SHADOWS
 
-#define MAX_PCF_SAMPLE 32
+#define MAX_SAMPLE_COUNT 32
 
 layout(binding = 5) uniform sampler2D dl_shadow_map;
 
@@ -196,6 +197,7 @@ struct Orthographic_camera {
     mat4 projection;
     vec3 camera_position;
     vec3 camera_direction;
+    float padding;
     float near;
     float far;
     float left;
@@ -220,25 +222,47 @@ float rand_2to1(vec2 uv) {
     return fract(sin(sn) * c);
 }
 
-void generate_poisson_disk_samples( // 更正函数名
+void generate_poisson_disk_samples(
     vec2 uv_seed,
-    int pcf_sample_count,
-    float pcf_tightness,
-    out vec2 samples[MAX_PCF_SAMPLE]
+    int sample_count,
+    float tightness,
+    out vec2 samples[MAX_SAMPLE_COUNT]
 ) {
     float angle = rand_2to1(uv_seed) * PI2;
-    float radius = 1.0 / float(pcf_sample_count);
+    float radius = 1.0 / float(sample_count);
     float radius_increment = radius;
     float angle_increment = (1.0 - 0.6180339887) * PI2;
 
-    pcf_sample_count = min(pcf_sample_count, MAX_PCF_SAMPLE); // 限制样本数量
+    sample_count = min(sample_count, MAX_SAMPLE_COUNT); // 限制样本数量
 
-    for (int i = 0; i < pcf_sample_count; i++) {
-        float x = cos(angle) * pow(radius, pcf_tightness);
-        float y = sin(angle) * pow(radius, pcf_tightness);
+    for (int i = 0; i < sample_count; i++) {
+        float x = cos(angle) * pow(radius, tightness);
+        float y = sin(angle) * pow(radius, tightness);
         samples[i] = vec2(x, y);
         angle += angle_increment;
         radius += radius_increment;
+    }
+}
+
+void get_sampled_uv(
+    vec2 main_uv,
+    float tightness,
+    float sample_radius,
+    int sample_count,
+    out vec2 sampled_uv[MAX_SAMPLE_COUNT]
+) {
+
+    vec2 poisson_disk_samples[MAX_SAMPLE_COUNT];
+    generate_poisson_disk_samples(
+        main_uv,
+        sample_count,
+        tightness,
+        poisson_disk_samples
+    );
+
+    for (int i = 0; i < sample_count; i++) {
+        vec2 uv = main_uv + poisson_disk_samples[i] * sample_radius;
+        sampled_uv[i] = uv;
     }
 }
 
@@ -248,43 +272,53 @@ float get_search_radius(
     float light_size,
     float frustum_size
 ) {
-    return ((light_space_depth - near_plane) / light_space_depth) * 
-            (light_size / frustum_size);
-    
+    return (light_space_depth - near_plane) / light_space_depth * 
+            light_size / frustum_size;
 }
 
-float find_blocker(
-    vec3 projected_position,
-    float search_radius,
-    float pcf_tightness,
-    int pcf_sample_count,
+void get_sampled_depth(
+    sampler2D shadow_map,
+    int sample_count,
+    in vec2 sampled_uv[MAX_SAMPLE_COUNT],
+    out float sampled_depth[MAX_SAMPLE_COUNT]
+) {
+    for (int i = 0; i < sample_count; i++) {
+        float shadow_map_depth = texture(shadow_map, sampled_uv[i]).r;
+        sampled_depth[i] = shadow_map_depth;
+    }
+}
+
+void get_sampled_depth_tex_array(
+    sampler2DArray shadow_map,
+    int layer,
+    int sample_count,
+    in vec2 sampled_uv[MAX_SAMPLE_COUNT],
+    out float sampled_depth[MAX_SAMPLE_COUNT]
+) {
+    for (int i = 0; i < sample_count; i++) {
+        float shadow_map_depth = texture(shadow_map, vec3(sampled_uv[i], layer)).r;
+        sampled_depth[i] = shadow_map_depth;
+    }
+}
+
+float find_blocker_depth(
+    float light_projected_depth,
     float bias,
-    sampler2D shadow_map
+    int sample_count,
+    in float sampled_depth[MAX_SAMPLE_COUNT]
 ) {
     int blocker_count = 0;
     float blocker_depth_sum = 0.0;
     
-    vec2 poisson_disk_samples[MAX_PCF_SAMPLE];
-    generate_poisson_disk_samples(
-        projected_position.xy,
-        pcf_sample_count,
-        pcf_tightness,
-        poisson_disk_samples
-    );
-
-    for(int i = 0; i < pcf_sample_count; i++) {
-        vec2 sample_uv = projected_position.xy + poisson_disk_samples[i] * search_radius;
-        float shadow_map_depth = texture(shadow_map, sample_uv).r;
-        
-        if(projected_position.z - bias > shadow_map_depth) {
-            blocker_depth_sum += shadow_map_depth;
-            blocker_count++;
+    for (int i = 0; i < sample_count; i++) {
+        if(light_projected_depth - bias > sampled_depth[i]) {
+            blocker_depth_sum += sampled_depth[i];
+            blocker_count ++;
         }
     }
     
     if (blocker_count == 0) return -1.0;
-    float avg_blocker_depth = blocker_depth_sum / float(blocker_count);
-    return avg_blocker_depth;
+    return blocker_depth_sum / float(blocker_count);
 }
 
 float get_penumbra_radius(
@@ -293,37 +327,26 @@ float get_penumbra_radius(
     float light_size,
     float frustum_size
 ) {
-    return ((receiver_depth - blocker_depth) / receiver_depth) * 
-            (light_size / frustum_size);
+    return (receiver_depth - blocker_depth) / receiver_depth * 
+            light_size / frustum_size;
 }
 
-float pcf(
-    vec3 projected_position,
-    float pcf_radius,
-    float pcf_tightness,
-    int pcf_sample_count,
-    float bias,
-    sampler2D shadow_map
-) {
-    // 保持原有实现不变
-    vec2 uv = projected_position.xy;
-    float frag_depth = projected_position.z;
 
-    vec2 poisson_disk_samples[MAX_PCF_SAMPLE];
-    generate_poisson_disk_samples(
-        uv,
-        pcf_sample_count,
-        pcf_tightness,
-        poisson_disk_samples
-    );
+float pcf(
+    float light_projected_depth,
+    float bias,
+    int sample_count,
+    in float sampled_depth[MAX_SAMPLE_COUNT]
+) {
 
     float sum = 0.0;
-    pcf_sample_count = min(pcf_sample_count, MAX_PCF_SAMPLE);
-    for (int i = 0; i < pcf_sample_count; i++) {
-        float shadow_map_depth = texture(shadow_map, uv + poisson_disk_samples[i] * pcf_radius).r;
-        sum += (frag_depth - bias > shadow_map_depth) ? 1.0 : 0.0;
+    sample_count = min(sample_count, MAX_SAMPLE_COUNT);
+    for (int i = 0; i < sample_count; i++) {
+        if (light_projected_depth - bias > sampled_depth[i]) {
+            sum += 1.0;
+        }
     }
-    return sum / float(pcf_sample_count);
+    return sum / float(sample_count);
 }
 
 #endif
@@ -331,7 +354,6 @@ float pcf(
 void main() {
     vec3 camera_position = main_camera.camera_position;
     vec3 camera_direction = main_camera.camera_direction;
-
 
     vec3 view_direction = normalize(camera_position - v_frag_position);
 
@@ -470,17 +492,19 @@ void main() {
     }
 
 #ifdef ENABLE_SHADOWS
+
     vec4 world_position = vec4(v_frag_position, 1.0);
     vec4 light_camera_clip_space_position = light_camera.projection * light_camera.view * world_position;
     vec3 light_camera_ndc = light_camera_clip_space_position.xyz / light_camera_clip_space_position.w;
     vec3 projected_position = light_camera_ndc * 0.5 + 0.5;
 
     vec3 light_camera_direction = light_camera.camera_direction; // 正确获取光源方向
-    float bias = max(0.0005, shadow_bias * (1.0 - dot(normalized_normal, -light_camera_direction)));
+    float bias = max(0.005, shadow_bias * (1.0 - dot(normalized_normal, -light_camera_direction)));
 
     vec3 light_space_position = vec3(light_camera.view * world_position);
 
     float light_space_depth = -light_space_position.z;
+    float receiver_depth = projected_position.z;
     float near_plane = light_camera.near;
     float frustum_size = light_camera.right - light_camera.left;
     
@@ -491,42 +515,97 @@ void main() {
         frustum_size
     );
 
-    float blocker_depth = find_blocker(
-        projected_position,
-        search_radius,
+    // frag_color = vec4(vec3(search_radius), 1.0);
+    // return;
+
+    vec2 sampled_blocked_depth_uv[MAX_SAMPLE_COUNT];
+    get_sampled_uv(
+        projected_position.xy,
         pcf_tightness,
+        search_radius,
         pcf_sample_count,
-        bias,
-        dl_shadow_map
+        sampled_blocked_depth_uv
     );
 
-    float radius = pcf_radius;
+    // 调试：输出 sampled_blocked_depth_uv
+    // frag_color = vec4(vec2(sampled_blocked_depth_uv[0]), 0.0, 1.0);
+    // return;
 
+    float sampled_blocked_depth[MAX_SAMPLE_COUNT];
+    get_sampled_depth(
+        dl_shadow_map,
+        pcf_sample_count,
+        sampled_blocked_depth_uv,
+        sampled_blocked_depth
+    );
+
+    float blocker_depth = find_blocker_depth(
+        receiver_depth,
+        bias,
+        pcf_sample_count,
+        sampled_blocked_depth
+    );
+
+    //调试：输出 blocker_depth
+    // if (blocker_depth != -1.0) {
+    //     frag_color = vec4(vec3(blocker_depth), 1.0);
+    //     return;
+    // } else {
+    //     frag_color = vec4(vec3(0.0), 1.0);
+    //     return;
+    // }
+    // 调试：输出 receiver_depth
+    // frag_color = vec4(vec3(receiver_depth), 1.0);
+    // return;
+    // 调试：输出 projected_position.z
+    // frag_color = vec4(vec3(projected_position.z), 1.0);
+    // return;
+
+    float shadow = 0.0;
     if (blocker_depth != -1.0) {
+
         float penumbra_radius = get_penumbra_radius(
-            projected_position.z,
+            receiver_depth,
             blocker_depth,
             light_size,
             frustum_size
         );
 
-        radius = pcf_radius * penumbra_radius;
-    }
+        vec2 sampled_uv[MAX_SAMPLE_COUNT];
+        get_sampled_uv(
+            projected_position.xy,
+            pcf_tightness,
+            penumbra_radius * pcf_radius,
+            pcf_sample_count,
+            sampled_uv
+        );
 
-    float shadow = pcf(
-        projected_position,
-        radius,
-        pcf_tightness,
-        pcf_sample_count,
-        bias,
-        dl_shadow_map
-    );
-    
+        float sampled_depth[MAX_SAMPLE_COUNT];
+        get_sampled_depth(
+            dl_shadow_map,
+            pcf_sample_count,
+            sampled_uv,
+            sampled_depth
+        );
+
+        shadow = pcf(
+            receiver_depth,
+            bias,
+            pcf_sample_count,
+            sampled_depth
+        );
+
+    } 
+
     frag_color = vec4(ambient + (1.0 - shadow) * (diffuse + specular), alpha);
 
+
 #else
+
     frag_color = vec4(ambient + diffuse + specular, alpha);
 
 #endif
 
 }
+
+

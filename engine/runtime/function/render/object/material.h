@@ -53,9 +53,9 @@ public:
 
 struct Shadow_settings {
     float shadow_bias{0.005f};
-    float light_size{10.0f};
-    float pcf_radius{0.01f};
-    float pcf_tightness{1.0f};
+    float light_size{0.7f};
+    float pcf_radius{0.75f};
+    float pcf_tightness{1.2f};
     int pcf_sample_count{18};
 
     Shadow_settings() = default;

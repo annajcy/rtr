@@ -75,20 +75,20 @@ public:
     }
 };
     
-class Directional_light_csm_shadow_caster_component : public Component_base {
+class CSM_shadow_caster_component : public Component_base {
 protected:
     std::shared_ptr<Directional_light> m_directional_light{};
     std::shared_ptr<Perspective_camera> m_main_camera{};
     std::vector<std::shared_ptr<Directional_light_shadow_caster>> m_shadow_casters{};
-    int m_csm_layers{4};
+    const int m_csm_layers{4};
 
 public:
-    Directional_light_csm_shadow_caster_component() : Component_base(Component_type::SHADOW_CASTER) {}
+    CSM_shadow_caster_component() : Component_base(Component_type::SHADOW_CASTER) {}
 
-    virtual ~Directional_light_csm_shadow_caster_component() override = default;
+    virtual ~CSM_shadow_caster_component() override = default;
 
-    static std::shared_ptr<Directional_light_csm_shadow_caster_component> create() {
-        return std::make_shared<Directional_light_csm_shadow_caster_component>();
+    static std::shared_ptr<CSM_shadow_caster_component> create() {
+        return std::make_shared<CSM_shadow_caster_component>();
     }
 
     const std::shared_ptr<Directional_light>& directional_light() const { return m_directional_light; }
@@ -98,7 +98,6 @@ public:
     std::vector<std::shared_ptr<Directional_light_shadow_caster>>& shadow_casters() { return m_shadow_casters; }
 
     const int csm_layers() const { return m_csm_layers; }
-    int& csm_layers() { return m_csm_layers; }
 
     std::vector<std::pair<float, float>> generate_csm_layers() {
         std::vector<std::pair<float, float>> layers{};
@@ -222,27 +221,36 @@ public:
 
         update();
 
-        tick_context.logic_swap_data.enable_csm = true;
+        // set csm shadow maps
         auto& csm_shadow_maps_data = tick_context.logic_swap_data.csm_shadow_casters;
         csm_shadow_maps_data.resize(m_shadow_casters.size());
+
+        auto csm_layers = generate_csm_layers();
+
         for (size_t i = 0; i < csm_shadow_maps_data.size(); i ++) {
             auto& swap_shadow_map = csm_shadow_maps_data[i];
             auto& shadow_caster = m_shadow_casters[i];
+            auto& [near, far] = csm_layers[i];
+
             if (shadow_caster) {
-                swap_shadow_map = Swap_directional_light_shadow_caster {
-                    .shadow_map = shadow_caster->shadow_map(),
-                    .shadow_camera = Swap_orthographic_camera {
-                        .view_matrix = shadow_caster->orthographic_shadow_camera()->view_matrix(),
-                        .projection_matrix = shadow_caster->orthographic_shadow_camera()->projection_matrix(),
-                        .camera_position = shadow_caster->orthographic_shadow_camera()->node()->world_position(),
-                        .camera_direction = shadow_caster->orthographic_shadow_camera()->node()->world_front(),
-                        .near = shadow_caster->orthographic_shadow_camera()->near_bound(),
-                        .far = shadow_caster->orthographic_shadow_camera()->far_bound(),
-                        .left = shadow_caster->orthographic_shadow_camera()->left_bound(),
-                        .right = shadow_caster->orthographic_shadow_camera()->right_bound(),
-                        .bottom = shadow_caster->orthographic_shadow_camera()->bottom_bound(),
-                        .top = shadow_caster->orthographic_shadow_camera()->top_bound(),
-                    }
+                swap_shadow_map = Swap_CSM_shadow_caster {
+                    .shadow_caster = Swap_directional_light_shadow_caster {
+                        .shadow_map = shadow_caster->shadow_map(),
+                        .shadow_camera = Swap_orthographic_camera {
+                            .view_matrix = shadow_caster->orthographic_shadow_camera()->view_matrix(),
+                            .projection_matrix = shadow_caster->orthographic_shadow_camera()->projection_matrix(),
+                            .camera_position = shadow_caster->orthographic_shadow_camera()->node()->world_position(),
+                            .camera_direction = shadow_caster->orthographic_shadow_camera()->node()->world_front(),
+                            .near = shadow_caster->orthographic_shadow_camera()->near_bound(),
+                            .far = shadow_caster->orthographic_shadow_camera()->far_bound(),
+                            .left = shadow_caster->orthographic_shadow_camera()->left_bound(),
+                            .right = shadow_caster->orthographic_shadow_camera()->right_bound(),
+                            .bottom = shadow_caster->orthographic_shadow_camera()->bottom_bound(),
+                            .top = shadow_caster->orthographic_shadow_camera()->top_bound(),
+                        }
+                    },
+                    .split_near = near,
+                    .split_far = far,
                 };
             }
         }

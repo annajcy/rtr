@@ -1,8 +1,8 @@
 #pragma once
 
-#include "engine/runtime/global/base.h"
 #include "engine/runtime/global/singleton.h"
 #include <filesystem>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -30,7 +30,6 @@ public:
     void set_root(const std::string& path) { 
         m_root_path = std::filesystem::absolute(path);
     }
-
 
     std::string get_root() const {
         return m_root_path.string();

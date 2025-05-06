@@ -6,6 +6,7 @@
 #include "engine/runtime/function/render/object/texture.h"
 #include "glm/fwd.hpp"
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace rtr {
@@ -87,6 +88,12 @@ struct Swap_point_light_shadow_caster {
     Swap_perspective_camera shadow_camera{};
 };
 
+struct Swap_CSM_shadow_caster {
+    Swap_directional_light_shadow_caster shadow_caster{};
+    float split_near{};
+    float split_far{};
+};
+
 struct Swap_data {
     
     Swap_camera camera{};
@@ -100,8 +107,7 @@ struct Swap_data {
 
     Swap_directional_light_shadow_caster dl_shadow_casters{};
     
-    bool enable_csm{false};
-    std::vector<Swap_directional_light_shadow_caster> csm_shadow_casters{};
+    std::vector<Swap_CSM_shadow_caster> csm_shadow_casters{};
 
     void clear() {
         render_objects.clear();

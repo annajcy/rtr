@@ -11,6 +11,7 @@ struct Camera {
     mat4 projection;
     vec3 camera_position;
     vec3 camera_direction;
+    float padding;
     float near;
     float far;
 };
