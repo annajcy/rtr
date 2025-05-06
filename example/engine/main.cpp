@@ -17,6 +17,7 @@
 #include "engine/runtime/framework/core/scene.h"
 #include "engine/runtime/framework/core/world.h"
 
+#include "engine/runtime/resource/file_service.h"
 #include "engine/runtime/resource/loader/image_loader.h"
 #include "engine/runtime/runtime.h"
 
@@ -37,27 +38,37 @@ int main() {
 
     auto bk_image = Image_loader::load_from_path(
         Image_format::RGB_ALPHA, 
-         "assets/image/skybox/spherical/bk.jpg"
+        File_ser::get_instance()->get_absolute_path(
+            "assets/image/skybox/spherical/bk.jpg"
+        )
     );
     
     auto height_map = Image_loader::load_from_path(
         Image_format::RGB_ALPHA,
-        "assets/image/bricks/disp.jpg"
+        File_ser::get_instance()->get_absolute_path(
+            "assets/image/bricks/disp.jpg"
+        )
     );
 
     auto normal_map = Image_loader::load_from_path(
         Image_format::RGB_ALPHA,
-        "assets/image/bricks/bricks_normal.jpg"
+        File_ser::get_instance()->get_absolute_path(
+            "assets/image/bricks/bricks_normal.jpg"
+        )
     );
 
     auto main_tex = Image_loader::load_from_path(
         Image_format::RGB_ALPHA, 
-        "assets/image/bricks/bricks.jpg"
+        File_ser::get_instance()->get_absolute_path(
+            "assets/image/bricks/bricks.jpg"
+        )
     );
 
     auto plane_main_tex = Image_loader::load_from_path(
         Image_format::RGB_ALPHA, 
-        "assets/image/grass/grass.jpg"
+        File_ser::get_instance()->get_absolute_path(
+            "assets/image/grass/grass.jpg"
+        )
     );
 
     auto phong_material_settings = Phong_material_settings::create();

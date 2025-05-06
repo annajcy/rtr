@@ -21,14 +21,24 @@ class File_service {
 
 public:
 
-    static std::shared_ptr<File_service> create(const std::string& root_path) {
-        return std::make_shared<File_service>(root_path);
+    static std::shared_ptr<File_service> create() {
+        return std::make_shared<File_service>();
     }
 
-    File_service(const std::string& root_path) : m_root_path(std::filesystem::absolute(root_path)) {}
+    File_service() : m_root_path(std::filesystem::absolute(std::filesystem::current_path())) {}
     // 设置文件系统根目录
     void set_root(const std::string& path) { 
         m_root_path = std::filesystem::absolute(path);
+    }
+
+
+    std::string get_root() const {
+        return m_root_path.string();
+    }
+
+    // 获取文件的绝对路径
+    std::string get_absolute_path(const std::string& relative_path) const {
+        return (m_root_path / relative_path).string();
     }
 
     // 获取目录下的文件列表（相对根目录的路径）
@@ -133,5 +143,7 @@ private:
         return node;
     }
 };
+
+using File_ser = Singleton<File_service>;
 
 }

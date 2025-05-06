@@ -12,7 +12,7 @@ namespace rtr {
 class Render_system {
 
 protected:
-    RHI_global_render_object m_global_render_resource{};
+    RHI_global_render_resource m_global_render_resource{};
     std::shared_ptr<Render_pipeline> m_render_pipeline{};
 
 public:
@@ -39,11 +39,11 @@ public:
         );
     }
 
-    const RHI_global_render_object& global_render_resource() const {
+    const RHI_global_render_resource& global_render_resource() const {
         return m_global_render_resource;
     }
 
-    RHI_global_render_object& global_render_resource() {
+    RHI_global_render_resource& global_render_resource() {
         return m_global_render_resource;
     }
 

@@ -20,11 +20,6 @@ struct Engine_runtime_descriptor {
     std::string title{"RTR Engine"};
 };
 
-// TODO: 多线程渲染
-class Engine_runtime_async {
-
-};
-
 class Engine_runtime {
 private:
     float m_delta_time {0.0f};
@@ -37,7 +32,6 @@ private:
     std::shared_ptr<Input_system> m_input_system{};
     std::shared_ptr<Render_system> m_render_system{};
     std::shared_ptr<Window_system> m_window_system{};
-    std::shared_ptr<File_service> m_file_service{};
     std::shared_ptr<World> m_world{};
     std::shared_ptr<Timer> m_timer{};
 
@@ -56,12 +50,10 @@ public:
         auto window_system = Window_system::create(window);
         auto input_system = Input_system::create(window);
         auto render_system = Render_system::create(device, window);
-        auto file_service = File_service::create("assets");
         
         m_rhi_device = device;
         m_window_system = window_system;
         m_input_system = input_system;
-        m_file_service = file_service;
         m_render_system = render_system;
 
         m_timer = std::make_shared<Timer>();
@@ -70,6 +62,7 @@ public:
         auto test_render_pipeline = Forward_render_pipeline::create(render_system->global_render_resource());
         render_system->set_render_pipeline(test_render_pipeline);
 
+        File_ser::get_instance()->set_root("/home/jinceyang/Desktop/rtr");
         Log_sys::get_instance()->log(Logging_system::Level::info, "Engine Runtime Created");
     }
 
@@ -77,7 +70,6 @@ public:
     std::shared_ptr<Input_system>& input_system() { return m_input_system; }
     std::shared_ptr<Render_system>& render_system() { return m_render_system; }
     std::shared_ptr<Window_system>& window_system() { return m_window_system; }
-    std::shared_ptr<File_service>& file_service() { return m_file_service; }
     std::shared_ptr<World>& world() { return m_world; }
 
     static std::shared_ptr<Engine_runtime> create(const Engine_runtime_descriptor& descriptor) {

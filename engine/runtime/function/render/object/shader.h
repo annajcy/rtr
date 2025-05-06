@@ -6,6 +6,7 @@
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_shader_code.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
+#include "engine/runtime/resource/file_service.h"
 #include "glm/fwd.hpp"
 #include <bitset>
 #include <cstddef>
@@ -459,8 +460,8 @@ public:
     Phong_shader() : Shader(
         "phong_shader", 
         std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
-            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url("assets/shader/phong.vert"))},
-            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url("assets/shader/phong.frag"))}
+            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url(File_ser::get_instance()->get_absolute_path("assets/shader/phong.vert")))},
+            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url(File_ser::get_instance()->get_absolute_path("assets/shader/phong.frag")))}
         }, 
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
             {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
@@ -517,8 +518,8 @@ public:
     Skybox_cubemap_shader() : Shader(
         "skybox_cubemap_shader",
         std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
-            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url("assets/shader/skybox_cubemap.vert"))},
-            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url("assets/shader/skybox_cubemap.frag"))}
+            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url(File_ser::get_instance()->get_absolute_path("assets/shader/skybox_cubemap.vert")))},
+            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url(File_ser::get_instance()->get_absolute_path("assets/shader/skybox_cubemap.frag")))}
         },
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {},
         std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {},
@@ -543,8 +544,8 @@ public:
     Skybox_spherical_shader() : Shader(
         "skybox_spherical_shader",
         std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
-            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url("assets/shader/skybox_spherical.vert"))},
-            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url("assets/shader/skybox_spherical.frag"))}
+            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url(File_ser::get_instance()->get_absolute_path("assets/shader/skybox_spherical.vert")))},
+            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url(File_ser::get_instance()->get_absolute_path("assets/shader/skybox_spherical.frag")))}
         },
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {},
         std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {},
@@ -569,8 +570,8 @@ public:
     Gamma_shader() : Shader(
         "gamma_shader",
         std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
-            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url("assets/shader/gamma.vert"))},
-            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url("assets/shader/gamma.frag"))}
+            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url(File_ser::get_instance()->get_absolute_path("assets/shader/gamma.vert")))},
+            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url(File_ser::get_instance()->get_absolute_path("assets/shader/gamma.frag")))}
         },
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {},
         std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {},
@@ -593,8 +594,8 @@ public:
     Shadow_caster_shader() : Shader(
         "shadow_caster_shader",
         std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
-            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url("assets/shader/shadow_caster.vert"))},
-            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url("assets/shader/shadow_caster.frag"))}
+            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, get_shader_code_from_url(File_ser::get_instance()->get_absolute_path("assets/shader/shadow_caster.vert")))},
+            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, get_shader_code_from_url(File_ser::get_instance()->get_absolute_path("assets/shader/shadow_caster.frag")))}
         },
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
             {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))}

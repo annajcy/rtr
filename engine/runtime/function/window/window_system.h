@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/runtime/global/base.h"
+
 #include "engine/runtime/platform/rhi/rhi_window.h"
 #include <memory>
 

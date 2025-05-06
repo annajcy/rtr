@@ -6,8 +6,8 @@
 #include "engine/runtime/function/render/object/shader.h"
 #include "engine/runtime/function/render/object/skybox.h"
 #include "engine/runtime/function/render/object/texture.h"
-#include "engine/runtime/function/render/core/render_object.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_error_opengl.h"
+#include "engine/runtime/platform/rhi/rhi_global_render_resource.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -16,11 +16,11 @@ namespace rtr {
     
 class Render_pass {
 protected:
-    RHI_global_render_object& m_rhi_global_render_resource;
+    RHI_global_render_resource& m_rhi_global_render_resource;
 
 public:
     Render_pass(
-        RHI_global_render_object& rhi_global_render_resource
+        RHI_global_render_resource& rhi_global_render_resource
     ) : m_rhi_global_render_resource(rhi_global_render_resource) {}
 
     virtual ~Render_pass() {}
@@ -39,7 +39,7 @@ public:
     };
 
     static std::shared_ptr<Shadow_pass> create(
-        RHI_global_render_object& rhi_global_render_resource
+        RHI_global_render_resource& rhi_global_render_resource
     ) {
         return std::make_shared<Shadow_pass>(rhi_global_render_resource);
     }
@@ -54,7 +54,7 @@ protected:
 public:
 
     Shadow_pass(
-        RHI_global_render_object& rhi_global_render_resource
+        RHI_global_render_resource& rhi_global_render_resource
     ) : Render_pass(rhi_global_render_resource), 
         m_shadow_caster_material(
             Shadow_caster_material::create(Shadow_caster_shader::create())
@@ -123,7 +123,7 @@ public:
     };
 
     static std::shared_ptr<Main_pass> create(
-        RHI_global_render_object& rhi_global_render_resource
+        RHI_global_render_resource& rhi_global_render_resource
     ) {
         return std::make_shared<Main_pass>(rhi_global_render_resource);
     }
@@ -135,7 +135,7 @@ protected:
     
 public:
     Main_pass(
-        RHI_global_render_object& rhi_global_render_resource
+        RHI_global_render_resource& rhi_global_render_resource
     ) : Render_pass(rhi_global_render_resource) {}
 
     ~Main_pass() {}
@@ -231,7 +231,7 @@ public:
     };
 
     static std::shared_ptr<Postprocess_pass> create(
-        RHI_global_render_object& rhi_global_render_resource
+        RHI_global_render_resource& rhi_global_render_resource
     ) {
         return std::make_shared<Postprocess_pass>(rhi_global_render_resource);
     }
@@ -247,7 +247,7 @@ protected:
 
 public:
     Postprocess_pass(
-        RHI_global_render_object& rhi_global_render_resource
+        RHI_global_render_resource& rhi_global_render_resource
     ) : Render_pass(rhi_global_render_resource) {
         m_gamma_material = Gamma_material::create(Gamma_shader::create());
         

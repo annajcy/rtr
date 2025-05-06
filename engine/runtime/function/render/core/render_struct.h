@@ -10,6 +10,8 @@
 
 namespace rtr {
 
+
+// CAMERA
 struct Camera_ubo {
     glm::mat4 view_matrix{};      
     glm::mat4 projection_matrix{}; 
@@ -70,6 +72,8 @@ struct Orthographic_camera_ubo_array {
     Orthographic_camera_ubo orthographic_camera_ubo[MAX_CAMERA];
 };
 
+
+// LIGHT
 struct Directional_light_ubo {
     float intensity{};             
     float padding1[3];          
