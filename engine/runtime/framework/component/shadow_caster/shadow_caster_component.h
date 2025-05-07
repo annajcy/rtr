@@ -6,6 +6,7 @@
 #include "engine/runtime/framework/component/light/light_component.h"
 #include "engine/runtime/framework/component/node/node.h"
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster.h"
+#include "engine/runtime/function/render/object/texture.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
@@ -23,7 +24,11 @@ protected:
     std::shared_ptr<Directional_light_shadow_caster> m_shadow_caster{};
 
 public:
-    Directional_light_shadow_caster_component() : Component_base(Component_type::SHADOW_CASTER) {}
+    Directional_light_shadow_caster_component() : Component_base(Component_type::SHADOW_CASTER) {
+        m_shadow_caster = Directional_light_shadow_caster::create(
+            Orthographic_camera::create(Node::create()) 
+        );
+    }
 
     virtual ~Directional_light_shadow_caster_component() override = default;
 
@@ -37,9 +42,6 @@ public:
 
     void on_add_to_game_object() override {
         m_directional_light = get_component<Directional_light_component>()->directional_light();
-        m_shadow_caster = Directional_light_shadow_caster::create(
-            Orthographic_camera::create(Node::create()) 
-        );
     }
 
     void update() {
@@ -83,7 +85,15 @@ protected:
     const int m_csm_layers{4};
 
 public:
-    CSM_shadow_caster_component() : Component_base(Component_type::SHADOW_CASTER) {}
+    CSM_shadow_caster_component() : 
+    Component_base(Component_type::SHADOW_CASTER) {
+        m_shadow_casters.resize(m_csm_layers);
+        for (int i = 0; i < m_shadow_casters.size(); i ++) {
+            m_shadow_casters[i] = Directional_light_shadow_caster::create(
+                Orthographic_camera::create(Node::create())
+            );
+        }
+    }
 
     virtual ~CSM_shadow_caster_component() override = default;
 
@@ -96,6 +106,12 @@ public:
     std::shared_ptr<Perspective_camera>& main_camera() { return m_main_camera; }
     const std::vector<std::shared_ptr<Directional_light_shadow_caster>>& shadow_casters() const { return m_shadow_casters; }
     std::vector<std::shared_ptr<Directional_light_shadow_caster>>& shadow_casters() { return m_shadow_casters; }
+
+    void init_shadow_maps(int width, int height) {
+        for (int i = 0; i < csm_layers(); i ++) {
+            m_shadow_casters[i]->shadow_map() = Texture_2D::create_depth_attachemnt(width, height);
+        }
+    }
 
     const int csm_layers() const { return m_csm_layers; }
 
@@ -209,17 +225,12 @@ public:
 
     void on_add_to_game_object() override {
         m_directional_light = get_component<Directional_light_component>()->directional_light();
-        m_shadow_casters.resize(m_csm_layers);
-        for (int i = 0; i < m_shadow_casters.size(); i ++) {
-            m_shadow_casters[i] = Directional_light_shadow_caster::create(
-                Orthographic_camera::create(Node::create())
-            );
-        }
     }
 
     void tick(const Logic_tick_context& tick_context) override {
 
         update();
+        tick_context.logic_swap_data.enable_csm_shadow = true;
 
         // set csm shadow maps
         auto& csm_shadow_maps_data = tick_context.logic_swap_data.csm_shadow_casters;

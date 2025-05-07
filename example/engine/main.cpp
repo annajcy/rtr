@@ -142,8 +142,7 @@ int main() {
 
     auto ping_pong_component = box->add_component<Ping_pong_component>();
     ping_pong_component->position() = glm::vec3(0, 1, 0);
-    ping_pong_component->amplitude() = 0.05f;
-    ping_pong_component->speed() = 0.05f;
+    ping_pong_component->speed() = 0.002f;
 
     auto box_mesh_renderer = box->add_component<Mesh_renderer_component>()->mesh_renderer();
     box_mesh_renderer->geometry() = Geometry::create_box();

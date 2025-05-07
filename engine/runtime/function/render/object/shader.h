@@ -27,6 +27,8 @@ namespace rtr {
 
 enum class Shader_feature {
     SHADOWS,
+    CSM_SHADOWS,
+    
     ALBEDO_MAP,
     ALPHA_MAP,
     NORMAL_MAP,
@@ -195,7 +197,8 @@ public:
     using Shader_feature_set = std::bitset<static_cast<size_t>(Shader_feature::MAX_FEATURES)>;
     
     inline static Shader_feature_dependency_graph g_shader_feature_dependency_graph {
-        {Shader_feature::HEIGHT_MAP, Shader_feature::NORMAL_MAP}
+        {Shader_feature::HEIGHT_MAP, Shader_feature::NORMAL_MAP},
+        {Shader_feature::CSM_SHADOWS, Shader_feature::SHADOWS},
     };
 
     inline static std::unordered_map<std::string, std::shared_ptr<Shader>> g_shader_cache{};
@@ -497,7 +500,8 @@ public:
                 Shader_feature::NORMAL_MAP,
                 Shader_feature::ALPHA_MAP,
                 Shader_feature::HEIGHT_MAP,
-                Shader_feature::SHADOWS
+                Shader_feature::SHADOWS,
+                Shader_feature::CSM_SHADOWS,
             })
         }
     ) {}

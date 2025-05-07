@@ -106,7 +106,8 @@ struct Swap_data {
     std::shared_ptr<Skybox> skybox{};    
 
     Swap_directional_light_shadow_caster dl_shadow_casters{};
-    
+
+    bool enable_csm_shadow{false};
     std::vector<Swap_CSM_shadow_caster> csm_shadow_casters{};
 
     void clear() {

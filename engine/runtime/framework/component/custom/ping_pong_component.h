@@ -42,8 +42,8 @@ public:
     
     void tick(const Logic_tick_context& tick_context) override {
         static double t = 0; 
-        t += m_speed;
-        auto position = m_node->position() + glm::vec3(0.0f,  m_amplitude * sin(t), 0.0f);
+        t += m_speed * tick_context.delta_time;
+        auto position = m_position + glm::vec3(0.0f,  m_amplitude * sin(t), 0.0f);
         m_node->set_position(position);
     }
 

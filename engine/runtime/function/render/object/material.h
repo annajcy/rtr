@@ -52,6 +52,7 @@ public:
 
 
 struct Shadow_settings {
+    bool enable_csm{false};
     float shadow_bias{0.005f};
     float light_size{0.7f};
     float pcf_radius{0.75f};
@@ -158,6 +159,10 @@ public:
         
         if (shadow_settings) {
             feature_set.set(static_cast<size_t>(Shader_feature::SHADOWS));
+        }
+
+        if (shadow_settings->enable_csm) {
+            feature_set.set(static_cast<size_t>(Shader_feature::CSM_SHADOWS));
         }
 
         return feature_set;

@@ -10,7 +10,6 @@
 
 namespace rtr {
 
-
 // CAMERA
 struct Camera_ubo {
     glm::mat4 view_matrix{};      
@@ -131,6 +130,15 @@ struct Spot_light_ubo_array {
     int count{};
     float padding1[3];
     Spot_light_ubo spot_light_ubo[MAX_SPOT_LIGHT];
+};
+
+//SHADWOW
+struct CSM_Shadow_map_ubo {
+    int layer_count{};
+    float padding1[3];
+    Orthographic_camera_ubo shadow_camera[MAX_CAMERA];
+    float split_near_plane[MAX_CAMERA];
+    float split_far_plane[MAX_CAMERA];
 };
 
 }

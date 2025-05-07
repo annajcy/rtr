@@ -210,6 +210,30 @@ layout(std140, binding = 4) uniform Light_camera_ubo {
     Orthographic_camera light_camera;
 };
 
+#ifdef ENABLE_CSM_SHADOWS
+
+#define MAX_CSM_COUNT 8
+
+layout(std140, binding = 5) uniform CSM_shadow_ubo {
+    int csm_layer_count;
+    Orthographic_camera csm_cameras[MAX_CSM_COUNT];
+    float csm_splits_near[MAX_CSM_COUNT];
+    float csm_splits_far[MAX_CSM_COUNT];
+}
+
+layout(binding = 6) uniform sampler2DArray csm_shadow_map;
+
+int get_csm_layer(float depth) {
+    for (int i = 0; i < csm_layer_count; i++) {
+        if (depth < csm_splits_far[i]) {
+            return i;
+        }
+    }
+    return csm_layer_count - 1;
+}
+
+#endif
+
 uniform float shadow_bias;
 uniform float light_size;
 uniform float pcf_radius;
@@ -515,9 +539,6 @@ void main() {
         frustum_size
     );
 
-    // frag_color = vec4(vec3(search_radius), 1.0);
-    // return;
-
     vec2 sampled_blocked_depth_uv[MAX_SAMPLE_COUNT];
     get_sampled_uv(
         projected_position.xy,
@@ -526,10 +547,6 @@ void main() {
         pcf_sample_count,
         sampled_blocked_depth_uv
     );
-
-    // 调试：输出 sampled_blocked_depth_uv
-    // frag_color = vec4(vec2(sampled_blocked_depth_uv[0]), 0.0, 1.0);
-    // return;
 
     float sampled_blocked_depth[MAX_SAMPLE_COUNT];
     get_sampled_depth(
@@ -545,21 +562,6 @@ void main() {
         pcf_sample_count,
         sampled_blocked_depth
     );
-
-    //调试：输出 blocker_depth
-    // if (blocker_depth != -1.0) {
-    //     frag_color = vec4(vec3(blocker_depth), 1.0);
-    //     return;
-    // } else {
-    //     frag_color = vec4(vec3(0.0), 1.0);
-    //     return;
-    // }
-    // 调试：输出 receiver_depth
-    // frag_color = vec4(vec3(receiver_depth), 1.0);
-    // return;
-    // 调试：输出 projected_position.z
-    // frag_color = vec4(vec3(projected_position.z), 1.0);
-    // return;
 
     float shadow = 0.0;
     if (blocker_depth != -1.0) {
