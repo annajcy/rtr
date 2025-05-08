@@ -1,0 +1,180 @@
+@startuml
+title runtime class diagram
+left to right direction
+class "Timer" as C_0014596040587850701201
+class C_0014596040587850701201 {
++elapsed_ms<T=float>() const : T
++elapsed_sec<T=float>() const : T
++format() const : std::string
++pause() : void
++resume() : void
++start() : void
+__
+-m_is_paused : bool
+-m_pause_point : Clock::time_point
+-m_paused_total : std::chrono::microseconds
+-m_start : Clock::time_point
+}
+abstract "RHI_device" as C_0012743932284637170494
+abstract C_0012743932284637170494 {
++RHI_device(API_type api_type) : void
++~RHI_device() constexpr = default : void
+..
++api_type() : const API_type &
+{abstract} +check_error() = 0 : void
+{abstract} +create_compute_task(const std::shared_ptr<RHI_shader_program> & shader_program) = 0 : RHI_compute_task::Ptr
++create_depth_attachment_cubemap(int width, int height) : std::shared_ptr<RHI_texture>
+{abstract} +create_element_buffer(Buffer_usage usage, unsigned int data_count, unsigned int data_size, const void * data) = 0 : std::shared_ptr<RHI_buffer>
+{abstract} +create_frame_buffer(int width, int height, const std::vector<std::shared_ptr<RHI_texture>> & color_attachments, const std::shared_ptr<RHI_texture> & depth_attachment) = 0 : std::shared_ptr<RHI_frame_buffer>
+{abstract} +create_geometry(const std::unordered_map<unsigned int,std::shared_ptr<RHI_buffer>> & vertex_buffers, const std::shared_ptr<RHI_buffer> & element_buffer) = 0 : std::shared_ptr<RHI_geometry>
+{abstract} +create_memory_buffer(Buffer_type type, Buffer_usage usage, unsigned int data_size, const void * data) = 0 : std::shared_ptr<RHI_buffer>
+{abstract} +create_memory_buffer_binder() = 0 : std::shared_ptr<RHI_memory_buffer_binder>
+{abstract} +create_pipeline_state(const Pipeline_state & pipeline_state) = 0 : std::shared_ptr<RHI_pipeline_state>
+{abstract} +create_pipeline_state() = 0 : std::shared_ptr<RHI_pipeline_state>
+{abstract} +create_renderer(const Clear_state & clear_state) = 0 : std::shared_ptr<RHI_renderer>
+{abstract} +create_screen_buffer(const std::shared_ptr<RHI_window> & window) = 0 : std::shared_ptr<RHI_screen_buffer>
+{abstract} +create_shader_code(Shader_type type, const std::string & code) = 0 : std::shared_ptr<RHI_shader_code>
+{abstract} +create_shader_program(const std::unordered_map<Shader_type,std::shared_ptr<RHI_shader_code>> & shader_codes, const std::unordered_map<std::string,std::shared_ptr<Uniform_entry_base>> & uniforms) = 0 : std::shared_ptr<RHI_shader_program>
+{abstract} +create_texture_2D(int width, int height, unsigned int mipmap_levels, Texture_internal_format internal_format, const std::unordered_map<Texture_wrap_target,Texture_wrap> & wraps, const std::unordered_map<Texture_filter_target,Texture_filter> & filters) = 0 : std::shared_ptr<RHI_texture>
+{abstract} +create_texture_2D_array(int width, int height, unsigned int mipmap_levels, Texture_internal_format internal_format, const std::unordered_map<Texture_wrap_target,Texture_wrap> & wraps, const std::unordered_map<Texture_filter_target,Texture_filter> & filters, unsigned int layer_count) = 0 : std::shared_ptr<RHI_texture>
+{abstract} +create_texture_builder() = 0 : std::shared_ptr<RHI_texture_builder>
++create_texture_color_attachment(int width, int height) : std::shared_ptr<RHI_texture>
+{abstract} +create_texture_cubemap(int width, int height, unsigned int mipmap_levels, Texture_internal_format internal_format, const std::unordered_map<Texture_wrap_target,Texture_wrap> & wraps, const std::unordered_map<Texture_filter_target,Texture_filter> & filters) = 0 : std::shared_ptr<RHI_texture>
++create_texture_depth_attachment(int width, int height) : std::shared_ptr<RHI_texture>
++create_texture_depth_attachment_array(int width, int height, int array_size) : std::shared_ptr<RHI_texture>
++create_texture_depth_stencil_attachment(int width, int height) : std::shared_ptr<RHI_texture>
+{abstract} +create_vertex_buffer(Buffer_usage usage, Buffer_data_type attribute_type, Buffer_iterate_type iterate_type, unsigned int unit_data_count, unsigned int data_size, const void * data) = 0 : std::shared_ptr<RHI_buffer>
+{abstract} +create_window(int width, int height, const std::string & title) = 0 : std::shared_ptr<RHI_window>
+__
+#m_api_type : API_type
+}
+class "Swap_data" as C_0009030101148513582816
+class C_0009030101148513582816 {
++clear() : void
++get_shadow_casters() const : std::vector<Swap_shadow_caster_object>
+__
++camera : Swap_camera
++csm_shadow_casters : std::vector<Swap_CSM_shadow_caster>
++directional_lights : std::vector<Swap_directional_light>
++dl_shadow_casters : Swap_directional_light_shadow_caster
++enable_csm_shadow : bool
++point_lights : std::vector<Swap_point_light>
++render_objects : std::vector<Swap_object>
++skybox : std::shared_ptr<Skybox>
++spot_lights : std::vector<Swap_spot_light>
+}
+class "Input_system" as C_0008047168720568262541
+class C_0008047168720568262541 {
++Input_system(const std::shared_ptr<RHI_window> & window) : void
++~Input_system() constexpr = default : void
+..
+{static} +create(const std::shared_ptr<RHI_window> & window) : std::shared_ptr<Input_system>
++reset_deltas() : void
++state() const : const Input_state &
++update_key(Key_code key, Key_action action, int mod) : void
++update_mouse_button(Mouse_button button, Key_action action) : void
++update_mouse_position(double x, double y) : void
++update_mouse_scroll(double x, double y) : void
+__
+-m_state : Input_state
+}
+class "Render_system" as C_0007581699747555106151
+class C_0007581699747555106151 {
++Render_system(const std::shared_ptr<RHI_device> & device, const std::shared_ptr<RHI_window> & window) : void
+..
+{static} +create(const std::shared_ptr<RHI_device> & device, const std::shared_ptr<RHI_window> & window) : std::shared_ptr<Render_system>
++global_render_resource() const : const RHI_global_render_resource &
++global_render_resource() : RHI_global_render_resource &
++set_render_pipeline(const std::shared_ptr<Render_pipeline> & pipeline) : void
++tick(const Render_tick_context & tick_context) : void
+__
+#m_global_render_resource : RHI_global_render_resource
+#m_render_pipeline : std::shared_ptr<Render_pipeline>
+}
+class "Window_system" as C_0011141300688391409295
+class C_0011141300688391409295 {
++Window_system(const std::shared_ptr<RHI_window> & window) : void
++~Window_system() constexpr = default : void
+..
+{static} +create(const std::shared_ptr<RHI_window> & window) : std::shared_ptr<Window_system>
++set_window(const std::shared_ptr<RHI_window> & window) : void
++window() const : std::shared_ptr<RHI_window>
+__
+#m_window : std::shared_ptr<RHI_window>
+}
+class "World" as C_0007805967718232101218
+class C_0007805967718232101218 {
++World(const std::string & name) : void
++~World() constexpr = default : void
+..
++add_scene(const std::shared_ptr<Scene> & scene) : std::shared_ptr<Scene>
++add_scene(const std::string & name) : std::shared_ptr<Scene>
+{static} +create(const std::string & name) : std::shared_ptr<World>
++current_scene() : std::shared_ptr<Scene>
++current_scene_index() const : unsigned int
++get_scene(const std::string & name) : std::shared_ptr<Scene>
++name() const : const std::string &
++next_scene() : void
++previous_scene() : void
++remove_scene(const std::string & name) : void
++scenes() const : const std::vector<std::shared_ptr<Scene>> &
++set_current_scene(const std::shared_ptr<Scene> & scene) : void
++set_current_scene(const std::string & name) : void
++set_current_scene_index(unsigned int index) : void
++tick(const Logic_tick_context & tick_context) : void
+__
+#m_current_scene_index : unsigned int
+#m_name : std::string
+#m_scenes : std::vector<std::shared_ptr<Scene>>
+}
+class "Engine_runtime_descriptor" as C_0013696022001798598608
+class C_0013696022001798598608 {
+__
++height : int
++title : std::string
++width : int
+}
+class "Engine_runtime" as C_0016216745571992493724
+class C_0016216745571992493724 {
++Engine_runtime(const Engine_runtime_descriptor & descriptor) : void
++~Engine_runtime() : void
+..
+{static} +create(const Engine_runtime_descriptor & descriptor) : std::shared_ptr<Engine_runtime>
++get_delta_time() : float
++get_fps() const : float
++input_system() : std::shared_ptr<Input_system> &
++is_active() const : bool
++logic_swap_data() : Swap_data &
++render_swap_data() : Swap_data &
++render_system() : std::shared_ptr<Render_system> &
++rhi_device() : std::shared_ptr<RHI_device> &
++run() : void
++swap() : void
++tick(float delta_time) : void
++window_system() : std::shared_ptr<Window_system> &
++world() : std::shared_ptr<World> &
+__
+-m_delta_time : float
+-m_input_system : std::shared_ptr<Input_system>
+-m_logic_swap_data_index : int
+-m_render_swap_data_index : int
+-m_render_system : std::shared_ptr<Render_system>
+-m_rhi_device : std::shared_ptr<RHI_device>
+-m_swap_data : Swap_data[2]
+-m_timer : std::shared_ptr<Timer>
+-m_window_system : std::shared_ptr<Window_system>
+-m_world : std::shared_ptr<World>
+}
+C_0007581699747555106151 ..> C_0012743932284637170494
+C_0016216745571992493724 ..> C_0013696022001798598608
+C_0016216745571992493724 o-- "2" C_0009030101148513582816 : -m_swap_data
+C_0016216745571992493724 --> C_0012743932284637170494 : -m_rhi_device
+C_0016216745571992493724 --> C_0008047168720568262541 : -m_input_system
+C_0016216745571992493724 --> C_0007581699747555106151 : -m_render_system
+C_0016216745571992493724 --> C_0011141300688391409295 : -m_window_system
+C_0016216745571992493724 --> C_0007805967718232101218 : -m_world
+C_0016216745571992493724 --> C_0014596040587850701201 : -m_timer
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

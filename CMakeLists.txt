@@ -52,7 +52,8 @@ include_directories(
     ${OPENGL_INCLUDE_DIR}
 )
 
-file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/engine/*.cpp)
+file(GLOB_RECURSE SOURCES 
+${CMAKE_SOURCE_DIR}/engine/*.cpp)
 
 # 在包含目录之后定义公共链接库列表
 set(COMMON_LIBS

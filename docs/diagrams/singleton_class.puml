@@ -1,0 +1,16 @@
+@startuml
+title Singleton class diagram
+left to right direction
+class "Singleton<T>" as C_0009796880665875106671
+class C_0009796880665875106671 {
++Singleton() : void
++~Singleton() : void
+..
+{static} +get_instance() : std::shared_ptr<T> &
+__
+{static} -m_instance : std::shared_ptr<T>
+}
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

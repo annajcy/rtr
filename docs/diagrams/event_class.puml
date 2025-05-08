@@ -1,0 +1,33 @@
+@startuml
+title Event class diagram
+left to right direction
+class "Event<Args...>" as C_0012375021817616023984
+class C_0012375021817616023984 {
++Event() = default : void
++Event(const std::vector<std::function<void (Args...)>> & actions) : void
++Event(const std::function<void (Args...)> & action) : void
+..
++add(const std::function<void (Args...)> & action) : void
++clear() : void
++execute(Args... args) : void
++remove(const std::function<void (Args...)> & action) : void
+__
+-m_events : std::vector<std::function<void (Args...)>>
+}
+class "Event_center<Args...>" as C_0011026497464562777238
+class C_0011026497464562777238 {
+-Event_center() = default : void
+..
++add_action(const std::string & event_name, const std::function<void (Args...)> & action) : void
++register_event(const std::string & event_name, Event<Args...> event) : void
++remove_action(const std::string & event_name, const std::function<void (Args...)> & action) : void
++trigger_event(const std::string & event_name, Args... args) : void
++unregister_event(const std::string & event_name) : void
+__
+-event_map : std::unordered_map<std::string,Event<Args...>>
+}
+C_0011026497464562777238 o-- C_0012375021817616023984 : -event_map
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

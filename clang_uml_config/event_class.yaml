@@ -1,0 +1,16 @@
+compilation_database_dir: ../build
+output_directory: ../docs/diagrams
+
+diagrams:
+  event_class:
+    type: class
+    title: Event class diagram
+    glob:
+      - ../engine/runtime/global/event.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+    plantuml:
+      before:
+        - left to right direction

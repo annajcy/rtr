@@ -1,0 +1,19 @@
+compilation_database_dir: ../build
+output_directory: ../docs/diagrams
+
+diagrams:
+  runtime_class:
+    type: class
+    title: runtime class diagram
+    glob:
+      - ../engine/runtime/runtime.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+      context:
+        - rtr::Engine_runtime
+      
+    plantuml:
+      before:
+        - left to right direction

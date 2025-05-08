@@ -1,0 +1,16 @@
+compilation_database_dir: ../build
+output_directory: ../docs/diagrams
+
+diagrams:
+  singleton_class:
+    type: class
+    title: Singleton class diagram
+    glob:
+      - ../engine/runtime/global/singleton.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+    plantuml:
+      before:
+        - left to right direction
