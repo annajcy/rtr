@@ -1,0 +1,16 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/global
+
+diagrams:
+  logger_class:
+    type: class
+    title: Logging system class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/global/logger.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+    plantuml:
+      before:
+        - left to right direction

@@ -1,0 +1,18 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/resource
+
+diagrams:
+  hash_class:
+    type: class
+    title: Hash class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/resource/hash.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+      context:
+        - rtr::Hash
+    plantuml:
+      before:
+        - left to right direction

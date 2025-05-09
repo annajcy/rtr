@@ -1,0 +1,19 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/resource
+
+diagrams:
+  guid_class:
+    type: class
+    title: GUID class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/resource/guid.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+      context:
+        - rtr::GUID
+        - rtr::GUID_generator
+    plantuml:
+      before:
+        - left to right direction

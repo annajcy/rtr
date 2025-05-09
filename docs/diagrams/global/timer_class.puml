@@ -1,0 +1,21 @@
+@startuml
+title Timer class diagram
+left to right direction
+class "Timer" as C_0014596040587850701201
+class C_0014596040587850701201 {
++elapsed_ms<T=float>() const : T
++elapsed_sec<T=float>() const : T
++format() const : std::string
++pause() : void
++resume() : void
++start() : void
+__
+-m_is_paused : bool
+-m_pause_point : Clock::time_point
+-m_paused_total : std::chrono::microseconds
+-m_start : Clock::time_point
+}
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

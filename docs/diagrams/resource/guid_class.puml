@@ -1,0 +1,25 @@
+@startuml
+title GUID class diagram
+left to right direction
+class "GUID_generator" as C_0015771458880914961975
+class C_0015771458880914961975 {
+{static} +generate_GUID() : unsigned int
+__
+{static} -m_id : unsigned int
+}
+class "GUID" as C_0002861868129913488643
+class C_0002861868129913488643 {
++GUID() : void
++GUID(unsigned int guid) : void
++~GUID() constexpr = default : void
+..
++operator==(const GUID & other) const : bool
+..
++guid() const : unsigned int
+__
+-m_guid : unsigned int
+}
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

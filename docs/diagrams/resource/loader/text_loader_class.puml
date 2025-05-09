@@ -1,0 +1,30 @@
+@startuml
+title Text loader class diagram
+left to right direction
+class "Text" as C_0001127392007066144031
+class C_0001127392007066144031 {
++Text(const std::string & path) : void
++Text(const char * data) : void
++~Text() constexpr = default : void
+..
++c_str() const : const char *
++content() const : const std::string &
++empty() const : bool
+-load_from_file(const std::string & path, std::string & str) : void
++size() const : int
+__
+-m_text : std::string
+}
+class "Text_loader" as C_0002976562922246231494
+class C_0002976562922246231494 {
++Text_loader() = default : void
++~Text_loader() constexpr = default : void
+..
+{static} +load_from_path(const std::string & path) : std::shared_ptr<Text>
+__
+}
+C_0002976562922246231494 ..> C_0001127392007066144031
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

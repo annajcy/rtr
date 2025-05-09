@@ -1,0 +1,15 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/global
+diagrams:
+  math_class:
+    type: class
+    title: Math class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/global/math.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+    plantuml:
+      before:
+        - left to right direction

@@ -1,0 +1,18 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/resource
+
+diagrams:
+  resource_manager_class:
+    type: class
+    title: Resource manager class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/resource/resource_base.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+      # context:
+      #   - rtr::File_service
+    plantuml:
+      before:
+        - left to right direction

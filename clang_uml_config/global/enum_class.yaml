@@ -1,0 +1,21 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/global
+
+diagrams:
+  enum_class:
+    type: class
+    title: Enum class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/global/enum.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+    exclude:
+      access:
+        - private
+        - protected
+        - public
+    plantuml:
+      before:
+        - left to right direction

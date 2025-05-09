@@ -1,12 +1,12 @@
-compilation_database_dir: ../build
-output_directory: ../docs/diagrams
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/global
 
 diagrams:
   singleton_class:
     type: class
     title: Singleton class diagram
     glob:
-      - ../engine/runtime/global/singleton.diagram.cpp
+      - /home/jinceyang/Desktop/rtr/engine/runtime/global/singleton.diagram.cpp
     using_namespace: rtr
     include:
       namespaces:

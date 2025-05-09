@@ -1,0 +1,13 @@
+@startuml
+title Serialization class diagram
+left to right direction
+class "Serialization_manager" as C_0000083717824364459972
+class C_0000083717824364459972 {
+{static} +deserialize<T>(const std::string & json_str) : T
+{static} +serialize<T>(const T & obj) : std::string
+__
+}
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

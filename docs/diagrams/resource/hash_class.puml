@@ -1,0 +1,28 @@
+@startuml
+title Hash class diagram
+left to right direction
+class "Hash" as C_0011226729605516039040
+class C_0011226729605516039040 {
++Hash() = default : void
++Hash(const Hash &) = default : void
++Hash(Hash &&) = default : void
++Hash(unsigned long long value) : void
+..
++operator=(const Hash &) constexpr = default : Hash &
++operator=(Hash &&) constexpr = default : Hash &
+..
++operator!=(const Hash & other) const : bool
++operator+(const Hash & other) const : Hash
++operator+=(const Hash & other) : Hash &
++operator==(const Hash & other) const : bool
+..
+{static} +from_raw_data(const unsigned char * data, unsigned int size) : Hash
+{static} +from_string(const std::string & str) : Hash
++value() const : unsigned long long
+__
+-m_value : unsigned long long
+}
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

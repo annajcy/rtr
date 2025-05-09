@@ -1,0 +1,18 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/global
+
+diagrams:
+  serialization_class:
+    type: class
+    title: Serialization class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/global/serialization.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+      context:
+        - rtr::Serialization_manager
+    plantuml:
+      before:
+        - left to right direction

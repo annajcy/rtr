@@ -1,0 +1,43 @@
+@startuml
+title Resource manager class diagram
+left to right direction
+class "Resource_manager<Key_type,T>" as C_0009847634702900292664
+class C_0009847634702900292664 {
++Resource_manager() = default : void
++~Resource_manager() = default : void
+..
++add(const Key_type & key, const std::shared_ptr<T> & resource) : void
++clear() : void
++get(const Key_type & key) : std::shared_ptr<T>
++get<S>(const Key_type & key) : std::shared_ptr<S>
++has(const Key_type & key) const : bool
++remove(const Key_type & key) : void
+__
+#m_resources : std::unordered_map<Key_type,std::shared_ptr<T>>
+}
+class "Resource_manager_dep<Key_type,T>" as C_0001452446044658535002
+class C_0001452446044658535002 {
++Resource_manager_dep() = default : void
++~Resource_manager_dep() = default : void
+..
++add(const Key_type & key, const std::shared_ptr<T> & resource) : void
++add_dependency(const Key_type & resource_key, const Key_type & dependency_key) : bool
++add_with_dependencies(const Key_type & key, const std::shared_ptr<T> & resource, const std::unordered_set<Key_type> & dependencies) : bool
++clear() : void
++get(const Key_type & key) : std::shared_ptr<T>
++get<S>(const Key_type & key) : std::shared_ptr<S>
++get_dependencies_of(const Key_type & key) const : std::unordered_set<Key_type>
++get_dependents_on(const Key_type & key) const : std::unordered_set<Key_type>
++has(const Key_type & key) const : bool
+-is_reachable(const Key_type & start_node, const Key_type & target_node) const : bool
++remove(const Key_type & key) : void
++remove_dependency(const Key_type & resource_key, const Key_type & dependency_key) : bool
+__
+#m_dependencies : std::unordered_map<Key_type,std::unordered_set<Key_type>>
+#m_dependents : std::unordered_map<Key_type,std::unordered_set<Key_type>>
+#m_resources : std::unordered_map<Key_type,std::shared_ptr<T>>
+}
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

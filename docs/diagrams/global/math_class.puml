@@ -1,0 +1,73 @@
+@startuml
+title Math class diagram
+left to right direction
+class "Ray" as C_0015450069910199784949
+class C_0015450069910199784949 {
++Ray() : void
++Ray(const glm::vec3 & origin, const glm::vec3 & direction) : void
+..
++at(float t) const : glm::vec3
+__
++direction : glm::vec3
++origin : glm::vec3
+}
+class "Bouding_box" as C_0002167986219114420181
+class C_0002167986219114420181 {
++Bouding_box() : void
++Bouding_box(const glm::vec3 & min, const glm::vec3 & max) : void
++Bouding_box(const std::vector<glm::vec3> & points) : void
+..
++operator*(const glm::mat4 & transform) const : Bouding_box
++operator*=(const glm::mat4 & transform) : Bouding_box &
++operator+(const glm::vec3 & point) const : Bouding_box
++operator+(const Bouding_box & other) const : Bouding_box
++operator+=(const glm::vec3 & point) : Bouding_box &
++operator+=(const Bouding_box & other) : Bouding_box &
+..
++center() const : glm::vec3
++extent() const : glm::vec3
++overlap(const Bouding_box & other) const : bool
+__
++max : glm::vec3
++min : glm::vec3
+}
+class "Sphere" as C_0008896654506794898592
+class C_0008896654506794898592 {
++Sphere() : void
++Sphere(const glm::vec3 & center, float radius) : void
++Sphere(const Bouding_box & bbox) : void
+__
++center : glm::vec3
++radius : float
+}
+class "Triangle" as C_0001500792012341220757
+class C_0001500792012341220757 {
++Triangle() : void
++Triangle(const glm::vec3 & v0, const glm::vec3 & v1, const glm::vec3 & v2) : void
+..
++area() const : float
++centroid() const : glm::vec3
++normal() const : glm::vec3
+__
++v0 : glm::vec3
++v1 : glm::vec3
++v2 : glm::vec3
+}
+class "Plane" as C_0007059972115507561733
+class C_0007059972115507561733 {
++Plane() : void
++Plane(const glm::vec3 & normal, float d) : void
++Plane(const Triangle & triangle) : void
++Plane(const glm::vec3 & v0, const glm::vec3 & v1, const glm::vec3 & v2) : void
+..
++distance(const glm::vec3 & point) const : float
+__
++d : float
++normal : glm::vec3
+}
+C_0008896654506794898592 ..> C_0002167986219114420181
+C_0007059972115507561733 ..> C_0001500792012341220757
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

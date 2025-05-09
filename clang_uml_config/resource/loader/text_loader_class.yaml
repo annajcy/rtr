@@ -1,0 +1,19 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/resource/loader
+
+diagrams:
+  text_loader_class:
+    type: class
+    title: Text loader class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/resource/loader/text_loader.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+      context:
+        - rtr::Text_loader
+        - rtr::Text
+    plantuml:
+      before:
+        - left to right direction

@@ -1,0 +1,38 @@
+@startuml
+title File service class diagram
+left to right direction
+class "File_node" as C_0011978095187432327002
+class C_0011978095187432327002 {
+__
++children : std::vector<std::shared_ptr<File_node>>
++is_directory : bool
++name : std::string
+}
+class "File_service" as C_0014223807442212390095
+class C_0014223807442212390095 {
++File_service() : void
+..
++add_text_file(const std::string & relative_path, const std::string & content) : bool
++build_file_tree(const std::string & relative_dir = "") const : std::shared_ptr<File_node>
+-build_tree_recursive(const std::filesystem::path & current_path) const : std::shared_ptr<File_node>
++copy_file(const std::string & src, const std::string & dest) : bool
+{static} +create() : std::shared_ptr<File_service>
++create_directory(const std::string & relative_path) : bool
++delete_file(const std::string & relative_path) : bool
++exists(const std::string & relative_path) const : bool
++get_absolute_path(const std::string & relative_path) const : std::string
++get_root() const : std::string
++is_directory(const std::string & relative_path) const : bool
++list_files(const std::string & relative_dir = "") const : std::vector<std::string>
++move_file(const std::string & src, const std::string & dest) : bool
++read_text_file(const std::string & relative_path, std::string & content) const : bool
++set_root(const std::string & path) : void
+__
+-m_root_path : std::filesystem::path
+}
+C_0011978095187432327002 o-- C_0011978095187432327002 : +children
+C_0014223807442212390095 ..> C_0011978095187432327002
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

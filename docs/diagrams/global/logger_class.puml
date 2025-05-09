@@ -1,0 +1,35 @@
+@startuml
+title Logging system class diagram
+left to right direction
+class "Singleton<T>" as C_0009796880665875106671
+class C_0009796880665875106671 {
++Singleton() : void
++~Singleton() : void
+..
+{static} +get_instance() : std::shared_ptr<T> &
+__
+{static} -m_instance : std::shared_ptr<T>
+}
+class "Logging_system" as C_0018211495183074186195
+class C_0018211495183074186195 {
++Logging_system() : void
++~Logging_system() : void
+..
++log<TARGS...>(Level level, basic_format_string<TARGS...> fmt, TARGS &&... args) : void
+__
+-m_logger : std::shared_ptr<spdlog::logger>
+}
+enum "Logging_system::Level" as C_0015023802631964297962
+enum C_0015023802631964297962 {
+debug
+info
+warn
+error
+fatal
+}
+C_0018211495183074186195 ..> C_0015023802631964297962
+C_0015023802631964297962 --+ C_0018211495183074186195
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

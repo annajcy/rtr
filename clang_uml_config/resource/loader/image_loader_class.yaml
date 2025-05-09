@@ -1,0 +1,19 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/resource/loader
+
+diagrams:
+  image_loader_class:
+    type: class
+    title: image loader class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/resource/loader/image_loader.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+      context:
+        - rtr::Image_loader
+        - rtr::Image
+    plantuml:
+      before:
+        - left to right direction

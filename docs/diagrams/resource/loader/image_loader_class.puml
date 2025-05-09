@@ -1,0 +1,41 @@
+@startuml
+title image loader class diagram
+left to right direction
+enum "Image_format" as C_0006040600221558325913
+enum C_0006040600221558325913 {
+RGB
+GRAY
+RGB_ALPHA
+GRAY_ALPHA
+}
+class "Image" as C_0013325158447238405943
+class C_0013325158447238405943 {
++Image(Image_format format, const unsigned char * data, unsigned int data_size, bool flip_y = true) : void
++Image(Image_format format, const std::string & path, bool flip_y = true) : void
++~Image() : void
+..
++channels() const : int
++data_ptr() const : const unsigned char *
++data_size() const : int
++height() const : int
++width() const : int
+__
+#m_channels : int
+#m_data : const unsigned char *
+#m_data_size : unsigned int
+#m_height : int
+#m_width : int
+}
+class "Image_loader" as C_0013284035013791430036
+class C_0013284035013791430036 {
+{static} +load_from_data(Image_format format, const unsigned char * data, unsigned int data_size, bool flip_y = true) : std::shared_ptr<Image>
+{static} +load_from_path(Image_format format, const std::string & path, bool flip_y = true) : std::shared_ptr<Image>
+__
+}
+C_0013325158447238405943 ..> C_0006040600221558325913
+C_0013284035013791430036 ..> C_0006040600221558325913
+C_0013284035013791430036 ..> C_0013325158447238405943
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml
