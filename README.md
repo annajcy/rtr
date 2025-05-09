@@ -1,12 +1,27 @@
-# RTR 实时渲染引擎
+# RTR Rendering Engine
 
-## 简介
-RTR 是一个实时3D图形渲染引擎。
+## RTR 系统总体架构
 
-## Engine Runtime系统架构
-![系统架构](docs/image/arch.jpg)
+RTR 是一个基于C++的渲染引擎，它提供了一个简单易用的API，使得开发者可以轻松地创建和管理3D场景。
+总的来说，RTR分为两个部分：Runtime和Editor。
 
-### 分层架构
+![系统总体架构](docs/image/RTR.png)
+
+- Runtime 
+Engine Runtime 是渲染引擎的执行核心，它负责在最终用户的设备上实际运行和显示应用程序或游戏。它包含了所有必要的模块来加载、处理、渲染场景和处理用户输入。
+- Editor
+Engine Editor 是一个用于编辑和调试 Engine Runtime 的工具。它允许用户在不运行应用程序的情况下对场景进行编辑和调试，从而提高开发效率和调试能力。
+
+## Editor系统架构
+
+Editor系统架构是基于runtime提供的RHI_ImGUI驱动的，总的来说，Editor系统的中心协调者是Editor类。它维护了一个Panel实例的集合（通过一个映射表进行管理），允许按名称动态添加和移除面板。Editor类与引擎运行时（Engine_runtime）交互，以获取必要的上下文信息。 因此Editor系统的具体实现将会在Runtime介绍后进行。
+
+![Editor系统架构](docs/image/editor/editor.png)
+
+## Runtime系统架构
+![Runtime系统架构](docs/image/runtime/runtime.png)
+
+## 分层架构
 
 RTR的系统架构采用分层设计，由底层到上层依次为：
 - 工具层
@@ -21,12 +36,17 @@ RTR的系统架构采用分层设计，由底层到上层依次为：
 每一层的设计相对独立，层与层之间具有单向的调用关系，上层的实现仅调用下层提供的接口。
 这样的设计使得RTR的系统更加灵活和可维护,易于测试和调试。
 
-# 工具层
+## 后续的章节安排
+因为RTR Runtime的系统架构比较复杂，因此我们将在后续的章节中对每一层的具体实现进行详细的介绍。
+
+# 运行时工具层
 
 ## 概述
 工具层主要用于提供一些通用的底层工具类和辅助函数。
 第三方库也将会于工具层接入RTR Runtime，工具层将会对其进行封装和抽象，提供统一的接口。
 以下是工具层的主要模块
+
+![工具层](docs/image/runtime/tool/tool.png)
 
 ## 设计模式库
 RTR Runtime时常会使用某些设计模式，如单例模式、事件中心模式等。工具层提供了这些设计模式的实现，使得其他模块可以方便地使用这些设计模式。
@@ -84,6 +104,8 @@ RTR Runtime使用枚举和宏来定义一些常用的常量和类型，如错误
 资源层的设计主要是为了实现跨平台的资源管理，使得RTR Runtime可以在不同的平台上运行。
 以下是资源层的主要模块
 
+![资源层](docs/image/runtime/reosource/resource.png)
+
 ## 文件服务
 
 ![文件服务](docs/diagrams/resource/file_service_class.svg)
@@ -117,7 +139,6 @@ RTR Runtime使用枚举和宏来定义一些常用的常量和类型，如错误
 
 `Hash` 结构体被设计为一个统一的哈希值表示和处理单元，它封装了一个 `unsigned long long` 类型的核心哈希值，并提供了标准的构造、赋值及比较操作。该结构体的关键功能在于其哈希生成能力：通过静态方法 `from_string`，它能够利用FNV-1a算法从字符串高效地计算出哈希值；而另一个静态方法 `from_raw_data` 则采用一种自定义的分块处理和位混合算法，从原始字节序列生成哈希。此外，`Hash` 结构体重载了 `+=` 和 `+` 运算符，允许通过特定的位操作（结合了异或、加法、位移及素数乘法）安全地将多个哈希对象合并为一个新的哈希值，这对于组合对象或序列的哈希非常有用。用户可以通过 `value()` 方法获取其内部的原始 `unsigned long long` 哈希值，使得该结构体不仅是哈希值的容器，也是一套功能完备的哈希生成与组合工具。
 
-
 ## GUID
 ![GUID](docs/diagrams/resource/guid_class.svg)
 
@@ -128,7 +149,9 @@ GUID 系统的设计目的是为了提供一种简单且高效的方式来生成
 
 ## 平台层概述
 
-RTR Runtime的平台层设计旨在提供跨平台的支持，使得开发者可以基于不同的图形API(OpenGL/DirectX12/Vulkan)使用RTR Runtime。
+RTR Runtime的平台层设计旨在提供跨平台的支持，使得开发者可以基于不同的图形API(OpenGL/DirectX12/Vulkan)使用RTR Runtime。并且向上提供统一的接口，使得上层模块可以在不同的平台上运行。
+
+![平台层](docs/image/runtime/platform/platform.png)
 
 平台层的设计主要包括以下两个方面：
 
@@ -139,174 +162,182 @@ RTR Runtime的平台层设计旨在提供跨平台的支持，使得开发者可
 平台接口层和平台适配层的设计主要是为了实现跨平台的支持，使得上层模块可以在不同的平台上运行。
 在本项目中，RHI接口仅实现了OpenGL的版本，对于其他的平台，需要自行实现RHI接口。
 
+![平台层](docs/image/runtime/platform/rhi/RHIarch.png)
+
 ## RHI核心模块
 
-### 设备管理（Device）
+本质上来说，RHI接口是对GPU设备的面向对象的抽象，它提供了一组API，使得开发者可以方便地管理GPU设备。在经典的图形开发的流程中，图形API通常会提供两种类型的能力：
+- 资源管理能力：用于管理GPU设备上的资源，如纹理、缓冲区、渲染目标等。
+- 渲染能力：用于管理GPU设备上的渲染状态，如渲染管道、着色器、渲染目标等。
 
-#### 跨平台GPU设备抽象
-`RHI_device`是一个跨平台的GPU设备抽象，提供了统一的接口，使得上层模块可以在不同的平台上运行。
-`RHI_device`的设计主要包括以下几个方面：
-- 设备管理：提供设备创建、销毁、配置等接口。
-- 资源管理：提供资源创建、销毁、配置等接口。
-- 上下文管理：提供上下文创建、销毁、配置等接口。
+因此，在RTR Runtime中，RHI接口主要提供了以下两个模块：
 
-#### 典型使用流程
-  ```cpp
-  // 1. 创建设备实例
-  auto device = RHI_device_OpenGL::create();
+- RHI_functions 
+  RHI_functions模块提供了一组API，用于管理GPU设备上的渲染能力。也包括渲染上下文的创建与销毁，资源的创建与销毁，渲染状态的设置与获取。
+- RHI_resources 
+  RHI_resources模块提供了一组API，用于表示GPU设备上的资源。如纹理、缓冲区、渲染目标，shader等。 
+
+![RHI核心模块](docs/image/runtime/platform/rhi/RHI.png)
+
+相比于传统的图形API（OpenGL），RTR Runtime的RHI接口更加面向对象，更加符合现代的C++编程风格，并且简单易用，功能全面。 这也是RTR Runtime的RHI设计的优点之一。
+
+
+接下来将会对这两个模块进行详细的介绍。
+
+## RHI_functions 模块
+![RHI_functions 模块](docs/image/runtime/platform/rhi/RHI_functions.png)
+
+
+
+## RHI_resources 模块
+
+![RHI_resources 模块](docs/image/runtime/platform/rhi/RHI_resources.png)
+
+### RHI资源的分类
+RHI_resources分为两种类型：
+- 原子类型 ：用于表示GPU设备上的不可细分的资源。如显存缓冲区，纹理、Shader代码，渲染管线配置文件等。
+- 组合类型 ：由原子类型组合而成的资源。如帧缓冲，几何体，Shader程序等。
+
+### RHI资源和渲染器前端的交互方式
+
+![RHI_linker](docs/image/runtime/platform/rhi/RHI_resources_interaction.png)
+
+RHI虽然是对GPU设备的面向对象的抽象，但是在实际的使用中，我们通常会使用渲染器前端来管理RHI资源。因为RHI还是一个较为底层的概念，我们通常不会直接使用RHI来管理资源。而是使用渲染器前端来管理RHI资源，封装RHI层的细节，提供更易用的API。
+
+在此，我们提出了RHI_linker概念，用于将RHI资源和渲染器前端进行链接。RHI_linker是一个模板类，它的模板参数是RHI资源的类型。RHI_linker的作用是将RHI资源和渲染器前端进行链接，使得渲染器前端可以使用RHI资源。并且RHI_linker向前端提供了一组API，用于灵活地管理RHI资源。可以实现渲染资源的惰性创建或者预生成等功能。
+
+### RHI资源对象
+
+![RHI资源对象](docs/image/runtime/platform/rhi/RHI_resources_object.png)
+
+在这里我们开始介绍RHI具体的资源有哪些，包括其实现方式和设计理念
+
+#### RHI_buffer
+
+![RHI_buffer](docs/image/runtime/platform/rhi/RHI_buffer.png)
+
+`RHI_buffer` 是对 GPU 设备上一种通用缓冲资源的抽象表示，在图形渲染中扮演着基础而重要的角色。它封装了缓冲区的基本属性，如缓冲类型（`Buffer_type`）、使用方式（`Buffer_usage`）以及数据大小等，旨在为渲染器提供统一的内存操作接口。类中定义了几个纯虚函数，如 `reallocate_data`、`subsitute_data` 和 `map_buffer`，它们分别用于重新分配数据、在指定偏移位置替换数据以及映射缓冲区到主存进行读写操作。这些接口的抽象设计允许不同平台或图形 API（如 Vulkan、OpenGL、DirectX）对底层缓冲区管理进行定制化实现。
+
+与 `RHI_buffer` 配套的还有 `RHI_buffer_access_flags` 结构体，用于指示在映射缓冲区时的访问权限。它提供了三个静态函数：`read_only`、`write_only` 和 `read_write`，分别用于快速配置读取、写入或读写权限。这一设计增强了 API 的表达力，使用户可以明确指定访问目的，避免出现不必要的数据同步或资源状态切换。
+
+此外，RHI 还针对不同类型的缓冲需求提供了接口类，如 `IRHI_vertex_buffer`、`IRHI_element_buffer` 和 `IRHI_memory_buffer`。其中，`IRHI_vertex_buffer` 表示一个顶点缓冲区，记录了每个顶点的数据类型、迭代方式和每个单元的数据数量等关键信息。它可用于描述顶点数据的组织方式，为渲染管线中的顶点输入阶段提供支持。而 `IRHI_element_buffer` 则用于存储索引数据，主要作用是在绘制时通过索引引用顶点，从而减少冗余数据，提高内存利用率。其内部假设索引类型为 `UINT`，简化了接口使用。`IRHI_memory_buffer` 提供了与绑定显存位置相关的接口，例如绑定整个缓冲区或部分区域，常见于 Uniform Buffer、Storage Buffer 等资源类型的绑定操作，其对齐方式也可通过成员变量进行指定。
+
+为了支持统一的资源绑定操作，RHI 还引入了 `RHI_memory_buffer_binder` 抽象类。该类为内存缓冲绑定操作提供了统一接口，支持整体绑定与部分绑定，便于在渲染管线不同阶段灵活控制资源访问。这种解耦的设计使得上层渲染器能够更方便地控制底层资源，而无需关心底层 API 的差异和复杂性。
+
+#### RHI_geometry
+![RHI_geometry](docs/image/runtime/platform/rhi/RHI_geometry.png)
+
+RHI_geometry 是对图形渲染中“几何体”这一资源的抽象封装。在图形渲染的过程中，几何体是由顶点和索引（元素）数据共同描述的，这正是 RHI_geometry 所管理的内容。该类的设计意图是为前端渲染逻辑提供一个统一的接口，用于管理和绑定 GPU 缓冲资源，并最终驱动绘制命令的执行。
+
+在类内部， `m_vertex_buffers` 是一个映射表，用于保存多个顶点缓冲（RHI_buffer），它们通过整数 location 作为键进行索引。这种设计与现代图形 API（如 OpenGL、Vulkan）对顶点属性绑定的方式保持一致，即每个顶点属性（位置、法线、纹理坐标等）都对应一个独立的缓冲对象。 `m_element_buffer` 则是可选的索引缓冲（element/index buffer），用于在绘制时通过索引来复用顶点数据，从而提高内存效率。
+
+构造函数支持从外部传入顶点缓冲和索引缓冲的智能指针，使得 RHI_geometry 对底层资源保持引用计数式的管理模式，避免了资源的重复拷贝和泄漏风险。
+
+作为一个抽象类，RHI_geometry 定义了若干纯虚函数，用于由派生类提供具体实现。`bind_buffers()` 是一个用于绑定所有相关缓冲区的函数，通常在绘制之前调用。`bind_vertex_buffer()` 提供了动态绑定某个顶点缓冲区的能力，这使得几何体的数据结构可以在运行时灵活变更。`draw()` 和 `draw_instanced()` 分别用于执行标准绘制和实例化绘制操作，后者在图形编程中常用于大量相同对象的重复渲染（例如草地、树木等），大幅提升渲染效率。
+
+#### RHI_shader
+
+
+RHI_shader 是对图形渲染中“着色器”这一资源的抽象封装。在图形渲染的过程中，着色器是用于处理顶点和像素数据的程序，它定义了顶点和像素的输入输出格式、计算逻辑等。在GPU渲染管线的不同阶段，都会有不同的Shader来对渲染管线中的数据进行灵活地处理。
+我们在此介绍两个和Shader密切相关的概念：
+
+- RHI_Shader_code，它是对着色器代码的抽象封装。
+- RHI_Shader_program ，它由多个RHI_Shader_code构成，是对着色器程序的抽象封装。
   
-  // 2. 创建渲染窗口
-  auto window = device->create_window(1280, 720, "RTR Engine");
+![RHI_shader](docs/image/runtime/platform/rhi/RHI_shader.png)
+
+##### RHI_shader_code
+
+![RHI_shader_code](docs/image/runtime/platform/rhi/RHI_shader_code.png)
+
+RHI_shader_code 类，它是对着色器代码资源的抽象表示，是 RHI（渲染硬件接口）层中的一个关键组件。着色器是运行在 GPU 上的程序，负责控制渲染管线中各个阶段的行为，例如顶点变换、片元着色等。该类设计的主要目的是提供统一的接口来管理不同类型的着色器代码，并在运行时执行编译过程。
+
+类中包含一个受保护成员变量 m_shader_type，用于标识该着色器的类型，比如是顶点着色器（Vertex Shader）、片元着色器（Fragment Shader）、几何着色器（Geometry Shader）等。这种分类对于着色器资源的管理和编译流程是必要的，因为不同的类型有不同的输入输出要求，并在 GPU 渲染流水线中的位置也不同。
+
+虚函数 compile() 是类的核心接口，它表示将着色器源码编译成 GPU 可识别的中间表示或机器码。由于是纯虚函数，这个类是抽象的，不能被直接实例化，而需要由具体图形 API（如 OpenGL、Vulkan、DirectX）的后端类继承并实现具体的编译逻辑。
+
+##### RHI_shader_program
+
+![RHI_shader_program](docs/image/runtime/platform/rhi/RHI_shader_program.png)
+
+`RHI_shader_program` 是抽象的着色器程序类，内部通过 `m_codes` 管理各个类型（如顶点、片元等）的着色器代码，通过 `m_uniforms` 维护所有 Uniform 变量的映射关系。它定义了一系列虚函数，如 `attach_code` 、 `detach_code` 、 `link` 和 `set_uniform` 等，用于派生类实现平台相关的操作。此外，类还提供了模板函数接口，例如 modify_uniform 和 get_uniform，可以类型安全地修改或读取 Uniform 变量的值。这些模板函数通过 `std::dynamic_pointer_cast` 实现对不同类型的 Uniform 条目的安全访问，并在找不到对应 Uniform 名称时输出提示信息。
+
+对于 Shader的 uniform变量管理，RHI也提供了全面支持：
+`Uniform_entry_base` 是所有 Uniform 数据项的抽象基类，定义了统一变量的类型（Uniform_data_type）以及是否需要更新的状态标志。这个类提供了接口函数 `data_ptr` 和 `data_count` ，由派生类具体实现，以获取底层数据指针和元素数量。
+
+对于具体的 `Uniform` 数据，代码分别实现了 `Uniform_entry<T>` 和 `Uniform_entry_array<T>` 两个模板类，分别对应单个值和数组类型的 Uniform。两者都继承自 `Uniform_entry_base` ，分别使用 `std::unique_ptr<T>` 和 `std::unique_ptr<T[]> ``来管理数据的生命周期。Uniform_entry` 提供了对单一数据的访问与修改，而 `Uniform_entry_array` 支持修改整个数组或指定位置的元素。两者均提供了静态 `create` 方法，便于构造共享指针实例以供管理。
+
+#### RHI_texture
+![RHI_texture](docs/image/runtime/platform/rhi/RHI_texture.png)
+
+`RHI_texture` 是对纹理资源的抽象封装，它是图形渲染中最常见的资源之一。纹理通常用于存储图像数据，例如纹理贴图、法线贴图等，在图形渲染中起到重要的作用。
+
+`RHI_texture` 是一个抽象基类，封装了纹理资源的通用属性和操作接口，例如纹理的类型、内部格式、尺寸、多级渐远纹理（mipmap）级数、环绕方式和过滤方式等。该类还定义了若干纯虚函数，如 `set_filter`,`set_wrap` ,`generate_mipmap` 和 `bind_to_unit` ，用于由具体平台的子类实现。同时，它提供了封装好的方法用于批量设置过滤器和环绕参数，以及设置边框颜色的方法 `set_border_color，并通过` `on_set_border_color` 纯虚函数将具体行为交由子类实现，从而保证接口的一致性与灵活性。
+
+对于纹理元数据的管理，我们提供了 `Image_data` 结构体。该结构体用于表示原始图像数据，包含图像的宽高、指向数据的指针、数据格式和外部格式信息，并通过 `has_ownership` 成员变量指示是否需要在析构时释放数据内存。此外，该结构体还封装了一个 `create_image` 方法，可以根据图像的缓冲类型创建对应格式的 `Image` 对象。
+
+RHI_texture 分为三大类：
+- 2D 纹理：用于存储二维图像数据，如纹理贴图。
+- 2D 数组纹理：用于存储二维图像数据的数组，如纹理数组。
+- Cubmap 纹理：用于存储立方体贴图图像数据。
+
+`对于这三种类型，IRHI_texture_2D` `、IRHI_texture_cubemap` 和 `IRHI_texture_2D_array` 分别定义了针对二维纹理、立方体纹理和二维纹理数组的接口，这些接口统一约定了图像数据上传和获取的操作，并支持通过原始图像数据或已有纹理资源进行纹理的构建。这种设计有助于实现纹理资源的灵活转换与共享，同时也便于引擎内部的功能复用。
+
+`RHI_texture_builder` 是一个面向构建的接口类，定义了一组用于创建不同类型纹理的方法。通过 `build_texture_2D`,`build_texture_cubemap` 和 `build_texture_2D_array` 等方法，用户可以使用原始图像数据或已有纹理资源构建目标纹理对象。这一设计模式遵循了“构建者模式”的思想，使纹理的构建流程更加灵活且易于维护，有利于与外部资源加载系统集成，提升引擎的模块化程度。
+
+#### RHI_frame_buffer
+![RHI_frame_buffer](docs/image/runtime/platform/rhi/RHI_frame_buffer.png)
+
+
+`RHI_frame_buffer` 定义了一套用于渲染帧缓冲区（Frame Buffer）的抽象与实现类，主要包括普通离屏帧缓冲与屏幕缓冲的封装。通过统一的基类接口 `RHI_frame_buffer_base`，系统可以在不关心具体帧缓冲类型的前提下操作渲染目标，从而提升渲染系统的通用性与可扩展性。
+
+`RHI_frame_buffer_base` 是所有帧缓冲类型的抽象基类，定义了判断帧缓冲有效性的纯虚函数 `is_valid`，以及获取缓冲区宽度和高度的接口 `width` 和 `height`。这一接口的存在为不同类型的帧缓冲提供了统一的访问方式，使得在后续的渲染流程中可以透明地切换目标缓冲对象，无需依赖具体的帧缓冲实现细节。
+
+`RHI_frame_buffer` 是具体的离屏帧缓冲实现，它维护了一个宽高尺寸，并使用 `std::vector` 存储了多个颜色附件（Color Attachments），以及一个深度附件（Depth Attachment）。这些附件均为纹理对象，说明该类旨在将渲染输出重定向到纹理中，用于后续的后处理、纹理采样或图像保存等操作。该类提供了获取颜色附件和深度附件的接口，从而方便图形管线在不同阶段读取或替换对应资源。
+
+`RHI_screen_buffer` 代表的是屏幕帧缓冲，即最终渲染结果输出到用户可见窗口的那部分帧缓冲。它内部保存了一个指向窗口对象的智能指针 `m_window`，并通过该对象提供的接口获取当前窗口的宽度和高度。由于屏幕缓冲通常不拥有独立的纹理资源，其行为主要受窗口系统的驱动，因此它没有显式的颜色或深度附件。
+
+#### RHI_pipeline_state
+
+![RHI_pipeline_state](docs/image/runtime/platform/rhi/RHI_pipeline_state.png)
+
+`RHI_pipeline_state` 定义了一个图形渲染管线状态的抽象系统，用于描述和控制图形渲染过程中的关键固定功能阶段。它以结构体的方式封装了深度测试、混合、偏移、模板测试以及背面剔除等常见渲染状态配置，并提供了多个静态工厂方法来快速构造常见渲染情形下的状态组合，如不透明物体、透明物体、天空盒、边缘检测和阴影渲染等。
+
+`Depth_state` 表示深度测试状态，其成员控制是否启用深度测试与深度写入，并指定使用哪种深度比较函数。针对不透明物体、半透明物体以及天空盒，该结构提供了三种静态方法，便于在构建渲染管线时快速设定合适的深度状态。例如，半透明对象通常关闭深度写入以避免遮挡错误，而天空盒允许与最远处深度相等的片元通过测试。
+
+`Polygon_offset_state` 用于控制多边形偏移，用以避免面片重合导致的Z-fighting问题。它支持对点、线和填充的偏移开关控制，并可指定偏移因子与单位值。该状态默认禁用，同时也提供了统一启用的工厂方法供特殊场景（如阴影偏移）使用。
+
+`Stencil_state` 结构体封装了模板测试的配置，包括是否启用模板测试、比较函数、以及当模板测试或深度测试失败或成功时应采取的操作。同时，它还提供模板参考值和掩码控制模板操作的范围。该结构定义了三种典型模板状态：禁用模板、不透明绘制时替换模板值、边缘检测时测试不相等值以突出轮廓。
+
+`Blend_state` 控制颜色混合阶段，主要用于实现半透明物体的正确叠加效果。它提供了源与目标颜色因子、混合操作等配置项。在默认禁用状态下，不进行任何颜色混合，而启用时则通常采用常见的 alpha 混合方式，即源颜色乘以其 alpha 值，加上目标颜色乘以（1 - alpha）。
+
+`Cull_state` 表示背面剔除设置，包括是否启用剔除、剔除哪一面（前面、背面、或全部），以及定义哪一面为正面（顺时针或逆时针）。它的多种静态方法可以帮助快速构造面向不同渲染任务的剔除设置，如完全关闭剔除或启用背面剔除等。
+
+所有这些状态被整合进一个统一的 `Pipeline_state` 结构体，用于代表某一具体渲染流程所需的完整状态集。该结构提供了多个静态方法，返回常见的渲染状态组合，例如用于阴影贴图渲染的 shadow\_pipeline\_state，或用于不透明几何绘制的 opaque\_pipeline\_state。通过这种方式，可以简化渲染流程中对状态的管理，提高可读性与复用性。
+
+`RHI_pipeline_state` 是一个抽象类，封装了一个具体的 `Pipeline_state` 成员，并定义了一个 `apply()` 方法用于将当前状态应用到底层图形 API 管线中。它通过纯虚函数分别调用各个子状态的应用接口，如 `apply_blend_state`、`apply_cull_state` 等，这些函数需在子类中结合具体的图形 API（如 OpenGL、Vulkan 或 DirectX）进行实现。该抽象设计有效地将高层渲染逻辑与底层平台无关地解耦，方便跨平台图形后端的开发与维护。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
-  // 3. 创建顶点/索引缓冲区
-  auto vbo = device->create_vertex_buffer(...);
-  auto ebo = device->create_element_buffer(...);
-  
-  // 4. 组装几何体
-  auto geometry = device->create_geometry({ {0, vbo} }, ebo);
-  
-  // 5. 创建着色器程序
-  auto shader_program = device->create_shader_program(...);
-  ```
 
-### 窗口系统
-#### 跨平台窗口抽象
-`RHI_window`类作为渲染硬件接口的窗口抽象基类，提供统一的跨平台窗口操作接口。主要功能包括：
 
-- 窗口属性管理
-  ```cpp
-  const int& width();      // 获取窗口宽度
-  const int& height();     // 获取窗口高度
-  const std::string& title(); // 获取窗口标题
-  ```
 
-- 生命周期控制
-  ```cpp
-  virtual bool is_active() = 0;  // 窗口激活状态
-  virtual void deactivate() = 0; // 关闭窗口
-  ```
 
-- 视口设置
-  ```cpp
-  virtual void set_viewport(int x, int y, int width, int height) = 0;
-  ```
-
-#### OpenGL上下文管理
-通过继承实现具体平台的上下文管理，核心方法：
-```cpp
-void on_frame_begin() {
-    poll_events();     // 处理系统事件
-    swap_buffers();    // 交换前后缓冲
-    m_frame_begin_event.execute(this); // 触发帧开始事件
-}
-
-void on_frame_end() {
-    m_frame_end_event.execute(this); // 触发帧结束事件
-}
-```
-#### 输入事件处理流程
-采用事件委托机制实现输入处理：
-
-```cpp
-// 事件类型定义
-using Window_resize_event = Event<int, int>;
-using Key_event = Event<Key_code, Key_action, unsigned int>;
-
-// 事件注册接口
-Window_resize_event& window_resize_event(); 
-Key_event& key_event();
-
-// 典型事件处理示例
-Key_event m_key_event{[&](Key_code key_code, Key_action action, unsigned int repeat) {
-    if (key_code == Key_code::ESCAPE && action == Key_action::PRESS) {
-        this->deactivate(); // ESC键关闭窗口
-    }
-}};
-```
-
-#### 实现特性
-1. **ImGui集成支持**
-   ```cpp
-   std::shared_ptr<RHI_imgui>& imgui(); // 获取ImGui上下文
-   ```
-
-2. **帧事件系统**
-   ```cpp
-   Event<RHI_window*>& frame_begin_event(); // 帧开始事件
-   Event<RHI_window*>& frame_end_event();   // 帧结束事件
-   ```
-
-3. **多平台扩展**
-   通过继承实现不同图形API的窗口：
-   ```cpp
-   class RHI_window_OpenGL : public RHI_window {
-       // OpenGL具体实现
-   };
-   
-   class RHI_window_Vulkan : public RHI_window {
-       // Vulkan具体实现
-   };
-   ```
-
-#### 使用示例
-```cpp
-// 创建窗口
-auto window = device->create_window(1280, 720, "RTR Engine");
-
-// 注册窗口调整事件
-window->window_resize_event().add_listener([](int w, int h) {
-    std::cout << "New size: " << w << "x" << h << std::endl;
-});
-
-// 主循环
-while(window->is_active()) {
-    window->on_frame_begin();
-    // 渲染逻辑...
-    window->on_frame_end();
-}
-```
-
-### 2.3 资源管理
-
-#### 2.3.1 缓冲区（Buffer）
-- 顶点/索引/存储缓冲区
-- 内存映射机制
-
-#### 2.3.2 着色器（Shader）
-- 着色器代码编译流程
-- Uniform管理策略
-- 跨平台着色器程序
-
-#### 2.3.3 纹理系统
-- 2D/立方体贴图/数组纹理
-- Mipmap生成策略
-- 帧缓冲附件管理
-
-## 3. 渲染管线
-
-### 3.1 几何体抽象
-- 顶点格式描述
-- VAO管理策略
-- 实例化渲染支持
-
-### 3.2 状态管理
-- 混合/深度测试/模板测试
-- 多边形偏移配置
-- 裁剪状态管理
-
-## 4. 工具模块
-
-### 4.1 ImGui集成
-- 平台抽象接口
-- 事件处理集成
-- 渲染后端对接
-
-### 4.2 计算管线
-- 计算着色器分派
-- 内存屏障控制
-- 异步计算支持
-
-## 5. 全局资源管理
-- 设备单例管理
-- 渲染器生命周期
-- 纹理构建器模式
