@@ -13,6 +13,6 @@ diagrams:
         - rtr
       context:
         - rtr::File_service
-    plantuml:
-      before:
-        - left to right direction
+    # plantuml:
+    #   before:
+    #     - left to right direction

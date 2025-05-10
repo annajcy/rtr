@@ -14,6 +14,6 @@ diagrams:
       context:
         - rtr::Image_loader
         - rtr::Image
-    plantuml:
-      before:
-        - left to right direction
+    # plantuml:
+    #   before:
+    #     - left to right direction

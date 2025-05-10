@@ -31,6 +31,9 @@ RTR的系统架构采用分层设计，由底层到上层依次为：
 - 上下文层
 - 框架层
 
+其中，工具层，资源层和平台层是渲染器Runtime的后端；
+功能层，上下文层，框架层是渲染器的前端。
+
 ## 为什么分层
 分层架构的设计使得RTR的系统更加模块化和可扩展。 
 每一层的设计相对独立，层与层之间具有单向的调用关系，上层的实现仅调用下层提供的接口。
@@ -39,7 +42,21 @@ RTR的系统架构采用分层设计，由底层到上层依次为：
 ## 后续的章节安排
 因为RTR Runtime的系统架构比较复杂，因此我们将在后续的章节中对每一层的具体实现进行详细的介绍。
 
-# 运行时工具层
+# 渲染器后端概述
+
+渲染器的后端由三层构成，分别为：
+
+- 工具层
+  用于提供一些通用的底层工具类和辅助函数
+- 资源层 
+  用于提供一些通用的资源管理类和资源加载的能力
+- 平台层 
+  提供跨平台的支持，使得开发者可以基于不同的图形API(OpenGL/DirectX12/Vulkan)使用RTR Runtime。并且向上提供统一的接口，使得上层模块可以在不同的平台上运行
+
+这三层是整个渲染器的基石，它们共同构成了渲染器的底层架构。
+其设计思想和具体的实现将在后续的章节中进行详细介绍。
+
+# 工具层
 
 ## 概述
 工具层主要用于提供一些通用的底层工具类和辅助函数。
@@ -359,6 +376,348 @@ RHI_texture 分为三大类：
 所有这些状态被整合进一个统一的 `Pipeline_state` 结构体，用于代表某一具体渲染流程所需的完整状态集。该结构提供了多个静态方法，返回常见的渲染状态组合，例如用于阴影贴图渲染的 shadow\_pipeline\_state，或用于不透明几何绘制的 opaque\_pipeline\_state。通过这种方式，可以简化渲染流程中对状态的管理，提高可读性与复用性。
 
 `RHI_pipeline_state` 是一个抽象类，封装了一个具体的 `Pipeline_state` 成员，并定义了一个 `apply()` 方法用于将当前状态应用到底层图形 API 管线中。它通过纯虚函数分别调用各个子状态的应用接口，如 `apply_blend_state`、`apply_cull_state` 等，这些函数需在子类中结合具体的图形 API（如 OpenGL、Vulkan 或 DirectX）进行实现。该抽象设计有效地将高层渲染逻辑与底层平台无关地解耦，方便跨平台图形后端的开发与维护。
+
+# 渲染器前端概述
+
+至此，我们已经介绍了RTR Runtime的平台层，资源层以及工具层。这三层为前端提供了一组平台无关的图形API赋予了整个Runtime跨平台的能力，以及一些基础的工具类。接下来我们将介绍渲染器前端的设计。
+
+渲染器的前端分为三个部分：
+
+- 框架层
+  定义了用户直接使用渲染器的接口
+- 上下文交换层
+  定义了框架层和功能层之间如何传输数据
+- 功能层
+  定义了渲染器的核心功能，这些功能由若干个系统提供。
+
+## 渲染器的帧循环机制
+![渲染器的帧循环机制](docs/image/runtime/renderer/frame_loop.png)
+
+渲染器之所以能够驱动一个动态的虚拟世界，核心在于它将每一帧的执行流程清晰地划分为逻辑更新与图形渲染两个阶段，并通过上下文交换机制在这两者之间传递数据，实现解耦与并行。整个过程由引擎主循环 `Engine_runtime::run` 驱动，该方法持续检测窗口是否处于活跃状态，只要窗口未被关闭，引擎就会不断调用 `tick` 方法推进每一帧的运转。
+
+每一帧的处理首先由窗口系统的 `on_frame_begin` 开启，它负责处理输入、窗口事件等与操作系统交互相关的内容。紧接着，引擎会将输入状态、当前帧的逻辑交换数据、以及时间增量 `delta_time` 一并封装进 `Logic_tick_context`，传入虚拟世界 `World` 中进行逻辑更新。在这个阶段，虚拟世界中所有对象的行为——包括移动、旋转、碰撞、AI、动画等——都在时间和输入的驱动下更新状态，从而推动虚拟世界前进。逻辑更新阶段的`tick`是由框架层具体实现。
+
+逻辑更新结束后，引擎会通过 `swap` 操作交换前后台的 `Swap_data` 缓冲区。这里的`Swap_data` 数据结构是由上下文交换层定义的，它包含了所有与功能层相关的数据。功能层接收到这些数据后，会根据这些信息构建功能层中各个系统的命令。
+
+对于渲染系统而言，渲染系统会读取前一阶段逻辑更新所产生的渲染数据，如相机、光源、物体等，并将其封装进 `Render_tick_context` 中传递到渲染系统。此时，渲染系统根据当前世界状态构建渲染命令并提交给后端的渲染设备，结合渲染系统所定义的渲染管线，最终生成可供显示的图像帧。而渲染系统所调用的底层的 RHI（渲染硬件接口）屏蔽了平台差异，使得这一过程可以在多种图形 API（如 OpenGL、Vulkan）上保持一致的行为。在渲染指令完成后，引擎会通过渲染设备检查图形接口错误，帮助开发者及时发现渲染过程中的问题。
+
+随后，`on_frame_end` 被调用以结束当前帧，并刷新窗口显示内容，准备进入下一帧循环。正是通过这一套持续且高效的帧循环机制，渲染器才能不断更新世界状态并实时生成画面，使得用户看到的虚拟世界仿佛在持续运动。
+
+![Runtime类图](docs/image/runtime/renderer/frame_loop.png)
+
+在了解了渲染器的帧循环机制后，我们接下来将会具体介绍渲染器前端各层的具体实现。
+
+# 框架层
+
+## 框架层概述
+
+框架层定义了用户直接使用渲染器的接口，作为渲染器最顶层，框架层对用户所需要渲染的虚拟世界进行了抽象，包括场景定义，对象的定义以及对象行为的描述。
+
+![框架层](docs/image/runtime/renderer/framework.png)
+
+### 框架层的核心概念
+框架层有如下核心概念，由下自上组成了一个层次结构：
+
+- Component
+  代表了虚拟世界中实体的一个组件，每个Component对象表示着虚拟世界中实体的一种属性，以及可以与其他Component进行交互的行为。
+- Component_list
+  一个Component的列表，用于存储虚拟世界中的一个实体的所有Component。每个实体都可以有多个Component，这些Component可以通过Component_list进行管理。
+- Game_object
+  代表了虚拟世界中的一个实体，如玩家、敌人、道具等。每个Game_object都可以挂载一个或多个Component。
+- Scene
+  一个场景容器，用于管理虚拟世界中的所有Game_object。每个Scene都可以包含多个Game_object，并且可以通过Scene对象进行统一的管理和控制。除此之外，Scene还提供一些全局的信息，如主相机、主光源，天空盒等。
+- World
+  一个虚拟世界，用于管理所有的Scene。每个World都可以包含多个Scene，并且可以通过World对象进行统一的管理和控制。
+
+![框架层的核心概念](docs/image/runtime/renderer/framework_concept.png)
+
+有了如上静态的层次结构，我们是如何驱动一个动态场景呢？其实，上述概念均包含了tick方法，这些方法会在每一帧的逻辑更新阶段被调用。
+
+World对象会执行Scene的tick方法，Scene对象会执行Game_object的tick方法，Game_object对象会执行所挂载的Component的tick方法。此外，用户可以在tick方法中获取当前的逻辑上下文，当前的时间增量，以及当前的输入状态。用户可以根据这些信息在tick方法中更新Game_object的状态，同时也可以更新逻辑上下文
+
+![框架层的tick方法](docs/image/runtime/renderer/framework_tick.png)
+
+### 框架层的具体实现
+在这里我们开始介绍框架层的具体实现
+
+#### Component
+
+![Component_base] (./docs/diagrams/framework/component_base_class.svg)
+
+`Component_base` 是所有组件的基类，封装了组件的基本行为和属性，并提供了与其它组件协作的核心接口。每一个组件通过枚举类型 `Component_type` 进行分类，例如节点（NODE）、网格渲染器（MESH\_RENDERER）、相机（CAMERA）、相机控制器（CAMERA\_CONTROL）、光源（LIGHT）、阴影投射器（SHADOW\_CASTER）以及用户自定义的组件（CUSTOM）等。在运行时，每一个组件实例都可以通过类型标识进行识别，以便框架进行特定的逻辑分发。
+
+`Component_base` 定义了一个纯虚的 `tick` 方法，该方法由派生类实现，代表组件在每帧逻辑更新时执行的行为。此外，它还提供了优先级控制机制，通过 `priority` 字段来调节不同组件在更新过程中的调用顺序，允许更细粒度的执行时调度。组件还可以启用或禁用，这一能力对实现某些状态切换或优化渲染路径非常重要。
+
+每个组件内部保存了一个弱引用指向其所附加的 `Component_list` 对象。这一设计让组件能够通过 `get_component` 方法查找和访问同一个实体上的其他组件，从而支持组件之间的解耦协作。此外，组件还可以通过 `add_component` 方法动态地向实体添加新的组件，或者通过 `remove_component` 方法移除不再需要的组件。
+
+![Component_list](./docs/diagrams/framework/component_list_class.svg)
+
+`Component_list` 类是组件系统的容器，负责管理一个实体上的所有组件。它内部使用一个 `std::vector` 来维护所有挂载的组件实例。用户可以通过 `add_component` 将新的组件加入到列表中，也可以使用模板方法 `get_component<T>` 来获取某一类型的组件引用。这些方法支持类型安全的动态查询，内部通过 `dynamic_pointer_cast` 来完成类型识别。`remove_component<T>` 允许按类型移除组件，而 `has_component<T>` 则提供快速检测某个组件是否已存在。
+
+为了增强系统的灵活性和调度能力，`Component_list` 还提供了组件排序功能。用户可以传入自定义的排序函数，通过 `sort_components` 方法对组件列表进行重新排序，从而影响组件在每帧更新中的执行顺序。这一机制在处理需要优先或延后更新的逻辑时非常有用，比如先更新相机控制器，再更新相机本身，以确保状态的正确传递。
+
+#### Game_object
+![Game_object](docs/diagrams/framework/game_object_class.svg)
+
+在组件系统之上，`Game_object` 是表示虚拟世界中一个具体实体的核心类。它是场景中可以被操作和驱动的基本单位，代表了一个完整的逻辑或图形对象，比如玩家、敌人、道具或环境中的任意元素。每个 `Game_object` 拥有一个名字，用于标识自身，同时也拥有一个内部的 `Component_list`，用于管理所有挂载在其上的组件。
+
+`Game_object` 提供了多种模板方法来访问或管理组件。开发者可以通过 `get_component<T>` 查询某一类型的组件，通过 `add_component<T>` 添加新的组件，或者通过传入已构造的组件实例调用另一版本的 `add_component` 方法。这些接口不仅简化了用户的使用体验，还允许组件在运行时动态构建和挂载，使得实体在生命周期中可以灵活地改变其行为和属性。为了保证组件的可访问性，每当组件被添加进 `Game_object` 时，系统都会自动设置组件的 `Component_list` 指针，并调用其生命周期方法 `on_add_to_game_object`，确保组件在加入实体时可以执行初始化逻辑。
+
+在每一帧的逻辑更新阶段，`Game_object` 的 `tick` 方法会被调用。该方法首先根据组件的优先级对所有组件进行排序，然后依次调用每个启用状态下组件的 `tick` 方法。这一机制确保了组件的执行顺序具备可预测性，尤其适用于组件间存在依赖关系的场景，例如相机控制器需要在相机更新之前执行。通过这种设计，`Game_object` 在封装组件行为的同时，也为整个逻辑调度提供了清晰的控制入口。
+
+此外，`Game_object` 支持使用静态工厂方法 `create` 来构造实体对象，从而提高了创建接口的一致性。无论是运行时动态创建的游戏对象，还是场景加载过程中的反序列化逻辑，均可以使用该工厂方法进行统一处理。
+
+#### Scene
+
+![Scene](docs/image/runtime/renderer/scene.png)
+
+在游戏世界的层级结构中，`Scene` 扮演着容器与组织者的双重角色。它代表了一个独立的游戏或渲染场景，聚合了多个 `Game_object` 实例，并统一管理其生命周期、逻辑更新与资源状态，是构建关卡、编辑地图或驱动渲染输出的核心单元。
+
+`Scene` 中的每一个 `Game_object` 都代表了虚拟世界中的一个具体元素，而 `Scene` 本身则通过一个 `std::vector<std::shared_ptr<Game_object>>` 管理着它们的集合。开发者可以通过 `add_game_object` 方法添加新的对象，无论是传入已有对象的共享指针，还是通过对象名称构建新的实例，`Scene` 都会将其统一纳入管理范畴。同时，它也提供了基于名称查找游戏对象的能力，以及按引用或名称移除对象的方法，使得场景对象的管理具备较高的灵活性和便利性。此外，`clear` 方法允许开发者快速清空整个场景，适用于场景切换或资源重置等操作。
+
+为了适配渲染需求，`Scene` 也支持对天空盒（`Skybox`）资源的引用管理。通过 `set_skybox` 和 `skybox` 方法，用户可以为场景指定当前所使用的天空盒资源，进而影响渲染时的环境背景。在逻辑更新过程中，`Scene::tick` 方法会在执行场景中所有 `Game_object` 的更新逻辑之前，将当前的天空盒信息写入 `Logic_tick_context` 中，确保逻辑数据与渲染数据之间的一致性。
+
+`Scene` 的生命周期中最核心的操作是逻辑更新，即 `tick` 方法的调用。在每一帧中，它会遍历并驱动所有子 `Game_object` 的更新逻辑，执行顺序按照对象插入顺序进行。这种设计使得 `Scene` 成为游戏引擎逻辑调度的入口，它通过对所有实体的调度，实现了从场景到对象、再到组件的逐层解耦与更新。
+
+#### World
+
+![World](docs/image/runtime/renderer/world.png)
+
+`World` 是对游戏空间的更高层次封装，它管理着一个或多个 `Scene` 实例，并提供场景切换、统一逻辑驱动以及场景索引控制的功能。可以将 `World` 理解为一个“舞台管理者”，在其之下，不同的 `Scene` 像是一幕幕剧目，而 `Game_object` 则是舞台上的具体演员。
+
+每个 `World` 拥有一个独立的名称，并维护着一组 `Scene` 的集合。通过 `add_scene` 方法，开发者可以动态添加新的场景资源，无论是通过已有 `Scene` 实例注入，还是通过名称创建新的场景对象，都能快速集成到当前世界中。`get_scene` 方法允许开发者按名称查找场景，而 `remove_scene` 则提供了清除不再使用场景的手段，确保资源管理的清晰有序。
+
+`World` 的核心功能之一是场景切换管理。其内部维护一个 `m_current_scene_index`，用于标识当前激活的场景索引。开发者可以通过 `set_current_scene`（支持通过名称或指针）指定当前活跃场景，或通过 `set_current_scene_index` 直接设置索引。此外，`next_scene` 和 `previous_scene` 提供了自动循环切换场景的机制，非常适合用于演示场景轮播、剧情过场等功能模块。
+
+逻辑驱动方面，`World::tick` 方法会将逻辑上下文 `Logic_tick_context` 传递给当前场景，由场景进一步递交给各个 `Game_object` 进行更新。通过这种逐层递进的方式，`World` 实现了对整个逻辑更新流程的统一调度。无论是物理运算、组件行为，还是渲染状态更新，都可以在这一过程中自然衔接，形成清晰的执行链条。
+
+### 框架层所提供的预制组件
+
+#### Node_component
+
+![Node_component](docs/image/runtime/renderer/node_component.png)
+
+`Node` 类和 `Node_component` 是实现场景图系统（Scene Graph System）与游戏对象体系（GameObject System）之间桥梁的关键模块，它们共同支持游戏对象的空间层级变换、节点组织与世界坐标转换等核心功能。
+
+`Node` 类本身是一个支持层级结构的空间变换节点，提供了位置（position）、旋转（rotation）、缩放（scale）等基本变换属性，并支持通过父子关系构建出树状结构的场景图。每个节点可以拥有多个子节点，并可设置其父节点，从而形成具有继承性的空间结构。通过 `model_matrix()` 方法，节点可以在发生变换时按需（基于脏标记机制）计算其完整的变换矩阵，并自动组合父节点的变换，以获得正确的世界变换。`Node` 同时也提供了 `world_position`、`world_rotation`、`world_scale` 等接口，用于获取世界空间中的状态，以及常用的空间方向向量（如前、上、右等）。此外，它支持 `look_at_point` 和 `look_at_direction` 等方法，可将节点朝向某个方向或点，在游戏角色面向控制、摄像机朝向调整等功能中尤为重要。
+
+与之配套的 `Node_component` 是框架层的一个预制组件，继承自 `Component_base`。它的职责是为游戏对象绑定一个 `Node` 实例，从而使得该对象可以在场景图中进行空间定位和组织。该组件在被添加到游戏对象时会自动创建一个 `Node` 对象并与之关联，开发者可以通过 `node()` 方法访问或操作这个节点。虽然 `Node_component` 本身不直接处理更新逻辑，其存在确保了游戏对象具备场景图中的层级变换能力，为后续的渲染、物理、动画等系统提供统一的空间基础。
+
+`Node` 提供了功能完备的变换和层级管理机制，而 `Node_component` 则将这一能力以组件化的形式集成到游戏对象中。两者相辅相成，共同构建起了该游戏引擎中支持复杂空间结构和父子变换继承的基础设施。
+
+#### Camera_component
+
+![Camera_component](docs/image/runtime/renderer/camera_component.png)
+
+`Camera` 类作为抽象基类，定义了所有相机通用的接口与核心属性。它依赖于一个 `Node` 实例来提供空间位置信息，使得相机能够通过节点系统进行定位与朝向控制。`Camera` 支持设置近平面和远平面，并提供了获取视图矩阵 `view_matrix()` 的方法，该方法基于绑定的节点计算视图变换，用于将世界空间转换为观察空间。由于 `Camera` 是抽象类，因此具体的投影矩阵生成逻辑交由子类实现，并通过 `projection_matrix()` 虚函数暴露。此外，相机还支持调整缩放（`adjust_zoom`）与设置纵横比（`set_aspect_ratio`），为动态视图控制提供便利。
+
+该体系下提供了两种具体的相机实现：`Perspective_camera` 和 `Orthographic_camera`。前者实现了透视投影，适用于三维场景中的真实视觉模拟，通过设定视野角（FOV）和纵横比生成投影矩阵。它的缩放操作通过在前方向上平移实现，模拟相机前后移动的效果。后者则采用正交投影，常用于2D界面、编辑器或需要无透视畸变的场景。`Orthographic_camera` 支持设置投影边界，并可通过缩放调整其可视区域大小。此外它还能根据窗口纵横比动态调整边界高度，实现自动适配。
+
+`Camera_component` 则是组件系统中的桥接器，将 `Camera` 类与游戏对象体系结合起来，使得游戏对象可以拥有并驱动一个摄像机实例。在逻辑更新的 `tick()` 函数中，组件会从相机中提取视图矩阵、投影矩阵、位置与方向等数据，并存入逻辑交换数据结构中供渲染使用。该组件还提供了 `add_resize_callback()` 方法，可注册窗口尺寸变化时的回调，从而自动更新相机的纵横比，确保视图正确适配窗口大小。
+
+为了方便不同类型相机的使用，系统还提供了 `Perspective_camera_component` 和 `Orthographic_camera_component` 两个具体子类。在添加到游戏对象时，这些组件会查找已有的 `Node_component`，获取其 `Node` 节点作为相机的空间基础，然后构建相应类型的相机实例。这种设计不仅实现了组件化管理，也保证了相机与场景图系统的无缝集成，为场景中多相机切换、UI摄像机与主视角分离等功能提供了基础支持。
+
+#### Camera_control_component
+
+![Camera_control_component](docs/image/runtime/renderer/camera_control_component.png)
+
+`Camera_control` 是一个抽象基类，负责统一摄像机控制的接口与基本行为封装，支持不同风格的摄像机控制类型，如轨迹球控制（Trackball）和第一人称游戏控制（Game）。该类持有一个摄像机的共享指针，并记录当前控制方式的类型以及控制的敏感度参数（包括移动速度、旋转速度和缩放速度）。它定义了必须实现的核心接口如 `pitch`（俯仰）、`yaw`（偏航）和 `tick`（根据输入状态更新摄像机状态），用于派生类根据用户输入更新摄像机姿态。
+
+在 `Camera_control` 的派生类中，`Trackball_Camera_control` 实现了一种轨迹球式的控制方式，通过鼠标左键旋转摄像机观察角度，中键平移摄像机位置，滚轮实现缩放，适合查看模型或场景。它在 `pitch` 和 `yaw` 方法中通过矩阵旋转计算新的摄像机位置，保持摄像机环绕目标旋转的交互感。而 `Game_Camera_control` 则模拟第一人称或自由视角的游戏摄像机控制逻辑，通过 W/A/S/D/Q/E 键控制方向移动，左键控制旋转视角，滚轮缩放视野。这种方式更适合在 3D 场景中自由漫游。
+
+`Camera_control_component` 则是一个基于组件化设计的摄像机控制容器，用于在游戏对象系统中集成和驱动 `Camera_control` 的行为。它继承自 `Component_base`，并在每帧调用 `tick` 方法来更新摄像机状态，实质上将输入系统与摄像机控制器进行连接。其子类如 `Trackball_camera_control_component` 和 `Game_camera_control_component`，会在被添加到游戏对象时自动获取相应的 `Camera_component`，并根据绑定的摄像机实例化对应的控制器，使得组件系统具备动态装配和切换摄像机控制方式的能力。这种设计模式有效提升了系统的可扩展性和灵活性，便于在不同交互场景下切换控制风格。
+
+#### Light_component
+![Light_component](docs/image/runtime/renderer/light_component.png)
+
+`Light` 类及其派生类代表了 3D 图形系统中的不同类型的光源。`Light` 类作为基类，提供了基础的属性，如颜色、强度和与之相关的节点，这些节点定义了光源在 3D 世界中的位置和朝向。该类还包括了这些属性的 getter 和 setter 方法，便于访问和修改光源的属性。构造函数用于初始化这些属性，并且类确保其析构函数是虚拟的，从而能够正确清理派生类对象。
+
+派生类——`Directional_light`、`Point_light` 和 `Spot_light`——是对 `Light` 类的具体化，表示 3D 场景中的不同类型的光源。`Directional_light` 代表一个特定方向的光源，通常用于模拟阳光；`Point_light` 代表从一个点发出的全向光源，常用于模拟灯泡；`Spot_light` 则代表一个在锥形区域内发光的光源，通常用于模拟聚光灯等。每个子类都有一些特定于光源类型的属性，如 `Point_light` 的衰减因子或 `Spot_light` 的角度。
+
+`Light_component` 类作为 `Light` 类的容器，封装了光源的功能，并将其纳入引擎的组件系统中。每种光源类型的组件，如 `Directional_light_component`、`Spot_light_component` 和 `Point_light_component`，都继承自 `Light_component`，并专门处理不同的光源类型。这些组件负责在游戏对象中添加适当的光源、每帧更新光源的数据以及执行必要的更新操作。
+
+例如，`Directional_light_component` 类包含了处理方向光的逻辑，包括存储光源的颜色、强度和方向。它使用 `tick` 函数将光源数据推送到交换数据中进行处理，如根据节点的世界前向向量更新光源的方向。同样，`Point_light_component` 和 `Spot_light_component` 处理各自的光源类型，将相关的数据如位置、衰减因子和角度推送到交换数据中。
+
+#### Mesh_renderer_component
+
+`Mesh_renderer` 类和 `Mesh_renderer_component` 类用于表示 3D 图形渲染系统中的网格渲染器。`Mesh_renderer` 类负责管理与渲染相关的基本组件，包括节点、几何体和材质。它的构造函数接受一个节点对象指针，用于将网格渲染器与特定的 3D 对象绑定。`Mesh_renderer` 类提供了对这些属性的访问方法，包括节点、几何体和材质的 getter 和 setter 方法，允许开发者动态地修改网格的属性。
+
+`Mesh_renderer_component` 类继承自 `Component_base`，是一个组件系统的一部分，专门用于管理 `Mesh_renderer` 类的生命周期和行为。该组件类包含了一个 `Mesh_renderer` 的共享指针，并且提供了 `on_add_to_game_object` 方法，在将该组件添加到游戏对象时，会自动创建并初始化一个 `Mesh_renderer` 对象。`Mesh_renderer_component` 还包括一个标志位 `m_is_cast_shadow`，用于控制该渲染器是否参与阴影投射。
+
+`Mesh_renderer_component` 还定义了 `tick` 方法，该方法在每帧被调用时，负责将网格渲染器的相关数据（如材质、几何体、模型矩阵和阴影投射标志）推送到渲染数据中，供后续的渲染管线处理。`Mesh_renderer_component` 提供了一个静态方法 `create`，用于创建一个新的组件实例，使得组件系统更加灵活和易于管理。
+
+#### Shadow_caster_component
+
+`Shadow_caster_component` 定义了一个与阴影映射（Shadow Mapping）相关的类结构，主要是为不同类型的光源（如定向光和点光源）提供阴影映射的功能。`Shadow_caster`类作为基类，包含了一个共享指针`m_shadow_map`，用于存储阴影贴图，以及`m_shadow_camera`，用于控制生成阴影的相机视角。该类有一个构造函数，接受一个相机对象，构造时进行初始化，并提供了多个方法来访问和修改阴影贴图和相机。
+
+`Directional_light_shadow_caster`类继承自`Shadow_caster`，它特别为定向光源（如太阳光）设计。在构造函数中，它要求传入一个正交相机（Orthographic Camera），这是因为定向光源的阴影通常使用正交投影。该类提供了一个方法，将`m_shadow_camera`动态转换为`Orthographic_camera`，确保正确访问其特定功能。
+
+`Point_light_shadow_caster`类则是专门为点光源设计的，同样继承自`Shadow_caster`，并使用透视相机（Perspective Camera）生成阴影。这些类通过继承和多态，能够根据不同光源的类型动态选择合适的阴影映射策略。
+
+接下来的`Directional_light_shadow_caster_component`类是一个组件类，主要功能是为游戏对象添加定向光源的阴影投射功能。它内部包含一个`Directional_light`对象和一个`Directional_light_shadow_caster`对象。在`update`方法中，基于光源的位置和方向更新相机的变换矩阵，并调整阴影相机的参数。`tick`方法用于更新阴影贴图数据，并将其传递到后续渲染流程中。
+
+`CSM_shadow_caster_component`类则实现了级联阴影映射（CSM，Cascaded Shadow Mapping）的功能。该类支持多个定向光阴影投射器（`Directional_light_shadow_caster`），并且可以根据相机的远近裁剪层次，动态调整阴影投射器的数量和视锥体。`generate_csm_layers`方法根据主相机的近远裁剪面生成层次化的阴影层，`generate_csm_frustum_vertices`方法则计算出每个阴影层的视锥体顶点。该类在`update`方法中根据光源和视锥体的变化调整每个阴影相机的参数。
+
+# 上下文交换层
+
+## 上下文交换层概述
+上下文交换层定义了框架层和功能层之间是如何传输数据的，使得逻辑与数据解耦。
+![上下文交换层](docs/image/runtime/renderer/context_swap.png)
+
+在这里，我们介绍上下文交换层的两个个核心概念：
+-  `Swap_data` 
+   功能层和框架层之间交换的数据结构
+-  `Tick_context`
+    框架层和功能层调用tick函数的上下文
+
+### Swap_data
+
+![Swap_data](docs/image/runtime/renderer/swap_data.png)
+
+`Swap_data` 结构体是渲染系统中框架层与功能层之间进行数据交换的核心载体，它封装了渲染场景所需的全部信息，旨在实现逻辑与数据的解耦。通过这个结构体，渲染器可以获取到当前帧需要渲染的所有对象、光源以及摄像机视图等关键数据。
+
+该结构体包含一个 `Swap_camera` 对象，用于定义当前场景的观察视角，包括其视图矩阵、投影矩阵、摄像机位置和方向，以及近裁剪面和远裁剪面距离。场景中所有可渲染的几何体都通过 `render_objects` 向量进行管理，每个 `Swap_object` 都包含几何体数据、材质信息、模型变换矩阵以及是否投射阴影的标志。
+
+光源信息则被细分为三种类型：`directional_lights` 存储方向光（如太阳光）的信息，包括强度、颜色和方向；`point_lights` 存储点光源（如灯泡）的信息，包含强度、颜色、位置和衰减参数；而 `spot_lights` 则存储聚光灯的信息，除了强度、颜色、位置和方向外，还定义了内外圆锥角的余弦值来控制光照范围。此外，`Swap_data` 还包含一个 `Skybox` 的共享指针，用于渲染天空盒，为场景提供环境背景。
+
+`Swap_data` 也处理了复杂的阴影数据，特别是针对方向光。`dl_shadow_casters` 存储单一方向光的阴影投射信息，包括阴影贴图和用于生成阴影的平行光正交摄像机数据。为了支持更精细的方向光阴影，特别是针对大范围场景，`enable_csm_shadow` 布尔变量用于控制是否启用级联阴影贴图（CSM）。当启用时，`csm_shadow_casters` 向量将包含多个 `Swap_CSM_shadow_caster` 结构体，每个结构体代表一个CSM级联，记录其对应的阴影投射器以及该级联的近裁剪面和远裁剪面距离。
+
+为了方便数据管理，`Swap_data` 提供了两个成员函数。`clear()` 函数用于重置 `Swap_data` 中的所有向量和共享指针，将其恢复到初始状态，确保每帧数据交换的独立性。而 `get_shadow_casters()` 函数则遍历 `render_objects` 向量，从中筛选出所有标记为 `is_cast_shadow` 的对象，并以 `Swap_shadow_caster_object` 的形式返回，这些对象仅包含几何体和模型矩阵信息，专用于阴影贴图的生成过程，从而优化了阴影计算的数据传输。
+
+### Tick_context
+
+![Tick_context](docs/image/runtime/renderer/tick_context.png)
+
+`Tick_context` 是框架层与功能层之间进行通信和数据传递的上下文结构，它为每帧的逻辑更新（Tick）和渲染更新（Tick）提供了必要的输入数据。通过将数据封装到这些上下文结构中，系统能够清晰地分离不同功能层（如逻辑层和渲染层）的职责，并确保它们在各自的更新周期中拥有所需的所有信息，从而实现高度解耦的设计。
+
+其中，`Logic_tick_context` 专为逻辑更新（或称模拟更新）提供上下文。它包含三个关键成员：`input_state`，该成员承载了当前帧的用户输入状态，如键盘按键、鼠标移动等，供逻辑层处理用户交互；`logic_swap_data` 是对 `Swap_data` 结构体的一个引用，它充当逻辑层向渲染层传递渲染指令和场景数据的输出通道，逻辑层会在这里填充本帧需要渲染的所有对象、光源、摄像机视图等信息；`delta_time` 则表示自上一帧逻辑更新以来所经过的时间，这个时间步长对于实现帧率无关的物理模拟、动画更新和计时器等功能至关重要。
+
+`Render_tick_context` 则为渲染系统的每帧更新提供了上下文。它主要包含两个成员：`render_swap_data`，这是对 `Swap_data` 结构体的另一个引用，但在此上下文中，它扮演着渲染层的输入数据源角色，渲染器会从这里读取逻辑层准备好的所有场景数据，并据此进行渲染绘制操作；与 `Logic_tick_context` 类似，`delta_time` 也存在于 `Render_tick_context` 中，它同样表示自上一帧渲染更新以来经过的时间，这对于实现时间相关的渲染效果、动画播放和着色器更新等方面非常有用。通过这种方式，逻辑层和渲染层可以独立地进行更新，并通过 `Swap_data` 在两者之间进行数据交换，共同驱动整个应用的运行。
+
+# 功能层
+
+## 功能层概述
+
+功能层定义了渲染器的核心功能，这些功能由若干个系统提供，如渲染系统，输入系统等。每个系统的具体实现由渲染器后端提供的平台无关的API实现
+
+![功能层](docs/image/runtime/renderer/function.png)
+
+## 功能层的核心系统
+
+### 输入系统
+![输入系统](docs/image/runtime/renderer/input_system.png)
+
+输入系统是功能层中的一个关键组件，它负责捕获、处理并维护所有用户输入设备（如键盘和鼠标）的当前状态。这个系统旨在提供一个统一且易于查询的接口，供上层逻辑（如游戏逻辑或UI系统）获取最新的输入信息，从而实现对用户交互的响应。
+
+该系统的核心数据结构是 `Input_state`。这个结构体详细记录了当前输入设备的各种状态：`key_mods`、`keys` 和 `mouse_buttons` 分别通过无序映射（`std::unordered_map`）存储了修饰键（如Ctrl、Shift）、普通按键和鼠标按键的按下/释放状态（`Key_action`）。此外，`Input_state` 还追踪鼠标的绝对位置 (`mouse_x`, `mouse_y`)，以及自上一帧以来的鼠标移动量 (`mouse_dx`, `mouse_dy`) 和鼠标滚轮的滚动量 (`mouse_scroll_dx`, `mouse_scroll_dy`)。为了方便外部模块查询，`Input_state` 提供了 `key_mod`、`key` 和 `mouse_button` 等常量成员函数，它们以安全的方式返回指定按键或按钮的状态，如果查询的键不存在，则默认返回 `Key_action::RELEASE`。
+
+`Input_system` 类是输入系统的主要管理者。它在构造时需要一个 `RHI_window` 的共享指针，并利用该窗口对象注册一系列事件回调。这包括鼠标移动事件、鼠标滚轮事件、键盘按键事件和鼠标按钮事件。当这些事件发生时，`Input_system` 内部的相应 `update_` 方法（例如 `update_mouse_position`、`update_key` 等）会被调用，负责处理原始输入数据并更新 `m_state`（即内部维护的 `Input_state` 对象）。值得注意的是，`update_mouse_position` 方法在更新鼠标绝对位置的同时，还会计算并存储鼠标的相对移动量。此外，`Input_system` 还注册了一个 `frame_end_event` 回调，在每一帧结束时调用 `reset_deltas()` 方法，将鼠标的位移和滚轮的增量归零，确保这些瞬时变化量在每帧开始时都是干净的。外部模块可以通过 `state()` 方法获取当前 `Input_state` 的常量引用，从而查询最新的输入数据。`create` 静态成员函数提供了一种便捷的方式来创建 `Input_system` 的共享实例。
+
+### 渲染系统
+
+#### 渲染系统概述
+
+渲染系统是功能层中至关重要的组成部分，它负责将抽象的场景数据转化为最终呈现在屏幕上的图像。整个渲染过程通过一系列精心设计的组件和流程来管理，旨在实现高效、灵活且可扩展的图形渲染。其核心在于对底层渲染硬件接口（RHI）的抽象和封装，使得渲染逻辑与具体的图形API实现解耦，从而提升系统的可移植性和维护性。
+
+#### 渲染系统核心概念
+
+- Render_system
+  整个渲染系统的入口，负责初始化全局RHI资源并管理 `Render_pipeline` 的生命周期。
+- Render_pipeline
+  渲染管线的抽象基类，定义了渲染的高级流程和接口。每个 `Render_pipeline`中包含多个 `Render_pass`，为每个render_pass提供了资源管理能力，并定义了其执行顺序。
+- Render_pass
+  `Render_pass` 是渲染管线中的基本构建单元，代表着一个独立的渲染阶段。如Shadow_map的绘制，场景着色，天空盒渲染，以及后处理等。 
+- Render_object
+  渲染系统中所有可渲染资产的抽象基类，例如几何体，材质，纹理和内存缓冲区。每个 `Render_object` 都可以与RHI设备进行链接和管理，确保渲染资源在需要时能够正确地加载和绑定到GPU。
+
+
+#### 渲染系统抽象类的定义
+
+##### Render_system
+
+##### Render_pipeline
+
+##### Render_pass
+
+##### Render_object
+
+#### 渲染系统的优越之处
+
+- **灵活性和可扩展性**。开发者可以轻松地通过实现新的 `Render_pipeline` 类来尝试不同的渲染技术（例如，从前向渲染切换到延迟渲染），而无需修改核心渲染逻辑。同样，通过添加新的 `Render_pass` 类，可以方便地集成新的渲染效果或阶段（如环境光遮蔽、景深等），这使得系统能够快速适应不断变化的渲染需求。
+
+- **可维护性和可测试性**。清晰的模块边界和职责分离使得每个组件的代码量相对较小，易于理解和维护。由于 `Render_pass` 具有明确的输入（`Resource_flow` 和 `Execution_context`），这使得它们可以更容易地进行单元测试，从而提高代码质量和稳定性。
+
+- **强大的平台无关性**。RHI抽象层是其核心优势之一，它使得渲染器能够轻松地部署到支持不同图形API（如OpenGL、Vulkan、DirectX）的平台上，而无需重写大部分渲染代码，这对于开发跨平台应用至关重要。
+
+- **数据流的清晰性与效率**。`Swap_data` 和 UBOs 的广泛使用不仅使逻辑层和渲染层之间的数据交换变得结构化和易于理解，而且通过批处理数据更新，有效减少了CPU与GPU之间的通信次数，从而潜在地提升了渲染性能。这种设计确保了渲染系统在复杂场景下也能保持高效运行，并为未来的性能优化奠定了坚实基础。
+
+# 渲染系统的具体实现
+
+## Render_object
+
+### Shader
+
+### Texture
+
+### Material
+
+### Frame_buffer
+
+### Attribute_buffer
+
+### Memory_buffer
+
+### Geometry
+
+### Skybox
+
+### texture
+
+## Render_pass
+
+### Shadow_pass
+
+### Main_pass
+
+### Postprocess_pass
+
+## Render_pipeline
+
+### Forward_render_pipeline
+
+# 运行时系统架构总结
+
+
+# 编辑器架构
+
+
+# 实时渲染算法的实现
+
+## 阴影算法
+
+### PCF
+
+### PCSS
+
+## 光照模型
+
+## 材质表达
+
+#### 透明蒙板
+
+#### 法线贴图
+
+#### 视差贴图
+
+## 后处理
+
+### Gamma矫正
+
+
+
+
+
+
 
 
 

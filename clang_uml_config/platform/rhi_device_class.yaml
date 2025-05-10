@@ -23,11 +23,17 @@ diagrams:
         # - rtr::Pipeline_state
         # - rtr::RHI_pipeline_state
     exclude:                                 # <---
-      access: [public, protected, private]   # <---
+      # access: [public, protected, private]   # <---
       relationships:                         # <---
         - aggregation
-      types:
-        - enum
+        - dependency
+      # context:
+      #   - rtr::Buffer_type
+      #   - rtr::Buffer_usage
+      #   - rtr::Buffer_iterate_type
+      
+      # types:
+      #   - enum
 
     plantuml:
       before:

@@ -1,6 +1,5 @@
 @startuml
 title Text loader class diagram
-left to right direction
 class "Text" as C_0001127392007066144031
 class C_0001127392007066144031 {
 +Text(const std::string & path) : void

@@ -142,6 +142,8 @@
 CONFIG_DIR="clang_uml_config"
 OUTPUT_DIR="docs/diagrams"
 SKIP_EXISTING=0 # 0 代表 false, 1 代表 true
+PLANTUML_ONLY=0 # 0 表示 false, 1 表示 true
+
 
 # 显示用法帮助函数
 usage() {
@@ -150,18 +152,33 @@ usage() {
     exit 1
 }
 
-# 解析命令行选项
-if [[ "$1" == "-s" || "$1" == "--skip-existing" ]]; then
-    SKIP_EXISTING=1
-    echo "信息：已启用跳过已存在SVG文件模式。"
-    shift # 移除已解析的选项
-fi
+while [[ "$1" != "" ]]; do
+    case $1 in
+        -s | --skip-existing )
+            SKIP_EXISTING=1
+            echo "信息：已启用跳过已存在SVG文件模式。"
+            ;;
+        -p | --plantuml-only )
+            PLANTUML_ONLY=1
+            echo "信息：已启用仅使用PlantUML模式（跳过clang-uml）。"
+            ;;
+        -* )
+            echo "错误：未知参数: $1"
+            usage
+            ;;
+        * )
+            break
+            ;;
+    esac
+    shift
+done
 
-# 检查是否有多余的未知参数
-if [ "$#" -gt 0 ]; then
-    echo "错误：未知参数: $@"
-    usage
-fi
+
+# # 检查是否有多余的未知参数
+# if [ "$#" -gt 0 ]; then
+#     echo "错误：未知参数: $@"
+#     usage
+# fi
 
 # 检查配置目录是否存在
 if [ ! -d "$CONFIG_DIR" ]; then
@@ -241,19 +258,33 @@ find "$CONFIG_DIR" -name "*.yaml" -type f -print0 | while IFS= read -r -d $'\0' 
         continue # 继续处理下一个配置文件
     fi
     
-    # --- 执行 clang-uml ---
-    echo "  执行 clang-uml ..."
-    # IMPORTANT: For clang-uml to output to the correct subdirectory,
-    # its YAML configuration needs 'output_directory' set correctly.
-    # This script *assumes* the YAML config will handle placing the .puml file
-    # in a path that, when prefixed with $OUTPUT_DIR, matches $expected_puml_file_path.
-    # Specifically, the YAML should effectively have:
-    # output_directory: $OUTPUT_DIR (e.g., docs/diagrams)
-    # output_name: $relative_path_no_ext (e.g., subdir/myconfig)
-    # OR
-    # output_directory: $OUTPUT_DIR/$(dirname $relative_path_no_ext) (e.g., docs/diagrams/subdir)
-    # output_name: $(basename $relative_path_no_ext) (e.g., myconfig)
-    clang-uml --config "$config_file" --query-driver .
+    # # --- 执行 clang-uml ---
+    # echo "  执行 clang-uml ..."
+    # # IMPORTANT: For clang-uml to output to the correct subdirectory,
+    # # its YAML configuration needs 'output_directory' set correctly.
+    # # This script *assumes* the YAML config will handle placing the .puml file
+    # # in a path that, when prefixed with $OUTPUT_DIR, matches $expected_puml_file_path.
+    # # Specifically, the YAML should effectively have:
+    # # output_directory: $OUTPUT_DIR (e.g., docs/diagrams)
+    # # output_name: $relative_path_no_ext (e.g., subdir/myconfig)
+    # # OR
+    # # output_directory: $OUTPUT_DIR/$(dirname $relative_path_no_ext) (e.g., docs/diagrams/subdir)
+    # # output_name: $(basename $relative_path_no_ext) (e.g., myconfig)
+    # clang-uml --config "$config_file" --query-driver .
+
+    if [ "$PLANTUML_ONLY" -eq 0 ]; then
+        echo "  执行 clang-uml ..."
+        clang-uml --config "$config_file" --query-driver .
+        status=$?
+        if [ $status -ne 0 ]; then
+            echo "  错误：clang-uml 处理配置文件 '$config_file' 失败 (退出码: $status)"
+            echo "--------------------"
+            continue
+        fi
+    else
+        echo "  已启用仅PlantUML模式，跳过 clang-uml 调用。"
+    fi
+
     
     status=$?
     if [ $status -ne 0 ]; then

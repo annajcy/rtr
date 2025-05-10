@@ -1,6 +1,5 @@
 @startuml
 title File service class diagram
-left to right direction
 class "File_node" as C_0011978095187432327002
 class C_0011978095187432327002 {
 __

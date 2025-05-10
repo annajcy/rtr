@@ -1,6 +1,5 @@
 @startuml
 title image loader class diagram
-left to right direction
 enum "Image_format" as C_0006040600221558325913
 enum C_0006040600221558325913 {
 RGB
