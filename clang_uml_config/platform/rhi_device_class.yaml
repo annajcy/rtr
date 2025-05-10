@@ -22,12 +22,13 @@ diagrams:
         # - rtr::Cull_state
         # - rtr::Pipeline_state
         # - rtr::RHI_pipeline_state
-    exclude:
-      relationships:
-        - inheritance
+    exclude:                                 # <---
+      access: [public, protected, private]   # <---
+      relationships:                         # <---
         - aggregation
-        - dependency
+      types:
+        - enum
 
-    # plantuml:
-    #   before:
-    #     - top to down direction
+    plantuml:
+      before:
+        - left to right direction
