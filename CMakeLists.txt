@@ -83,6 +83,9 @@ target_link_libraries(rhi_compute ${COMMON_LIBS})
 add_executable(main ${SOURCES} example/engine/main.cpp)
 target_link_libraries(main ${COMMON_LIBS})
 
+add_executable(test ${SOURCES} example/engine/test.cpp)
+target_link_libraries(test ${COMMON_LIBS})
+
 
 
 

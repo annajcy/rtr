@@ -101,7 +101,7 @@ public:
         );
 
         if (!m_image) {
-            std::cout << "Texture2D::link: m_image is nullptr" << std::endl;
+            //std::cout << "Texture2D::link: m_image is nullptr" << std::endl;
             return;
         }
         
@@ -295,7 +295,7 @@ public:
         );
 
         if (m_images.size() == 0) {
-            std::cout << "Texture2DArray::link: m_images is empty" << std::endl;
+            //std::cout << "Texture2DArray::link: m_images is empty" << std::endl;
             return;
         }
 
@@ -496,7 +496,7 @@ public:
         );
 
         if (m_images.size() != 6) {
-            std::cout << "Texture_cubemap::link: number of m_images is not vaild" << std::endl;
+            //std::cout << "Texture_cubemap::link: number of m_images is not vaild" << std::endl;
             return;
         }
 

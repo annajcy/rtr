@@ -127,6 +127,26 @@ public:
     }
 };
 
+class FPS_panel : public Panel {
+
+public:
+    FPS_panel(
+        const std::string& name,
+        const std::shared_ptr<RHI_imgui>& imgui
+    ) : Panel(name, imgui) {}
+
+    virtual void draw_panel() override {
+        m_imgui->text("fps: %f", std::to_string(m_imgui->frame_rate()));
+    }
+
+    static std::shared_ptr<FPS_panel> create(
+        const std::string& name,
+        const std::shared_ptr<RHI_imgui>& imgui
+    ) {
+        return std::make_shared<FPS_panel>(name, imgui);
+    }
+};
+
 class Editor {
 
 private:
@@ -144,6 +164,7 @@ public:
         add_panel(Shadow_settings_panel::create("shadow settings", m_imgui));
         add_panel(Phong_material_settings_panel::create("phong material settings", m_imgui));
         add_panel(Parallax_settings_panel::create("parallax settings", m_imgui));
+        add_panel(FPS_panel::create("fps", m_imgui));
 
     }
 
