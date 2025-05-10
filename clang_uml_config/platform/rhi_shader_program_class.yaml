@@ -1,0 +1,29 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/platform
+
+diagrams:
+  rhi_shader_program_class:
+    type: class
+    title: rhi_shader_program class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/platform/rhi/rhi_shader_program.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+      context:
+        - rtr::RHI_shader_program
+        - rtr::Uniform_entry_base
+        # - rtr::Stencil_state
+        # - rtr::Blend_state
+        # - rtr::Cull_state
+        # - rtr::Pipeline_state
+        # - rtr::RHI_pipeline_state
+      relationships:
+        - inheritance
+        - aggregation
+        - dependency
+
+    # plantuml:
+    #   before:
+    #     - top to down direction

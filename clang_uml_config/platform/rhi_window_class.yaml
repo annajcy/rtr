@@ -1,0 +1,31 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/platform
+
+diagrams:
+  rhi_window_class:
+    type: class
+    title: rhi_window class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/platform/rhi/rhi_window.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+      context:
+        - rtr::RHI_window
+        # - rtr::IRHI_texture_2D
+        # - rtr::IRHI_texture_cubemap
+        # - rtr::IRHI_texture_2D_array
+        # - rtr::RHI_texture_builder
+        # - rtr::Stencil_state
+        # - rtr::Blend_state
+        # - rtr::Cull_state
+        # - rtr::Pipeline_state
+        # - rtr::RHI_pipeline_state
+      relationships:
+        - inheritance
+        - aggregation
+
+    # plantuml:
+    #   before:
+    #     - top to down direction

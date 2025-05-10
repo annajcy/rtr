@@ -1,0 +1,69 @@
+@startuml
+title rhi_window class diagram
+class "Event<int,int>" as C_0016292333850286079981
+class C_0016292333850286079981 {
+__
+}
+class "Event<Mouse_button,Key_action,unsigned int>" as C_0014847333669851370870
+class C_0014847333669851370870 {
+__
+}
+class "Event<double,double>" as C_0007753529789918665902
+class C_0007753529789918665902 {
+__
+}
+class "Event<Key_code,Key_action,unsigned int>" as C_0013094731928571238521
+class C_0013094731928571238521 {
+__
+}
+class "Event<RHI_window *>" as C_0017328016858130017764
+class C_0017328016858130017764 {
+__
+}
+abstract "RHI_window" as C_0006962593096431523184
+abstract C_0006962593096431523184 {
++RHI_window(int width, int height, std::string title) : void
++~RHI_window() constexpr = default : void
+..
+{abstract} +deactivate() = 0 : void
++frame_begin_event() : Event<RHI_window *> &
++frame_end_event() : Event<RHI_window *> &
++height() : const int &
++imgui() : std::shared_ptr<RHI_imgui> &
+{abstract} +is_active() = 0 : bool
++key_event() : Key_event &
++mouse_button_event() : Mouse_button_event &
++mouse_move_event() : Mouse_move_event &
++mouse_scroll_event() : Mouse_scroll_event &
++on_frame_begin() : void
++on_frame_end() : void
+{abstract} -poll_events() = 0 : void
+{abstract} +set_viewport(int x, int y, int width, int height) = 0 : void
+{abstract} -swap_buffers() = 0 : void
++title() : const std::string &
++width() : const int &
++window_resize_event() : Window_resize_event &
+__
+#m_frame_begin_event : Event<RHI_window *>
+#m_frame_end_event : Event<RHI_window *>
+#m_height : int
+#m_imgui : std::shared_ptr<RHI_imgui>
+#m_key_event : Key_event
+#m_mouse_button_event : Mouse_button_event
+#m_mouse_move_event : Mouse_move_event
+#m_mouse_scroll_event : Mouse_scroll_event
+#m_title : std::string
+#m_width : int
+#m_window_resize_event : Window_resize_event
+}
+C_0006962593096431523184 o-- C_0016292333850286079981 : #m_window_resize_event
+C_0006962593096431523184 o-- C_0013094731928571238521 : #m_key_event
+C_0006962593096431523184 o-- C_0014847333669851370870 : #m_mouse_button_event
+C_0006962593096431523184 o-- C_0007753529789918665902 : #m_mouse_move_event
+C_0006962593096431523184 o-- C_0007753529789918665902 : #m_mouse_scroll_event
+C_0006962593096431523184 o-- C_0017328016858130017764 : #m_frame_end_event
+C_0006962593096431523184 o-- C_0017328016858130017764 : #m_frame_begin_event
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

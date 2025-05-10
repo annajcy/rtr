@@ -1,0 +1,44 @@
+@startuml
+title rhi_renderer class diagram
+class "Clear_state" as C_0013741543183434560393
+class C_0013741543183434560393 {
+{static} +enabled() : Clear_state
+__
++color : bool
++color_clear_value : glm::vec4
++depth : bool
++depth_clear_value : float
++stencil : bool
++stencil_clear_value : unsigned int
+}
+abstract "RHI_renderer" as C_0010445000104793355249
+abstract C_0010445000104793355249 {
++RHI_renderer(const Clear_state & clear_state) : void
++~RHI_renderer() : void
+..
+{abstract} +apply_clear_state() = 0 : void
++change_clear_state(std::function<void (Clear_state &)> changer) : void
+{abstract} +clear(const std::shared_ptr<RHI_frame_buffer_base> & frame_buffer) = 0 : void
++clear_state() : Clear_state &
+{abstract} +draw(const std::shared_ptr<RHI_shader_program> & shader_program, const std::shared_ptr<RHI_geometry> & geometry, const std::shared_ptr<RHI_frame_buffer_base> & frame_buffer) = 0 : void
+{abstract} +draw_instanced(const std::shared_ptr<RHI_shader_program> & shader_program, const std::shared_ptr<RHI_geometry> & geometry, const std::shared_ptr<RHI_frame_buffer_base> & frame_buffer, unsigned int instance_count) = 0 : void
++frame_buffer() const : const std::shared_ptr<RHI_frame_buffer_base> &
++geometry() const : const std::shared_ptr<RHI_geometry> &
+{abstract} +get_viewport() const = 0 : glm::ivec4
++init() : void
++set_frame_buffer(const std::shared_ptr<RHI_frame_buffer_base> & frame_buffer) : void
++set_geometry(const std::shared_ptr<RHI_geometry> & geometry) : void
++set_shader_program(const std::shared_ptr<RHI_shader_program> & shader_program) : void
+{abstract} +set_viewport(const glm::ivec4 & viewport) = 0 : void
++shader_program() const : const std::shared_ptr<RHI_shader_program> &
+__
+#m_clear_state : Clear_state
+#m_frame_buffer : std::shared_ptr<RHI_frame_buffer_base>
+#m_geometry : std::shared_ptr<RHI_geometry>
+#m_shader_program : std::shared_ptr<RHI_shader_program>
+}
+C_0010445000104793355249 o-- C_0013741543183434560393 : #m_clear_state
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

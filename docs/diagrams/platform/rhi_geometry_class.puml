@@ -1,0 +1,47 @@
+@startuml
+title rhi_geometry class diagram
+enum "Draw_mode" as C_0012787197714378433781
+enum C_0012787197714378433781 {
+POINTS
+LINES
+LINE_LOOP
+LINE_STRIP
+TRIANGLES
+TRIANGLE_STRIP
+TRIANGLE_FAN
+}
+abstract "RHI_buffer" as C_0017791414552427487908
+abstract C_0017791414552427487908 {
++RHI_buffer(Buffer_type type, Buffer_usage usage, unsigned int data_size, const void * data) : void
++~RHI_buffer() : void
+..
++data_size() const : unsigned int
+{abstract} +map_buffer(std::function<void (void *)> accessor, const RHI_buffer_access_flags & flags) = 0 : void
+{abstract} +reallocate_data(const void * data, unsigned int data_size) = 0 : void
+{abstract} +subsitute_data(const void * data, unsigned int data_size, unsigned int offset) = 0 : void
++type() const : Buffer_type
++usage() const : Buffer_usage
+__
+#m_data_size : unsigned int
+#m_type : Buffer_type
+#m_usage : Buffer_usage
+}
+abstract "RHI_geometry" as C_0001135025639073477914
+abstract C_0001135025639073477914 {
++RHI_geometry(const std::unordered_map<unsigned int,std::shared_ptr<RHI_buffer>> & vertex_buffers, const std::shared_ptr<RHI_buffer> & element_buffer) : void
++~RHI_geometry() : void
+..
+{abstract} +bind_buffers() = 0 : void
+{abstract} +bind_vertex_buffer(unsigned int location, const std::shared_ptr<RHI_buffer> & vbo) = 0 : void
+{abstract} +draw(Draw_mode mode = Draw_mode::TRIANGLES) = 0 : void
+{abstract} +draw_instanced(unsigned int instance_count, Draw_mode mode = Draw_mode::TRIANGLES) = 0 : void
+__
+#m_element_buffer : std::shared_ptr<RHI_buffer>
+#m_vertex_buffers : std::unordered_map<unsigned int,std::shared_ptr<RHI_buffer>>
+}
+C_0001135025639073477914 ..> C_0012787197714378433781
+C_0001135025639073477914 o-- C_0017791414552427487908 : #m_vertex_buffers
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

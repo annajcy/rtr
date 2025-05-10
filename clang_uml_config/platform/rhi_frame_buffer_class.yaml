@@ -1,0 +1,30 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/platform
+
+diagrams:
+  rhi_frame_buffer_class:
+    type: class
+    title: rhi_frame_buffer class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/platform/rhi/rhi_frame_buffer.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+      context:
+        - rtr::RHI_frame_buffer_base
+        - rtr::RHI_screen_buffer
+        - rtr::RHI_frame_buffer
+        # - rtr::Stencil_state
+        # - rtr::Blend_state
+        # - rtr::Cull_state
+        # - rtr::Pipeline_state
+        # - rtr::RHI_pipeline_state
+      relationships:
+        - inheritance
+        - aggregation
+        - dependency
+
+    # plantuml:
+    #   before:
+    #     - top to down direction

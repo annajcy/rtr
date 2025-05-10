@@ -1,0 +1,77 @@
+@startuml
+title rhi_frame_buffer class diagram
+abstract "RHI_texture" as C_0010734468283113446611
+abstract C_0010734468283113446611 {
++RHI_texture(int width, int height, unsigned int mipmap_levels, Texture_type type, Texture_internal_format internal_format, const std::unordered_map<Texture_wrap_target,Texture_wrap> & wraps, const std::unordered_map<Texture_filter_target,Texture_filter> & filters) : void
++~RHI_texture() : void
+..
++apply_filters() : void
++apply_wraps() : void
+{abstract} +bind_to_unit(unsigned int location) = 0 : void
++border_color() const : const glm::vec4 &
++filters() const : const std::unordered_map<Texture_filter_target,Texture_filter> &
+{abstract} +generate_mipmap() = 0 : void
++height() const : int
++internal_format() const : Texture_internal_format
++mipmap_levels() const : unsigned int
+{abstract} +on_set_border_color() = 0 : void
++set_border_color(const glm::vec4 & color) : void
+{abstract} +set_filter(Texture_filter_target target, Texture_filter filter) = 0 : void
+{abstract} +set_wrap(Texture_wrap_target target, Texture_wrap wrap) = 0 : void
++type() const : Texture_type
++width() const : int
++wraps() const : const std::unordered_map<Texture_wrap_target,Texture_wrap> &
+__
+#m_border_color : glm::vec4
+#m_filters : std::unordered_map<Texture_filter_target,Texture_filter>
+#m_height : int
+#m_internal_format : Texture_internal_format
+#m_mipmap_levels : unsigned int
+#m_type : Texture_type
+#m_width : int
+#m_wraps : std::unordered_map<Texture_wrap_target,Texture_wrap>
+}
+abstract "RHI_frame_buffer_base" as C_0010729753107808637218
+abstract C_0010729753107808637218 {
++RHI_frame_buffer_base() : void
++~RHI_frame_buffer_base() : void
+..
+{abstract} +height() = 0 : int
+{abstract} +is_valid() const = 0 : bool
+{abstract} +width() = 0 : int
+__
+}
+class "RHI_frame_buffer" as C_0014412187074121619859
+class C_0014412187074121619859 {
++RHI_frame_buffer() : void
++RHI_frame_buffer(int width, int height, const std::vector<std::shared_ptr<RHI_texture>> & color_attachments, const std::shared_ptr<RHI_texture> & depth_attachment) : void
++~RHI_frame_buffer() : void
+..
++color_attachments() const : const std::vector<std::shared_ptr<RHI_texture>> &
++depth_attachment() const : const std::shared_ptr<RHI_texture> &
++height() : int
++width() : int
+__
+#m_color_attachments : std::vector<std::shared_ptr<RHI_texture>>
+#m_depth_attachment : std::shared_ptr<RHI_texture>
+#m_height : int
+#m_width : int
+}
+class "RHI_screen_buffer" as C_0016923041866925335297
+class C_0016923041866925335297 {
++RHI_screen_buffer(const std::shared_ptr<RHI_window> & window) : void
++~RHI_screen_buffer() : void
+..
++height() : int
++width() : int
++window() const : const std::shared_ptr<RHI_window> &
+__
+#m_window : std::shared_ptr<RHI_window>
+}
+C_0014412187074121619859 o-- C_0010734468283113446611 : #m_color_attachments
+C_0010729753107808637218 <|-- C_0014412187074121619859
+C_0010729753107808637218 <|-- C_0016923041866925335297
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

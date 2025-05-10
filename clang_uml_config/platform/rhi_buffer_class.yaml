@@ -1,0 +1,29 @@
+compilation_database_dir: /home/jinceyang/Desktop/rtr/build
+output_directory: /home/jinceyang/Desktop/rtr/docs/diagrams/platform
+
+diagrams:
+  rhi_buffer_class:
+    type: class
+    title: RHI_buffer class diagram
+    glob:
+      - /home/jinceyang/Desktop/rtr/engine/runtime/platform/rhi/rhi_buffer.diagram.cpp
+    using_namespace: rtr
+    include:
+      namespaces:
+        - rtr
+      context:
+        - rtr::RHI_buffer_access_flags
+        - rtr::RHI_buffer
+        - rtr::IRHI_vertex_buffer
+        - rtr::IRHI_element_buffer
+        - rtr::IRHI_memory_buffer
+        - rtr::RHI_memory_buffer_binder
+      relationships:
+        - inheritance
+        - aggregation
+        - dependency
+
+
+    # plantuml:
+    #   before:
+    #     - left to right direction

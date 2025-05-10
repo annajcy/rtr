@@ -1,0 +1,165 @@
+@startuml
+title rhi_texture_class class diagram
+enum "Texture_type" as C_0006149230696890043113
+enum C_0006149230696890043113 {
+TEXTURE_2D
+TEXTURE_CUBEMAP
+TEXTURE_2D_ARRAY
+}
+enum "Texture_internal_format" as C_0018100622761529327180
+enum C_0018100622761529327180 {
+RGB
+RGB_ALPHA
+RGB_ALPHA_16F
+RGB_ALPHA_32F
+DEPTH_STENCIL
+DEPTH_STENCIL_24_8
+DEPTH
+DEPTH_32F
+SRGB_ALPHA
+SRGB
+}
+enum "Texture_wrap" as C_0007430224565045704135
+enum C_0007430224565045704135 {
+REPEAT
+MIRRORED_REPEAT
+CLAMP_TO_EDGE
+CLAMP_TO_BORDER
+}
+enum "Texture_wrap_target" as C_0011818061497085403001
+enum C_0011818061497085403001 {
+U
+V
+W
+}
+enum "Texture_filter" as C_0000432466263055770052
+enum C_0000432466263055770052 {
+NEAREST
+LINEAR
+NEAREST_MIPMAP_NEAREST
+LINEAR_MIPMAP_NEAREST
+NEAREST_MIPMAP_LINEAR
+LINEAR_MIPMAP_LINEAR
+}
+enum "Texture_filter_target" as C_0017951485453815299293
+enum C_0017951485453815299293 {
+MIN
+MAG
+}
+enum "Texture_cubemap_face" as C_0000774374732035700960
+enum C_0000774374732035700960 {
+RIGHT
+LEFT
+TOP
+BOTTOM
+BACK
+FRONT
+}
+class "Image_data" as C_0000448246298594541806
+class C_0000448246298594541806 {
++~Image_data() : void
+..
++create_image() const : std::shared_ptr<Image>
+__
++buffer_type : Texture_buffer_type
++data : const unsigned char *
++external_format : Texture_external_format
++has_ownership : bool
++height : int
++width : int
+}
+abstract "RHI_texture" as C_0010734468283113446611
+abstract C_0010734468283113446611 {
++RHI_texture(int width, int height, unsigned int mipmap_levels, Texture_type type, Texture_internal_format internal_format, const std::unordered_map<Texture_wrap_target,Texture_wrap> & wraps, const std::unordered_map<Texture_filter_target,Texture_filter> & filters) : void
++~RHI_texture() : void
+..
++apply_filters() : void
++apply_wraps() : void
+{abstract} +bind_to_unit(unsigned int location) = 0 : void
++border_color() const : const glm::vec4 &
++filters() const : const std::unordered_map<Texture_filter_target,Texture_filter> &
+{abstract} +generate_mipmap() = 0 : void
++height() const : int
++internal_format() const : Texture_internal_format
++mipmap_levels() const : unsigned int
+{abstract} +on_set_border_color() = 0 : void
++set_border_color(const glm::vec4 & color) : void
+{abstract} +set_filter(Texture_filter_target target, Texture_filter filter) = 0 : void
+{abstract} +set_wrap(Texture_wrap_target target, Texture_wrap wrap) = 0 : void
++type() const : Texture_type
++width() const : int
++wraps() const : const std::unordered_map<Texture_wrap_target,Texture_wrap> &
+__
+#m_border_color : glm::vec4
+#m_filters : std::unordered_map<Texture_filter_target,Texture_filter>
+#m_height : int
+#m_internal_format : Texture_internal_format
+#m_mipmap_levels : unsigned int
+#m_type : Texture_type
+#m_width : int
+#m_wraps : std::unordered_map<Texture_wrap_target,Texture_wrap>
+}
+abstract "IRHI_texture_2D" as C_0014811695696107963185
+abstract C_0014811695696107963185 {
++IRHI_texture_2D() : void
++~IRHI_texture_2D() : void
+..
+{abstract} +get_image_data() = 0 : Image_data
+{abstract} +upload_data(const Image_data & image) = 0 : bool
+{abstract} +upload_data(const std::shared_ptr<RHI_texture> & image) = 0 : bool
+__
+}
+abstract "IRHI_texture_cubemap" as C_0003883740293003038031
+abstract C_0003883740293003038031 {
++IRHI_texture_cubemap() : void
++~IRHI_texture_cubemap() : void
+..
+{abstract} +get_image_data() = 0 : std::unordered_map<Texture_cubemap_face,Image_data>
+{abstract} +upload_data(const std::unordered_map<Texture_cubemap_face,Image_data> & images) = 0 : bool
+{abstract} +upload_data(const std::unordered_map<Texture_cubemap_face,std::shared_ptr<RHI_texture>> & images) = 0 : bool
+__
+}
+abstract "IRHI_texture_2D_array" as C_0000909625408989262936
+abstract C_0000909625408989262936 {
++IRHI_texture_2D_array(unsigned int layer_count) : void
++~IRHI_texture_2D_array() : void
+..
+{abstract} +get_image_data() = 0 : std::vector<Image_data>
+{abstract} +upload_data(const std::vector<Image_data> & images) = 0 : bool
+{abstract} +upload_data(const std::vector<std::shared_ptr<RHI_texture>> & images) = 0 : bool
+__
+#m_layer_count : unsigned int
+}
+abstract "RHI_texture_builder" as C_0000785506838828527807
+abstract C_0000785506838828527807 {
++RHI_texture_builder() : void
++~RHI_texture_builder() : void
+..
+{abstract} +build_texture_2D(std::shared_ptr<RHI_texture> & texture_2D, const Image_data & image) = 0 : bool
+{abstract} +build_texture_2D(std::shared_ptr<RHI_texture> & texture_2D, const std::shared_ptr<RHI_texture> & image) = 0 : bool
+{abstract} +build_texture_2D_array(std::shared_ptr<RHI_texture> & texture_2D_array, const std::vector<Image_data> & texture_2Ds) = 0 : bool
+{abstract} +build_texture_2D_array(std::shared_ptr<RHI_texture> & texture_2D_array, const std::vector<std::shared_ptr<RHI_texture>> & texture_2Ds) = 0 : bool
+{abstract} +build_texture_cubemap(std::shared_ptr<RHI_texture> & texture_cubemap, const std::unordered_map<Texture_cubemap_face,Image_data> & images) = 0 : bool
+{abstract} +build_texture_cubemap(std::shared_ptr<RHI_texture> & texture_cubemap, const std::unordered_map<Texture_cubemap_face,std::shared_ptr<RHI_texture>> & images) = 0 : bool
+__
+}
+C_0010734468283113446611 o-- C_0006149230696890043113 : #m_type
+C_0010734468283113446611 o-- C_0018100622761529327180 : #m_internal_format
+C_0010734468283113446611 o-- C_0011818061497085403001 : #m_wraps
+C_0010734468283113446611 o-- C_0007430224565045704135 : #m_wraps
+C_0010734468283113446611 o-- C_0017951485453815299293 : #m_filters
+C_0010734468283113446611 o-- C_0000432466263055770052 : #m_filters
+C_0014811695696107963185 ..> C_0000448246298594541806
+C_0014811695696107963185 ..> C_0010734468283113446611
+C_0003883740293003038031 ..> C_0000774374732035700960
+C_0003883740293003038031 ..> C_0000448246298594541806
+C_0003883740293003038031 ..> C_0010734468283113446611
+C_0000909625408989262936 ..> C_0000448246298594541806
+C_0000909625408989262936 ..> C_0010734468283113446611
+C_0000785506838828527807 ..> C_0010734468283113446611
+C_0000785506838828527807 ..> C_0000448246298594541806
+C_0000785506838828527807 ..> C_0000774374732035700960
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

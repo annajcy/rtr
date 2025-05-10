@@ -1,0 +1,108 @@
+@startuml
+title RHI_buffer class diagram
+enum "Buffer_type" as C_0002032515534055210101
+enum C_0002032515534055210101 {
+VERTEX
+ELEMENT
+UNIFORM
+STORAGE
+}
+enum "Buffer_usage" as C_0010592841599701209546
+enum C_0010592841599701209546 {
+STATIC
+DYNAMIC
+STREAM
+}
+enum "Buffer_iterate_type" as C_0009796764016695142166
+enum C_0009796764016695142166 {
+PER_VERTEX
+PER_INSTANCE
+}
+enum "Buffer_data_type" as C_0013782537434528127808
+enum C_0013782537434528127808 {
+FLOAT
+INT
+UINT
+BOOL
+}
+class "RHI_buffer_access_flags" as C_0005950535501858680113
+class C_0005950535501858680113 {
+{static} +read_only() : RHI_buffer_access_flags
+{static} +read_write() : RHI_buffer_access_flags
+{static} +write_only() : RHI_buffer_access_flags
+__
++is_buffer_discard : bool
++is_read : bool
++is_write : bool
+}
+abstract "RHI_buffer" as C_0017791414552427487908
+abstract C_0017791414552427487908 {
++RHI_buffer(Buffer_type type, Buffer_usage usage, unsigned int data_size, const void * data) : void
++~RHI_buffer() : void
+..
++data_size() const : unsigned int
+{abstract} +map_buffer(std::function<void (void *)> accessor, const RHI_buffer_access_flags & flags) = 0 : void
+{abstract} +reallocate_data(const void * data, unsigned int data_size) = 0 : void
+{abstract} +subsitute_data(const void * data, unsigned int data_size, unsigned int offset) = 0 : void
++type() const : Buffer_type
++usage() const : Buffer_usage
+__
+#m_data_size : unsigned int
+#m_type : Buffer_type
+#m_usage : Buffer_usage
+}
+class "IRHI_vertex_buffer" as C_0000365570118619516250
+class C_0000365570118619516250 {
++IRHI_vertex_buffer(Buffer_data_type data_type, Buffer_iterate_type iterate_type, unsigned int unit_data_count) : void
++~IRHI_vertex_buffer() : void
+..
++buffer_data_type() const : Buffer_data_type
++iterate_type() const : Buffer_iterate_type
++unit_data_count() const : unsigned int
++unit_data_size() const : unsigned int
+__
+#m_data_type : Buffer_data_type
+#m_iterate_type : Buffer_iterate_type
+#m_unit_data_count : unsigned int
+}
+class "IRHI_element_buffer" as C_0000963699493091773110
+class C_0000963699493091773110 {
++IRHI_element_buffer(unsigned int data_count) : void
++~IRHI_element_buffer() : void
+..
++attribute_type() const : Buffer_data_type
++data_count() const : unsigned int
+__
+#m_data_count : unsigned int
+}
+abstract "IRHI_memory_buffer" as C_0016650475817225599687
+abstract C_0016650475817225599687 {
++IRHI_memory_buffer() : void
++~IRHI_memory_buffer() : void
+..
++alignment() const : int
+{abstract} +bind_memory(unsigned int position) = 0 : void
+{abstract} +bind_partial_memory(unsigned int position, unsigned int offset, unsigned int size) = 0 : void
+__
+#m_alignment : int
+}
+abstract "RHI_memory_buffer_binder" as C_0000165747513007540689
+abstract C_0000165747513007540689 {
++RHI_memory_buffer_binder() : void
++~RHI_memory_buffer_binder() : void
+..
+{abstract} +bind_memory_bufer_partial(const std::shared_ptr<RHI_buffer> & buffer, unsigned int binding_point, unsigned int offset, unsigned int size) = 0 : void
+{abstract} +bind_memory_buffer(const std::shared_ptr<RHI_buffer> & buffer, unsigned int binding_point) = 0 : void
+__
+}
+C_0017791414552427487908 ..> C_0005950535501858680113
+C_0017791414552427487908 o-- C_0002032515534055210101 : #m_type
+C_0017791414552427487908 o-- C_0010592841599701209546 : #m_usage
+C_0000365570118619516250 o-- C_0013782537434528127808 : #m_data_type
+C_0000365570118619516250 o-- C_0009796764016695142166 : #m_iterate_type
+C_0000963699493091773110 ..> C_0013782537434528127808
+C_0000165747513007540689 ..> C_0017791414552427487908
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

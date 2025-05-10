@@ -1,0 +1,16 @@
+@startuml
+title rhi_compute class diagram
+abstract "RHI_compute_task" as C_0015782965437584737229
+abstract C_0015782965437584737229 {
++RHI_compute_task(const std::shared_ptr<RHI_shader_program> & shader_program) : void
++~RHI_compute_task() : void
+..
+{abstract} +dispatch(unsigned int x, unsigned int y, unsigned int z) = 0 : void
+{abstract} +wait() = 0 : void
+__
+#m_shader_program : std::shared_ptr<RHI_shader_program>
+}
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

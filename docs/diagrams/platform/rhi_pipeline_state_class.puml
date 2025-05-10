@@ -1,0 +1,180 @@
+@startuml
+title rhi_pipeline_state class diagram
+enum "Depth_function" as C_0015315770824919878280
+enum C_0015315770824919878280 {
+NEVER
+LESS
+EQUAL
+LESS_EQUAL
+GREATER
+NOT_EQUAL
+GREATER_EQUAL
+ALWAYS
+}
+enum "Stencil_operation" as C_0013002212370996026529
+enum C_0013002212370996026529 {
+KEEP
+ZERO
+REPLACE
+INCR
+DECR
+INVERT
+INCR_WRAP
+DECR_WRAP
+}
+enum "Stencil_function" as C_0006675511002150183875
+enum C_0006675511002150183875 {
+NEVER
+LESS
+EQUAL
+LESS_EQUAL
+GREATER
+NOT_EQUAL
+GREATER_EQUAL
+ALWAYS
+}
+enum "Blend_factor" as C_0012701967614483832555
+enum C_0012701967614483832555 {
+ZERO
+ONE
+SRC_COLOR
+ONE_MINUS_SRC_COLOR
+DST_COLOR
+ONE_MINUS_DST_COLOR
+SRC_ALPHA
+ONE_MINUS_SRC_ALPHA
+DST_ALPHA
+ONE_MINUS_DST_ALPHA
+}
+enum "Blend_operation" as C_0017501660999904871061
+enum C_0017501660999904871061 {
+ADD
+SUBTRACT
+REVERSE_SUBTRACT
+MIN
+MAX
+}
+enum "Cull_mode" as C_0002157893757014812054
+enum C_0002157893757014812054 {
+NONE
+FRONT
+BACK
+FRONT_AND_BACK
+}
+enum "Front_face" as C_0007578588789520119609
+enum C_0007578588789520119609 {
+COUNTER_CLOCKWISE
+CLOCKWISE
+}
+class "Depth_state" as C_0005852705731821194481
+class C_0005852705731821194481 {
+{static} +opaque() : Depth_state
+{static} +skybox() : Depth_state
+{static} +translucent() : Depth_state
+__
++function : Depth_function
++test_enable : bool
++write_enable : bool
+}
+class "Polygon_offset_state" as C_0014915395093621420391
+class C_0014915395093621420391 {
+{static} +disabled() : Polygon_offset_state
+{static} +enabled() : Polygon_offset_state
+__
++factor : float
++fill_enabled : bool
++line_enabled : bool
++point_enabled : bool
++units : float
+}
+class "Stencil_state" as C_0008842206346122004037
+class C_0008842206346122004037 {
+{static} +disabled() : Stencil_state
+{static} +edge() : Stencil_state
+{static} +opaque() : Stencil_state
+__
++depth_fail : Stencil_operation
++depth_pass : Stencil_operation
++enable : bool
++function : Stencil_function
++function_mask : unsigned int
++mask : unsigned int
++reference : unsigned int
++stencil_fail : Stencil_operation
+}
+class "Blend_state" as C_0011727291569075239826
+class C_0011727291569075239826 {
+{static} +disabled() : Blend_state
+{static} +enabled() : Blend_state
+__
++alpha_operation : Blend_operation
++color_operation : Blend_operation
++dst_alpha_factor : Blend_factor
++dst_color_factor : Blend_factor
++enable : bool
++src_alpha_factor : Blend_factor
++src_color_factor : Blend_factor
+}
+class "Cull_state" as C_0003672516125294812208
+class C_0003672516125294812208 {
+{static} +back() : Cull_state
+{static} +disabled() : Cull_state
+{static} +front() : Cull_state
+{static} +front_and_back() : Cull_state
+__
++enable : bool
++front_face : Front_face
++mode : Cull_mode
+}
+class "Pipeline_state" as C_0006463496597452141367
+class C_0006463496597452141367 {
+{static} +edge_pipeline_state() : Pipeline_state
+{static} +opaque_pipeline_state() : Pipeline_state
+{static} +shadow_pipeline_state() : Pipeline_state
+{static} +skybox_pipeline_state() : Pipeline_state
+{static} +translucent_pipeline_state() : Pipeline_state
+__
++blend_state : Blend_state
++cull_state : Cull_state
++depth_state : Depth_state
++polygon_offset_state : Polygon_offset_state
++stencil_state : Stencil_state
+}
+abstract "RHI_pipeline_state" as C_0005959593889702998783
+abstract C_0005959593889702998783 {
++RHI_pipeline_state() : void
++RHI_pipeline_state(const Pipeline_state & pipeline) : void
++~RHI_pipeline_state() constexpr = default : void
+..
++apply() : void
+{abstract} +apply_blend_state() = 0 : void
+{abstract} +apply_cull_state() = 0 : void
+{abstract} +apply_depth_state() = 0 : void
+{abstract} +apply_polygon_offset_state() = 0 : void
+{abstract} +apply_stencil_state() = 0 : void
+__
++state : Pipeline_state
+}
+C_0005852705731821194481 o-- C_0015315770824919878280 : +function
+C_0008842206346122004037 o-- C_0006675511002150183875 : +function
+C_0008842206346122004037 o-- C_0013002212370996026529 : +stencil_fail
+C_0008842206346122004037 o-- C_0013002212370996026529 : +depth_fail
+C_0008842206346122004037 o-- C_0013002212370996026529 : +depth_pass
+C_0011727291569075239826 o-- C_0012701967614483832555 : +src_color_factor
+C_0011727291569075239826 o-- C_0012701967614483832555 : +dst_color_factor
+C_0011727291569075239826 o-- C_0012701967614483832555 : +src_alpha_factor
+C_0011727291569075239826 o-- C_0012701967614483832555 : +dst_alpha_factor
+C_0011727291569075239826 o-- C_0017501660999904871061 : +color_operation
+C_0011727291569075239826 o-- C_0017501660999904871061 : +alpha_operation
+C_0003672516125294812208 o-- C_0002157893757014812054 : +mode
+C_0003672516125294812208 o-- C_0007578588789520119609 : +front_face
+C_0006463496597452141367 o-- C_0005852705731821194481 : +depth_state
+C_0006463496597452141367 o-- C_0011727291569075239826 : +blend_state
+C_0006463496597452141367 o-- C_0014915395093621420391 : +polygon_offset_state
+C_0006463496597452141367 o-- C_0008842206346122004037 : +stencil_state
+C_0006463496597452141367 o-- C_0003672516125294812208 : +cull_state
+C_0005959593889702998783 o-- C_0006463496597452141367 : +state
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml

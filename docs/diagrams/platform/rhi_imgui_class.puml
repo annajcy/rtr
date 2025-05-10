@@ -1,0 +1,26 @@
+@startuml
+title rhi_imgui class diagram
+abstract "RHI_imgui" as C_0014919443622722247954
+abstract C_0014919443622722247954 {
++RHI_imgui() : void
++~RHI_imgui() constexpr = default : void
+..
+{abstract} +begin_frame() = 0 : void
+{abstract} +begin_render(const std::string & title) = 0 : void
+{abstract} +button(const std::string & title, float width, float height) = 0 : bool
+{abstract} +checkbox(const std::string & title, bool * value) = 0 : bool
+{abstract} +color_edit(const std::string & title, float * color) = 0 : void
+{abstract} +end_frame() = 0 : void
+{abstract} +end_render() = 0 : void
+{abstract} +frame_rate() = 0 : float
+{abstract} +is_io_captured() = 0 : bool
+{abstract} +slider_float(const std::string & title, float * value, float min, float max) = 0 : bool
+{abstract} +slider_int(const std::string & title, int * value, int min, int max) = 0 : bool
+{abstract} +text(const std::string & title, const std::string & text) = 0 : void
+{abstract} +text_edit(const std::string & title, std::string * text) = 0 : void
+__
+}
+
+'Generated with clang-uml, version 0.6.1-15-gbf4bfdc
+'LLVM version clang version 19.1.7 (Fedora 19.1.7-3.fc41)
+@enduml
