@@ -117,7 +117,7 @@ int main() {
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
     auto camera_node = camera_game_object->add_component<Node_component>()->node();
-    camera_node->set_position(glm::vec3(0, 0, 30));
+    camera_node->set_position(glm::vec3(0, 0, 60));
     camera_node->look_at_point(glm::vec3(0, 0, 0));
 
     auto camera_component = camera_game_object->add_component<Perspective_camera_component>();
@@ -197,9 +197,9 @@ int main() {
     
     box_node->add_child(sphere_node, true);
 
-    int cubes_per_side_x = 20; // 10 cubes wide
-    int cubes_per_side_z = 20;  // 5 cubes deep
-    int layers_y = 5;          // 2 layers high (10 * 5 * 2 = 100 cubes)
+    int cubes_per_side_x = 30; // 10 cubes wide
+    int cubes_per_side_z = 30;  // 5 cubes deep
+    int layers_y = 7;          // 2 layers high (10 * 5 * 2 = 100 cubes)
     float spacing = 2.0f;      // Spacing between cube centers
 
     float offset_x = (cubes_per_side_x - 1) * spacing / 2.0f;
