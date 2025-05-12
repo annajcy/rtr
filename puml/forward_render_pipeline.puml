@@ -1,0 +1,16 @@
+@startuml
+title 前向渲染流程 (Forward Rendering Pipeline)
+left to right direction
+
+(*) --> "对于每个对象"
+--> "基础Pass：
+  - 应用一个逐像素定向光
+  - 应用所有逐顶点/SH光
+  - 应用光照贴图、环境光和自发光"
+--> "对于每个逐像素光"
+--> "额外Pass：
+  - 渲染每个额外的逐像素光"
+--> "合成所有Pass"
+--> "输出图像"
+--> (*)
+@enduml

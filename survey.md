@@ -1208,25 +1208,7 @@ World对象会执行Scene的tick方法，Scene对象会执行Game_object的tick�
 
 最终，`execute()` 方法定义了前向渲染管线的执行顺序：它首先调用 `m_shadow_pass->excute()` 来生成阴影贴图，然后调用 `m_main_pass->excute()` 进行主场景渲染，并将阴影贴图作为输入进行光照计算，最后调用 `m_postprocess_pass->excute()` 对主渲染结果进行后期处理（如伽马校正），并将最终图像呈现到屏幕上。这种分阶段的执行流程清晰地展现了前向渲染管线的逻辑结构，通过各个渲染通道的协同工作，实现了场景的完整渲染。
 
-# 编辑器架构
 
-至此，我们完成了渲染器运行时的讲解，接下来我们开始讲解渲染器的编辑器架构。
-
-## 编辑器的设计理念
-
-此编辑器代码所揭示的设计理念核心在于为游戏引擎提供一个可扩展、模块化且在运行时可配置的调试与参数调整环境。其主要思想是将编辑器用户界面组件与底层的引擎逻辑分离，从而允许在引擎运行时动态地检查和修改各项参数。这一目标通过构建一个高度模块化的基于面板（Panel）的系统来实现。每组特定的引擎设置，如阴影属性、材质参数或视差效果，都被封装在各自独立的面板中，极大地促进了职责分离的清晰性。
-
-## 编辑器的核心架构
-
-编辑器的核心架构围绕一个中央的 `Editor` 类构建，该类负责协调管理各种用户界面 `Panel` 实例。`Panel` 类作为所有可定制编辑器窗口的抽象基类，定义了一个通用的接口。具体的面板将会继承自这个基类，每个面板都负责呈现和操作一组独特的引擎参数。这种设计采用了模板方法模式，其中 `Panel::render()` 方法定义了渲染循环（开始、绘制、结束），而 `draw_panel()` 虚方法则由派生类实现，以提供特定的UI元素。
-
-`Editor` 类内部维护着一个 `Panel` 对象的无序映射 (`std::unordered_map`)，通过面板名称进行索引，从而方便地实现面板的添加、移除和检索。至关重要的是，编辑器充当 `Engine_runtime` 实例的包装器，将引擎的帧更新（tick）转发给运行时，同时利用 `RHI_imgui` 管理自己的编辑器特定渲染循环。这种清晰的分离使得编辑器能够作为正在运行的引擎的一个叠加层或伴侣来运行。依赖注入是架构中显着的模式，`RHI_imgui` 接口被提供给面板以满足其渲染需求，并且特定的设置对象（如 `Shadow_settings`）被注入到各自的面板中以供操作。
-
-## 编辑器的具体实现
-
-在具体实现层面，编辑器利用 `RHI_imgui` 接口来渲染其图形用户界面。`Panel` 类的 `render()` 方法封装了每个面板的 ImGui 渲染过程，确保在面板的自定义 `draw_panel()` 逻辑前后正确调用 `begin_render()` 和 `end_render()`。`draw_panel()` 方法由派生面板类实现，直接使用 `m_imgui` 的方法（例如 `slider_float`、`color_edit`、`slider_int`）来创建交互式UI小部件，这些小部件对应着特定的引擎设置。例如，`Shadow_settings_panel` 提供滑动条以调整 `shadow_bias`、`light_size`、`pcf_radius`、`pcf_tightness` 和 `pcf_sample_count`，直接修改其持有的 `Shadow_settings` 对象。类似地，`Phong_material_settings_panel` 允许修改 `Phong_material_settings` 的 `ambient`、`diffuse`、`specular` 颜色和 `shininess`。`Parallax_settings_panel` 则提供了对 `parallax_scale` 和 `parallax_layer_count` 的控制。
-
-编辑器的主要操作循环由 `Editor` 类中的 `run()` 方法处理。此方法会持续调用 `tick()`，`tick()` 又会分派调用到 `runtime_tick()`（用于更新底层引擎状态）和 `editor_tick()`（用于绘制编辑器的UI）。`editor_tick()` 方法启动一个 ImGui 帧，遍历 `m_panel_map` 中所有已注册的面板，并调用每个面板的 `render()` 方法，从而确保所有活动的面板都显示在屏幕上。最后，它结束 ImGui 帧。`Editor` 和各个 `Panel` 类型的静态 `create` 方法简化了对象的创建和管理，提供了一种实例化这些由共享指针管理的对象的统一方式。
 
 # 实时渲染算法的实现
 
@@ -1253,20 +1235,7 @@ World对象会执行Scene的tick方法，Scene对象会执行Game_object的tick�
 
 #### 具体实现
 
-```mermaid
-graph TD
-    A[开始PCF处理每个片元] --> B{获取片元在光源空间下的UV和深度 D_frag};
-    B --> C{根据pcf_radius和泊松盘生成N个采样UV};
-    C --> D{循环 N 次: 对于每个采样UV_i};
-    D --> E{从阴影图中读取采样深度 D_sample_i};
-    E --> F{比较: D_frag - bias > D_sample_i ?};
-    F -- 是 (被遮挡) --> G[遮挡计数器 ++];
-    F -- 否 (未被遮挡) --> H[继续];
-    G --> H;
-    H -- 所有样本处理完毕 --> I{计算阴影因子 = 遮挡计数器 / N};
-    I --> J[结束PCF，得到阴影强度];
 
-```
 
 在具体实现时，对于场景中的每一个待着色的片元，首先会将其位置转换到光源的观察空间，从而得到其在对应阴影图上的UV坐标 `main_uv` 以及深度值 `light_projected_depth`。为了在阴影图上进行有效的多点采样，系统采用了泊松盘采样策略，通过 `generate_poisson_disk_samples` 函数生成一组分布均匀且能避免摩尔纹的二维偏移样本。该函数内部，初始采样角度 `angle` 基于 `rand_2to1(uv_seed) * PI2` （其中 $PI2 = 2\pi$）的伪随机结果生成，后续样本点则通过迭代更新角度 `angle += (1.0 - 0.6180339887) * PI2` （此为黄金分割角，有助于良好分布）和半径 `radius += radius_increment`，并结合 `tightness` 参数调整样本聚集度，计算出形如 
 $$(\cos(\text{angle}) \cdot \text{radius}^{\text{tightness}}, \sin(\text{angle}) \cdot \text{radius}^{\text{tightness}})$$
@@ -1286,22 +1255,6 @@ $$\text{shadow\_factor} = \text{sum} / \text{float}(\text{sample\_count})$$
 
 #### 具体实现
 
-```mermaid
-graph TD
-    AA[开始PCSS处理每个片元] --> AB{获取片元在光源空间下的UV和深度 D_frag (receiver_depth)};
-    AB --> AC{Step 1: 遮挡物搜索};
-    AC --> AD{计算初始搜索半径 R_search};
-    AD --> AE{在R_search区域内采样N_blocker个点，获取其深度};
-    AE --> AF{计算平均遮挡物深度 D_blocker};
-    AF --> AG{Step 2: 半影估算};
-    AG -- D_blocker有效 --> AH{根据D_frag, D_blocker, 光源尺寸等计算半影半径 R_penumbra};
-    AF -- 未找到遮挡物 --> AI[阴影因子=0 (或小固定PCF)];
-    AI --> AY[结束];
-    AH --> AJ{Step 3: PCF滤波};
-    AJ --> AK{使用R_penumbra作为PCF滤波半径，采样N_pcf个点};
-    AK --> AL{执行PCF比较，计算最终阴影因子};
-    AL --> AY;
-```
 
 PCSS处理流程的起始与PCF类似，首先获取片元在光源视角下的UV与深度 `light_projected_depth`（在PCSS语境下也称作接收面深度 `receiver_depth`）。接下来是遮挡物搜索阶段：为了确定半影的范围，算法需要估算平均遮挡物的深度。为此，`get_search_radius` 函数会计算一个初始的搜索半径，其计算公式为 
 $$\text{search\_radius} = \frac{(\text{light\_space\_depth} - \text{near\_plane})}{\text{light\_space\_depth}} \cdot \frac{\text{light\_size}}{\text{frustum\_size}}$$
@@ -1424,6 +1377,27 @@ $$C_{corrected} = C_{linear}^{(1/\gamma_{display})}$$
 在`gamma.frag` 片元着色器代码中，Gamma矫正作为一种全屏后处理效果被实现。该着色器接收一个名为 `u_screen_texture` 的2D纹理作为输入，这通常是整个场景在主要渲染流程结束后被渲染到一个帧缓冲对象（FBO）上的图像结果，此时图像中的颜色值处于线性空间。
 
 着色器的 `main` 函数首先使用传入的纹理坐标 `v_uv` 从 `u_screen_texture` 中采样得到当前片元的原始颜色：`vec4 color = texture(u_screen_texture, v_uv);`。接着，核心的Gamma矫正操作被应用于采样颜色的RGB分量上：`frag_color = vec4(pow(color.rgb, vec3(1.0 / 2.2)), 1.0);`。这里，`pow` 函数将 `color.rgb` 的每个分量都提升到 `vec3(1.0 / 2.2)` 次幂。值 `2.2` 是一个行业内广泛采用的标准显示器gamma近似值，尤其接近于sRGB色彩空间的特性。通过施加 $1/2.2$ 的幂指数，着色器有效地对线性颜色进行了预补偿。最终输出的 `frag_color` 的Alpha分量被设置为 `1.0`（完全不透明），这是因为Gamma矫正通常是显示图像前的最后几个步骤之一，处理的是最终要呈现的颜色。此Gamma校正后的颜色随后会被写入到目标帧缓冲（通常是屏幕默认帧缓冲），从而在显示器上展现出经过正确亮度校正的图像。
+
+
+# 编辑器架构
+
+至此，我们完成了渲染器运行时的讲解，接下来我们开始讲解渲染器的编辑器架构。
+
+## 编辑器的设计理念
+
+此编辑器代码所揭示的设计理念核心在于为游戏引擎提供一个可扩展、模块化且在运行时可配置的调试与参数调整环境。其主要思想是将编辑器用户界面组件与底层的引擎逻辑分离，从而允许在引擎运行时动态地检查和修改各项参数。这一目标通过构建一个高度模块化的基于面板（Panel）的系统来实现。每组特定的引擎设置，如阴影属性、材质参数或视差效果，都被封装在各自独立的面板中，极大地促进了职责分离的清晰性。
+
+## 编辑器的核心架构
+
+编辑器的核心架构围绕一个中央的 `Editor` 类构建，该类负责协调管理各种用户界面 `Panel` 实例。`Panel` 类作为所有可定制编辑器窗口的抽象基类，定义了一个通用的接口。具体的面板将会继承自这个基类，每个面板都负责呈现和操作一组独特的引擎参数。这种设计采用了模板方法模式，其中 `Panel::render()` 方法定义了渲染循环（开始、绘制、结束），而 `draw_panel()` 虚方法则由派生类实现，以提供特定的UI元素。
+
+`Editor` 类内部维护着一个 `Panel` 对象的无序映射 (`std::unordered_map`)，通过面板名称进行索引，从而方便地实现面板的添加、移除和检索。至关重要的是，编辑器充当 `Engine_runtime` 实例的包装器，将引擎的帧更新（tick）转发给运行时，同时利用 `RHI_imgui` 管理自己的编辑器特定渲染循环。这种清晰的分离使得编辑器能够作为正在运行的引擎的一个叠加层或伴侣来运行。依赖注入是架构中显着的模式，`RHI_imgui` 接口被提供给面板以满足其渲染需求，并且特定的设置对象（如 `Shadow_settings`）被注入到各自的面板中以供操作。
+
+## 编辑器的具体实现
+
+在具体实现层面，编辑器利用 `RHI_imgui` 接口来渲染其图形用户界面。`Panel` 类的 `render()` 方法封装了每个面板的 ImGui 渲染过程，确保在面板的自定义 `draw_panel()` 逻辑前后正确调用 `begin_render()` 和 `end_render()`。`draw_panel()` 方法由派生面板类实现，直接使用 `m_imgui` 的方法（例如 `slider_float`、`color_edit`、`slider_int`）来创建交互式UI小部件，这些小部件对应着特定的引擎设置。例如，`Shadow_settings_panel` 提供滑动条以调整 `shadow_bias`、`light_size`、`pcf_radius`、`pcf_tightness` 和 `pcf_sample_count`，直接修改其持有的 `Shadow_settings` 对象。类似地，`Phong_material_settings_panel` 允许修改 `Phong_material_settings` 的 `ambient`、`diffuse`、`specular` 颜色和 `shininess`。`Parallax_settings_panel` 则提供了对 `parallax_scale` 和 `parallax_layer_count` 的控制。
+
+编辑器的主要操作循环由 `Editor` 类中的 `run()` 方法处理。此方法会持续调用 `tick()`，`tick()` 又会分派调用到 `runtime_tick()`（用于更新底层引擎状态）和 `editor_tick()`（用于绘制编辑器的UI）。`editor_tick()` 方法启动一个 ImGui 帧，遍历 `m_panel_map` 中所有已注册的面板，并调用每个面板的 `render()` 方法，从而确保所有活动的面板都显示在屏幕上。最后，它结束 ImGui 帧。`Editor` 和各个 `Panel` 类型的静态 `create` 方法简化了对象的创建和管理，提供了一种实例化这些由共享指针管理的对象的统一方式。
 
 # 系统测试
 

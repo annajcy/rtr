@@ -1,0 +1,89 @@
+@startuml
+autonumber
+actor User
+participant Editor
+participant Engine_runtime
+participant RHI_imgui
+participant "Panel Instance" as Panel_Instance
+participant "Engine Setting Object" as Setting_Object
+
+User -> Editor : starts application / initiates run()
+
+activate Editor
+Editor -> Editor : run()
+
+loop continuous operation (one tick iteration)
+    Editor -> Editor : tick()
+    activate Editor
+
+    ' Update underlying engine state
+    Editor -> Editor : runtime_tick()
+    activate Editor
+    Editor -> Engine_runtime : tick()
+    activate Engine_runtime
+    Engine_runtime --> Editor : (engine state updated)
+    deactivate Engine_runtime
+    deactivate Editor
+
+    ' Draw editor UI
+    Editor -> Editor : editor_tick()
+    activate Editor
+    Editor -> RHI_imgui : begin_frame()
+    activate RHI_imgui
+
+    
+    loop for each active Panel instance
+        Editor -> Panel_Instance : render()
+        activate Panel_Instance
+        
+        ' Panel's render() method encapsulates ImGui rendering process
+        Panel_Instance -> RHI_imgui : begin_render() 
+        
+        ' draw_panel() is implemented by derived panel classes to draw specific UI elements
+        Panel_Instance -> Panel_Instance : draw_panel()
+        activate Panel_Instance
+           
+            
+            ' Example UI widget interaction: slider_float
+            Panel_Instance -> RHI_imgui : slider_float("shadow_bias", &setting.shadow_bias, ...)
+            activate RHI_imgui
+            RHI_imgui -> Setting_Object : update
+            activate Setting_Object
+            Setting_Object --> RHI_imgui : (value updated)
+            deactivate Setting_Object
+            RHI_imgui --> Panel_Instance : (UI widget rendered, input handled)
+            deactivate RHI_imgui
+
+            ' Example UI widget interaction: color_edit
+            Panel_Instance -> RHI_imgui : color_edit("ambient", &setting.ambient_color, ...)
+            activate RHI_imgui
+            RHI_imgui -> Setting_Object : update 
+            activate Setting_Object
+            Setting_Object --> RHI_imgui : (value updated)
+            deactivate Setting_Object
+            RHI_imgui --> Panel_Instance : (UI widget rendered, input handled)
+            deactivate RHI_imgui
+
+            ' ... other widgets like slider_int for different settings
+        deactivate Panel_Instance 
+        ' End of draw_panel() logic
+
+        Panel_Instance -> RHI_imgui : end_render() 
+        deactivate Panel_Instance 
+        ' End of render() call
+    end loop
+
+    RHI_imgui --> Editor :
+    deactivate RHI_imgui
+    Editor -> RHI_imgui : end_frame() 
+    ' Finalizes the ImGui frame, preparing for rendering
+    deactivate Editor 
+    ' End of editor_tick() call
+
+    deactivate Editor 
+    ' End of tick() call
+end loop 
+' End of Editor::run() continuous operation loop
+
+deactivate Editor
+@endumml
