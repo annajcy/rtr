@@ -1,0 +1,133 @@
+@startuml
+skinparam classAttributeIconVisible false
+
+' Base Interfaces/Classes for Texture
+
+abstract class Render_object
+
+class "RHI_linker<RHI_texture>" as RHI_Linker_RHI_Texture {
+    ' Specialization of RHI_linker template for RHI_texture.
+    ' Likely contains a pointer/reference to the RHI_texture object.
+}
+
+
+' Abstract Base Class Texture
+abstract class Texture {
+    -- Attributes --
+    # TextureType m_type
+    # int m_mipmap_levels
+    # Texture_internal_format m_internal_format
+    # TextureWrapMode m_wraps
+    # TextureFilterMode m_filters
+
+    -- Constructor & Destructor --
+    + virtual ~Texture()
+
+    -- Core Method --
+    + virtual void link(RHI_Device* device) = 0 ' Abstract link method, details in derived classes
+    ' General property access interfaces (getters for attributes are implied)
+}
+
+' Derived Classes from Texture
+
+class Texture_2D extends Texture {
+    -- Attributes --
+    # int m_width
+    # int m_height
+    # std::shared_ptr<Image> m_image_data
+
+    -- Constructors --
+    + Texture_2D(std::shared_ptr<Image> image, ...)
+    + Texture_2D(int width, int height, ...)
+
+    -- Methods --
+    + void link(RHI_Device* device)
+
+    -- Static Factory Methods --
+    + {static} std::shared_ptr<Texture_2D> create_image(...)
+    + {static} std::shared_ptr<Texture_2D> create_color_attachment(...)
+    + {static} std::shared_ptr<Texture_2D> create_depth_attachment(...)
+    + {static} std::shared_ptr<Texture_2D> create_depth_stencil_attachment(...)
+}
+
+class Texture_2D_array extends Texture {
+    -- Attributes --
+    # int m_width
+    # int m_height
+    # int m_layer_count
+    # std::vector<std::shared_ptr<Image>> m_image_data
+
+    -- Constructors --
+    + Texture_2D_array(std::vector<std::shared_ptr<Image>> images, ...)
+    + Texture_2D_array(int width, int height, int layer_count, ...)
+
+    -- Methods --
+    + void link(RHI_Device* device)
+
+    -- Static Factory Methods --
+    + {static} std::shared_ptr<Texture_2D_array> create_from_images(...)
+    + {static} std::shared_ptr<Texture_2D_array> create_as_framebuffer_attachment(...)
+}
+
+class Texture_cubemap extends Texture {
+    -- Attributes --
+    # int m_width
+    # int m_height
+    # std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>> m_image_data
+
+    -- Constructors --
+    + Texture_cubemap(std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>> images, ...)
+    + Texture_cubemap(int width, int height, ...)
+
+    -- Methods --
+    + void link(RHI_Device* device)
+
+    -- Static Factory Methods --
+    + {static} std::shared_ptr<Texture_cubemap> create_from_six_images(...)
+    + {static} std::shared_ptr<Texture_cubemap> create_as_framebuffer_attachment(...)
+}
+
+' Auxiliary Types/Concepts
+class Image {
+    ' Stores raw pixel data for textures.
+}
+
+class TextureType {
+    ' Enum for texture types (e.g., 2D, 2D_array, cubemap).
+}
+
+class Texture_internal_format {
+    ' Specifies internal format of the texture (e.g., RGBA8, D32_FLOAT).
+}
+
+class TextureWrapMode {
+    ' Specifies texture wrapping modes (e.g., Repeat, ClampToEdge).
+}
+
+class TextureFilterMode {
+    ' Specifies texture filtering modes (e.g., Nearest, Linear).
+}
+
+
+' Relationships
+
+RHI_Linker_RHI_Texture <|-- Texture
+Render_object <|-- Texture
+
+Texture <|-- Texture_2D
+Texture <|-- Texture_2D_array
+Texture <|-- Texture_cubemap
+
+' Associations / Aggregations (shared ownership)
+Texture_2D "1" o-- "0..1" Image : contains pixel data
+Texture_2D_array "1" o-- "0..*" Image : contains pixel data for layers
+Texture_cubemap "1" o-- "6" Image : contains pixel data for faces
+
+
+Texture .right.> TextureType : <<uses>>
+Texture .right.> Texture_internal_format : <<uses>>
+Texture .right.> TextureWrapMode : <<uses>>
+Texture .right.> TextureFilterMode : <<uses>>
+
+
+@enduml

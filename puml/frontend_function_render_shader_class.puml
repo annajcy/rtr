@@ -1,0 +1,38 @@
+@startuml
+'skinparam linetype ortho
+
+
+
+interface "RHI_linker<T>" as RHI_linker_generic {
+  + link(device: RHI_Device): void
+}
+
+class Shader_code {
+  - m_code: string
+  - m_shader_code_type: ShaderCodeType
+  + Shader_code(code: string, type: ShaderCodeType)
+  + {static} create(code: string, type: ShaderCodeType): std::shared_ptr<Shader_code>
+  + link(device: RHI_Device): RHI_shader_code ' Connects to RHI, creates RHI_shader_code
+  + get_code(): string
+  + get_type(): ShaderCodeType
+}
+Shader_code .up.|> "RHI_linker<RHI_shader_code>"
+"RHI_linker<RHI_shader_code>" --|> RHI_linker_generic
+
+class Shader_program {
+  - m_shader_codes: std::map<ShaderCodeType, std::shared_ptr<Shader_code>>
+  - m_uniforms: std::map<string, Uniform_info> ' Assuming Uniform_info is a struct/class for uniform details
+  + Shader_program()
+  + {static} create(): std::shared_ptr<Shader_program>
+  + add_shader_code(shader: std::shared_ptr<Shader_code>): void
+  + link(device: RHI_Device): RHI_shader_program ' Coordinates Shader_code linking, creates RHI_shader_program
+  ' + set_uniform(...): void
+  ' + get_uniform_location(...): int
+}
+Shader_program .up.|> "RHI_linker<RHI_shader_program>"
+"RHI_linker<RHI_shader_program>" --|> RHI_linker_generic
+
+Shader_program o-- "1" Shader_code : "维护 shader_codes 映射"
+
+
+@enduml

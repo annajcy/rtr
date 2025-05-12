@@ -1,0 +1,89 @@
+@startuml
+hide empty members
+
+' Define the Key_action class/enum
+enum Key_action {
+    ' Represents the state of a key/button (e.g., pressed, released, held).
+    ' Details not provided in the prompt; could be an enum or a simple struct.
+    RELEASED
+    PRESSED
+    HOLD
+}
+
+' Define the RHI_window class (external dependency)
+class RHI_window {
+    ' External dependency, represents the underlying RHI (Render Hardware Interface) window.
+    ' Responsible for providing raw input events (mouse move, scroll, keyboard, mouse button).
+    ' Input_system registers callbacks with this window.
+}
+
+' Define the Input_state class
+class Input_state {
+    ' Stores the current state of input devices.
+    --
+    ' Key/button states using unordered maps
+    +key_mods: unordered_map<KeyType, Key_action>
+    +keys: unordered_map<KeyType, Key_action>
+    +mouse_buttons: unordered_map<MouseButtonType, Key_action>
+    --
+    ' Mouse absolute position
+    +mouse_x: float
+    +mouse_y: float
+    ' Mouse movement deltas (relative movement)
+    +mouse_dx: float
+    +mouse_dy: float
+    ' Mouse scroll deltas
+    +mouse_scroll_dx: float
+    +mouse_scroll_dy: float
+    --
+    ' Public constant member functions to query specific input states safely.
+    +key_mod(modifier_key: KeyType): const Key_action&
+    +key(key_code: KeyType): const Key_action&
+    +mouse_button(button_code: MouseButtonType): const Key_action&
+}
+
+' Define the Input_system class
+class Input_system {
+    ' Private members
+    -m_state: Input_state
+    -m_rhi_window: shared_ptr<RHI_window>
+    --
+    ' Constructor
+    +Input_system(window: shared_ptr<RHI_window>)
+    --
+    ' Internal methods for processing and updating input state
+    -update_(): void
+    -update_mouse_position(raw_x: float, raw_y: float): void
+    ' Resets delta values at the end of a frame
+    -reset_deltas(): void
+    --
+    ' Public static factory method to create a shared instance
+    +static create(window: shared_ptr<RHI_window>): shared_ptr<Input_system>
+    ' Public method to provide a constant reference to the current input state
+    +state(): const Input_state&
+    --
+    ' Private event handler callbacks registered with RHI_window
+    ' These methods are called by the RHI_window when relevant input events occur.
+    -on_mouse_move_event(x: float, y: float): void
+    -on_mouse_scroll_event(dx: float, dy: float): void
+    -on_keyboard_event(key_code: KeyType, action: Key_action, mods: int): void
+    -on_mouse_button_event(button_code: MouseButtonType, action: Key_action, mods: int): void
+    -on_frame_end_event(): void
+}
+
+' Relationships between classes
+
+' Input_system owns (composes) an Input_state instance.
+Input_system *-- Input_state : 拥有
+
+' Input_system depends on RHI_window, specifically by using its shared pointer
+' and registering callbacks with it.
+Input_system .> RHI_window : 使用 (注册回调)
+
+' Input_state uses Key_action type for its map values.
+Input_state .. Key_action : 使用
+
+' Note: KeyType and MouseButtonType are placeholders for specific key/button identifier types (e.g., enums).
+' Their definitions are not provided in the prompt and thus not detailed here.
+
+@enduml

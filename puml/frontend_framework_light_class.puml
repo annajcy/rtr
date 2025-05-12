@@ -1,0 +1,118 @@
+@startuml
+' 设置图表标题
+title 光源系统与组件集成设计
+
+left to right direction
+
+' =====================================
+' 外部/基础类 (来自之前上下文)
+' =====================================
+
+' 所有组件的抽象基类
+abstract class Component_base {
+    ' 通用组件接口
+}
+
+
+' 游戏对象体系中的实体
+class GameObject {
+    - List<Component_base> components ' 包含的组件列表
+    ' ...
+}
+
+' =====================================
+' 光源类体系 (Light Class Hierarchy)
+' =====================================
+
+' Light 抽象基类
+abstract class Light {
+    ' 基础属性
+    - Color color ' 光源颜色
+    - float intensity ' 光源强度
+    - Node node ' 关联的 Node 实例，用于定义光源位置与朝向
+
+    ' 构造函数与析构函数
+    + Light(color: Color, intensity: float, node: Node)
+    + ~Light()
+
+    ' Getter/Setter 方法
+    + get_color(): Color
+    + set_color(color: Color)
+    + get_intensity(): float
+    + set_intensity(intensity: float)
+
+    ' 其他通用光源操作 (如果适用)
+}
+
+' Directional_light (方向光)
+class Directional_light {
+    ' 模拟阳光，方向由 Node 的朝向决定
+    + Directional_light(color: Color, intensity: float, node: Node)
+}
+
+' Point_light (点光源)
+class Point_light {
+    - float attenuation_factor ' 光源衰减因子
+
+    + Point_light(color: Color, intensity: float, node: Node, attenuation_factor: float)
+}
+
+' Spot_light (聚光灯)
+class Spot_light {
+    - float inner_cone_angle ' 聚光灯内锥角
+    - float outer_cone_angle ' 聚光灯外锥角
+
+    + Spot_light(color: Color, intensity: float, node: Node, inner_cone_angle: float, outer_cone_angle: float)
+}
+
+' =====================================
+' 光源组件体系 (Light Component Hierarchy)
+' =====================================
+
+' Light_component 基类
+class Light_component {
+    - Light light_instance ' 封装的光源实例
+
+    ' 构造函数
+    + Light_component(light: Light)
+
+    ' 核心操作
+    + update_light_data_per_frame() ' 每帧更新光源数据到渲染系统
+    + execute_necessary_operations() ' 执行其他必要操作 (如渲染指令)
+}
+
+' 具体光源组件
+class Directional_light_component {
+    ' (构造函数: 负责查找 GameObject 的 Node_component, 获取 Node,
+    ' 并构建 Directional_light 实例，然后传递给 Light_component 基类)
+}
+
+class Point_light_component {
+    ' (构造函数: 同上，构建 Point_light 实例)
+}
+
+class Spot_light_component {
+    ' (构造函数: 同上，构建 Spot_light 实例)
+}
+
+' =====================================
+' 类之间关系 (Relationships)
+' =====================================
+
+' 继承关系 (Inheritance)
+Directional_light --|> Light
+Point_light --|> Light
+Spot_light --|> Light
+
+Light_component --|> Component_base
+Directional_light_component --|> Light_component
+Point_light_component --|> Light_component
+Spot_light_component --|> Light_component
+
+' 组合关系 (Composition)
+' Light_component 封装并管理一个 Light 实例
+Light_component "1" *-- "1" Light : 封装并管理 >
+
+
+
+@enduml

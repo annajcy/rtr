@@ -1,0 +1,119 @@
+@startuml
+' 设置图表标题
+title 网格渲染器系统 (Mesh Renderer System)
+
+' =====================================
+' 外部/基础类 (从之前上下文推断)
+' =====================================
+
+' 所有组件的抽象基类
+abstract class Component_base {
+    ' 通用组件接口和生命周期方法
+}
+
+' 场景图中的 Node 类，提供空间变换信息
+class Node {
+    ' 空间变换属性: 位置 (Vector3), 旋转 (Quaternion), 缩放 (Vector3)
+    ' ...
+}
+
+' 桥接 GameObject 与 Node 的组件
+class Node_component {
+    - Node node ' 关联的 Node 实例
+    ' ...
+}
+
+' 游戏对象体系中的实体
+class GameObject {
+    - List<Component_base> components ' 包含的组件列表
+    ' ...
+}
+
+' 几何体数据 (例如顶点、索引、法线等)
+class Geometry {
+    ' 顶点数据、索引数据等
+    ' ...
+}
+
+' 材质数据 (例如颜色、纹理、着色器等)
+class Material {
+    ' 表面属性，如漫反射颜色、高光颜色、纹理等
+    ' ...
+}
+
+' 渲染数据队列/管线 (Mesh_renderer_component::tick 推送数据到此处)
+class LogicSwapData {
+    ' 接收并处理渲染相关数据
+    ' ...
+}
+
+' =====================================
+' 核心渲染器类 (Core Renderer Class)
+' =====================================
+
+' Mesh_renderer 类
+class Mesh_renderer {
+    - Node* node_ptr ' 绑定特定 3D 对象的节点指针
+    - Geometry* geometry_ptr ' 管理的几何体指针
+    - Material* material_ptr ' 管理的材质指针
+
+    ' 构造函数
+    + Mesh_renderer(node_ptr: Node*)
+
+    ' 属性访问方法 (Getter/Setter)
+    + get_geometry(): Geometry*
+    + set_geometry(geom: Geometry*)
+    + get_material(): Material*
+    + set_material(mat: Material*)
+    ' (可能还有用于更新 Node 指针的方法)
+}
+
+' =====================================
+' 组件系统集成 (Component System Integration)
+' =====================================
+
+' Mesh_renderer_component 类
+class Mesh_renderer_component {
+    - std::shared_ptr<Mesh_renderer> m_mesh_renderer ' 管理 Mesh_renderer 生命周期
+
+    - bool m_is_cast_shadow = true ' 控制渲染器是否参与阴影投射
+
+    ' 生命周期和行为方法
+    + on_add_to_game_object() ' 添加至游戏对象时自动创建并初始化 Mesh_renderer
+
+    + tick(render_pipe: LogicSwapData) ' 每帧调用，将渲染数据推送到渲染管线
+        ' (推送数据包括: 材质、几何体、模型矩阵、阴影投射标志)
+
+    ' 静态工厂方法
+    + {static} create(): std::shared_ptr<Mesh_renderer_component>
+}
+
+' =====================================
+' 类之间关系 (Relationships)
+' =====================================
+
+' 继承关系 (Inheritance)
+Mesh_renderer_component --|> Component_base
+
+' 组合关系 (Composition)
+' Mesh_renderer_component 封装并管理其内部的 Mesh_renderer 实例的生命周期
+Mesh_renderer_component "1" *-- "1" Mesh_renderer : 封装并管理 >
+
+' 关联/依赖关系 (Association/Dependency)
+' Mesh_renderer 使用 Node、Geometry 和 Material 数据进行渲染
+Mesh_renderer --> Node : 使用其空间信息 >
+Mesh_renderer --> Geometry : 管理 / 渲染 >
+Mesh_renderer --> Material : 管理 / 渲染 >
+
+' Mesh_renderer_component 在初始化时依赖 Node_component 获取 Node 实例
+' 以便将其传递给 Mesh_renderer 的构造函数
+Mesh_renderer_component ..> Node_component : 查找 Node 用于初始化 Mesh_renderer >
+
+' Mesh_renderer_component 的 tick 方法将渲染相关数据推送到 LogicSwapData
+Mesh_renderer_component ..> LogicSwapData : 推送渲染数据到 >
+
+' GameObject 包含 Mesh_renderer_component (作为一种 Component_base)
+GameObject "1" *-- "0..*" Mesh_renderer_component : 包含 >
+
+
+@enduml

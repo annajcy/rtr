@@ -1,0 +1,81 @@
+@startuml
+' 设置图表标题
+title 场景图系统与游戏对象体系的桥梁
+
+' 定义 Node 类
+class Node {
+    ' 空间变换属性
+    - Vector3 position
+    - Quaternion rotation
+    - Vector3 scale
+    - Node parent ' 父节点，构建树状结构
+    - List<Node> children ' 子节点列表
+    - boolean dirty_flag ' 脏标记，用于按需计算矩阵
+
+    ' 核心方法
+    + model_matrix(): Matrix ' 按需计算完整变换矩阵 (世界变换)
+    + world_position(): Vector3 ' 获取世界空间位置
+    + world_rotation(): Quaternion ' 获取世界空间旋转
+    + world_scale(): Vector3 ' 获取世界空间缩放
+    + look_at_point(point: Vector3) ' 面向指定点
+    + look_at_direction(direction: Vector3) ' 面向指定方向向量
+}
+
+' 定义 Component_base 抽象基类
+abstract class Component_base {
+    ' 框架层组件基类，提供通用接口
+}
+
+' 定义 Node_component 类
+class Node_component {
+    - Node node ' 关联的 Node 实例
+
+    ' 方法
+    + node(): Node ' 获取关联的 Node 实例
+    ' (隐式方法，添加至游戏对象时自动创建Node并关联)
+    + on_attached_to_gameobject()
+}
+
+' 定义 GameObject 类 (根据描述推断，代表游戏中的实体)
+class GameObject {
+    - List<Component_base> components ' 游戏对象可以拥有的组件列表
+    ' (其他游戏对象相关属性和方法)
+}
+
+' 关系定义
+
+' Node_component 继承自 Component_base
+Node_component --|> Component_base
+
+' Node_component 与 Node 之间的关系：
+' Node_component 负责为 GameObject 绑定 Node 实例，
+' 并且文本中提到“添加至游戏对象时自动创建Node并关联”，
+' 这表明 Node_component 拥有并管理一个 Node 实例，因此是组合关系。
+Node_component "1" *-- "1" Node : 绑定并管理 >
+
+' GameObject 与 Node_component 之间的关系：
+' Node_component 被添加到 GameObject 上，
+' 是 GameObject 的一部分，赋予其空间定位能力，
+' 也是一种组合关系，一个 GameObject 可以有0个或1个 Node_component。
+GameObject "1" *-- "0..1" Node_component : 包含 >
+
+' 添加说明性注释
+note left of Node
+    支持层级空间变换的节点，
+    构建树状场景图。
+    提供世界坐标转换和朝向控制。
+end note
+
+note right of Node_component
+    框架层预制组件，
+    是 GameObject 与 Node 之间的桥梁，
+    负责为 GameObject 绑定 Node 实例，
+    实现空间定位和组织。
+end note
+
+note right of GameObject
+    游戏对象体系中的基本实体，
+    通过组件组合功能。
+end note
+
+@enduml

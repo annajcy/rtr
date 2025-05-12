@@ -1,0 +1,81 @@
+@startuml
+skinparam linetype ortho
+
+struct Depth_state {
+  + enable_depth_test : boolean
+  + enable_depth_write : boolean
+  + depth_compare_function : int 
+  {static} + opaque_object_state() : Depth_state
+  {static} + transparent_object_state() : Depth_state
+  {static} + skybox_state() : Depth_state
+}
+
+struct Polygon_offset_state {
+  + enable_point_offset : boolean
+  + enable_line_offset : boolean
+  + enable_fill_offset : boolean
+  + offset_factor : float
+  + offset_units : float
+  {static} + default_state() : Polygon_offset_state
+  {static} + enabled_state() : Polygon_offset_state
+}
+
+struct Stencil_state {
+  + enable_stencil_test : boolean
+  + compare_function : int
+  + stencil_fail_op : int
+  + depth_fail_op : int
+  + pass_op : int
+  + reference_value : int
+  + mask : int
+  {static} + disabled_state() : Stencil_state
+  {static} + opaque_replace_state() : Stencil_state
+  {static} + edge_detection_state() : Stencil_state
+}
+
+struct Blend_state {
+  + enable_blend : boolean
+  + source_color_factor : int
+  + destination_color_factor : int
+  + blend_operation : int
+  {static} + disabled_state() : Blend_state
+  {static} + alpha_blend_state() : Blend_state
+}
+
+struct Cull_state {
+  + enable_cull : boolean
+  + cull_face : int
+  + front_face_definition : int
+  {static} + disabled_state() : Cull_state
+  {static} + cull_back_state() : Cull_state
+}
+
+struct Pipeline_state {
+  + depth_state : Depth_state
+  + blend_state : Blend_state
+  + polygon_offset_state : Polygon_offset_state
+  + stencil_state : Stencil_state
+  + cull_state : Cull_state
+  {static} + shadow_pipeline_state() : Pipeline_state
+  {static} + opaque_pipeline_state() : Pipeline_state
+}
+
+abstract class RHI_pipeline_state {
+  # _pipeline_state : Pipeline_state
+  + apply()
+  {abstract} # apply_blend_state(state: Blend_state)
+  {abstract} # apply_cull_state(state: Cull_state)
+  {abstract} # apply_depth_state(state: Depth_state)
+  {abstract} # apply_polygon_offset_state(state: Polygon_offset_state)
+  {abstract} # apply_stencil_state(state: Stencil_state)
+}
+
+Pipeline_state *-- Depth_state
+Pipeline_state *-- Blend_state
+Pipeline_state *-- Polygon_offset_state
+Pipeline_state *-- Stencil_state
+Pipeline_state *-- Cull_state
+
+RHI_pipeline_state *-- Pipeline_state : _pipeline_state
+
+@enduml

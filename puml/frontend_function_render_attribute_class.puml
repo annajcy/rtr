@@ -1,0 +1,101 @@
+@startuml
+' PlantUML Class Diagram - Simplified Parameters
+
+left to right direction
+
+' --- Enums ---
+enum Buffer_data_type {
+  FLOAT
+  INT
+  UNSIGNED_INT
+  BOOL
+  UNKNOWN
+}
+
+enum Buffer_usage {
+  STATIC
+  DYNAMIC
+}
+
+enum Buffer_iterate_type {
+  PER_VERTEX
+  PER_INSTANCE
+}
+
+' --- Base Classes ---
+abstract class RHI_linker<T> {
+  # rhi_resource : T
+  + link(device : RHI_device) : void
+}
+
+abstract class Attribute_base {
+  # usage : Buffer_usage
+  # data_type : Buffer_data_type
+  + Attribute_base(usage : Buffer_usage, data_type : Buffer_data_type)
+  + {abstract} data_ptr() : void*
+  + {abstract} data_count() : size_t
+  + {abstract} data_size() : size_t
+  + get_usage() : Buffer_usage
+  + get_data_type() : Buffer_data_type
+}
+RHI_linker <|-- Attribute_base : < RHI_buffer >
+
+abstract class Vertex_attribute_base extends Attribute_base {
+  # iterate_type : Buffer_iterate_type
+  + Vertex_attribute_base(usage : Buffer_usage, data_type : Buffer_data_type, iterate_type : Buffer_iterate_type)
+  + {abstract} unit_data_count() : size_t
+  + {abstract} unit_count() : size_t
+  + {abstract} unit_data_size() : size_t ' Size of one vertex unit in bytes
+  + get_iterate_type() : Buffer_iterate_type
+  + link(device : RHI_device) : void ' Overrides RHI_linker::link
+}
+
+
+' --- Concrete Element Attribute ---
+class Element_atrribute extends Attribute_base {
+  - data : std::vector<unsigned int>
+  + Element_atrribute(usage : Buffer_usage, initial_data : std::vector<unsigned int>)
+  ' data_type is set to represent unsigned int via get_buffer_atrribute_type
+  + {static} create(usage : Buffer_usage, initial_data : std::vector<unsigned int>) : Element_atrribute*
+  + data_ptr() : void*
+  + data_count() : size_t
+  + data_size() : size_t
+  + link(device : RHI_device) : void ' Overrides RHI_linker::link
+}
+
+' --- Template Vertex Attribute ---
+class "Vertex_attribute<T, UNIT_DATA_COUNT>" as Vertex_attribute_T_UDC extends Vertex_attribute_base {
+  - data : std::vector<T>
+  ' UNIT_DATA_COUNT is a template parameter
+  + Vertex_attribute(usage : Buffer_usage, iterate_type : Buffer_iterate_type, initial_data : std::vector<T>)
+  ' data_type is initialized using get_buffer_atrribute_type<T>() in constructor
+  + data_ptr() : void*
+  + data_count() : size_t ' Total number of T elements
+  + data_size() : size_t ' Total size in bytes
+  + unit_data_count() : size_t ' Returns UNIT_DATA_COUNT
+  + unit_count() : size_t ' Number of vertices
+  + unit_data_size() : size_t ' Size of one vertex unit in bytes
+  + unit_data(index : size_t) : T*
+  + get_unit(index : size_t) : std::vector<T>
+  + set_unit(index : size_t, unit_values : const std::vector<T>&) : void
+  + apply(func : std::function<void(T&)>) : void
+}
+
+
+' --- Relationships ---
+Attribute_base "1" *-- "1" Buffer_usage
+Attribute_base "1" *-- "1" Buffer_data_type
+Vertex_attribute_base "1" *-- "1" Buffer_iterate_type
+
+Attribute_base --|> RHI_linker
+
+
+
+' Link methods now pass descriptors (conceptual, shown in notes)
+' Vertex_attribute_base ..> RHI_device : "uses create_vertex_buffer()"
+' Element_atrribute ..> RHI_device : "uses create_element_buffer()"
+
+
+' Hide empty members for cleaner look if needed
+hide empty members
+@enduml

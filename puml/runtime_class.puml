@@ -1,0 +1,66 @@
+@startuml
+left to right direction
+skinparam classAttributeIconSize 0
+
+' Descriptor struct for Engine_runtime initialization
+class Engine_runtime_descriptor {
+    + width: int
+    + height: int
+    + title: std::string
+}
+
+' Main Engine_runtime class
+class Engine_runtime {
+    ' Private Member Variables
+    - m_delta_time: float
+    - m_swap_data[2]: Swap_data
+    - m_render_swap_data_index: int
+    - m_logic_swap_data_index: int
+    - m_rhi_device: std::shared_ptr<RHI_device>
+    - m_input_system: std::shared_ptr<Input_system>
+    - m_render_system: std::shared_ptr<Render_system>
+    - m_window_system: std::shared_ptr<Window_system>
+    - m_world: std::shared_ptr<World>
+    - m_timer: std::shared_ptr<Timer>
+
+    ' Key Public Member Functions
+    + Engine_runtime(descriptor)
+    + ~Engine_runtime()
+    + static create(descriptor): std::shared_ptr<Engine_runtime>
+    + is_active(): bool
+    + run(): void
+    + tick(float dt): void
+    + get_delta_time(): float
+    + get_fps(): float
+    + swap(): void
+    + render_swap_data(): Swap_data&
+    + logic_swap_data(): Swap_data&
+}
+
+' Other classes/structs used by Engine_runtime
+class Swap_data <<struct>>
+class Logic_tick_context <<struct>>
+class Render_tick_context <<struct>>
+class RHI_device
+class Input_system
+class Render_system
+class Window_system
+class World
+class Timer
+
+' Relationships
+' Composition (Engine_runtime "owns" these components via shared_ptr or direct member)
+Engine_runtime *-- RHI_device
+Engine_runtime *-- Input_system
+Engine_runtime *-- Render_system
+Engine_runtime *-- Window_system
+Engine_runtime *-- World
+Engine_runtime *-- Timer
+Engine_runtime *-- "2" Swap_data
+
+' Dependency (Engine_runtime "uses" these types, typically as parameters or local variables)
+Engine_runtime ..> Engine_runtime_descriptor : configures
+Engine_runtime ..> Logic_tick_context : uses in tick()
+Engine_runtime ..> Render_tick_context : uses in tick()
+
+@enduml

@@ -1,0 +1,79 @@
+@startuml
+!pragma layout smetana
+
+title Runtime Frontend Frame Loop Mechanism (帧循环机制)
+
+actor "用户" as User
+participant "Engine_runtime" as Engine
+participant "Window System\n(窗口系统)" as Window
+participant "Virtual World\n(虚拟世界)" as World
+participant "Context Exchange Layer\n(上下文交换层)\n<<Swap_data>>" as ContextExchange
+participant "Feature Layer\n(功能层)" as Feature
+participant "Render System\n(渲染系统)" as Render
+participant "Backend Render Device\n(RHI)" as RHI
+
+autonumber "00"
+
+' Engine_runtime::run drives the main loop
+User -> Engine : 启动渲染器
+activate Engine
+Engine -> Engine : run()\n(持续检测窗口活跃)
+
+loop 每一帧 (While window is active)
+
+  Engine -> Engine : tick()\n(推进帧运转)
+
+  ' --- 1. Frame Start ---
+  Engine -> Window : on_frame_begin()\n(处理输入、窗口事件)
+  activate Window
+  Window --> Engine
+  deactivate Window
+
+  ' --- 2. Logic Update Stage ---
+  Engine -> Engine : 封装 Logic_tick_context
+  Engine -> World : Logic_tick_context\n(逻辑更新)
+  activate World
+  World -> World : 更新所有对象状态
+  note right of World : 逻辑更新由框架层实现
+  World --> Engine : 返回更新状态
+  deactivate World
+
+  ' --- 3. Context Exchange (Data Swap) ---
+  Engine -> ContextExchange : swap()\n(交换 Swap_data 缓冲区)
+  note left of ContextExchange : Swap_data: 功能层相关数据\n(上下文交换层定义)
+
+  ' --- 4. Graphics Rendering Stage ---
+  ContextExchange --> Feature : 传输 Swap_data
+  activate Feature
+  Feature -> Render : (功能层处理数据)
+  activate Render
+  Render -> Render : 读取逻辑更新渲染数据
+  Render -> Render : 封装 Render_tick_context
+  Render -> Render : 构建渲染命令
+  Render -> RHI : 提交渲染命令
+  activate RHI
+  RHI -> RHI : 生成图像帧 (通过渲染管线)
+  note left of RHI : RHI 屏蔽平台差异
+  RHI --> Render
+  deactivate RHI
+  Render --> Feature
+  deactivate Render
+  Feature --> Engine : 渲染完成
+  deactivate Feature
+
+  ' --- 5. Error Checking ---
+  Engine -> RHI : 检查图形接口错误
+  RHI --> Engine : 错误报告
+
+  ' --- 6. Frame End ---
+  Engine -> Window : on_frame_end()\n(结束当前帧, 刷新窗口)
+  activate Window
+  Window --> Engine
+  deactivate Window
+
+end
+
+deactivate Engine
+Engine --> User : 虚拟世界持续运动
+
+@enduml

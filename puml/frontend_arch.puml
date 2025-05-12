@@ -1,0 +1,43 @@
+@startuml
+title Runtime前端架构图
+
+left to right direction
+
+actor 用户
+
+package "Runtime前端" {
+    package "框架层" as Framework {
+        component "用户接口" as UserInterface {
+            rectangle "定义了渲染器的用户接口" as UserInterfaceRect {
+                
+            }
+        }
+        
+    }
+
+    package "上下文交换层" as ContextExchange {
+        component "数据传输" as DataTransfer {
+            rectangle "定义了框架层和功能层之间的数据传输" as DataTransferRect {
+            }
+            
+        }
+        
+    }
+
+    package "功能层" as Functional {
+        component "核心功能系统" as CoreSystems {
+            rectangle "定义了渲染器的核心功能，\n这些功能由若干个系统提供。" as CoreSystemsRect {
+        }
+        
+    }
+}
+
+用户 --> UserInterface : 使用渲染器接口
+
+Framework -[hidden]down-> ContextExchange
+UserInterface ..> DataTransfer : 调用
+
+ContextExchange -[hidden]down-> Functional
+DataTransfer ..> CoreSystems : 传输数据/调用功能
+
+@enduml

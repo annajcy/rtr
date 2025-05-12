@@ -1,0 +1,144 @@
+@startuml
+' 设置图表标题
+title 阴影投射系统 (Shadow Caster System)
+
+
+
+' =====================================
+' 外部/基础类 (从之前上下文推断和关联)
+' =====================================
+
+' 组件基类
+abstract class Component_base {
+    ' 通用组件接口，例如 on_add_to_game_object(), tick() 等
+}
+
+
+' 游戏对象体系实体，可以挂载各种组件
+class GameObject {
+    - List<Component_base> components ' 包含的组件列表
+    ' ...
+}
+
+' 光源体系 (此处仅列出与阴影投射相关的部分)
+abstract class Light {
+    ' 颜色、强度等基本光源属性
+    - Color color
+    - float intensity
+    - Node node
+    ' ...
+}
+
+class Directional_light extends Light {
+    ' 方向性光源 (模拟阳光)
+    ' ...
+}
+
+
+' 相机体系 (此处仅列出与阴影投射相关的部分)
+abstract class Camera {
+    ' 通用相机接口与核心属性 (如视图矩阵、投影矩阵)
+    ' ...
+}
+
+class Orthographic_camera extends Camera {
+    ' 正交投影相机 (常用于定向光阴影)
+    ' ...
+}
+
+class Perspective_camera extends Camera {
+    ' 透视投影相机 (常用于点光源阴影)
+    ' ...
+}
+
+' 阴影贴图数据结构 (由 Shadow_caster 拥有)
+class Shadow_map {
+    ' 存储深度信息 (例如深度纹理)
+    ' ...
+}
+
+' 渲染数据管线 (tick 方法会将处理后的数据推送到这里)
+class LogicSwapData {
+    ' 接收并处理待渲染数据，如阴影贴图、变换矩阵等
+    ' ...
+}
+
+' =====================================
+' 阴影投射器类 (Shadow Caster Classes)
+' =====================================
+
+' Shadow_caster 基类
+abstract class Shadow_caster {
+    - std::shared_ptr<Shadow_map> m_shadow_map ' 阴影贴图的共享指针
+    - std::shared_ptr<Camera> m_shadow_camera ' 阴影相机视角的共享指针
+
+    ' 构造函数，接受一个相机对象用于初始化阴影相机
+    + Shadow_caster(camera: Camera)
+
+    ' 属性访问方法 (Getter/Setter)
+    + get_shadow_map(): std::shared_ptr<Shadow_map>
+    + set_shadow_map(sm: std::shared_ptr<Shadow_map>)
+    + get_shadow_camera(): std::shared_ptr<Camera>
+    + set_shadow_camera(cam: std::shared_ptr<Camera>)
+}
+
+' Directional_light_shadow_caster (定向光阴影投射器)
+class Directional_light_shadow_caster extends Shadow_caster {
+    ' 专为定向光源设计，通常使用正交投影相机
+    + Directional_light_shadow_caster(ortho_camera: Orthographic_camera)
+
+    ' 提供方法以更安全地访问转换为正交相机后的 m_shadow_camera
+    + get_orthographic_camera(): Orthographic_camera*
+}
+
+
+' =====================================
+' 阴影投射组件类 (Shadow Caster Component Classes)
+' =====================================
+
+' Directional_light_shadow_caster_component (定向光阴影投射组件)
+class Directional_light_shadow_caster_component extends Component_base {
+    - std::shared_ptr<Directional_light> m_directional_light ' 关联的定向光源对象
+    - std::shared_ptr<Directional_light_shadow_caster> m_shadow_caster ' 内部的定向光阴影投射器实例
+
+    ' 核心方法
+    + update() ' 基于光源位置和方向更新阴影相机变换矩阵和参数
+    + tick(render_pipe: LogicSwapData) ' 更新阴影贴图数据并传递至后续渲染流程
+}
+
+' =====================================
+' 类之间关系 (Relationships)
+' =====================================
+
+' 继承关系 (Inheritance)
+Directional_light_shadow_caster --|> Shadow_caster
+
+Directional_light_shadow_caster_component --|> Component_base
+
+' 组合关系 (Composition)
+' Shadow_caster 拥有其自身的阴影贴图和阴影相机实例
+Shadow_caster "1" *-- "1" Shadow_map : 拥有 >
+Shadow_caster "1" *-- "1" Camera : 拥有其视角相机 >
+
+' 组件拥有其内部的特定类型阴影投射器实例
+Directional_light_shadow_caster_component "1" *-- "1" Directional_light_shadow_caster : 拥有 >
+
+' 依赖/关联关系 (Dependency/Association)
+' Shadow_caster 构造函数接受一个 Camera 对象进行初始化
+Shadow_caster ..> Camera : 构造时初始化 >
+
+' Directional_light_shadow_caster 构造函数接受 Orthographic_camera
+Directional_light_shadow_caster ..> Orthographic_camera : 构造时初始化 >
+
+
+' Directional_light_shadow_caster_component 需要关联一个 Directional_light 对象的信息
+Directional_light_shadow_caster_component --> Directional_light : 关联光源信息 >
+
+
+' 组件的 tick 方法将处理后的阴影数据推送到渲染管线
+Directional_light_shadow_caster_component ..> LogicSwapData : 推送阴影数据到 >
+
+' GameObject 包含这些组件
+GameObject "1" *-- "0..*" Directional_light_shadow_caster_component : 包含 >
+
+@enduml

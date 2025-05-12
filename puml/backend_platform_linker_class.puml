@@ -1,0 +1,91 @@
+@startuml
+title RHI_linker: RHI资源与渲染器前端的交互方式
+
+left to right direction
+
+!define CLASS_COLOR PaleTurquoise
+!define TEMPLATE_CLASS_COLOR LightGoldenRodYellow
+!define RHI_RESOURCE_COLOR LightSteelBlue
+!define RENDERER_FRONTEND_COLOR LightSkyBlue
+!define RHI_DEVICE_COLOR Khaki
+!define NOTE_BG_COLOR LightYellow
+!define NOTE_BORDER_COLOR OrangeRed
+
+
+hide empty members
+
+
+' RHI Device 抽象类 (来自先前上下文，已简化)
+abstract class RHI_Device <<RHIDevice>> {
+  + {abstract} create_specific_texture(params: ...): RHI_Texture_Resource*
+  + {abstract} create_specific_buffer(params: ...): RHI_Buffer_Resource*
+  + {abstract} destroy_rhi_resource(resource_handle: ...): void
+  ' ... 其他RHI资源创建/管理方法
+}
+
+' 使用 RHI_linker 的渲染器前端
+class RendererFrontend <<RendererFrontend>> {
+  - m_rhi_device: RHI_Device*
+  - m_texture_linker: RHI_linker<RHI_Texture_Resource>
+  - m_material_buffer_linker: RHI_linker<RHI_Buffer_Resource>
+
+  + RendererFrontend(device: RHI_Device*)
+  + initialize_resources(): void ' 初始化资源
+  + render_scene(): void ' 渲染场景
+}
+
+' RHI_linker 模板类
+class RHI_linker<T_RHI_Resource> <<Template>> {
+  - m_actual_resource: T_RHI_Resource*
+  - m_rhi_device: RHI_Device*
+  - m_creation_parameters: any ' 存储创建所需的参数
+  - m_is_loaded: bool = false
+
+  + RHI_linker(device: RHI_Device*, creation_params: any)
+  + ~RHI_linker() ' 若拥有资源，则负责在析构时释放
+
+  + get_resource(): T_RHI_Resource* ' 获取资源，必要时执行惰性创建
+  + ensure_loaded(): bool          ' 用于预生成/显式加载
+  + release_resource(): void       ' 显式释放RHI资源
+  + is_ready(): bool
+  note right
+    <b>RHI_linker 作用:</b>
+    连接渲染器前端与RHI资源。
+    ----
+    <b>主要特性:</b>
+    - 封装RHI层细节。
+    - 向前端提供更简洁的API。
+    - 实现灵活的资源管理:
+      - 惰性创建 (首次调用 `get_resource()` 时)
+      - 预生成 (通过 `ensure_loaded()` 实现)
+  end note
+}
+
+' RHI 资源类型抽象基类 (T_RHI_Resource 的概念基础)
+abstract class T_RHI_Resource <<RHI_Resource>> {
+  + {abstract} get_native_id(): opaque_handle ' 获取底层API的原生句柄/ID
+  + is_valid(): bool ' 资源是否有效
+}
+
+' RHI 具体资源示例 (作为 T_RHI_Resource 的具体类型)
+class RHI_Texture_Resource extends T_RHI_Resource {
+  ' 特定纹理属性 (宽度, 高度, 格式等)
+}
+class RHI_Buffer_Resource extends T_RHI_Resource {
+  ' 特定缓冲属性 (大小, 용도, 类型等)
+}
+
+
+' --- 关系 ---
+
+' RendererFrontend 拥有/使用 RHI_linker 实例来管理特定的 RHI 资源
+RendererFrontend o-- "linkers*" RHI_linker : (通过链接器管理资源访问)
+
+' RHI_linker 根据 RHI_Resource 类型进行模板化。
+' 它管理该 T_RHI_Resource 类型的一个实例的生命周期。
+RHI_linker ..> T_RHI_Resource : (管理其实例)
+
+' RHI_linker 使用 RHI_Device 来执行实际的 RHI 操作 (例如资源的创建和销毁)。
+RHI_linker ..> RHI_Device : (委托RHI操作至)
+
+@enduml

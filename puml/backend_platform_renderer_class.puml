@@ -1,0 +1,100 @@
+@startuml
+title RHI_renderer Class Diagram
+
+!define ABSTRACT_CLASS_COLOR Khaki
+!define CLASS_COLOR PaleTurquoise
+!define HELPER_STRUCT_COLOR LightGray
+!define NOTE_BG_COLOR LightYellow
+!define NOTE_BORDER_COLOR OrangeRed
+
+
+
+hide empty members
+
+
+' --- Forward Declarations / Referenced RHI Core Classes ---
+class RHI_shader_program {
+  ' Represents a compiled and linked shader program
+}
+class RHI_geometry {
+  ' Represents geometric data (vertex/index buffers)
+}
+class RHI_frame_buffer_base {
+  ' Abstract base for framebuffer objects
+}
+
+
+' --- Helper Structures/Classes (used by RHI_renderer) ---
+package "Helper Structures" <<Utilities>> {
+  class Color <<Helper>> {
+    + r: float
+    + g: float
+    + b: float
+    + a: float
+    + Color(r: float, g: float, b: float, a: float)
+  }
+
+  class Clear_state <<Helper>> {
+    + clear_color_buffer: bool = true
+    + clear_depth_buffer: bool = true
+    + clear_stencil_buffer: bool = true
+    + default_color_value: Color
+    + default_depth_value: float = 1.0f
+    + default_stencil_value: int = 0
+    + Clear_state() ' Initializes default_color_value to soft pink
+    ' Note: Default soft pink for default_color_value (e.g., Color(1.0f, 0.75f, 0.8f, 1.0f))
+  }
+
+  class Viewport <<Helper>> {
+    + x: int
+    + y: int
+    + width: int
+    + height: int
+  }
+}
+
+
+' --- RHI_renderer Class (Abstract Base) ---
+abstract class RHI_renderer {
+  # m_shader_program: RHI_shader_program*
+  # m_geometry: RHI_geometry*
+  # m_frame_buffer: RHI_frame_buffer_base*
+  # m_clear_state: Clear_state
+
+  + init(): void ' Initializes held resources to nullptr, resets state
+
+  + set_shader_program(program: RHI_shader_program*): void
+  + set_geometry(geometry: RHI_geometry*): void
+  + set_frame_buffer(frame_buffer: RHI_frame_buffer_base*): void
+
+  + {abstract} draw(primitive_type: PrimitiveType, count: int, offset: int = 0): void
+  + {abstract} draw_instanced(primitive_type: PrimitiveType, count: int, instance_count: int, offset: int = 0, base_instance: int = 0): void
+
+  + {virtual} clear(): void ' Clears currently bound framebuffer using m_clear_state
+  + {virtual} apply_clear_state(): void ' Applies m_clear_state values to the graphics API
+  + change_clear_state(modifier_func: std::function<void(Clear_state&)>): void
+
+  + {abstract} get_viewport(): Viewport
+  + {abstract} set_viewport(vp: Viewport): void
+  + {abstract} set_viewport(x: int, y: int, width: int, height: int): void ' Overload for convenience
+}
+
+' --- Relationships ---
+RHI_renderer o--> RHI_shader_program : "uses"
+RHI_renderer o--> RHI_geometry : "uses"
+RHI_renderer o--> RHI_frame_buffer_base : "targets"
+RHI_renderer *--> Clear_state : "manages" ' Renderer owns its clear state instance
+
+' RHI_renderer uses Viewport for its get/set methods
+RHI_renderer ..> Viewport : (uses in method signature)
+
+' RHI_renderer uses PrimitiveType (an enum, not detailed) in draw methods
+RHI_renderer ..> PrimitiveType : (uses in method signature)
+
+' Clear_state has a Color object
+Clear_state *-- Color : "defines default"
+
+
+
+
+@enduml

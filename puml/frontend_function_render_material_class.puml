@@ -1,0 +1,58 @@
+@startuml
+
+left to right direction
+
+abstract class Material {
+    + Material(MaterialType type, std::shared_ptr<Shader> shader)
+    + virtual ~Material()
+
+    -- Core Interface --
+    + virtual ShaderProgram get_shader_program() const
+    + virtual ShaderFeatureSet get_shader_feature_set() const
+    + virtual PipelineState get_pipeline_state() const
+    + virtual std::map<TextureSlot, Texture> get_texture_map() const
+    + virtual void modify_shader_uniform(ShaderProgram& program) const
+
+    -- Attributes --
+    - std::shared_ptr<Shader> m_shader
+    - MaterialType m_material_type // Implied by constructor
+}
+
+class Shader {
+    
+    + ShaderProgram get_program(ShaderFeatureSet features)
+}
+
+class ShaderProgram {
+    
+}
+
+class ShaderFeatureSet {
+    
+}
+
+class MaterialType {
+    
+}
+
+class PipelineState {
+
+}
+
+
+class Texture {
+    
+}
+
+Material "1" o-- "1" Shader : 关联 >
+MaterialType .down.> Material
+ShaderFeatureSet .down.> Material
+ShaderProgram .down.> Material
+PipelineState .down.> Material
+Texture .down.> Material
+
+' Notes/Derivations - not explicitly requested as classes but implied
+' Material <|-- PhongMaterial
+' Material <|-- PBRMaterial
+
+@enduml

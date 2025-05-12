@@ -1,0 +1,52 @@
+@startuml
+skinparam classAttributeIconVisible false
+
+
+
+
+class "RHI_linker<RHI_frame_buffer>" as RHI_Linker_RHI_Frame_Buffer {
+    ' Specialization of RHI_linker for RHI_frame_buffer.
+    ' Manages the underlying RHI_frame_buffer resource.
+}
+
+
+
+' Frame_buffer Class
+class Frame_buffer {
+    -- Attributes --
+    - int m_width
+    - int m_height
+    - std::vector<std::shared_ptr<Texture>> m_color_attachments
+    - std::shared_ptr<Texture> m_depth_attachment
+
+    -- Constructor --
+    + Frame_buffer(int width, int height, std::vector<std::shared_ptr<Texture>> color_attachments, std::shared_ptr<Texture> depth_attachment)
+
+    -- Methods --
+    + void link(RHI_Device* device)
+    ' Ensures all texture attachments are linked to RHI device
+    ' Calls color_attachment->link(device) for each color attachment.
+    ' Calls depth_attachment->link(device) for the depth attachment.
+    ' Calls device->create_frame_buffer() with RHI texture resources.
+
+    -- Static Factory Method --
+    + {static} std::shared_ptr<Frame_buffer> create(...)
+}
+
+' Simplified Texture class (assuming its existence and relevant methods from prior context)
+class Texture {
+    ' Abstract base class for all texture types.
+    ' Responsible for encapsulating texture properties and linking to RHI texture resources.
+    + virtual void link(RHI_Device* device) = 0
+}
+
+' Relationships
+
+' Inheritance
+RHI_Linker_RHI_Frame_Buffer <|-- Frame_buffer
+
+
+
+Frame_buffer .right.> Texture :  attachments >
+
+@enduml

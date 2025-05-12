@@ -1,0 +1,47 @@
+@startuml
+skinparam linetype ortho
+
+abstract class RHI_frame_buffer_base {
+  {abstract} + is_valid() : boolean
+  + width() : int
+  + height() : int
+}
+
+class RHI_frame_buffer {
+  - internal_width : int
+  - internal_height : int
+  - color_attachments : std::vector<RHI_texture>
+  - depth_attachment : RHI_texture
+  + get_color_attachments() : std::vector<RHI_texture>
+  + get_depth_attachment() : RHI_texture
+  + is_valid() : boolean
+  + width() : int
+  + height() : int
+}
+
+class RHI_screen_buffer {
+  - m_window : std::shared_ptr<Window>
+  + is_valid() : boolean
+  + width() : int
+  + height() : int
+}
+
+class RHI_texture {
+  ' Assuming RHI_texture is defined elsewhere
+  ' or its internal details are not relevant here.
+}
+
+class Window {
+  + get_width() : int
+  + get_height() : int
+}
+
+RHI_frame_buffer_base <|-- RHI_frame_buffer
+RHI_frame_buffer_base <|-- RHI_screen_buffer
+
+RHI_frame_buffer o-- "*" RHI_texture : color_attachments
+RHI_frame_buffer o-- "0..1" RHI_texture : depth_attachment
+
+RHI_screen_buffer o-- "1" Window : m_window
+
+@enduml

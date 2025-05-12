@@ -1,0 +1,50 @@
+@startuml
+skinparam classAttributeIconVisible false
+
+
+title 框架层核心概念层次结构
+
+package "框架层" {
+    class World {
+        + tick()
+    }
+
+    class Scene {
+        - game_objects: List<Game_object>
+        - mainCamera: Camera
+        - mainLight: Light
+        - skybox: Skybox
+        + tick()
+    }
+
+    class Game_object {
+        - components: Component_list
+        + tick()
+    }
+
+    class Component_list {
+        - components: List<Component>
+        + addComponent(Component)
+        + removeComponent(Component)
+    }
+
+    class Component {
+        + tick()
+        + getContext(): LogicContext
+        + getTimeDelta(): float
+        + getInputState(): InputState
+    }
+
+    ' Relationships based on containment/management'
+    World "1" --> "*" Scene : manages >
+    Scene "1" --> "*" Game_object : manages >
+    Game_object "1" --> "1" Component_list : owns >
+    Component_list "1" --> "*" Component : manages >
+
+    ' Relationships based on tick method calls (dependency/invocation)'
+    World .down.> Scene : calls tick() >
+    Scene .down.> Game_object : calls tick() >
+    Game_object .down.> Component : calls tick() >
+}
+
+@enduml

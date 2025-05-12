@@ -1,0 +1,75 @@
+@startuml
+' Theme and styling
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+
+
+' Enums
+enum "Shader_feature" {
+    SHADOWS
+    ALBEDO_MAP
+    NORMAL_MAP
+    SPECULAR_MAP
+    METALLIC_MAP
+    --
+    +shader_feature_to_defines(): string
+}
+
+' Classes
+class "Shader_feature_dependency_graph" as ShaderFeatureDependencyGraph {
+    +g_shader_feature_dependency_graph: static ShaderFeatureDependencyGraph
+    --
+    +add_dependency(feature: Shader_feature, dependency: Shader_feature)
+    +is_dependent(feature: Shader_feature, check_dependency: Shader_feature): bool
+    +get_dependencies(feature: Shader_feature): set<Shader_feature>
+    +get_all_dependencies(feature: Shader_feature): set<Shader_feature>
+}
+
+abstract class "Shader" {
+    -base_shader_code: string
+    -main_uniforms: map<string, Uniform>
+    -feature_uniforms: map<Shader_feature, map<string, Uniform>>
+    -shader_feature_whitelist: Shader_feature_set
+    -active_feature_set: Shader_feature_set
+    --
+    +g_shader_cache: static map<string, Shader*>
+    --
+    +Shader(base_code, main_uniforms, feature_uniforms, whitelist)
+    +is_cached(key: string): bool
+    +get_cached_shader(key: string): Shader*
+    +add_shader_to_cache(key: string, shader: Shader*)
+    +get_shader_variant(requested_features: Shader_feature_set): Shader_program
+    -get_shader_codes(): string
+    -get_shader_uniforms(): map<string, Uniform>
+    +get_all_shader_variants_permutation(): list<Shader_feature_set>
+    +generate_all_shader_variants()
+    +link_all_shader_variants()
+    +get_shader_code_from_url(url: string): static string
+    +load_shader_code_with_includes(url: string): static string
+}
+
+class "Shader_program" as ShaderProgram {
+    ' Represents a compiled shader program
+    ' Attributes and methods are not detailed in the text.
+}
+
+' Relationships
+
+' ShaderFeatureDependencyGraph manages Shader_feature
+ShaderFeatureDependencyGraph "1" *-- "many" Shader_feature : 管理依赖 >
+
+' Shader uses Shader_feature_dependency_graph (via global instance)
+Shader "1" -- "1" ShaderFeatureDependencyGraph : 使用 \n(g_shader_feature_dependency_graph)
+
+' Shader creates Shader_program instances
+Shader "1" *-- "1" ShaderProgram : 创建 >
+
+' Shader maintains a cache of Shader instances (self-aggregation)
+Shader "1" o-- "0..*" Shader : g_shader_cache 存储 >
+
+' Shader uses Shader_feature for uniforms and feature sets
+Shader "1" --> "*" Shader_feature : 生成\nfeatures & uniforms
+
+
+@enduml

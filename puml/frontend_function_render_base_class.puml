@@ -1,0 +1,108 @@
+@startuml
+hide empty members
+
+' 全局 RHI 渲染资源结构体
+class RHI_global_render_resource {
+    ' 封装渲染系统所需全局 RHI 对象
+    +RHI设备: RHI_device
+    +渲染窗口: RHI_window
+    +渲染器: RHI_renderer
+    +屏幕缓冲区: RHI_screen_buffer
+    +内存绑定器: RHI_memory_binder
+    +管线状态: RHI_pipeline_state
+    +纹理构建器: RHI_texture_builder
+}
+
+
+' Render_pass 相关的辅助结构体
+class Execution_context {
+    ' 存储可渲染对象元信息
+}
+
+class Render_object {
+    ' 如纹理、内存缓冲区
+}
+
+class Render_resource_flow {
+    ' 存放渲染资源 Render_object，作为 Render_pass 的输入和输出
+}
+Render_resource_flow *-- "n" Render_object : 包含
+
+' Render_pass 抽象基类
+abstract class Render_pass {
+    ' 持有 RHI_global_render_resource 的引用
+    -m_rhi_global_render_resource: RHI_global_render_resource&
+    --
+    +Render_pass(rhi_global_render_resource: RHI_global_render_resource&)
+    ' 纯虚函数，派生类必须实现，定义了渲染阶段的核心逻辑
+    +<<abstract>> 执行(): void
+}
+' Render_pass 使用 Execution_context 和 Render_resource_flow
+Render_pass ..> Execution_context : 使用
+Render_pass ..> Render_resource_flow : 使用
+' Render_pass 持有对 RHI_global_render_resource 的引用
+Render_pass "1" -- "*" RHI_global_render_resource : <<引用>>
+
+' 渲染流程上下文
+class Render_tick_context {
+    ' 存储每帧渲染的上下文信息
+}
+
+' 资源管理器
+class Resource_manager {
+    ' 管理 Render_object 的生命周期和访问
+}
+
+' Render_pipeline 抽象基类
+abstract class Render_pipeline {
+    ' 内部 Resource_manager 管理 Render_object
+    -m_resource_manager: Resource_manager
+    ' 管理 Render_pass 实例列表
+    -m_render_passes: List<shared_ptr<Render_pass>>
+    --
+    ' 每帧主执行入口，驱动渲染 (纯虚函数)
+    +<<abstract>> 执行(上下文: const Render_tick_context): void
+    ' UBO 初始化 (纯虚函数)
+    +<<abstract>> 初始化UBO(): void
+    ' UBO 数据更新 (纯虚函数)
+    +<<abstract>> 更新UBO(上下文: const Render_tick_context): void
+    --
+    ' 初始化渲染阶段
+    +初始化渲染阶段(): void
+    ' 每帧更新渲染阶段状态
+    +更新渲染阶段(上下文: const Render_tick_context): void
+    ' 更新管线资源
+    +更新管线资源(上下文: const Render_tick_context): void
+}
+' Render_pipeline 组合 Resource_manager
+Render_pipeline *-- Resource_manager : 管理
+' Render_pipeline 聚合 Render_pass 实例
+Render_pipeline "1" -- "n" Render_pass : 聚合
+' Render_pipeline 使用 Render_tick_context
+Render_pipeline ..> Render_tick_context : 使用
+
+' Render_system 最高层入口和管理器
+class Render_system {
+    ' 封装全局 RHI 对象
+    -m_全局渲染资源: RHI_global_render_resource
+    ' 管理 Render_pipeline 实例
+    -m_渲染管线: shared_ptr<Render_pipeline>
+    --
+    +Render_system(rhi_设备: shared_ptr<RHI_device>, rhi_窗口: shared_ptr<RHI_window>)
+    --
+    ' 允许外部设置或替换渲染管线
+    +设置渲染管线(管线: shared_ptr<Render_pipeline>): void
+    ' 驱动每帧渲染更新和执行
+    +帧更新(上下文: const Render_tick_context): void
+}
+' Render_system 组合 RHI_global_render_resource
+Render_system *-- RHI_global_render_resource : 组合
+' Render_system 聚合 Render_pipeline (可通过 set_render_pipeline 替换)
+Render_system o-- Render_pipeline : 聚合 (可切换)
+' Render_system 依赖 RHI_device 和 RHI_window (用于构造函数)
+Render_system ..> RHI_device : 依赖 (构造)
+Render_system ..> RHI_window : 依赖 (构造)
+' Render_system 使用 Render_tick_context (在 tick 方法中)
+Render_system ..> Render_tick_context : 使用 (在帧更新中)
+
+@enduml

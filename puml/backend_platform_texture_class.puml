@@ -1,0 +1,69 @@
+@startuml
+skinparam linetype ortho
+
+abstract class RHI_texture {
+  + type
+  + internal_format
+  + dimensions
+  + mipmap_levels
+  + wrap_mode
+  + filter_mode
+  {abstract} + set_filter()
+  {abstract} + set_wrap()
+  {abstract} + generate_mipmap()
+  {abstract} + bind_to_unit()
+  + set_border_color()
+  {abstract} # on_set_border_color()
+}
+
+struct Image_data {
+  + width
+  + height
+  + data_pointer
+  + data_format
+  + external_format
+  + has_ownership : boolean
+  + create_image() : Image
+}
+
+class Image {
+}
+
+Image_data ..> Image : creates
+
+interface IRHI_texture_2D {
+  + upload_data(Image_data)
+  + upload_data(RHI_texture)
+  + get_data()
+}
+
+interface IRHI_texture_cubemap {
+  + upload_data(Image_data)
+  + upload_data(RHI_texture)
+  + get_data()
+}
+
+interface IRHI_texture_2D_array {
+  + upload_data(Image_data)
+  + upload_data(RHI_texture)
+  + get_data()
+}
+
+
+
+interface RHI_texture_builder {
+  + build_texture_2D(Image_data) : IRHI_texture_2D
+  + build_texture_2D(RHI_texture) : IRHI_texture_2D
+  + build_texture_cubemap(Image_data) : IRHI_texture_cubemap
+  + build_texture_cubemap(RHI_texture) : IRHI_texture_cubemap
+  + build_texture_2D_array(Image_data) : IRHI_texture_2D_array
+  + build_texture_2D_array(RHI_texture) : IRHI_texture_2D_array
+}
+
+RHI_texture_builder ..> Image_data : uses
+RHI_texture_builder ..> RHI_texture : uses
+RHI_texture_builder ..> IRHI_texture_2D : creates
+RHI_texture_builder ..> IRHI_texture_cubemap : creates
+RHI_texture_builder ..> IRHI_texture_2D_array : creates
+
+@enduml

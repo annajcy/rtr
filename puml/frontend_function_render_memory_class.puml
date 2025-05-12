@@ -1,0 +1,60 @@
+@startuml
+'skinparam linetype ortho
+
+left to right direction
+
+
+interface "RHI_linker<RHI_buffer>" as RHI_linker_RHI_buffer {
+  + link(device: RHI_Device): void
+}
+
+abstract class Memory_buffer {
+  # type: Buffer_type
+  # usage: Buffer_usage
+  + {abstract} pull_from_rhi(): void
+  + {abstract} push_to_rhi(): void
+}
+Memory_buffer .up.|> RHI_linker_RHI_buffer
+
+class "Uniform_buffer<T>" as Uniform_buffer_T {
+  - m_data: T
+  + Uniform_buffer() ' Sets type=UNIFORM, usage=STATIC
+  + {static} create(...): Uniform_buffer<T>
+  + link(device: RHI_Device): void ' Calls device->create_memory_buffer
+  + push_to_rhi(): void ' Writes m_data to GPU
+  + pull_from_rhi(): void ' Reads from GPU to m_data
+}
+Uniform_buffer_T --|> Memory_buffer
+
+class "Uniform_buffer_array<T>" as Uniform_buffer_array_T {
+  - data: std::vector<T>
+  + Uniform_buffer_array() ' Sets type=UNIFORM, usage=STATIC
+  + {static} create(...): Uniform_buffer_array<T>
+  + link(device: RHI_Device): void ' Calls device->create_memory_buffer with total size
+  + push_to_rhi(): void ' Writes std::vector data to GPU
+  + pull_from_rhi(): void ' Reads from GPU to std::vector
+}
+Uniform_buffer_array_T --|> Memory_buffer
+
+class "Storage_buffer<T>" as Storage_buffer_T {
+  - m_data: T ' Implied, similar to Uniform_buffer
+  + Storage_buffer() ' Sets type=STORAGE, usage=DYNAMIC
+  + {static} create(...): Storage_buffer<T>
+  + link(device: RHI_Device): void ' Calls device->create_memory_buffer (type=STORAGE)
+  + push_to_rhi(): void
+  + pull_from_rhi(): void
+}
+Storage_buffer_T --|> Memory_buffer
+
+class "Storage_buffer_array<T>" as Storage_buffer_array_T {
+  - data: std::vector<T> ' Implied, similar to Uniform_buffer_array
+  + Storage_buffer_array() ' Sets type=STORAGE, usage=DYNAMIC
+  + {static} create(...): Storage_buffer_array<T>
+  + link(device: RHI_Device): void ' Calls device->create_memory_buffer (type=STORAGE)
+  + push_to_rhi(): void
+  + pull_from_rhi(): void
+}
+Storage_buffer_array_T --|> Memory_buffer
+
+
+@enduml

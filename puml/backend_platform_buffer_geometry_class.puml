@@ -1,0 +1,92 @@
+@startuml
+
+
+' ========================
+' RHI_buffer 核心结构
+' ========================
+abstract class RHI_buffer {
+    + {abstract} reallocate_data(size: size_t)
+    + {abstract} substitute_data(offset: size_t, data: void*)
+    + {abstract} map_buffer(access: RHI_buffer_access_flags): void*
+    + {abstract} unmap_buffer()
+    + get_size(): size_t
+    + get_type(): Buffer_type
+    + get_usage(): Buffer_usage
+}
+
+enum Buffer_type {
+    VERTEX_BUFFER
+    INDEX_BUFFER
+    UNIFORM_BUFFER
+    STORAGE_BUFFER
+}
+
+enum Buffer_usage {
+    STATIC_DRAW
+    DYNAMIC_DRAW
+    STREAM_DRAW
+}
+
+class RHI_buffer_access_flags {
+    + {static} read_only(): RHI_buffer_access_flags
+    + {static} write_only(): RHI_buffer_access_flags
+    + {static} read_write(): RHI_buffer_access_flags
+}
+
+RHI_buffer --> Buffer_type
+RHI_buffer --> Buffer_usage
+RHI_buffer --> RHI_buffer_access_flags : 映射时\n指定访问权限
+
+' ========================
+' 派生缓冲接口
+' ========================
+interface IRHI_vertex_buffer {
+    + get_stride(): size_t
+    + get_vertex_count(): size_t
+    + get_element_type(): Vertex_element_type
+}
+
+interface IRHI_element_buffer {
+    + get_index_type(): Index_type = UINT
+    + get_index_count(): size_t
+}
+
+interface IRHI_memory_buffer {
+    + bind_memory(offset: size_t, size: size_t)
+    + get_alignment(): size_t
+}
+
+RHI_buffer <|-- IRHI_vertex_buffer
+RHI_buffer <|-- IRHI_element_buffer
+RHI_buffer <|-- IRHI_memory_buffer
+
+' ========================
+' 内存绑定器
+' ========================
+abstract class RHI_memory_buffer_binder {
+    + {abstract} bind_full(buffer: IRHI_memory_buffer)
+    + {abstract} bind_range(buffer: IRHI_memory_buffer, offset: size_t)
+}
+
+RHI_memory_buffer_binder --> IRHI_memory_buffer : 操作
+
+' ========================
+' RHI_geometry 结构
+' ========================
+abstract class RHI_geometry {
+    - m_vertex_buffers: map<int, shared_ptr<RHI_buffer>>
+    - m_element_buffer: shared_ptr<RHI_buffer>
+    + {abstract} bind_buffers()
+    + {abstract} bind_vertex_buffer(location: int, buffer: RHI_buffer)
+    + {abstract} draw(vertex_count: uint32_t)
+    + {abstract} draw_instanced(instance_count: uint32_t)
+    + add_vertex_buffer(location: int, buffer: shared_ptr<RHI_buffer>)
+    + set_element_buffer(buffer: shared_ptr<RHI_buffer>)
+}
+
+RHI_geometry "1" *-- "0..*" RHI_buffer : 顶点缓冲
+RHI_geometry "1" *-- "0..1" IRHI_element_buffer : 索引缓冲
+
+
+
+@enduml

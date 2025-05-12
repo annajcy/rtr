@@ -1,0 +1,81 @@
+@startuml
+skinparam dpi 150
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 14
+skinparam rectangleBorderColor #4CAF50
+skinparam rectangleBackgroundColor #E8F5E9
+skinparam databaseBorderColor #2196F3
+skinparam databaseBackgroundColor #E3F2FD
+skinparam actorBorderColor #F44336
+skinparam actorBackgroundColor #FFEBEE
+skinparam entityBorderColor #9C27B0
+skinparam entityBackgroundColor #F3E5F5
+
+title 双缓冲数据流图 (Double Buffering Data Flow Diagram)
+
+' =====================================
+' 外部实体 (External Entities)
+' =====================================
+actor User as "用户\n(输入源)"
+
+entity Display as "显示器/屏幕\n(渲染输出)"
+
+' =====================================
+' 核心处理流程 (Processes)
+' =====================================
+
+rectangle "P1: 更新游戏逻辑 (World.update)" as LogicProcess #BBDEFB
+
+rectangle "P2: 协调交换与渲染 (Engine_runtime.tick)" as OrchestrationProcess #C8E6C9
+
+rectangle "P3: 渲染场景 (Render_system.render)" as RenderProcess #BBDEFB
+
+' =====================================
+' 数据存储 (Data Store)
+' =====================================
+
+database "DS1: Swap_data 缓冲区\n(m_swap_data[2])" as SwapDataBuffers #FFCCBC
+
+' =====================================
+' 数据流 (Data Flows)
+' =====================================
+
+' 1. 用户输入状态流入游戏逻辑
+User --> LogicProcess : "输入状态 (Input_state)"
+
+' 2. 协调进程触发游戏逻辑更新，并传递上下文数据
+OrchestrationProcess --> LogicProcess : "逻辑更新上下文\n(Logic_tick_context)"
+note on link
+    - delta_time
+    - logic_swap_data 引用
+end note
+
+' 3. 游戏逻辑将下一帧场景数据写入当前逻辑缓冲区
+LogicProcess --> SwapDataBuffers : "场景状态数据 (下一帧)"
+
+' 4. 协调进程执行缓冲区角色交换与清空操作
+OrchestrationProcess --( SwapDataBuffers : "交换缓冲区角色 & 清空旧逻辑缓冲区"
+note on link
+    - Engine_runtime.swap()
+    - logic_swap_data().clear()
+end note
+
+' 5. 协调进程触发渲染系统，并传递上下文数据
+OrchestrationProcess --> RenderProcess : "渲染更新上下文\n(Render_tick_context)"
+note on link
+    - delta_time
+    - render_swap_data 引用
+end note
+
+' 6. 渲染系统从当前渲染缓冲区读取上一帧的场景数据
+SwapDataBuffers --> RenderProcess : "场景状态数据 (当前帧)"
+
+' 7. 渲染系统将渲染结果输出到显示器
+RenderProcess --> Display : "渲染完成图像"
+
+' =====================================
+' 流程说明 (Flow Description)
+' =====================================
+
+
+@enduml

@@ -1,0 +1,93 @@
+@startuml
+title RHI 着色器系统 (RHI Shader System) 类图
+
+!define ABSTRACT_CLASS_COLOR Khaki
+!define CLASS_COLOR PaleTurquoise
+!define TEMPLATE_CLASS_COLOR LightGoldenRodYellow
+!define NOTE_BG_COLOR LightYellow
+!define NOTE_BORDER_COLOR OrangeRed
+
+left to right direction
+
+
+package "着色器核心抽象 (Shader Core Abstractions)" {
+    abstract class RHI_shader_code {
+        # m_shader_type: ShaderType ' 例如：顶点着色器 (Vertex_Shader), 片元着色器 (Fragment_Shader)等
+        
+        + RHI_shader_code(type: ShaderType)
+        + get_shader_type(): ShaderType
+        + {abstract} compile(source_code: string): bool ' 编译着色器源码
+        note: 对单一着色器代码（如一个GLSL文件内容）的抽象表示。\n负责管理和编译特定类型的着色器代码。
+    }
+
+    abstract class RHI_shader_program {
+        # m_codes: Map<ShaderType, RHI_shader_code*> ' 存储不同阶段的着色器代码对象
+        # m_uniforms: Map<String, shared_ptr<Uniform_entry_base>> ' 维护所有Uniform变量的映射
+
+        + {abstract} attach_code(code: RHI_shader_code*): void ' 附加一个着色器代码
+        + {abstract} detach_code(type: ShaderType): void ' 分离一个指定类型的着色器代码
+        + {abstract} link(): bool ' 链接所有已附加的着色器代码形成可执行程序
+        
+        ' 模板方法用于类型安全地修改和获取Uniform值
+        + modify_uniform<T>(name: string, value: T): bool
+        + get_uniform<T>(name: string, out_value: T&): bool
+        
+        ' 平台相关的底层Uniform设置接口，由派生类实现
+        + {abstract} set_uniform_platform_specific(name: string, entry: Uniform_entry_base*): void
+        note: 抽象的着色器程序类，由多个RHI_Shader_code构成。\n管理着色器代码的链接及Uniform变量。
+    }
+}
+RHI_shader_program o-- "m_codes" RHI_shader_code : (包含多个) >
+RHI_shader_program o-- "m_uniforms" Uniform_entry_base : (管理多个) >
+
+
+package "Uniform 变量管理 (Uniform Management)" {
+    abstract class Uniform_entry_base {
+        # uniform_name: string ' Uniform变量名
+        # data_type: UniformDataType ' Uniform数据类型 (如 FLOAT, VEC3, MAT4)
+        # needs_update: bool = true ' 是否需要更新到GPU
+
+        + Uniform_entry_base(name: string, type: UniformDataType)
+        + get_name(): string
+        + get_data_type(): UniformDataType
+        + mark_dirty(is_dirty: bool = true): void ' 标记为需要更新
+        + is_dirty(): bool
+        
+        + {abstract} data_ptr(): void* ' 获取底层数据指针 (用于GPU上传)
+        + {abstract} data_count(): int  ' 获取数据元素数量 (例如数组长度, 非数组为1)
+        note: 所有Uniform数据项的抽象基类，\n定义了Uniform类型和更新状态。
+    }
+
+    class Uniform_entry<T> <<Template>> extends Uniform_entry_base {
+        - m_value: std::unique_ptr<T> ' 使用unique_ptr管理单个数据
+
+        + Uniform_entry(name: string, type: UniformDataType, initial_value: T)
+        + {static} create(name: string, type: UniformDataType, initial_value: T): shared_ptr<Uniform_entry<T>>
+        
+        + get_value(): const T&
+        + set_value(value: T): void
+        
+        + data_ptr() override: void*
+        + data_count() override: int ' 对于单个值，返回1
+        note: 单个值Uniform的模板类。
+    }
+
+    class Uniform_entry_array<T> <<Template>> extends Uniform_entry_base {
+        - m_values: std::unique_ptr<T[]> ' 使用unique_ptr管理数据数组
+        - m_element_count: int ' 数组中的元素数量
+
+        + Uniform_entry_array(name: string, type: UniformDataType, count: int)
+        + {static} create(name: string, type: UniformDataType, count: int, initial_data: const T* = nullptr): shared_ptr<Uniform_entry_array<T>>
+        
+        + get_value_at(index: int): const T&
+        + set_value_at(index: int, value: T): void
+        + set_values(data: const T*, num_elements_to_copy: int): void ' 修改整个或部分数组
+        + get_count(): int ' 返回数组元素数量
+        
+        + data_ptr() override: void*
+        + data_count() override: int ' 返回数组定义的元素数量
+        note: 数组类型Uniform的模板类。
+    }
+}
+
+@enduml

@@ -1,0 +1,19 @@
+@startuml
+' 设置图表方向，让图从左向右排列
+left to right direction
+
+' 定义组件：整个运行时后端 (Runtime Backend)
+component "Runtime Backend" as Backend {
+    ' 在运行时后端内部，定义渲染器后端 (Renderer Backend)
+    rectangle "渲染器后端" as RendererBackend {
+        ' 定义平台层，并添加简短描述
+        package "平台层\n<size:12>提供跨平台支持，统一接口</size>" as PlatformLayer
+        ' 定义资源层，并添加简短描述
+        package "资源层\n<size:12>提供通用资源管理和加载能力</size>" as ResourceLayer
+        ' 定义工具层，并添加简短描述
+        package "工具层\n<size:12>提供通用底层工具类和辅助函数</size>" as ToolLayer
+    }
+}
+
+
+@enduml

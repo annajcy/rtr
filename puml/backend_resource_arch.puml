@@ -1,0 +1,57 @@
+@startuml
+title 资源层 (Resource Layer) - 整体架构
+
+package "资源层 (Resource Layer)" {
+
+    component "文件服务\n(File Service)" as FS
+    note right of FS
+        - 跨平台文件系统操作抽象
+        - 路径管理 (根目录设置/获取)
+        - 文本文件读写, 目录创建/遍历
+        - 跨平台文件操作 (复制/移动/删除)
+    end note
+
+    component "资源加载器模块\n(Resource Loaders Module)" as RLM
+    note right of RLM
+        - **文本加载器 (Text Loader)**:
+          加载并管理 Text 对象的共享指针
+        - **图像加载器 (Image Loader)**:
+          加载并管理 Image 对象的共享指针
+          (处理不同像素格式, stb_image封装)
+    end note
+
+    component "资源管理器\n(Resource Manager)" as RM
+    note left of RM
+        - 模板化资源管理 (Key_type, T)
+        - 存储与管理共享资源 (std::shared_ptr)
+        - **核心: 资源依赖图管理**
+        - 添加/获取/移除资源
+        - 循环依赖检测
+        - 查询依赖项/被依赖项
+    end note
+
+    component "哈希 (Hashing)" as HashUtil
+        note bottom: FNV-1a, 自定义字节序列哈希, 哈希合并
+    component "GUID生成 (GUID Generation)" as GuidUtil
+        note bottom: 顺序唯一ID生成与封装
+}
+
+' --- Interactions ---
+
+' Resource Loaders use File Service to access raw file data
+RLM ..> FS : <<uses>>\n(读取文件数据)
+
+' Resource Loaders provide loaded resource instances (as shared_ptrs) to the Resource Manager
+RLM ..> RM : <<provides>>\n(加载的资源实例)
+
+
+' External interaction explicitly mentioned for File Service
+rectangle "GUI层 File面板\n(GUI Layer File Panel)" as GuiFilePanel #APPLICATION
+GuiFilePanel ....> FS : <<uses>>\n(可视化资源管理接口)
+
+' Higher-level application logic would interact with the Resource Manager to get managed resources
+rectangle "RTR Runtime / 上层应用\n(Application Layer)" as App #APPLICATION
+App ....> RM : <<uses>>\n(请求/管理资源)
+
+
+@enduml

@@ -1,0 +1,111 @@
+@startuml
+skinparam classAttributeIconVisible false
+
+' Main Skybox class
+class Skybox {
+    -- Attributes --
+    - std::shared_ptr<Geometry> m_geometry
+    - std::shared_ptr<Material> m_material
+
+    -- Constructor --
+    + Skybox(std::shared_ptr<Texture> texture)
+    ' Internally calls Geometry::create_box().
+    ' If texture is Texture_2D, creates Skybox_spherical_material.
+    ' If texture is Texture_cubemap, creates Skybox_cubemap_material.
+
+    -- Methods --
+    + std::shared_ptr<Geometry> geometry() const
+    + std::shared_ptr<Material> material() const
+
+    -- Static Factory Method --
+    + {static} std::shared_ptr<Skybox> create(std::shared_ptr<Texture> texture)
+}
+
+' Related Core Classes (simplified for this context from previous diagrams)
+class Geometry {
+    + {static} std::shared_ptr<Geometry> create_box()
+    ' Represents a geometric shape, e.g., a cube.
+}
+
+abstract class Texture {
+    ' Base class for all texture types.
+}
+
+class Texture_2D extends Texture {
+    ' Represents a 2D texture.
+}
+
+class Texture_cubemap extends Texture {
+    ' Represents a cubemap texture.
+}
+
+abstract class Material {
+    ' Abstract base class for defining object surface properties.
+    ' Associated with a Shader object.
+    + Material(MaterialType type, std::shared_ptr<Shader> shader)
+}
+
+abstract class Shader {
+    ' Abstract base class for shader programs.
+    ' Determines how material is lit and rendered.
+}
+
+' Specific Skybox Material and Shader Implementations
+class Skybox_spherical_material extends Material {
+    -- Attributes --
+    + std::shared_ptr<Texture_2D> spherical_map
+
+    -- Constructor --
+    + Skybox_spherical_material(std::shared_ptr<Skybox_spherical_shader> shader)
+    ' Note: inherits Material constructor which takes Shader
+}
+
+class Skybox_cubemap_material extends Material {
+    -- Attributes --
+    + std::shared_ptr<Texture_cubemap> cube_map
+
+    -- Constructor --
+    + Skybox_cubemap_material(std::shared_ptr<Skybox_cubemap_shader> shader)
+    ' Note: inherits Material constructor which takes Shader
+}
+
+class Skybox_spherical_shader extends Shader {
+    ' Shader designed for spherical skybox rendering, typically uses a 2D texture.
+}
+
+class Skybox_cubemap_shader extends Shader {
+    ' Shader designed for cubemap skybox rendering, typically uses a cubemap texture.
+}
+
+' Relationships
+
+' Skybox Aggregations (shared ownership)
+Skybox "1" o-- "1" Geometry : contains > m_geometry
+Skybox "1" o-- "1" Material : uses > m_material
+
+' Inheritance
+Texture <|-- Texture_2D
+Texture <|-- Texture_cubemap
+
+Material <|-- Skybox_spherical_material
+Material <|-- Skybox_cubemap_material
+
+Shader <|-- Skybox_spherical_shader
+Shader <|-- Skybox_cubemap_shader
+
+' Dependencies / Associations
+Skybox .right.> Texture : uses in constructor for type checking
+Skybox .right.> Geometry : uses static method create_box()
+
+Skybox_spherical_material .right.> Skybox_spherical_shader : uses in constructor (via Material)
+Skybox_spherical_material "1" o-- "1" Texture_2D : references > spherical_map
+
+Skybox_cubemap_material .right.> Skybox_cubemap_shader : uses in constructor (via Material)
+Skybox_cubemap_material "1" o-- "1" Texture_cubemap : references > cube_map
+
+note top of Skybox
+  Represents the background or environment in a 3D rendering scene,
+  providing overall ambient lighting and a sense of spatial context.
+end note
+
+@enduml

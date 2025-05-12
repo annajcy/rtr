@@ -1,0 +1,124 @@
+@startuml
+left to right direction
+' Define standard types for attributes for consistency
+!define Matrix Matrix
+!define Vector3 Vector3
+!define Color Color
+!define shared_ptr "std::shared_ptr<"
+!define List "List<"
+
+' =====================================
+' 核心数据交换结构 (Core Data Exchange Structures)
+' =====================================
+package "Swap_data: 渲染数据核心载体" {
+
+    class Swap_data {
+        + Swap_camera camera
+        + List<Swap_object> render_objects
+        + List<Swap_directional_light> directional_lights
+        + List<Swap_point_light> point_lights
+        + List<Swap_spot_light> spot_lights
+        + shared_ptr<Skybox> skybox
+        + List<Swap_DL_Shadow_caster> dl_shadow_casters
+        + bool enable_csm_shadow ' 控制是否启用级联阴影
+        + List<Swap_CSM_shadow_caster> csm_shadow_casters
+
+        ' 方法
+        + clear() ' 重置所有向量和共享指针
+        + get_shadow_casters(): List<Swap_shadow_caster_object> ' 筛选投射阴影对象
+    }
+
+    ' =====================================
+    ' Swap_data 内部封装/关联的结构体
+    ' =====================================
+
+    struct Swap_camera {
+        
+    }
+
+    struct Swap_object {
+        
+    }
+
+    struct Swap_directional_light {
+        
+    }
+
+    struct Swap_point_light {
+       
+    }
+
+
+    struct Swap_DL_Shadow_caster {
+       
+    }
+
+    struct Swap_CSM_shadow_caster {
+       
+    }
+
+
+
+    ' =====================================
+    ' Swap_data 内部结构的关系
+    ' =====================================
+
+    Swap_data *-- Swap_camera : 包含 >
+    Swap_data *-- "0..*" Swap_object : 包含 >
+    Swap_data *-- "0..*" Swap_directional_light : 包含 >
+    Swap_data *-- "0..*" Swap_point_light : 包含 >
+    Swap_data *-- "0..*" Swap_spot_light : 包含 >
+    Swap_data *-- "0..1" Skybox : 包含 >
+    Swap_data *-- "0..*" Swap_DL_Shadow_caster : 包含 >
+    Swap_data *-- "0..*" Swap_CSM_shadow_caster : 包含 >
+
+
+    
+}
+
+' =====================================
+' Tick_context: 上下文数据结构
+' =====================================
+' package "Tick_context: 帧更新上下文" {
+'     class Logic_tick_context {
+'         + Input_state input_state ' 当前帧用户输入状态
+'         + Swap_data& logic_swap_data ' 逻辑层向渲染层传递数据通道 (引用)
+'         + float delta_time ' 上一帧逻辑更新以来时间
+'     }
+
+'     class Render_tick_context {
+'         + Swap_data& render_swap_data ' 渲染层输入数据源 (引用)
+'         + float delta_time ' 上一帧渲染更新以来时间
+'     }
+
+'     ' 外部依赖/相关类
+'     class Input_state {
+'         ' 键盘、鼠标等输入状态
+'         ' ...
+'     }
+
+'     ' =====================================
+'     ' Tick_context 结构之间的关系
+'     ' =====================================
+
+'     Logic_tick_context *-- Input_state : 包含 >
+'     Logic_tick_context --> Swap_data : 引用并修改 >
+'     Render_tick_context --> Swap_data : 引用并读取 >
+
+'     ' Notes for clarity
+'     note "为每帧逻辑更新提供必要输入" as LogicContextNote
+'     Logic_tick_context .. LogicContextNote
+
+'     note "为渲染系统每帧更新提供必要输入" as RenderContextNote
+'     Render_tick_context .. RenderContextNote
+' }
+
+' ' General notes on system design
+' note "Swap_data 是框架层与功能层之间数据交换的核心载体" as SwapDataMainNote
+' Swap_data .. SwapDataMainNote
+
+' note "Tick_context 封装了每帧更新的上下文数据，实现功能解耦" as TickContextMainNote
+' Logic_tick_context .. TickContextMainNote
+' Render_tick_context .. TickContextMainNote
+
+@enduml

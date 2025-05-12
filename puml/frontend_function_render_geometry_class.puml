@@ -1,0 +1,61 @@
+@startuml
+' PlantUML Class Diagram for Geometry and related components
+
+interface RHI_geometry extends RHI_linker_T {
+  + {abstract} some_rhi_geometry_method()
+}
+
+' --- RHI Linker (from previous context) ---
+abstract class "RHI_linker<T>" as RHI_linker_T<T> {
+  # rhi_resource : T
+  + link(device : RHI_device) : void
+  + get_rhi_resource() : T
+}
+
+' --- Bounding Volume Structs (New) ---
+struct BoundingBox {
+  + min_point : float[3] ' Example member
+  + max_point : float[3] ' Example member
+}
+
+struct BoundingSphere {
+  + center : float[3] ' Example member
+  + radius : float    ' Example member
+}
+
+' --- Render_object Base Class (New) ---
+abstract class Render_object {
+}
+
+' --- Geometry Class (New Focus) ---
+class Geometry extends Render_object {
+  - m_vertex_attributes : std::unordered_map<int, std::shared_ptr<Vertex_attribute_base>>
+  - m_element_attribute : std::shared_ptr<Element_atrribute>
+
+  + Geometry(vertex_attrs : std::unordered_map<int, std::shared_ptr<Vertex_attribute_base>>, elem_attr : std::shared_ptr<Element_atrribute>)
+  ' Accessors for attributes could be added here e.g. get_vertex_attribute(slot: int)
+
+  + {static} create_box() : std::shared_ptr<Geometry>
+  + {static} create_plane() : std::shared_ptr<Geometry>
+  + {static} create_screen_plane() : std::shared_ptr<Geometry>
+  + {static} create_sphere() : std::shared_ptr<Geometry>
+
+  + {static} compute_bounding_box(positions : Position_attribute) : BoundingBox
+  + {static} compute_bounding_sphere(positions : Position_attribute) : BoundingSphere
+
+  + link(device : RHI_device) : void ' Overrides RHI_linker_T::link
+}
+RHI_linker_T <|-- Geometry : <RHI_geometry>
+
+
+
+' --- Relationships for Geometry ---
+Geometry o-- "m_vertex_attributes\n(shader_slot)" Vertex_attribute_base : "0..*"
+Geometry o-- "m_element_attribute" Element_atrribute : "0..1"
+
+Geometry ..> RHI_device : uses during link()
+Geometry ..> BoundingBox : creates/returns
+Geometry ..> BoundingSphere : creates/returns
+Geometry ..> Position_attribute : uses in compute_bounding_*
+
+@enduml

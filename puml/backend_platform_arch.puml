@@ -1,0 +1,62 @@
+
+@startuml
+title 平台层 (Platform Layer) - RHI Modules as Components
+left to right direction
+actor "上层模块\n(Upper Layers)" as UpperLayer
+
+package "平台层 (Platform Layer)" {
+
+    package "RHI 抽象层 (RHI Abstraction Layer)\n(Render Hardware Interface)" as RHI_Abstraction_Package {
+        interface "统一RHI接口 (Unified RHI Interface)" as Unified_RHI_Interface
+
+        component "RHI_functions 模块" as RHIFunctions_Module {
+            note bottom
+                管理GPU渲染能力:
+                - 渲染管道 (Pipelines)
+                - 着色器 (Shaders)
+                - 渲染状态 (Render States)
+                - 等
+            end note
+        }
+
+        component "RHI_resources 模块" as RHIResources_Module {
+            note bottom
+                管理GPU设备资源:
+                - 纹理 (Textures)
+                - 缓冲区 (Buffers)
+                - 渲染目标 (Render Targets)
+                - 等
+            end note
+        }
+    }
+    note top of RHI_Abstraction_Package : **平台抽象 (Platform Abstraction)**
+
+    package "平台适配层 (Platform Adaptation Layer)\n(RHI Implementations)" as AdaptationLayer {
+        component "OpenGL RHI Implementation" as OpenGL_RHI
+        note bottom of OpenGL_RHI : (当前已实现)
+
+        component "DirectX12 RHI Implementation" as DX12_RHI
+        note bottom of DX12_RHI : (待实现)
+
+        component "Vulkan RHI Implementation" as Vulkan_RHI
+        note bottom of Vulkan_RHI : (待实现)
+    }
+    note top of AdaptationLayer : **平台适配 (Platform Adaptation)**\n针对不同图形API的具体实现
+}
+
+' --- Relationships ---
+
+' Upper Layer modules use the Unified RHI Interface
+UpperLayer --> Unified_RHI_Interface : <<uses>>
+
+' Concrete RHI implementations (in the Adaptation Layer) realize the Unified RHI Interface
+OpenGL_RHI ..|> Unified_RHI_Interface : <<implements>>
+DX12_RHI ..|> Unified_RHI_Interface : <<implements>>
+Vulkan_RHI ..|> Unified_RHI_Interface : <<implements>>
+
+' Implicit relationship: RHIFunctions_Module and RHIResources_Module
+' define the scope of the Unified_RHI_Interface.
+' This is conveyed by them being inside the RHI_Abstraction_Package
+' alongside the interface, and by the note on the interface.
+
+@enduml

@@ -1,0 +1,113 @@
+@startuml
+' 设置图表标题
+title 相机系统与组件集成设计
+
+' 从之前图例推断的基类
+abstract class Component_base {
+    ' 组件基类
+}
+
+' 场景图系统中的 Node 类 (相机依赖其空间信息)
+class Node {
+    ' 空间变换属性: 位置、旋转、缩放等
+    ' ...
+}
+
+' 场景图系统中的 Node_component (用于获取 Node 实例)
+class Node_component {
+    - Node node ' 关联的 Node 实例
+    ' ...
+}
+
+' 游戏对象体系中的 GameObject 类
+class GameObject {
+    - List<Component_base> components ' 包含的组件列表
+    ' ...
+}
+
+' 相机抽象基类
+abstract class Camera {
+    ' 核心属性
+    - float near_plane ' 近裁剪平面
+    - float far_plane ' 远裁剪平面
+
+    ' 核心方法
+    + view_matrix(): Matrix ' 计算视图变换矩阵 (从世界到相机空间)
+    + {abstract} projection_matrix(): Matrix ' 虚函数，由子类实现投影矩阵生成
+    + adjust_zoom(zoom_factor: float) ' 动态调整缩放
+    + set_aspect_ratio(ratio: float) ' 设置纵横比
+}
+
+' 透视相机实现
+class Perspective_camera {
+    - float FOV ' 视场角
+    - float aspect_ratio ' 纵横比
+
+    + projection_matrix(): Matrix ' 实现透视投影矩阵
+    ' (行为: 缩放模拟前后移动)
+}
+
+' 正交相机实现
+class Orthographic_camera {
+    - float left ' 投影边界：左
+    - float right ' 投影边界：右
+    - float top ' 投影边界：上
+    - float bottom ' 投影边界：下
+
+    + projection_matrix(): Matrix ' 实现正交投影矩阵
+    + adapt_to_window_aspect_ratio(window_ratio: float) ' 根据窗口纵横比自动适配边界高度
+}
+
+' 相机组件基类
+class Camera_component {
+    - Camera camera_instance ' 关联的 Camera 实例
+
+    + tick() ' 更新并提取视图、投影矩阵、位置、方向等数据供渲染
+    + add_resize_callback(callback: Function) ' 注册窗口尺寸变化回调
+}
+
+' 透视相机组件
+class Perspective_camera_component {
+    ' (隐含构造函数: 查找 Node_component, 获取 Node 作为相机空间基础, 构建 Perspective_camera 实例)
+}
+
+' 正交相机组件
+class Orthographic_camera_component {
+    ' (隐含构造函数: 查找 Node_component, 获取 Node 作为相机空间基础, 构建 Orthographic_camera 实例)
+}
+
+
+' =====================================
+' 定义类之间的关系
+' =====================================
+
+' 继承关系
+Perspective_camera --|> Camera
+Orthographic_camera --|> Camera
+
+Camera_component --|> Component_base
+Perspective_camera_component --|> Camera_component
+Orthographic_camera_component --|> Camera_component
+
+' 依赖关系
+' Camera 依赖 Node 提供空间位置信息 (但不拥有 Node)
+Camera ..> Node : 依赖空间信息 >
+
+' 组合关系
+' Camera_component 拥有并管理一个 Camera 实例
+Camera_component "1" *-- "1" Camera : 管理 / 包含 >
+
+' Perspective_camera_component 和 Orthographic_camera_component 在创建时依赖 Node_component
+' 查找 Node_component 来获取 Node，并将其用于构建内部的 Camera 实例。
+Perspective_camera_component ..> Node_component : 查找 Node 用于构建相机 >
+Orthographic_camera_component ..> Node_component : 查找 Node 用于构建相机 >
+
+' GameObject 包含 Camera_component (作为一种 Component_base)
+GameObject "1" *-- "0..*" Camera_component : 包含 >
+
+' =====================================
+' 添加注释说明
+' =====================================
+
+
+@enduml

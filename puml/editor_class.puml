@@ -1,0 +1,102 @@
+@startuml
+skinparam classAttributeIconVisible false
+
+
+
+' Editor Core Classes
+class Editor {
+    -- Attributes --
+    - std::unordered_map<std::string, std::shared_ptr<Panel>> m_panel_map
+    - Engine_runtime* m_engine_runtime
+    - RHI_imgui* m_imgui
+
+    -- Constructor --
+    + Editor(Engine_runtime* runtime, RHI_imgui* imgui)
+
+    -- Methods --
+    + void run()
+    - void tick()
+    - void runtime_tick()
+    - void editor_tick()
+    + void add_panel(const std::string& name, std::shared_ptr<Panel> panel)
+    + std::shared_ptr<Panel> get_panel(const std::string& name)
+    + void remove_panel(const std::string& name)
+
+    -- Static Factory Method --
+    + {static} std::shared_ptr<Editor> create(Engine_runtime* runtime, RHI_imgui* imgui)
+}
+
+abstract class Panel {
+    -- Attributes --
+    # RHI_imgui* m_imgui ' Injected dependency for UI rendering
+
+    -- Constructor --
+    + Panel(RHI_imgui* imgui)
+
+    -- Methods (Template Method Pattern) --
+    + void render() ' Defines the rendering loop (begin_render, draw_panel, end_render)
+    # virtual void draw_panel() = 0 ' Implemented by derived classes to provide specific UI elements
+    # void begin_render() ' Part of render() internal logic
+    # void end_render() ' Part of render() internal logic
+
+    -- Static Factory Method --
+    + {static} std::shared_ptr<Panel> create(...) ' Generic factory for panels
+}
+
+' Concrete Panel Implementations
+class Shadow_settings_panel extends Panel {
+   
+}
+
+class Phong_material_settings_panel extends Panel {
+   
+}
+
+class Parallax_settings_panel extends Panel {
+  
+}
+
+' Other Core System Classes
+class Engine_runtime {
+    -- Methods --
+    + void tick() ' Updates the underlying engine state
+}
+
+interface RHI_imgui {
+   
+}
+
+' Settings Classes (data structures to be manipulated by panels)
+class Shadow_settings {
+
+}
+
+class Phong_material_settings {
+
+}
+
+class Parallax_settings {
+
+}
+
+' Relationships
+
+' Editor relationships
+Editor "1" *-- "0..*" Panel : manages panels (via shared_ptr) > m_panel_map
+Editor "1" --> "1" Engine_runtime : wraps runtime > m_engine_runtime
+Editor "1" --> "1" RHI_imgui : uses for UI rendering > m_imgui
+
+' Panel inheritance
+Panel <|-- Shadow_settings_panel
+Panel <|-- Phong_material_settings_panel
+Panel <|-- Parallax_settings_panel
+
+' Panel dependencies (Dependency Injection)
+Panel .right.> RHI_imgui : uses ImGui functions > m_imgui
+
+Shadow_settings_panel "1" o-- "1" Shadow_settings : manipulates > m_settings
+Phong_material_settings_panel "1" o-- "1" Phong_material_settings : manipulates > m_settings
+Parallax_settings_panel "1" o-- "1" Parallax_settings : manipulates > m_settings
+
+
+@enduml

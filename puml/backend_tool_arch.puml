@@ -1,0 +1,44 @@
+@startuml
+allowmixing
+
+title Overall Architecture of 工具层 (Tool Layer)
+
+package "工具层 (Tool Layer)" <<Frame>> {
+
+    package "设计模式库\n(Design Pattern Library)" <<Module>> as DesignPatterns {
+        
+    }
+
+    package "数学库\n(Math Library)" <<Module>> as MathLib {
+        
+    }
+    MathLib ..> "GLM" : uses
+
+    package "日志库\n(Logging Library)" <<Module>> as LoggingLib {
+        
+    }
+    LoggingLib ..> "spdlog" : uses
+
+    package "序列化库\n(Serialization Library)" <<Module>> as SerializationLib {
+       
+    }
+    SerializationLib ..> "nlohmann_json" : uses
+
+    package "计时器库\n(Timer Library)" <<Module>> as TimerLib {
+       
+    }
+    TimerLib ..> "chrono" : uses
+
+    package "枚举和宏\n(Enums and Macros)" <<Module>> as EnumsMacros {
+        
+    }
+}
+
+component "GLM" <<External Library>>
+component "spdlog" <<External Library>>
+component "nlohmann_json" <<External Library>>
+component "chrono" <<External Library>>
+
+
+
+@enduml

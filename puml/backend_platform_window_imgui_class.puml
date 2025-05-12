@@ -1,0 +1,89 @@
+@startuml
+title RHI_window and RHI_imgui Class Diagram
+
+!define ABSTRACT_CLASS_COLOR Khaki
+!define CLASS_COLOR PaleTurquoise
+
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam roundcorner 10
+skinparam shadowing false
+
+
+' --- Event Classes (simplified based on text) ---
+class Key_event {
+  ' Details like key_code, action (press/release) would be here
+}
+class Mouse_button_event {
+  ' Details like button_id, action, coordinates would be here
+}
+class Mouse_move_event {
+  ' Details like x_pos, y_pos would be here
+}
+class Mouse_scroll_event {
+  ' Details like x_offset, y_offset would be here
+}
+
+
+' --- RHI_imgui Class (Pure Virtual) ---
+abstract class RHI_imgui {
+  + {abstract} begin_frame(): void
+  + {abstract} end_frame(): void
+  + {abstract} begin_render(panel_title: string, p_open: bool*, flags: int): void
+  + {abstract} end_render(): void
+  + {abstract} button(label: string, ...): bool
+  + {abstract} color_edit(label: string, color_ptr: float[3], ...): bool
+  + {abstract} slider_float(label: string, value_ptr: float*, min_val: float, max_val: float, ...): bool
+  + {abstract} text_edit(label: string, buffer: char*, buffer_size: int, ...): bool
+  ' ... other common ImGui widget methods ...
+  + {abstract} is_io_captured(): bool
+  + {abstract} frame_rate(): float
+}
+
+' --- RHI_window Class (Abstract Base) ---
+abstract class RHI_window {
+  # width: int
+  # height: int
+  # title: string
+  # p_rhi_imgui: RHI_imgui*
+
+  + RHI_window(width: int, height: int, title: string)
+  + bind_rhi_imgui(imgui_instance: RHI_imgui*): void
+
+  ' Event Registration (example callbacks)
+  + {abstract} register_key_event_callback(callback: void(*)(Key_event event)): void
+  + {abstract} register_mouse_button_event_callback(callback: void(*)(Mouse_button_event event)): void
+  + {abstract} register_mouse_move_event_callback(callback: void(*)(Mouse_move_event event)): void
+  + {abstract} register_mouse_scroll_event_callback(callback: void(*)(Mouse_scroll_event event)): void
+  ' Potentially other callbacks for window resize, close, etc.
+
+  ' Frame Lifecycle
+  + on_frame_begin(): void  // Handles event polling logic, calls poll_events
+  + on_frame_end(): void    // Handles buffer swapping logic, calls swap_buffers
+  
+  + {abstract} poll_events(): void // Platform-specific event polling
+  + {abstract} swap_buffers(): void // Platform-specific buffer swap
+
+  ' Accessors
+  + get_width(): int
+  + get_height(): int
+  + get_title(): string
+  + get_rhi_imgui(): RHI_imgui*
+  
+  ' Note: Default event handling (ESC to close, viewport adjustment on resize)
+  ' is implemented internally within concrete derived classes or this base,
+  ' typically by using the registered event system.
+}
+
+' --- Relationships ---
+RHI_window o-- RHI_imgui : " binds >" ' An RHI_window can optionally have an RHI_imgui instance
+
+' RHI_window uses (creates/dispatches) specific event types
+RHI_window ..> Key_event : <<dispatches>>
+RHI_window ..> Mouse_button_event : <<dispatches>>
+RHI_window ..> Mouse_move_event : <<dispatches>>
+RHI_window ..> Mouse_scroll_event : <<dispatches>>
+
+
+@enduml

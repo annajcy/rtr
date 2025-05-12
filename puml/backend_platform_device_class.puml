@@ -1,0 +1,99 @@
+@startuml
+title RHI_device Class Diagram (Simplified, Left-to-Right)
+
+!define ABSTRACT_CLASS_COLOR Khaki
+!define CLASS_COLOR PaleTurquoise
+!define STEREOTYPE_BG_COLOR LightPink
+
+left to right direction 
+
+abstract class RHI_device {
+  # type: API_type
+  + RHI_device(type: API_type)
+  + api_type(): API_type
+  + {abstract} check_error(): void
+
+  .. Buffer Creation ..
+  + {abstract} create_vertex_buffer(config: ...): RHI_vertex_buffer*
+  + {abstract} create_element_buffer(config: ...): RHI_element_buffer*
+  + {abstract} create_memory_buffer(config: ...): RHI_memory_buffer*
+
+  .. Geometry Creation ..
+  + {abstract} create_geometry(vertex_sources: ..., index_source: ...): RHI_geometry*
+
+  .. Shader Creation ..
+  + {abstract} create_shader_code(source: string, type: ShaderType, ...): RHI_shader_code*
+  + {abstract} create_shader_program(shader_map: map, layout_desc: ...): RHI_shader_program*
+
+  .. Texture Creation ..
+  + {abstract} create_texture_2D(width: int, height: int, tex_config: ...): RHI_texture_2D*
+  + {abstract} create_texture_2D_array(width: int, height: int, layers: int, tex_config: ...): RHI_texture_2D_array*
+  + {abstract} create_cube_map(size: int, tex_config: ...): RHI_cube_map*
+  + {abstract} create_color_attachment(width: int, height: int, format_info: ...): RHI_texture_2D*
+  + {abstract} create_depth_attachment(width: int, height: int, format_info: ...): RHI_texture_2D*
+  + {abstract} create_depth_cube_map(size: int, format_info: ...): RHI_cube_map*
+
+  .. Framebuffer Creation ..
+  + {abstract} create_frame_buffer(attachments: map, desc: ...): RHI_frame_buffer*
+  + {abstract} create_screen_buffer(...): RHI_screen_buffer*
+
+  .. Compute Task Creation ..
+  + {abstract} create_compute_task(program: RHI_shader_program*, ...): RHI_compute_task*
+
+  .. Higher-Order Object Creation ..
+  + {abstract} create_memory_buffer_binder(...): RHI_memory_buffer_binder*
+  + {abstract} create_texture_builder(...): RHI_texture_builder*
+  + {abstract} create_renderer(...): RHI_renderer*
+  + {abstract} create_pipeline_state(...): RHI_pipeline_state*
+}
+
+' --- RHI Resource Classes ---
+class RHI_vertex_buffer
+class RHI_element_buffer
+class RHI_memory_buffer
+class RHI_geometry
+class RHI_shader_code
+class RHI_shader_program
+class RHI_texture <<abstract>> {
+  + {abstract} get_native_handle(): void*
+}
+class RHI_texture_2D extends RHI_texture
+class RHI_texture_2D_array extends RHI_texture
+class RHI_cube_map extends RHI_texture
+class RHI_frame_buffer
+class RHI_screen_buffer 
+class RHI_compute_task
+class RHI_memory_buffer_binder
+class RHI_texture_builder
+class RHI_renderer
+class RHI_pipeline_state
+
+' --- Relationships ---
+
+' RHI_device creates instances of various RHI resources
+RHI_device ..> RHI_vertex_buffer : <<creates>>
+RHI_device ..> RHI_element_buffer : <<creates>>
+RHI_device ..> RHI_memory_buffer : <<creates>>
+RHI_device ..> RHI_geometry : <<creates>>
+RHI_device ..> RHI_shader_code : <<creates>>
+RHI_device ..> RHI_shader_program : <<creates>>
+RHI_device ..> RHI_texture_2D : <<creates>>
+RHI_device ..> RHI_texture_2D_array : <<creates>>
+RHI_device ..> RHI_cube_map : <<creates>>
+RHI_device ..> RHI_frame_buffer : <<creates>>
+RHI_device ..> RHI_screen_buffer : <<creates>>
+RHI_device ..> RHI_compute_task : <<creates>>
+RHI_device ..> RHI_memory_buffer_binder : <<creates>>
+RHI_device ..> RHI_texture_builder : <<creates>>
+RHI_device ..> RHI_renderer : <<creates>>
+RHI_device ..> RHI_pipeline_state : <<creates>>
+
+' Composition / Aggregation
+RHI_geometry "1" *-- " N" RHI_vertex_buffer : combines
+RHI_geometry "1" *-- "0..1" RHI_element_buffer : combines
+
+RHI_shader_program "1" *-- "1..N" RHI_shader_code : composed of
+
+RHI_frame_buffer "1" o-- "*" RHI_texture : has attachments
+
+@enduml

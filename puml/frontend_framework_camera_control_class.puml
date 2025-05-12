@@ -1,0 +1,97 @@
+@startuml
+' 设置图表标题
+title 摄像机控制系统
+
+' 定义抽象基类 Component_base
+abstract class Component_base {
+    ' 组件基类，提供通用接口
+}
+
+' 定义抽象基类 Camera_control
+abstract class Camera_control {
+    ' 属性
+    + std::shared_ptr<Camera> camera_ptr ' 持有的摄像机共享指针
+    + ControlType control_type ' 控制类型 (例如：轨迹球，第一人称)
+    + float move_sensitivity ' 移动速度/敏感度
+    + float rotation_sensitivity ' 旋转速度/敏感度
+    + float zoom_sensitivity ' 缩放速度/敏感度
+
+    ' 抽象接口
+    + {abstract} pitch(angle: float) ' 俯仰角控制接口
+    + {abstract} yaw(angle: float) ' 偏航角控制接口
+    + {abstract} tick(delta_time: float) ' 根据用户输入更新摄像机姿态
+}
+
+' 定义 Camera_control 的派生类：轨迹球控制
+class Trackball_Camera_control {
+    ' 实现 Camera_control 的抽象方法
+    + pitch(angle: float)
+    + yaw(angle: float)
+    + tick(delta_time: float)
+    ' (具体逻辑：鼠标左键旋转、中键平移、滚轮缩放)
+}
+
+' 定义 Camera_control 的派生类：第一人称游戏控制
+class Game_Camera_control {
+    ' 实现 Camera_control 的抽象方法
+    + pitch(angle: float)
+    + yaw(angle: float)
+    + tick(delta_time: float)
+    ' (具体逻辑：W/A/S/D/Q/E键移动，左键旋转，滚轮缩放)
+}
+
+' 定义 Camera_control_component 类
+class Camera_control_component {
+    - std::shared_ptr<Camera_control> controller_ptr ' 集成并驱动的 Camera_control 实例
+
+    ' 方法
+    + tick(delta_time: float) ' 每帧调用，驱动控制器更新摄像机状态
+    ' (隐式：连接输入系统与控制器)
+}
+
+' 定义 Camera_control_component 的派生类：轨迹球控制组件
+class Trackball_camera_control_component {
+    ' (隐式方法：添加至游戏对象时自动获取 Camera_component，
+    ' 并实例化 Trackball_Camera_control)
+    + on_attached_to_gameobject()
+}
+
+' 定义 Camera_control_component 的派生类：第一人称游戏控制组件
+class Game_camera_control_component {
+    ' (隐式方法：添加至游戏对象时自动获取 Camera_component，
+    ' 并实例化 Game_Camera_control)
+    + on_attached_to_gameobject()
+}
+
+' 其他相关类 (根据文本推断)
+class Camera {
+    ' 摄像机对象，包含视图矩阵、投影矩阵等
+}
+
+class Camera_component {
+    - std::shared_ptr<Camera> camera_instance ' 持有的 Camera 实例
+    ' 游戏对象上的摄像机组件
+}
+
+' 关系定义
+
+' 继承关系
+Trackball_Camera_control --|> Camera_control
+Game_Camera_control --|> Camera_control
+
+Camera_control_component --|> Component_base
+Trackball_camera_control_component --|> Camera_control_component
+Game_camera_control_component --|> Camera_control_component
+
+' 组合关系：Camera_control_component 持有并驱动一个 Camera_control 实例
+Camera_control_component "1" *-- "1" Camera_control : 集成并驱动 >
+
+' 关联关系：Camera_control 操作一个 Camera 实例
+Camera_control "1" o-- "1" Camera : 控制 >
+
+' 依赖关系：Camera_control_component (及其派生类) 需要从 Camera_component 获取 Camera 实例
+' Camera_component 作为 GameObject 持有 Camera 实例的桥梁
+Camera_control_component ..> Camera_component : 获取摄像机实例 >
+Camera_component "1" *-- "1" Camera : 持有 >
+
+@enduml

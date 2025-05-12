@@ -1,0 +1,54 @@
+@startuml
+left to right direction
+' Define standard types for attributes for consistency
+!define Matrix Matrix
+!define Vector3 Vector3
+!define Color Color
+!define shared_ptr "std::shared_ptr<"
+!define List "List<"
+
+' =====================================
+' 核心数据交换结构 (Core Data Exchange Structures)
+' =====================================
+
+
+' =====================================
+' Tick_context: 上下文数据结构
+' =====================================
+package "Tick_context: 帧更新上下文" {
+    class Logic_tick_context {
+        + Input_state input_state ' 当前帧用户输入状态
+        + Swap_data& logic_swap_data ' 逻辑层向渲染层传递数据通道 (引用)
+        + float delta_time ' 上一帧逻辑更新以来时间
+    }
+
+    class Render_tick_context {
+        + Swap_data& render_swap_data ' 渲染层输入数据源 (引用)
+        + float delta_time ' 上一帧渲染更新以来时间
+    }
+
+    ' 外部依赖/相关类
+    class Input_state {
+        ' 键盘、鼠标等输入状态
+        ' ...
+    }
+
+    ' =====================================
+    ' Tick_context 结构之间的关系
+    ' =====================================
+
+    Logic_tick_context *-- Input_state : 包含 >
+    Logic_tick_context --> Swap_data : 引用并修改 >
+    Render_tick_context --> Swap_data : 引用并读取 >
+
+    ' Notes for clarity
+    note "为每帧逻辑更新提供必要输入" as LogicContextNote
+    Logic_tick_context .. LogicContextNote
+
+    note "为渲染系统每帧更新提供必要输入" as RenderContextNote
+    Render_tick_context .. RenderContextNote
+}
+
+
+
+@enduml
