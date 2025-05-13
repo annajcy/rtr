@@ -25,7 +25,6 @@
 #include "glm/fwd.hpp"
 #include <memory>
 #include <unordered_map>
-#include <string> // Required for std::to_string
 
 using namespace rtr;
 
@@ -118,10 +117,8 @@ int main() {
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
     auto camera_node = camera_game_object->add_component<Node_component>()->node();
-    // --------------- CAMERA POSITION MODIFIED ---------------
-    camera_node->set_position(glm::vec3(0, 0, 18)); // Move camera further out and slightly up
-    camera_node->look_at_point(glm::vec3(0, 0, 0));   // Look at the center of the grid
-    // --------------- END CAMERA POSITION MODIFIED ---------------
+    camera_node->set_position(glm::vec3(0, 0, 60));
+    camera_node->look_at_point(glm::vec3(0, 0, 0));
 
     auto camera_component = camera_game_object->add_component<Perspective_camera_component>();
     camera_component->add_resize_callback(runtime->window_system()->window());
@@ -130,15 +127,15 @@ int main() {
 
     auto sphere = scene->add_game_object(Game_object::create("go1"));
     auto sphere_node = sphere->add_component<Node_component>()->node();
-    sphere_node->set_position(glm::vec3(-2, 0, 0)); // This sphere is now relative to the original "box"
+    sphere_node->set_position(glm::vec3(-2, 0, 0));
 
     auto sphere_mesh_renderer = sphere->add_component<Mesh_renderer_component>()->mesh_renderer();
     sphere_mesh_renderer->geometry() = Geometry::create_sphere();
-    sphere_mesh_renderer->material() = go_material; // Using go_material (brick texture) for sphere
+    sphere_mesh_renderer->material() = go_material;
 
-    auto box = scene->add_game_object(Game_object::create("go2_original_box")); // Renamed for clarity
+    auto box = scene->add_game_object(Game_object::create("go2"));
     auto box_node = box->add_component<Node_component>()->node();
-    box_node->set_position(glm::vec3(0, 0, 0)); // This box will be at the center of one layer of the grid
+    box_node->set_position(glm::vec3(0, 0, 0));
 
     auto rotate_component = box->add_component<Rotate_component>();
     rotate_component->speed() = 0.1f;
@@ -147,67 +144,64 @@ int main() {
     ping_pong_component->position() = glm::vec3(0, 1, 0);
     ping_pong_component->speed() = 0.002f;
 
-    auto box_mesh_renderer_component = box->add_component<Mesh_renderer_component>();
-    auto shared_box_mesh_renderer = box_mesh_renderer_component->mesh_renderer(); // Get the shared_ptr to the mesh_renderer
-    shared_box_mesh_renderer->geometry() = Geometry::create_box();
-    shared_box_mesh_renderer->material() = go_material; // This is the material new cubes will share
+    auto box_mesh_renderer = box->add_component<Mesh_renderer_component>()->mesh_renderer();
+    box_mesh_renderer->geometry() = Geometry::create_box();
+    box_mesh_renderer->material() = go_material;
 
     auto plane = scene->add_game_object(Game_object::create("plane"));
     auto plane_node = plane->add_component<Node_component>()->node();
-    plane_node->set_position(glm::vec3(0, -5, 0)); // Lower the plane a bit more
+    plane_node->set_position(glm::vec3(0, -1, 0));
     plane_node->look_at_direction(glm::vec3(0, 1, 0));
-    plane_node->set_scale(glm::vec3(15.0)); // Make plane larger to fit under all cubes
+    plane_node->set_scale(glm::vec3(5.0));
     auto plane_mesh_renderer = plane->add_component<Mesh_renderer_component>()->mesh_renderer();
     plane_mesh_renderer->geometry() = Geometry::create_plane();
     plane_mesh_renderer->material() = plane_material;
 
     auto dl_game_object = scene->add_game_object(Game_object::create("dl"));
     auto dl_node = dl_game_object->add_component<Node_component>()->node();
-    dl_node->look_at_direction(glm::vec3(0.1f, -1.0f, 0.1f)); // Slightly angled light
-    dl_node->set_position(glm::vec3(0, 10, 0)); // Move light higher up
+    dl_node->look_at_direction(glm::vec3(0, -1, 0));
+    dl_node->set_position(glm::vec3(0, 3, 0));
     auto dl = dl_game_object->add_component<Directional_light_component>();
     auto dl_shadow_caster = dl_game_object->add_component<Directional_light_shadow_caster_component>();
-    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_depth_attachemnt(4096, 4096); // Higher res shadow map
+    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_depth_attachemnt(2048, 2048);
 
     auto pl0_game_object = scene->add_game_object(Game_object::create("pl0"));
     auto pl0_node = pl0_game_object->add_component<Node_component>()->node();
-    pl0_node->set_position(glm::vec3(5, 1, 5)); // Adjusted point light position
+    pl0_node->set_position(glm::vec3(1, 0, 0));
     auto pl0 = pl0_game_object->add_component<Point_light_component>()->point_light();
     pl0->color() = glm::vec3(0, 1, 0);
 
     auto pl1_game_object = scene->add_game_object(Game_object::create("pl1"));
     auto pl1_node = pl1_game_object->add_component<Node_component>()->node();
-    pl1_node->set_position(glm::vec3(-5, 1, -5)); // Adjusted point light position
+    pl1_node->set_position(glm::vec3(-1, 0, 0));
     auto pl1 = pl1_game_object->add_component<Point_light_component>()->point_light();
     pl1->color() = glm::vec3(0, 0, 1);
 
     auto sl0_game_object = scene->add_game_object(Game_object::create("sl0"));
     auto sl0_node = sl0_game_object->add_component<Node_component>()->node();
-    sl0_node->set_position(glm::vec3(0, 5, 5)); // Adjusted spotlight position
-    sl0_node->look_at_direction(glm::vec3(0, -1, -1));
+    sl0_node->set_position(glm::vec3(0, 0, 1.0));
+    sl0_node->look_at_direction(glm::vec3(0, 0, -1));
     auto sl0 = sl0_game_object->add_component<Spot_light_component>()->spot_light();
     sl0->inner_angle() = 15.0f;
     sl0->outer_angle() = 20.0f;
     sl0->color() = glm::vec3(1, 1, 0);
-    sl0->intensity() = 0.8f; // Increased intensity
+    sl0->intensity() = 0.5f;
 
     auto sl1_game_object = scene->add_game_object(Game_object::create("sl1"));
     auto sl1_node = sl1_game_object->add_component<Node_component>()->node();
-    sl1_node->set_position(glm::vec3(0.0, 5.0, -5.0)); // Adjusted spotlight position
-    sl1_node->look_at_direction(glm::vec3(0.0, -1.0, 1.0));
+    sl1_node->set_position(glm::vec3(0.0, 1.0, 0.0));
+    sl1_node->look_at_direction(glm::vec3(0.0, -1.0, 0.0));
     auto sl1 = sl1_game_object->add_component<Spot_light_component>()->spot_light();
-    sl1->color() = glm::vec3(1, 0, 1); // Changed color for variety
-    sl1->intensity() = 0.8f; // Increased intensity
+    sl1->color() = glm::vec3(1, 1, 0);
+    sl1->intensity() = 0.5f;
     
     box_node->add_child(sphere_node, true);
 
-    // --------------- ADD 100 CUBES ---------------
-    int cubes_per_side_x = 10; // 10 cubes wide
-    int cubes_per_side_z = 5;  // 5 cubes deep
-    int layers_y = 2;          // 2 layers high (10 * 5 * 2 = 100 cubes)
+    int cubes_per_side_x = 30; 
+    int cubes_per_side_z = 30;  
+    int layers_y = 7;          
     float spacing = 2.0f;      // Spacing between cube centers
 
-    // Calculate offsets to center the grid around (0,0,0) on the XZ plane
     float offset_x = (cubes_per_side_x - 1) * spacing / 2.0f;
     float offset_z = (cubes_per_side_z - 1) * spacing / 2.0f;
 
@@ -228,14 +222,16 @@ int main() {
                 // Add MeshRendererComponent and share geometry and material
                 auto new_cube_mesh_renderer_component = cube_go->add_component<Mesh_renderer_component>();
                 auto new_cube_mesh_renderer = new_cube_mesh_renderer_component->mesh_renderer();
+
+                auto rotate_component = cube_go->add_component<Rotate_component>();
+                rotate_component->speed() = 0.1f;
                 
                 // Share the geometry and material from the original box_mesh_renderer
-                new_cube_mesh_renderer->geometry() = shared_box_mesh_renderer->geometry();
-                new_cube_mesh_renderer->material() = shared_box_mesh_renderer->material();
+                new_cube_mesh_renderer->geometry() = Geometry::create_box();
+                new_cube_mesh_renderer->material() = go_material;
             }
         }
     }
-
 
     editor->get_panel<editor::Parallax_settings_panel>("parallax settings")->set_parallax_settings(parallax_settings);
     editor->get_panel<editor::Phong_material_settings_panel>("phong material settings")->set_phong_material_settings(phong_material_settings);

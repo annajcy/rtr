@@ -117,7 +117,7 @@ int main() {
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
     auto camera_node = camera_game_object->add_component<Node_component>()->node();
-    camera_node->set_position(glm::vec3(0, 0, 60));
+    camera_node->set_position(glm::vec3(0, 0, 8));
     camera_node->look_at_point(glm::vec3(0, 0, 0));
 
     auto camera_component = camera_game_object->add_component<Perspective_camera_component>();
@@ -137,12 +137,12 @@ int main() {
     auto box_node = box->add_component<Node_component>()->node();
     box_node->set_position(glm::vec3(0, 0, 0));
 
-    auto rotate_component = box->add_component<Rotate_component>();
-    rotate_component->speed() = 0.1f;
+    // auto rotate_component = box->add_component<Rotate_component>();
+    // rotate_component->speed() = 0.1f;
 
-    auto ping_pong_component = box->add_component<Ping_pong_component>();
-    ping_pong_component->position() = glm::vec3(0, 1, 0);
-    ping_pong_component->speed() = 0.002f;
+    // auto ping_pong_component = box->add_component<Ping_pong_component>();
+    // ping_pong_component->position() = glm::vec3(0, 1, 0);
+    // ping_pong_component->speed() = 0.002f;
 
     auto box_mesh_renderer = box->add_component<Mesh_renderer_component>()->mesh_renderer();
     box_mesh_renderer->geometry() = Geometry::create_box();
@@ -196,43 +196,6 @@ int main() {
     sl1->intensity() = 0.5f;
     
     box_node->add_child(sphere_node, true);
-
-    int cubes_per_side_x = 30; // 10 cubes wide
-    int cubes_per_side_z = 30;  // 5 cubes deep
-    int layers_y = 7;          // 2 layers high (10 * 5 * 2 = 100 cubes)
-    float spacing = 2.0f;      // Spacing between cube centers
-
-    float offset_x = (cubes_per_side_x - 1) * spacing / 2.0f;
-    float offset_z = (cubes_per_side_z - 1) * spacing / 2.0f;
-
-    int cube_count = 0;
-    for (int y_layer = 0; y_layer < layers_y; ++y_layer) {
-        for (int i = 0; i < cubes_per_side_x; ++i) {
-            for (int j = 0; j < cubes_per_side_z; ++j) {
-                std::string cube_name = "auto_cube_" + std::to_string(cube_count++);
-                auto cube_go = scene->add_game_object(Game_object::create(cube_name));
-                auto cube_go_node = cube_go->add_component<Node_component>()->node();
-
-                float pos_x = (i * spacing) - offset_x;
-                float pos_y = y_layer * spacing; // Stagger layers upwards
-                float pos_z = (j * spacing) - offset_z;
-                
-                cube_go_node->set_position(glm::vec3(pos_x, pos_y, pos_z));
-
-                // Add MeshRendererComponent and share geometry and material
-                auto new_cube_mesh_renderer_component = cube_go->add_component<Mesh_renderer_component>();
-                auto new_cube_mesh_renderer = new_cube_mesh_renderer_component->mesh_renderer();
-
-                auto rotate_component = cube_go->add_component<Rotate_component>();
-                rotate_component->speed() = 0.1f;
-                
-                // Share the geometry and material from the original box_mesh_renderer
-                new_cube_mesh_renderer->geometry() = Geometry::create_box();
-                new_cube_mesh_renderer->material() = go_material;
-            }
-        }
-    }
-    // --------------- END ADD 100 CUBES ---------------
 
     editor->get_panel<editor::Parallax_settings_panel>("parallax settings")->set_parallax_settings(parallax_settings);
     editor->get_panel<editor::Phong_material_settings_panel>("phong material settings")->set_phong_material_settings(phong_material_settings);

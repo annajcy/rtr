@@ -1,0 +1,38 @@
+@startuml
+left to right direction
+actor "3D艺术家" as artist
+
+rectangle "渲染器系统" {
+  usecase "使用直观用户界面" as UC_UI
+  usecase "导入模型" as UC_ImportModel
+  usecase "调整材质参数" as UC_AdjustMaterial
+  usecase "设置光照环境" as UC_SetLighting
+  usecase "实时预览渲染效果" as UC_RealtimePreview
+  usecase "创作真实感材质" as UC_CreateRealisticMaterials
+  note left of UC_CreateRealisticMaterials : 支持Phong光照模型\n(漫反射, 镜面反射, 环境光)
+  usecase "布置和控制光源" as UC_ControlLights
+  usecase "进行相机控制和场景导航" as UC_CameraControl
+
+  artist -- UC_UI
+  artist -- UC_ImportModel
+  artist -- UC_AdjustMaterial
+  artist -- UC_SetLighting
+  artist -- UC_RealtimePreview
+  artist -- UC_CreateRealisticMaterials
+  artist -- UC_ControlLights
+  artist -- UC_CameraControl
+
+
+  UC_RealtimePreview .> UC_AdjustMaterial : "实时反馈"
+  UC_RealtimePreview .> UC_SetLighting : "实时反馈"
+
+}
+
+note right of artist
+  更关注渲染器的易用性、
+  视觉表现力、艺术创作流程的流畅性。
+  核心需求: 快速迭代和所见即所得。
+end note
+
+caption 3D艺术家用例图
+@enduml

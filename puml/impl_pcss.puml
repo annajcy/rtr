@@ -1,0 +1,33 @@
+@startuml
+
+start
+
+:获取 light_projected_depth（receiver_depth）;
+
+:计算搜索半径 search_radius\n
+search_radius = ((light_space_depth - near_plane) / light_space_depth) * (light_size / frustum_size);
+
+:使用 search_radius 生成采样点;
+
+:获取采样区域内的深度值列表\n（通过 get_sampled_depth）;
+
+:查找遮挡物（find_blocker_depth）;
+if (找到了遮挡物?) then (是)
+  :计算 avg_blocker_depth\n
+  avg_blocker_depth = blocker_depth_sum / blocker_count;
+else (否)
+  :返回 -1.0（直接照亮）;
+  stop
+endif
+
+:计算半影半径 penumbra_radius\n
+penumbra_radius = ((receiver_depth - avg_blocker_depth) / receiver_depth) * (light_size / frustum_size);
+
+:使用 penumbra_radius 生成新的采样点;
+
+:执行 PCF 滤波\n（使用动态滤波半径）;
+
+:输出柔和阴影结果;
+
+stop
+@enduml

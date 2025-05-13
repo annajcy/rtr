@@ -1,0 +1,25 @@
+@startuml
+left to right direction
+actor "图形开发者" as dev
+
+rectangle "渲染器系统" {
+  usecase "集成自定义渲染算法" as UC1
+  usecase "快速开发GUI面板" as UC2
+  usecase "扩展渲染器核心组件" as UC3
+  usecase "使用跨平台的RHI" as UC4
+  usecase "自动化渲染资源管理" as UC5
+
+  dev -- UC1
+  dev -- UC2
+  dev -- UC3
+  dev -- UC4
+  dev -- UC5
+
+}
+
+note right of dev
+  具备深厚的计算机图形学背景和编程能力，
+  使用渲染器作为研究、实验和开发高级图形应用的平台。
+end note
+
+@enduml

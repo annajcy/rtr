@@ -1,16 +1,29 @@
 @startuml
-title 前向渲染流程 (Forward Rendering Pipeline)
-left to right direction
 
-(*) --> "对于每个对象"
---> "基础Pass：
-  - 应用一个逐像素定向光
-  - 应用所有逐顶点/SH光
-  - 应用光照贴图、环境光和自发光"
---> "对于每个逐像素光"
---> "额外Pass：
-  - 渲染每个额外的逐像素光"
---> "合成所有Pass"
---> "输出图像"
---> (*)
+start
+
+:开始渲染帧;
+:遍历物体列表;
+
+repeat
+    :还有物体未处理?;
+
+    if (是) then (是)
+        :处理几何与光栅化;
+        :进行片元着色，处理光照;
+
+        if (深度/模板测试通过?) then (是)
+            :混合并写入帧缓冲;
+        else (否)
+            :丢弃片元;
+        endif
+
+    endif
+
+repeat while (还有物体未处理?)
+
+:后处理;
+:显示最终图像;
+
+stop
 @enduml

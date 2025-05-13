@@ -1,0 +1,27 @@
+@startuml
+
+start
+
+:转换片元坐标至光源空间;\n计算 main_uv 与 light_projected_depth;
+
+:生成泊松盘样本;
+
+
+:计算 sampled_uv[i] = main_uv + samples[i] * sample_radius;
+
+:从阴影图获取 sampled_depth[i] = texture(shadow_map, sampled_uv[i]).r;
+
+:初始化 sum = 0;\ni = 0;
+
+while (i < sample_count?)
+  :比较 light_projected_depth - shadow_bias\n是否 > sampled_depth[i]?;
+  if (是) then (是)
+    :sum += 1.0;
+  endif
+  :i += 1;
+endwhile
+
+:shadow_factor = sum / float(sample_count);
+
+stop
+@enduml

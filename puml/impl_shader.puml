@@ -1,0 +1,41 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Shader {
+
+}
+
+class Phong_shader {
+    -unordered_map<Shader_feature, Uniforms> features
+    -model
+    -transparency
+    -ka, kd, ks
+    -shininess
+    -parallax_scale
+    -parallax_layer_count
+    -shadow_bias
+    -pcf_params
+}
+
+class Skybox_cubemap_shader {
+    -skybox texture (cubemap)
+}
+
+class Skybox_spherical_shader {
+    -skybox texture (spherical)
+}
+
+class Shadow_caster_shader {
+    -model
+}
+
+class Gamma_shader {
+    // no default uniforms
+}
+
+Shader <|-- Phong_shader
+Shader <|-- Skybox_cubemap_shader
+Shader <|-- Skybox_spherical_shader
+Shader <|-- Shadow_caster_shader
+Shader <|-- Gamma_shader
+@enduml

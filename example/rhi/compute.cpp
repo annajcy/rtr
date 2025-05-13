@@ -92,8 +92,11 @@ int main() {
 
     std::vector<float> res = sb->data();
     
+    cout << "Initial data: " << endl;
     for (auto v : initial_data) cout << v << " ";
     cout << endl;
+
+    cout << "Result data (round1): " << endl;
     for (auto v : res) cout << v << " ";
     cout << endl;
 
@@ -104,6 +107,7 @@ int main() {
 
     sb->pull_from_rhi();
     res = sb->data();
+    cout << "Result data (round2) : " << endl;
     for (auto v : res) cout << v << " ";
     cout << endl;
 

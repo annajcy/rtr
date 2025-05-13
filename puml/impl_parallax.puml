@@ -1,0 +1,37 @@
+@startuml
+start
+
+  :读取高度图 height_map
+  :读取视差强度 parallax_scaleS_parallax
+  :读取层数 parallax_layer_count（N_layers）；
+
+:计算观察方向 V_view；
+:转换至切线空间：\nV_tangent = normalize(transpose(M_TBN) * V_view)；
+:透视校正：\nV_offset_dir.xy = V_tangent.xy / -V_tangent.z；
+
+:计算每层步进量：\nΔuv = V_offset_dir * S_parallax / N_layers；\nD_layer = 1.0 / N_layers；
+
+:初始化当前UV坐标 uv_curr = 原始uv；
+:初始化当前深度 D_curr = 0；
+
+repeat
+  :uv_curr += Δuv；
+  :D_curr += D_layer；
+  :采样高度值：\nH_curr = texture(height_map, uv_curr).r；
+repeat while (H_curr > D_curr)
+
+:uv_prev = uv_curr - Δuv；
+:D_prev = D_curr - D_layer；
+:H_prev = texture(height_map, uv_prev).r；
+
+:计算深度差值：
+d_prev_dist = H_prev - D_prev；
+d_curr_dist = D_curr - H_curr；
+
+:计算插值权重：\nw = d_curr_dist / (d_curr_dist + d_prev_dist)；
+:线性插值UV坐标：\nuv_final = mix(uv_curr, uv_prev, w)；
+
+:使用 uv_final 对其他贴图进行采样；
+
+stop
+@enduml

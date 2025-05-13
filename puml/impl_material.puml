@@ -1,0 +1,93 @@
+@startuml
+
+
+left to right direction
+
+' 基类 Material
+class Material {
+    +get_texture_map()
+    +get_pipeline_state()
+    +modify_shader_uniform()
+}
+
+' Phong 材质及其组成部分
+class Phong_material {
+    -Phong_shader shader
+    -Shadow_settings shadow_settings
+    -Phong_material_settings material_settings
+    -Parallax_settings parallax_settings
+    -Phong_texture_settings texture_settings
+    +get_shader_feature_set()
+    +get_texture_map()
+    +get_pipeline_state()
+    +modify_shader_uniform()
+}
+
+class Shadow_settings {
+    -shadow_bias
+    -light_size
+    -pcf_radius
+    -pcf_tightness
+    -pcf_sample_count
+    -enable_csm
+    +modify_shader_uniform()
+}
+
+class Phong_material_settings {
+    -transparency
+    -ka, kd, ks
+    -shininess
+    +modify_shader_uniform()
+}
+
+class Parallax_settings {
+    -parallax_scale
+    -parallax_layer_count
+    +modify_shader_uniform()
+}
+
+class Phong_texture_settings {
+    -albedo_map
+    -specular_map
+    -normal_map
+    -alpha_map
+    -height_map
+}
+
+' 其他材质
+class Skybox_spherical_material {
+    -Skybox_spherical_shader shader
+    -spherical_map
+    +get_texture_map()
+    +get_pipeline_state()
+}
+
+class Shadow_caster_material {
+    -Shadow_caster_shader shader
+    +get_pipeline_state()
+}
+
+class Gamma_material {
+    -Gamma_shader shader
+    -screen_map
+    +get_texture_map()
+}
+
+' 基类 Material 继承关系
+Material <|-- Phong_material
+Material <|-- Skybox_spherical_material
+Material <|-- Shadow_caster_material
+Material <|-- Gamma_material
+
+' 聚合关系
+Phong_material o-- Shadow_settings
+Phong_material o-- Phong_material_settings
+Phong_material o-- Parallax_settings
+Phong_material o-- Phong_texture_settings
+
+' 材质依赖着色器
+Phong_material --> Phong_shader
+Skybox_spherical_material --> Skybox_spherical_shader
+Shadow_caster_material --> Shadow_caster_shader
+Gamma_material --> Gamma_shader
+@enduml

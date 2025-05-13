@@ -1,0 +1,99 @@
+@startuml
+
+' package Shadow_pass <<Frame>> {
+'   class Shadow_pass extends Render_pass {
+'     - m_context: Shadow_pass.Execution_context
+'     - m_shadow_caster_material: Shadow_caster_material
+'     - Frame_buffer: shadow_fb
+'     ---
+'     + Shadow_pass()
+'     + set_resource_flow(Resource_flow)
+'     + set_context(Execution_context)
+'     + execute()
+'   }
+
+'   class Shadow_pass.Execution_context {
+'     + shadow_caster_swap_objects: List<Object>
+'   }
+
+'   class Shadow_pass.Resource_flow {
+'     + shadow_map_out: Depth_texture
+'   }
+
+'   class Shadow_caster_material {
+'     + shader: Shadow_caster_shader
+'     + pipeline_state
+'   }
+'   Shadow_pass ..> Shadow_caster_material : uses
+' }
+
+' package Main_pass <<Frame>> {
+'   class Main_pass extends Render_pass {
+'     - m_context: Main_pass.Execution_context
+'     - Frame_buffer: main_fb
+'     ---
+'     + Main_pass()
+'     + set_resource_flow(Resource_flow)
+'     + set_context(Execution_context)
+'     + execute()
+'   }
+
+'   class Main_pass.Execution_context {
+'     + skybox: shared_ptr<Skybox>
+'     + render_swap_objects: List<Object_with_Material>
+'   }
+
+'   class Main_pass.Resource_flow {
+'     + shadow_map_in: Depth_texture
+'     + color_attachment_out: Color_texture
+'     + depth_attachment_out: Depth_texture
+'   }
+
+'   class Skybox {
+'     + material: Skybox_material
+'     + geometry
+'   }
+'   Main_pass ..> Skybox : uses (optional)
+' }
+
+package Postprocess_pass <<Frame>> {
+  class Postprocess_pass extends Render_pass {
+    - m_gamma_material: Gamma_material
+    - m_screen_geometry: Screen_quad_geometry
+    - m_rhi_global_render_resource: Global_Resource
+    ---
+    + Postprocess_pass()
+    + set_resource_flow(Resource_flow)
+    + set_context(Execution_context) (currently empty)
+    + execute()
+  }
+
+  class Postprocess_pass.Resource_flow {
+    + texture_in: Color_texture (from Main_pass.color_attachment_out)
+  }
+
+  class Postprocess_pass.Execution_context {
+    (empty for this pass)
+  }
+
+  class Gamma_material {
+    + shader: Gamma_shader
+    + screen_map: Texture (references texture_in)
+    + pipeline_state
+  }
+  Postprocess_pass ..> Gamma_material : uses
+
+  class Global_Resource {
+    + screen_buffer : Default_FrameBuffer
+  }
+  Postprocess_pass ..> Global_Resource : uses
+
+  
+}
+
+' ' Data Flow between passes
+' Shadow_pass::Shadow_pass.Resource_flow --> Main_pass::Main_pass.Resource_flow : shadow_map_out -> shadow_map_in
+' Main_pass::Main_pass.Resource_flow --> Postprocess_pass::Postprocess_pass.Resource_flow : color_attachment_out -> texture_in
+
+
+@enduml
