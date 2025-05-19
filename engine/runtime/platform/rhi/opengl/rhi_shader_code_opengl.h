@@ -2,12 +2,51 @@
 
 #include "engine/runtime/global/base.h" 
 #include "../rhi_shader_code.h"
-#include "rhi_cast_opengl.h"
+
 #include <cassert>
 
 #define LOG_STR_LEN 1024
 
 namespace rtr {
+
+
+inline constexpr unsigned int gl_shader_type(Shader_type type) {
+    switch (type) {
+        case Shader_type::VERTEX:
+            return GL_VERTEX_SHADER;
+        case Shader_type::FRAGMENT:
+            return GL_FRAGMENT_SHADER;
+        case Shader_type::GEOMETRY:
+            return GL_GEOMETRY_SHADER;
+        case Shader_type::COMPUTE:
+            return GL_COMPUTE_SHADER;
+        case Shader_type::TESSELATION_CONTROL:
+            return GL_TESS_CONTROL_SHADER;
+        case Shader_type::TESSELATION_EVALUATION:
+            return GL_TESS_EVALUATION_SHADER;
+        default:
+            return 0;
+    }
+}
+
+inline constexpr std::string gl_shader_type_str(Shader_type type) {
+    switch (type) {
+        case Shader_type::VERTEX:
+            return "GL_VERTEX_SHADER";
+        case Shader_type::FRAGMENT:
+            return "GL_FRAGMENT_SHADER";
+        case Shader_type::GEOMETRY:
+            return "GL_GEOMETRY_SHADER";
+        case Shader_type::COMPUTE:
+            return "GL_COMPUTE_SHADER";
+        case Shader_type::TESSELATION_CONTROL:
+            return "GL_TESS_CONTROL_SHADER";
+        case Shader_type::TESSELATION_EVALUATION:
+            return "GL_TESS_EVALUATION_SHADER";
+        default:
+            return "UNKNOWN_SHADER_TYPE";
+    }
+}
 
 class RHI_shader_code_OpenGL : public RHI_shader_code {
 protected:

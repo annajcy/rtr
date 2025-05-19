@@ -13,6 +13,12 @@
 #include <memory>
 
 namespace rtr {
+    
+enum class API_type {
+    OPENGL,
+    DIRECTX,
+    VULKAN
+};
 
 class RHI_device {
 

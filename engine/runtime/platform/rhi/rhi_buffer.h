@@ -1,10 +1,47 @@
 #pragma once
 
-#include "engine/runtime/global/base.h" 
-#include "rhi_cast.h"
+#include "engine/runtime/global/math.h"
+
 #include <memory>
 
 namespace rtr {
+
+
+enum class Buffer_type {
+    VERTEX,
+    ELEMENT,
+    UNIFORM,
+    STORAGE,
+};
+
+enum class Buffer_usage {
+    STATIC,
+    DYNAMIC,
+    STREAM,
+};
+
+enum class Buffer_iterate_type {
+    PER_VERTEX,
+    PER_INSTANCE,
+};
+
+enum class Buffer_data_type {
+    FLOAT,
+    INT,
+    UINT,
+    BOOL,
+};
+
+
+inline constexpr unsigned int sizeof_buffer_data(Buffer_data_type type) {
+    switch (type) {
+    case Buffer_data_type::FLOAT: return 4;
+    case Buffer_data_type::INT: return 4;
+    case Buffer_data_type::UINT: return 4;
+    case Buffer_data_type::BOOL: return 1;
+    default: return 0;
+    }
+}
 
 struct RHI_buffer_access_flags {
     bool is_read{true};

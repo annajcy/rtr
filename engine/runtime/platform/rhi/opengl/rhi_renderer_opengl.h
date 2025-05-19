@@ -3,10 +3,10 @@
 #include "engine/runtime/global/base.h" 
 
 #include "../rhi_renderer.h"
-#include "../rhi_window.h"
 #include "rhi_frame_buffer_opengl.h"
 #include "rhi_geometry_opengl.h"
 #include "rhi_shader_program_opengl.h"
+
 #include <memory>
 
 namespace rtr {

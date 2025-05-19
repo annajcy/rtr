@@ -2,9 +2,94 @@
 
 #include "engine/runtime/global/base.h" 
 #include "../rhi_pipeline_state.h"
-#include "rhi_cast_opengl.h"
 
 namespace rtr {
+
+inline constexpr unsigned int gl_blend_factor(Blend_factor factor) {
+    switch (factor) {
+        case Blend_factor::ZERO: return GL_ZERO;
+        case Blend_factor::ONE: return GL_ONE;
+        case Blend_factor::SRC_COLOR: return GL_SRC_COLOR;
+        case Blend_factor::ONE_MINUS_SRC_COLOR: return GL_ONE_MINUS_SRC_COLOR;
+        case Blend_factor::DST_COLOR: return GL_DST_COLOR;
+        case Blend_factor::ONE_MINUS_DST_COLOR: return GL_ONE_MINUS_DST_COLOR;
+        case Blend_factor::SRC_ALPHA: return GL_SRC_ALPHA;
+        case Blend_factor::ONE_MINUS_SRC_ALPHA: return GL_ONE_MINUS_SRC_ALPHA;
+        case Blend_factor::DST_ALPHA: return GL_DST_ALPHA;
+        case Blend_factor::ONE_MINUS_DST_ALPHA: return GL_ONE_MINUS_DST_ALPHA;
+        default: return GL_ZERO;
+    }
+}
+
+inline constexpr unsigned int gl_blend_operation(Blend_operation operation) {
+    switch (operation) {
+        case Blend_operation::ADD: return GL_FUNC_ADD;
+        case Blend_operation::SUBTRACT: return GL_FUNC_SUBTRACT;
+        case Blend_operation::REVERSE_SUBTRACT: return GL_FUNC_REVERSE_SUBTRACT;
+        case Blend_operation::MIN: return GL_MIN;
+        case Blend_operation::MAX: return GL_MAX;
+        default: return GL_FUNC_ADD;
+    }
+}
+
+inline constexpr unsigned int gl_cull_mode(Cull_mode mode) {
+    switch (mode) {
+        case Cull_mode::FRONT: return GL_FRONT;
+        case Cull_mode::BACK: return GL_BACK;
+        case Cull_mode::FRONT_AND_BACK: return GL_FRONT_AND_BACK;
+        default: return GL_BACK;
+    }
+}
+
+inline constexpr unsigned int gl_front_face(Front_face face) {
+    switch (face) {
+        case Front_face::CLOCKWISE: return GL_CW;
+        case Front_face::COUNTER_CLOCKWISE : return GL_CCW;
+        default: return GL_CCW;
+    }
+}
+
+inline constexpr unsigned int gl_depth_function(Depth_function function) {
+    switch (function) {
+        case Depth_function::NEVER: return GL_NEVER;
+        case Depth_function::LESS: return GL_LESS;
+        case Depth_function::EQUAL: return GL_EQUAL;
+        case Depth_function::LESS_EQUAL : return GL_LEQUAL;
+        case Depth_function::GREATER: return GL_GREATER;
+        case Depth_function::NOT_EQUAL: return GL_NOTEQUAL;
+        case Depth_function::GREATER_EQUAL : return GL_GEQUAL;
+        case Depth_function::ALWAYS: return GL_ALWAYS;
+        default: return GL_LESS;
+    }
+}
+
+inline constexpr unsigned int gl_stencil_operation(Stencil_operation operation) {
+    switch (operation) {
+        case Stencil_operation::KEEP: return GL_KEEP;
+        case Stencil_operation::ZERO: return GL_ZERO;
+        case Stencil_operation::REPLACE: return GL_REPLACE;
+        case Stencil_operation::INCR: return GL_INCR;
+        case Stencil_operation::INCR_WRAP: return GL_INCR_WRAP;
+        case Stencil_operation::DECR: return GL_DECR;
+        case Stencil_operation::DECR_WRAP: return GL_DECR_WRAP;
+        case Stencil_operation::INVERT: return GL_INVERT;
+        default: return GL_KEEP;
+    }
+}
+
+inline constexpr unsigned int gl_stencil_function(Stencil_function function) {
+    switch (function) {
+        case Stencil_function::NEVER: return GL_NEVER;
+        case Stencil_function::LESS: return GL_LESS;
+        case Stencil_function::EQUAL: return GL_EQUAL;
+        case Stencil_function::LESS_EQUAL : return GL_LEQUAL;
+        case Stencil_function::GREATER: return GL_GREATER;
+        case Stencil_function::NOT_EQUAL: return GL_NOTEQUAL;
+        case Stencil_function::GREATER_EQUAL : return GL_GEQUAL;
+        case Stencil_function::ALWAYS: return GL_ALWAYS;
+        default: return GL_LESS;
+    }
+}
 
 class RHI_pipeline_state_OpenGL : public RHI_pipeline_state {
 

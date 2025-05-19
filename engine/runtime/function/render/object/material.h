@@ -3,7 +3,7 @@
 #include "engine/runtime/function/render/object/shader.h"
 #include "engine/runtime/function/render/object/texture.h"
 #include "engine/runtime/function/render/core/render_object.h"
-#include "engine/runtime/global/enum.h"
+
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
 #include "glm/fwd.hpp"
@@ -11,6 +11,16 @@
 #include <unordered_map>
 
 namespace rtr {
+
+enum class Material_type {
+    PHONG,
+    PBR,
+    SKYBOX_CUBEMAP,
+    SKYBOX_SPHERICAL,
+    GAMMA,
+    SHADOW_CASTER,
+    TEST
+};
 
 class Material : public Render_object {
     

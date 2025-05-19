@@ -1,11 +1,9 @@
 #pragma once
 
-#include "engine/runtime/global/base.h" 
-
 #include "rhi_shader_program.h"
 #include "rhi_geometry.h"
 #include "rhi_frame_buffer.h"
-#include "rhi_window.h"
+
 #include <memory>
 
 

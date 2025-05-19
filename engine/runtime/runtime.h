@@ -4,12 +4,12 @@
 #include "engine/runtime/context/swap_struct.h"
 #include "engine/runtime/function/input/input_system.h"
 #include "engine/runtime/function/render/render_system.h"
-#include "engine/runtime/function/window/window_system.h"
 #include "engine/runtime/global/logger.h"
 #include "engine/runtime/global/timer.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 #include "engine/runtime/framework/core/world.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
+#include "engine/runtime/platform/rhi/rhi_window.h"
 #include "engine/runtime/resource/file_service.h"
 
 namespace rtr {
@@ -29,11 +29,13 @@ private:
     int m_logic_swap_data_index = 1;
 
     std::shared_ptr<RHI_device> m_rhi_device{};
-    std::shared_ptr<Input_system> m_input_system{};
-    std::shared_ptr<Render_system> m_render_system{};
-    std::shared_ptr<Window_system> m_window_system{};
+    std::shared_ptr<RHI_window> m_rhi_window{};
+    
     std::shared_ptr<World> m_world{};
     std::shared_ptr<Timer> m_timer{};
+
+    std::shared_ptr<Input_system> m_input_system{};
+    std::shared_ptr<Render_system> m_render_system{};
 
 public:
 
@@ -47,12 +49,11 @@ public:
             descriptor.title
         );
 
-        auto window_system = Window_system::create(window);
         auto input_system = Input_system::create(window);
         auto render_system = Render_system::create(device, window);
         
         m_rhi_device = device;
-        m_window_system = window_system;
+        m_rhi_window = window;
         m_input_system = input_system;
         m_render_system = render_system;
 
@@ -67,9 +68,11 @@ public:
     }
 
     std::shared_ptr<RHI_device>& rhi_device() { return m_rhi_device; }
+    std::shared_ptr<RHI_window>& rhi_window() { return m_rhi_window; }
+    
     std::shared_ptr<Input_system>& input_system() { return m_input_system; }
     std::shared_ptr<Render_system>& render_system() { return m_render_system; }
-    std::shared_ptr<Window_system>& window_system() { return m_window_system; }
+
     std::shared_ptr<World>& world() { return m_world; }
 
     static std::shared_ptr<Engine_runtime> create(const Engine_runtime_descriptor& descriptor) {
@@ -80,10 +83,10 @@ public:
         Log_sys::get_instance()->log(Logging_system::Level::info, "Engine Runtime Destroyed");
     }
 
-    bool is_active() const { return m_window_system->window()->is_active(); }
+    bool is_active() const { return m_rhi_window->is_active(); }
 
     void run() {
-        while (m_window_system->window()->is_active()) {
+        while (is_active()) {
             tick(get_delta_time());
         }
     }
@@ -105,9 +108,9 @@ public:
     }
 
     void tick(float delta_time) {
-        m_window_system->window()->on_frame_begin();
+        rhi_window()->on_frame_begin();
 
-        m_world->tick(Logic_tick_context{
+        world()->tick(Logic_tick_context{
             m_input_system->state(),
             logic_swap_data(),
             delta_time
@@ -116,13 +119,13 @@ public:
         swap();
         logic_swap_data().clear();
 
-        m_render_system->tick(Render_tick_context{
+        render_system()->tick(Render_tick_context{
             render_swap_data(),
             delta_time
         });
 
-        m_rhi_device->check_error();
-        m_window_system->window()->on_frame_end();
+        rhi_device()->check_error();
+        rhi_window()->on_frame_end();
     }
     
 };

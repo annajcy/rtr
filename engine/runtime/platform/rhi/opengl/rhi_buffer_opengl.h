@@ -2,12 +2,56 @@
 
 #include "engine/runtime/global/base.h" 
 #include "../rhi_buffer.h"
-#include "rhi_cast_opengl.h"
 
 #include <memory>
 
 
 namespace rtr {
+
+inline constexpr unsigned int gl_usage(Buffer_usage usage) {
+    switch (usage) {
+    case Buffer_usage::STATIC:
+        return GL_STATIC_DRAW;
+    case Buffer_usage::DYNAMIC:
+        return GL_DYNAMIC_DRAW;
+    case Buffer_usage::STREAM:
+        return GL_STREAM_DRAW;
+    default:
+        return GL_STATIC_DRAW;
+    }
+}
+
+inline constexpr unsigned int gl_buffer_type(Buffer_type type) {
+    switch(type) {
+        case Buffer_type::VERTEX: return GL_ARRAY_BUFFER;
+        case Buffer_type::ELEMENT: return GL_ELEMENT_ARRAY_BUFFER;
+        case Buffer_type::UNIFORM: return GL_UNIFORM_BUFFER;
+        case Buffer_type::STORAGE: return GL_SHADER_STORAGE_BUFFER;
+        default: return GL_ARRAY_BUFFER;
+    }
+}
+
+inline constexpr unsigned int gl_buffer_data_type(Buffer_data_type type) {
+    switch (type) {
+    case Buffer_data_type::FLOAT: return GL_FLOAT;
+    case Buffer_data_type::INT: return GL_INT;
+    case Buffer_data_type::UINT: return GL_UNSIGNED_INT;
+    case Buffer_data_type::BOOL: return GL_BOOL;
+    default: return 0;
+    }
+}
+
+
+inline unsigned int gl_memory_buffer_alignment_type(Buffer_type type) {
+    switch (type) {
+        case Buffer_type::UNIFORM:
+            return GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
+        case Buffer_type::STORAGE:
+            return GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT;
+        default:
+            return GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
+    }    
+};
 
 class RHI_buffer_OpenGL : public RHI_buffer {
 protected:

@@ -3,14 +3,165 @@
 #include "engine/runtime/global/base.h" 
 
 #include "../rhi_texture.h"
-#include "engine/runtime/global/enum.h"
-#include "rhi_cast_opengl.h"
+#include "glm/gtc/type_ptr.hpp"
+
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
 
 namespace rtr {
+
+inline constexpr unsigned int gl_texture_type(Texture_type type) {
+    switch (type) {
+        case Texture_type::TEXTURE_2D:
+            return GL_TEXTURE_2D;
+        case Texture_type::TEXTURE_CUBEMAP:
+            return GL_TEXTURE_CUBE_MAP;
+        case Texture_type::TEXTURE_2D_ARRAY:
+            return GL_TEXTURE_2D_ARRAY;
+        default:
+            return GL_TEXTURE_2D;
+    }
+}
+
+inline constexpr unsigned int gl_texture_internal_format(Texture_internal_format format) {
+    switch (format) {
+        case Texture_internal_format::RGB:
+            return GL_RGB8;  // 添加位数
+        case Texture_internal_format::RGB_ALPHA:
+            return GL_RGBA8;
+        case Texture_internal_format::RGB_ALPHA_16F:
+            return GL_RGBA16F;
+        case Texture_internal_format::RGB_ALPHA_32F:
+            return GL_RGBA32F;
+        case Texture_internal_format::DEPTH_STENCIL:
+            return GL_DEPTH24_STENCIL8; // 更明确的深度格式
+        case rtr::Texture_internal_format::DEPTH:
+            return GL_DEPTH_COMPONENT24;
+        case Texture_internal_format::DEPTH_32F:
+            return GL_DEPTH_COMPONENT32F;
+        case Texture_internal_format::SRGB_ALPHA:
+            return GL_SRGB8_ALPHA8;  // 添加位数
+        case Texture_internal_format::SRGB:
+            return GL_SRGB8;         // 添加位数
+        case Texture_internal_format::DEPTH_STENCIL_24_8:
+            return GL_DEPTH24_STENCIL8;
+        default:
+            return GL_RGB8;  // 默认也带位数
+    }
+}
+
+inline constexpr unsigned int gl_texture_external_format(Texture_external_format format) {
+    switch (format) {
+        case Texture_external_format::RGB:
+            return GL_RGB;
+        case Texture_external_format::RGB_ALPHA:
+            return GL_RGBA;
+        case Texture_external_format::DEPTH_STENCIL:
+            return GL_DEPTH_STENCIL;
+        case Texture_external_format::DEPTH:
+            return GL_DEPTH_COMPONENT;
+        case Texture_external_format::SRGB_ALPHA:
+            return GL_SRGB_ALPHA;
+        case Texture_external_format::SRGB:
+            return GL_SRGB;
+        default:
+            return GL_RGB;
+    }
+}
+
+inline constexpr unsigned int gl_texture_buffer_type(Texture_buffer_type type) {
+    switch (type) {
+        case Texture_buffer_type::UNSIGNED_BYTE:
+            return GL_UNSIGNED_BYTE;
+        case Texture_buffer_type::UNSIGNED_INT:
+            return GL_UNSIGNED_INT;
+        case Texture_buffer_type::UNSIGNED_INT_24_8:
+            return GL_UNSIGNED_INT_24_8;
+        case Texture_buffer_type::FLOAT:
+            return GL_FLOAT;
+        default:
+            return GL_UNSIGNED_BYTE;
+    }
+}
+
+inline constexpr unsigned int gl_texture_wrap(Texture_wrap wrap) {
+    switch (wrap) {
+        case Texture_wrap::REPEAT:
+            return GL_REPEAT;
+        case Texture_wrap::MIRRORED_REPEAT:
+            return GL_MIRRORED_REPEAT;
+        case Texture_wrap::CLAMP_TO_EDGE:
+            return GL_CLAMP_TO_EDGE;
+        case Texture_wrap::CLAMP_TO_BORDER:
+            return GL_CLAMP_TO_BORDER;
+        default:
+            return GL_REPEAT;
+    }
+}
+
+inline constexpr unsigned int gl_texture_filter(Texture_filter filter) {
+    switch (filter) {
+        case Texture_filter::NEAREST:
+            return GL_NEAREST;
+        case Texture_filter::LINEAR:
+            return GL_LINEAR;
+        case Texture_filter::NEAREST_MIPMAP_NEAREST:
+            return GL_NEAREST_MIPMAP_NEAREST;
+        case Texture_filter::LINEAR_MIPMAP_NEAREST:
+            return GL_LINEAR_MIPMAP_NEAREST;
+        case Texture_filter::NEAREST_MIPMAP_LINEAR:
+            return GL_NEAREST_MIPMAP_LINEAR;
+        case Texture_filter::LINEAR_MIPMAP_LINEAR:
+            return GL_LINEAR_MIPMAP_LINEAR;
+        default:
+            return GL_NEAREST;
+    }
+}
+
+inline constexpr unsigned int gl_texture_cube_map_face(Texture_cubemap_face face) {
+    switch (face) {
+        case Texture_cubemap_face::RIGHT:
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+        case Texture_cubemap_face::LEFT:
+            return GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
+        case Texture_cubemap_face::TOP:
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
+        case Texture_cubemap_face::BOTTOM:
+            return GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
+        case Texture_cubemap_face::FRONT:
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
+        case Texture_cubemap_face::BACK:
+            return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+        default:
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+    }
+}
+
+inline constexpr unsigned int gl_texture_warp_target(Texture_wrap_target target) {
+    switch (target) {
+        case Texture_wrap_target::U:
+            return GL_TEXTURE_WRAP_S;
+        case Texture_wrap_target::V:
+            return GL_TEXTURE_WRAP_T;
+        case Texture_wrap_target::W:
+            return GL_TEXTURE_WRAP_R;
+        default:
+            return GL_TEXTURE_WRAP_S;
+    }
+}
+
+inline constexpr unsigned int gl_texture_filter_target(Texture_filter_target target) {
+    switch (target) {
+        case Texture_filter_target::MIN:
+            return GL_TEXTURE_MIN_FILTER;
+        case Texture_filter_target::MAG:
+            return GL_TEXTURE_MAG_FILTER;
+        default:
+            return GL_TEXTURE_MIN_FILTER;
+    }
+}
 
 class RHI_texture_OpenGL : public RHI_texture {
 protected:

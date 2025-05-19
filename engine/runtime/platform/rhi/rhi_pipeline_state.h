@@ -1,8 +1,72 @@
 #pragma once
 
-#include "engine/runtime/global/enum.h"
-
 namespace rtr {
+
+enum class Depth_function {
+    NEVER,
+    LESS,
+    EQUAL,
+    LESS_EQUAL,
+    GREATER,
+    NOT_EQUAL,
+    GREATER_EQUAL,
+    ALWAYS,
+};
+
+enum class Stencil_operation {
+    KEEP,
+    ZERO,
+    REPLACE,
+    INCR,
+    DECR,
+    INVERT,
+    INCR_WRAP,
+    DECR_WRAP,  
+};
+
+enum class Stencil_function {
+    NEVER,
+    LESS,
+    EQUAL,
+    LESS_EQUAL,
+    GREATER,
+    NOT_EQUAL,
+    GREATER_EQUAL,
+    ALWAYS
+};
+
+enum class Blend_factor {
+    ZERO,
+    ONE,
+    SRC_COLOR,
+    ONE_MINUS_SRC_COLOR,
+    DST_COLOR,
+    ONE_MINUS_DST_COLOR,
+    SRC_ALPHA,
+    ONE_MINUS_SRC_ALPHA,
+    DST_ALPHA,
+    ONE_MINUS_DST_ALPHA
+};
+
+enum class Blend_operation {
+    ADD,
+    SUBTRACT,
+    REVERSE_SUBTRACT,
+    MIN,
+    MAX,
+};
+
+enum class Cull_mode {
+    NONE,
+    FRONT,
+    BACK,
+    FRONT_AND_BACK,
+};
+
+enum class Front_face {
+    COUNTER_CLOCKWISE,
+    CLOCKWISE
+};
 
 struct Depth_state {
     bool test_enable{true};

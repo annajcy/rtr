@@ -2,14 +2,21 @@
 
 #include "engine/runtime/global/base.h" 
 #include "../rhi_buffer.h"
-#include "../rhi_cast.h"
 #include "../rhi_geometry.h"
 
 #include "rhi_buffer_opengl.h"
-#include "rhi_cast_opengl.h"
 #include "rhi_error_opengl.h"
 
 namespace rtr {
+
+inline constexpr unsigned int gl_draw_mode(Draw_mode mode) {
+    switch (mode) {
+    case Draw_mode::TRIANGLES: return GL_TRIANGLES;
+    case Draw_mode::POINTS: return GL_POINTS;
+    case Draw_mode::LINES: return GL_LINES;
+    default: return GL_TRIANGLES;
+    }
+}
 
 class RHI_geometry_OpenGL : public RHI_geometry {
 protected:

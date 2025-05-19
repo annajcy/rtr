@@ -1,6 +1,6 @@
 #include "engine/runtime/framework/component/custom/ping_pong_component.h"
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
-#include "engine/runtime/global/enum.h"
+
 #include "engine/editor/editor.h"
 #include "engine/runtime/function/render/object/material.h"
 #include "engine/runtime/function/render/object/shader.h"
@@ -121,7 +121,7 @@ int main() {
     camera_node->look_at_point(glm::vec3(0, 0, 0));
 
     auto camera_component = camera_game_object->add_component<Perspective_camera_component>();
-    camera_component->add_resize_callback(runtime->window_system()->window());
+    camera_component->add_resize_callback(runtime->rhi_window());
     
     auto camera_control_component = camera_game_object->add_component<Trackball_camera_control_component>();
 

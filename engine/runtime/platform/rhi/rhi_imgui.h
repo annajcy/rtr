@@ -1,7 +1,7 @@
 #pragma once
 
-
 #include <string>
+
 namespace rtr {
 
 class RHI_imgui {

@@ -4,7 +4,7 @@
 
 #include "../rhi_compute.h"
 #include "../rhi_shader_program.h"
-#include "rhi_buffer_opengl.h"
+
 #include "rhi_shader_program_opengl.h"
 
 

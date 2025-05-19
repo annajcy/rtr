@@ -1,11 +1,82 @@
 #pragma once
 
-#include "engine/runtime/global/enum.h"
 #include "engine/runtime/resource/loader/image_loader.h"
+#include "glm/ext/vector_float4.hpp"
 #include <memory>
 #include <vector>
 
 namespace rtr {
+
+
+enum class Texture_buffer_type {
+    UNSIGNED_BYTE,
+    UNSIGNED_INT,
+    UNSIGNED_INT_24_8,
+    FLOAT
+};
+
+enum class Texture_type {
+    TEXTURE_2D,
+    TEXTURE_CUBEMAP,
+    TEXTURE_2D_ARRAY
+};
+
+enum class Texture_internal_format {
+    RGB,
+    RGB_ALPHA,
+    RGB_ALPHA_16F,
+    RGB_ALPHA_32F,
+    DEPTH_STENCIL,
+    DEPTH_STENCIL_24_8,
+    DEPTH,
+    DEPTH_32F,
+    SRGB_ALPHA,
+    SRGB
+};
+
+enum class Texture_external_format {
+    RGB,
+    RGB_ALPHA,
+    DEPTH_STENCIL,
+    DEPTH,
+    SRGB_ALPHA,
+    SRGB
+};
+
+enum class Texture_wrap {
+    REPEAT,
+    MIRRORED_REPEAT,
+    CLAMP_TO_EDGE,
+    CLAMP_TO_BORDER,
+};
+
+enum class Texture_wrap_target {
+    U, V, W
+};
+
+enum class Texture_filter {
+    NEAREST,
+    LINEAR,
+    NEAREST_MIPMAP_NEAREST,
+    LINEAR_MIPMAP_NEAREST,
+    NEAREST_MIPMAP_LINEAR,
+    LINEAR_MIPMAP_LINEAR,
+};
+
+enum class Texture_filter_target {
+    MIN,
+    MAG,
+};
+
+enum class Texture_cubemap_face {
+    RIGHT,
+    LEFT,
+    TOP,
+    BOTTOM,
+    BACK,
+    FRONT,
+};
+
 
 struct Image_data {
     int width{};

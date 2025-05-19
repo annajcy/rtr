@@ -159,7 +159,7 @@ public:
 
     Editor(const std::shared_ptr<Engine_runtime>& engine_runtime) : 
     m_engine_runtime(engine_runtime),
-    m_imgui(engine_runtime->window_system()->window()->imgui()) {
+    m_imgui(engine_runtime->rhi_window()->imgui()) {
 
         add_panel(Shadow_settings_panel::create("shadow settings", m_imgui));
         add_panel(Phong_material_settings_panel::create("phong material settings", m_imgui));

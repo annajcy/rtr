@@ -6,6 +6,16 @@
 
 namespace rtr {
 
+enum class Draw_mode {
+    POINTS,
+    LINES,
+    LINE_LOOP,
+    LINE_STRIP,
+    TRIANGLES,
+    TRIANGLE_STRIP,
+    TRIANGLE_FAN,
+};
+
 class RHI_geometry  {
 protected:
     std::shared_ptr<RHI_buffer> m_element_buffer{};
