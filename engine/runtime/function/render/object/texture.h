@@ -152,18 +152,19 @@ public:
     }
 
     static std::shared_ptr<Texture_2D> create_image(
-        const std::shared_ptr<Image>& image
+        const std::shared_ptr<Image>& image,
+        Texture_internal_format internal_format = Texture_internal_format::SRGB_ALPHA
     ) {
         return create(
             image,
-            1,
-            Texture_internal_format::SRGB_ALPHA,
+            4,
+            internal_format,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
             },
             std::unordered_map<Texture_filter_target, Texture_filter>{
-                {Texture_filter_target::MIN, Texture_filter::LINEAR},
+                {Texture_filter_target::MIN, Texture_filter::LINEAR_MIPMAP_LINEAR},
                 {Texture_filter_target::MAG, Texture_filter::LINEAR}
             }
         );

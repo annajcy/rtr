@@ -21,6 +21,7 @@
 #include "engine/runtime/framework/core/scene.h"
 #include "engine/runtime/framework/core/world.h"
 
+#include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "engine/runtime/resource/file_service.h"
 #include "engine/runtime/resource/loader/image_loader.h"
 #include "engine/runtime/runtime.h"
@@ -81,8 +82,8 @@ int main() {
 
     auto go_texture_settings = Phong_texture_settings::create();
     go_texture_settings->albedo_map = Texture_2D::create_image(main_tex);
-    go_texture_settings->normal_map = Texture_2D::create_image(normal_map);
-    go_texture_settings->height_map = Texture_2D::create_image(height_map);
+    go_texture_settings->normal_map = Texture_2D::create_image(normal_map, Texture_internal_format::RGB_ALPHA);
+    go_texture_settings->height_map = Texture_2D::create_image(height_map, Texture_internal_format::RGB_ALPHA);
 
     auto plane_texture_settings = Phong_texture_settings::create();
     plane_texture_settings->albedo_map = Texture_2D::create_image(plane_main_tex);
@@ -108,13 +109,15 @@ int main() {
     // auto spherical = Skybox::create(Texture_image::create(bk_image));
     // scene->set_skybox(spherical);
 
-    auto cubemap = Skybox::create(Texture_cubemap::create_image(std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
-        {Texture_cubemap_face::BACK, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/back.jpg", false)},
-        {Texture_cubemap_face::BOTTOM, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/bottom.jpg", false)},
-        {Texture_cubemap_face::FRONT, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/front.jpg", false)},
-        {Texture_cubemap_face::LEFT, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/left.jpg", false)},
-        {Texture_cubemap_face::RIGHT, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/right.jpg", false)},
-        {Texture_cubemap_face::TOP, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/top.jpg", false)}
+    auto cubemap = Skybox::create(
+        Texture_cubemap::create_image(
+        std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
+            {Texture_cubemap_face::BACK, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/back.jpg", false)},
+            {Texture_cubemap_face::BOTTOM, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/bottom.jpg", false)},
+            {Texture_cubemap_face::FRONT, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/front.jpg", false)},
+            {Texture_cubemap_face::LEFT, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/left.jpg", false)},
+            {Texture_cubemap_face::RIGHT, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/right.jpg", false)},
+            {Texture_cubemap_face::TOP, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/top.jpg", false)}
     }));
     scene->set_skybox(cubemap);
 
