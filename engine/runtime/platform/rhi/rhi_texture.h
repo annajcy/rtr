@@ -94,10 +94,10 @@ struct Image_data {
 
     std::shared_ptr<Image> create_image() const {
         if (buffer_type == Texture_buffer_type::FLOAT) {
-            return Image_loader::load_from_data(Image_format::GRAY, data, width * height * sizeof(float));
+            return Image::create(Image_format::GRAY, data, width * height * sizeof(float));
         }
         else if (buffer_type == Texture_buffer_type::UNSIGNED_BYTE) {
-            return Image_loader::load_from_data(Image_format::RGB_ALPHA, data, width * height * sizeof(unsigned char));
+            return Image::create(Image_format::RGB_ALPHA, data, width * height * sizeof(unsigned char));
         }
         else throw std::runtime_error("Unsupported buffer type");
     }

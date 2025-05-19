@@ -40,35 +40,35 @@ int main() {
     auto world = World::create("world1");
     runtime->world() = world;
 
-    auto bk_image = Image_loader::load_from_path(
+    auto bk_image = Image::create(
         Image_format::RGB_ALPHA, 
         File_ser::get_instance()->get_absolute_path(
             "assets/image/skybox/spherical/bk.jpg"
         )
     );
     
-    auto height_map = Image_loader::load_from_path(
+    auto height_map = Image::create(
         Image_format::RGB_ALPHA,
         File_ser::get_instance()->get_absolute_path(
             "assets/image/bricks/disp.jpg"
         )
     );
 
-    auto normal_map = Image_loader::load_from_path(
+    auto normal_map = Image::create(
         Image_format::RGB_ALPHA,
         File_ser::get_instance()->get_absolute_path(
             "assets/image/bricks/bricks_normal.jpg"
         )
     );
 
-    auto main_tex = Image_loader::load_from_path(
+    auto main_tex = Image::create(
         Image_format::RGB_ALPHA, 
         File_ser::get_instance()->get_absolute_path(
             "assets/image/bricks/bricks.jpg"
         )
     );
 
-    auto plane_main_tex = Image_loader::load_from_path(
+    auto plane_main_tex = Image::create(
         Image_format::RGB_ALPHA, 
         File_ser::get_instance()->get_absolute_path(
             "assets/image/grass/grass.jpg"
@@ -109,12 +109,12 @@ int main() {
     // scene->set_skybox(spherical);
 
     auto cubemap = Skybox::create(Texture_cubemap::create_image(std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
-        {Texture_cubemap_face::BACK, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/back.jpg", false)},
-        {Texture_cubemap_face::BOTTOM, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/bottom.jpg", false)},
-        {Texture_cubemap_face::FRONT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/front.jpg", false)},
-        {Texture_cubemap_face::LEFT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/left.jpg", false)},
-        {Texture_cubemap_face::RIGHT, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/right.jpg", false)},
-        {Texture_cubemap_face::TOP, Image_loader::load_from_path(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/top.jpg", false)}
+        {Texture_cubemap_face::BACK, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/back.jpg", false)},
+        {Texture_cubemap_face::BOTTOM, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/bottom.jpg", false)},
+        {Texture_cubemap_face::FRONT, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/front.jpg", false)},
+        {Texture_cubemap_face::LEFT, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/left.jpg", false)},
+        {Texture_cubemap_face::RIGHT, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/right.jpg", false)},
+        {Texture_cubemap_face::TOP, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/top.jpg", false)}
     }));
     scene->set_skybox(cubemap);
 

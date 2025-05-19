@@ -9,12 +9,22 @@ namespace rtr {
 class Text {
 private:
     std::string m_text{};
+
 public:
     Text(const std::string& path) {
-       load_from_file(path, m_text);
+        std::ifstream file{};
+        file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        try {
+            file.open(path);
+            std::stringstream buffer{};
+            buffer << file.rdbuf();
+            file.close();
+            m_text = buffer.str();
+        }
+        catch(const std::exception& e) {
+            std::cerr << e.what() << '\n';
+        }
     }
-
-    Text(const char* data) : m_text(data) {}
 
     ~Text() = default;
 
@@ -23,32 +33,10 @@ public:
     int size() const { return m_text.size(); }
     bool empty() const { return m_text.empty(); }
 
-private:
-    void load_from_file(const std::string& path, std::string& str) {
-        std::ifstream file{};
-        file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        try {
-            file.open(path);
-            std::stringstream buffer{};
-            buffer << file.rdbuf();
-            file.close();
-            str = buffer.str();
-        }
-        catch(const std::exception& e) {
-            std::cerr << e.what() << '\n';
-        }
-    }
-
-};
-
-class Text_loader {
-public:
-    Text_loader() = default;
-    ~Text_loader() = default;
-    static std::shared_ptr<Text> load_from_path(const std::string& path) {
+    static std::shared_ptr<Text> create(const std::string& path) {
         return std::make_shared<Text>(path);
     }
-
 };
+
 
 }

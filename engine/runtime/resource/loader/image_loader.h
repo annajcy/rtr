@@ -71,11 +71,7 @@ public:
     const unsigned char* data_ptr() const { return m_data; }
     int data_size() const { return m_data_size; }
 
-};
-
-class Image_loader {
-public:
-    static std::shared_ptr<Image> load_from_path(
+    static std::shared_ptr<Image> create(
         Image_format format,
         const std::string& path,
         bool flip_y = true
@@ -83,7 +79,7 @@ public:
         return std::make_shared<Image>(format, path, flip_y);
     }
 
-    static std::shared_ptr<Image> load_from_data(
+    static std::shared_ptr<Image> create(
         Image_format format,
         const unsigned char* data,
         unsigned int data_size,
@@ -93,5 +89,6 @@ public:
     }
 
 };
+
 
 }

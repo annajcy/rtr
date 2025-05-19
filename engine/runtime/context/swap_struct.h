@@ -6,7 +6,6 @@
 #include "engine/runtime/function/render/object/texture.h"
 #include "glm/fwd.hpp"
 #include <memory>
-#include <utility>
 #include <vector>
 
 namespace rtr {

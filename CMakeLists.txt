@@ -47,6 +47,8 @@ include_directories(ext/glm)
 add_subdirectory(ext/mirrow)
 include_directories(ext/mirrow/include)
 
+include_directories(ext/tinyobjectloader)
+
 include_directories(
     ${CMAKE_SOURCE_DIR}
     ${OPENGL_INCLUDE_DIR}

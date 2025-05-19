@@ -1,6 +1,5 @@
 #pragma once
 
-#include "engine/runtime/global/base.h" 
 #include "rhi_texture.h"
 #include "rhi_window.h"
 #include <memory>

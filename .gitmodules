@@ -28,3 +28,6 @@
 [submodule "ext/mirrow"]
 	path = ext/mirrow
 	url = https://github.com/VisualGMQ/mirrow.git
+[submodule "ext/tinyobjectloader"]
+	path = ext/tinyobjectloader
+	url = https://github.com/tinyobjloader/tinyobjloader.git
