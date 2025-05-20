@@ -22,6 +22,7 @@ class Directional_light_shadow_caster_component : public Component_base {
 protected:
     std::shared_ptr<Directional_light> m_directional_light{};
     std::shared_ptr<Directional_light_shadow_caster> m_shadow_caster{};
+    float m_camera_orthographic_size{};
 
 public:
     Directional_light_shadow_caster_component() : Component_base(Component_type::SHADOW_CASTER) {
@@ -40,6 +41,9 @@ public:
     const std::shared_ptr<Directional_light_shadow_caster>& shadow_caster() const { return m_shadow_caster; }
     std::shared_ptr<Directional_light_shadow_caster>& shadow_caster() { return m_shadow_caster; }
 
+    float& camera_orthographic_size() { return m_camera_orthographic_size; }
+    float camera_orthographic_size() const { return m_camera_orthographic_size; }
+
     void on_add_to_game_object() override {
         m_directional_light = get_component<Directional_light_component>()->directional_light();
     }
@@ -49,7 +53,7 @@ public:
         auto light_position = m_directional_light->node()->world_position();
         m_shadow_caster->orthographic_shadow_camera()->node()->set_position(light_position);
         m_shadow_caster->orthographic_shadow_camera()->node()->look_at_direction(light_direction);
-        m_shadow_caster->orthographic_shadow_camera()->set_orthographic_size(12);
+        m_shadow_caster->orthographic_shadow_camera()->set_orthographic_size(m_camera_orthographic_size);
     }
 
     void tick(const Logic_tick_context& tick_context) override {

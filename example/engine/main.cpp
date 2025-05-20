@@ -144,7 +144,7 @@ int main() {
         scene->add_game_object(go);
     }
 
-    bag_root_go->get_component<Node_component>()->node()->set_position(glm::vec3(0, 2, 0));
+    bag_root_go->get_component<Node_component>()->node()->set_position(glm::vec3(2, 3, 0));
     auto bag_rot = bag_root_go->add_component<Rotate_component>();
     bag_rot->speed() = 0.01f;
 
@@ -197,6 +197,7 @@ int main() {
     auto dl = dl_game_object->add_component<Directional_light_component>();
     auto dl_shadow_caster = dl_game_object->add_component<Directional_light_shadow_caster_component>();
     dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_depth_attachemnt(2048, 2048);
+    dl_shadow_caster->camera_orthographic_size() = 17.0f;
 
     auto pl0_game_object = scene->add_game_object(Game_object::create("pl0"));
     auto pl0_node = pl0_game_object->add_component<Node_component>()->node();
