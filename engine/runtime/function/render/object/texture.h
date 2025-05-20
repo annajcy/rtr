@@ -1,16 +1,18 @@
 #pragma once
 
-#include "engine/runtime/function/render/core/render_object.h"
+#include "engine/runtime/function/render/core/render_resource.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "engine/runtime/resource/guid.h"
+#include "engine/runtime/resource/hash.h"
 #include "engine/runtime/resource/loader/image_loader.h"
+#include "engine/runtime/resource/resource_base.h"
 #include <memory>
 #include <unordered_map>
 
 namespace rtr {
 
-class Texture : public GUID, public RHI_linker<RHI_texture>, public Render_object {
+class Texture : public RHI_linker<RHI_texture>, public Render_resource {
 protected:
     Texture_type m_texture_type{};
     Texture_internal_format m_internal_format{};
@@ -25,7 +27,7 @@ public:
         Texture_internal_format internal_format,
         std::unordered_map<Texture_wrap_target, Texture_wrap> wraps,
         std::unordered_map<Texture_filter_target, Texture_filter> filters
-    ) : Render_object(Render_object_type::TEXTURE),
+    ) : Render_resource(Render_resource_type::TEXTURE),
         m_texture_type(texture_type),
         m_internal_format(internal_format),
         m_mipmap_levels(mipmap_levels),
@@ -124,6 +126,11 @@ public:
         std::unordered_map<Texture_wrap_target, Texture_wrap> wraps,
         std::unordered_map<Texture_filter_target, Texture_filter> filters
     ) {
+        if (!image) {
+            std::cout << "Texture2D::create failed: image is nullptr" << std::endl;
+            return nullptr;
+        }
+
         return std::make_shared<Texture_2D>(
             image,
             mipmap_levels,
@@ -324,6 +331,10 @@ public:
         std::unordered_map<Texture_wrap_target, Texture_wrap> wraps,
         std::unordered_map<Texture_filter_target, Texture_filter> filters
     ) {
+        if (images.size() == 0) {
+            std::cout << "Texture2DArray::create failed: images is empty" << std::endl;
+            return nullptr;
+        }
         return std::make_shared<Texture_2D_array>(
             images,
             mipmap_levels,
@@ -522,6 +533,10 @@ public:
         std::unordered_map<Texture_wrap_target, Texture_wrap> wraps,
         std::unordered_map<Texture_filter_target, Texture_filter> filters
     ) {
+        if (images.size() != 6) {
+            std::cout << "Texture_cubemap::create failed: number of m_images is not vaild" << std::endl;
+            return nullptr;
+        }
         return std::make_shared<Texture_cubemap>(
             images,
             mipmap_levels,

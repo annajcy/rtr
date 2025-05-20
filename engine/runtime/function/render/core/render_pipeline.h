@@ -4,7 +4,7 @@
 #include "engine/runtime/function/render/object/memory_buffer.h"
 #include "engine/runtime/function/render/object/texture.h"
 #include "engine/runtime/function/render/core/render_pass.h"
-#include "engine/runtime/function/render/core/render_object.h"
+#include "engine/runtime/function/render/core/render_resource.h"
 #include "engine/runtime/function/render/core/render_struct.h"
 #include "engine/runtime/resource/resource_base.h"
 #include "glm/fwd.hpp"
@@ -15,7 +15,7 @@ namespace rtr {
 class Render_pipeline {
 protected:
     RHI_global_render_resource& m_rhi_global_render_resource;
-    Resource_manager<std::string, Render_object> m_render_resource_manager{};
+    Resource_manager<std::string, Render_resource> m_render_resource_manager{};
 
 public:
     Render_pipeline(RHI_global_render_resource& global_render_resource) : 

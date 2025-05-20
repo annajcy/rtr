@@ -1,6 +1,7 @@
 
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
 #include "engine/editor/editor.h"
+#include "engine/runtime/framework/plugin/model_loader.h"
 #include "engine/runtime/function/render/object/material.h"
 #include "engine/runtime/function/render/object/shader.h"
 #include "engine/runtime/function/render/object/texture.h"
@@ -24,11 +25,13 @@
 #include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "engine/runtime/resource/file_service.h"
 #include "engine/runtime/resource/loader/image_loader.h"
+#include "engine/runtime/resource/loader/model_loader.h"
 #include "engine/runtime/runtime.h"
 
 #include "glm/fwd.hpp"
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 using namespace rtr;
 
@@ -76,6 +79,21 @@ int main() {
         )
     );
 
+   auto bag = Model_assimp::create(
+        File_ser::get_instance()->get_absolute_path(
+            "assets/model/backpack/backpack.obj"
+        )
+    );
+    bag->load();
+
+    std::vector<std::shared_ptr<Game_object>> bag_gos;
+
+    auto bag_root_go = Model_loader::load_model(
+        "bag",
+        bag,
+        bag_gos
+    );
+
     auto phong_material_settings = Phong_material_settings::create();
     auto parallax_settings = Parallax_settings::create();
     auto shadow_settings = Shadow_settings::create();
@@ -119,7 +137,16 @@ int main() {
             {Texture_cubemap_face::RIGHT, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/right.jpg", false)},
             {Texture_cubemap_face::TOP, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/top.jpg", false)}
     }));
+
     scene->set_skybox(cubemap);
+
+    for (auto& go : bag_gos) {
+        scene->add_game_object(go);
+    }
+
+    bag_root_go->get_component<Node_component>()->node()->set_position(glm::vec3(0, 2, 0));
+    auto bag_rot = bag_root_go->add_component<Rotate_component>();
+    bag_rot->speed() = 0.01f;
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
     auto camera_node = camera_game_object->add_component<Node_component>()->node();
@@ -143,12 +170,12 @@ int main() {
     auto box_node = box->add_component<Node_component>()->node();
     box_node->set_position(glm::vec3(0, 0, 0));
 
-    // auto rotate_component = box->add_component<Rotate_component>();
-    // rotate_component->speed() = 0.1f;
+    auto rotate_component = box->add_component<Rotate_component>();
+    rotate_component->speed() = 0.1f;
 
-    // auto ping_pong_component = box->add_component<Ping_pong_component>();
-    // ping_pong_component->position() = glm::vec3(0, 1, 0);
-    // ping_pong_component->speed() = 0.002f;
+    auto ping_pong_component = box->add_component<Ping_pong_component>();
+    ping_pong_component->position() = glm::vec3(0, 1, 0);
+    ping_pong_component->speed() = 0.002f;
 
     auto box_mesh_renderer = box->add_component<Mesh_renderer_component>()->mesh_renderer();
     box_mesh_renderer->geometry() = Geometry::create_box();
@@ -165,7 +192,7 @@ int main() {
 
     auto dl_game_object = scene->add_game_object(Game_object::create("dl"));
     auto dl_node = dl_game_object->add_component<Node_component>()->node();
-    dl_node->look_at_direction(glm::vec3(0, -1, 0));
+    dl_node->look_at_direction(glm::vec3(1, -1, 1));
     dl_node->set_position(glm::vec3(0, 3, 0));
     auto dl = dl_game_object->add_component<Directional_light_component>();
     auto dl_shadow_caster = dl_game_object->add_component<Directional_light_shadow_caster_component>();

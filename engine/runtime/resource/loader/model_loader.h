@@ -5,6 +5,7 @@
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
 #include "engine/runtime/resource/loader/image_loader.h"
+#include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float2.hpp"
 #include "glm/geometric.hpp"
@@ -103,28 +104,28 @@ struct Model_material {
     glm::vec3 kd{};         // 漫反射颜色 (Diffuse)
     glm::vec3 ks{};         // 镜面反射颜色 (Specular)
     glm::vec3 ke{};         // 自发光颜色 (Emissive)
-    float ns{};             // 镜面高光指数 (Shininess)
-    float ni{};             // 折射率 (Index of Refraction)
-    float d{};              // 不透明度 (Dissolve/Opacity)
-    int illum{};            // 光照模型 (Illumination model) - 注意 MTL 是 int, Assimp 也是 int
+    float shininess{};             // 镜面高光指数 (Shininess)
+    float ior{};             // 折射率 (Index of Refraction)
+    float alpha{};              // 不透明度 (Dissolve/Opacity)
 
     // 纹理贴图
-    std::shared_ptr<Image> map_Kd{};   // 通常是漫反射贴图 (map_Kd)
-    std::shared_ptr<Image> map_Ks{}; // 镜面贴图 (map_Ks)
-    std::shared_ptr<Image> map_d{};    // Alpha/不透明度贴图 (map_d)
-    std::shared_ptr<Image> map_norm{};   // 法线贴图 (norm or map_Bump if it's a normal map)
-    std::shared_ptr<Image> map_Bump{};   // 高度贴图 (map_Bump)
+    std::shared_ptr<Image> map_albedo{};   // 通常是漫反射贴图 (map_Kd)
+    std::shared_ptr<Image> map_specular{}; // 镜面贴图 (map_Ks)
+    std::shared_ptr<Image> map_alpha{};    // Alpha/不透明度贴图 (map_d)
+    std::shared_ptr<Image> map_normal{};   // 法线贴图 (norm or map_Bump if it's a normal map)
+    std::shared_ptr<Image> map_height{};   // 高度贴图 (map_Bump)
 };
 
 struct Model_mesh {
     std::shared_ptr<Model_geometry> geometry{};
-    std::shared_ptr<Model_material> material{};
+    unsigned int material_index{};
 };
 
 struct Model_node {
     std::vector<std::shared_ptr<Model_mesh>> meshes{};
     std::vector<std::shared_ptr<Model_node>> children{};
     std::weak_ptr<Model_node> parent{};
+    glm::mat4 local_model_matrix{1.0f};
 
     std::shared_ptr<Model_node> parent_node() const {
         return parent.lock();
@@ -135,11 +136,13 @@ struct Model_node {
 class Model {
 protected:
     std::shared_ptr<Model_node> m_root{};
+    std::vector<std::shared_ptr<Model_material>> m_materials{};
     std::string m_path{};
 
 public:
     Model(const std::string& path) : m_path(path) {}
-    std::shared_ptr<Model_node> root() const { return m_root; }
+    std::shared_ptr<Model_node> root_node() const { return m_root; }
+    const std::vector<std::shared_ptr<Model_material>>& materials() const { return m_materials; }
 
     virtual ~Model() = default;
     virtual std::shared_ptr<Model_node> load() = 0;
@@ -178,8 +181,21 @@ private:
         const aiNode* node, 
         const std::shared_ptr<Model_node>& parent
     ) {
+        if (!node) {
+            return nullptr;
+        }
+
+        std::cout << "Processing node: " << node->mName.C_Str() << std::endl;
+
         auto model_node = std::make_shared<Model_node>();
         model_node->parent = parent;
+
+        model_node->local_model_matrix = glm::mat4(
+            node->mTransformation.a1, node->mTransformation.a2, node->mTransformation.a3, node->mTransformation.a4,
+            node->mTransformation.b1, node->mTransformation.b2, node->mTransformation.b3, node->mTransformation.b4,
+            node->mTransformation.c1, node->mTransformation.c2, node->mTransformation.c3, node->mTransformation.c4,
+            node->mTransformation.d1, node->mTransformation.d2, node->mTransformation.d3, node->mTransformation.d4
+        );
 
         for (unsigned int i = 0; i < node->mNumMeshes; i++) {
             auto mesh = m_scene->mMeshes[node->mMeshes[i]];
@@ -198,7 +214,7 @@ private:
     std::shared_ptr<Model_mesh> process_mesh(const aiMesh* mesh) {
         auto model_mesh = std::make_shared<Model_mesh>();
         model_mesh->geometry = process_geometry(mesh);
-        model_mesh->material = process_material(mesh);
+        model_mesh->material_index = process_material(mesh);
         return model_mesh;
     }
 
@@ -295,37 +311,52 @@ private:
         return 0;
     }
 
-    std::shared_ptr<Model_material> process_material(const aiMesh* mesh) {
-        auto model_material = std::make_shared<Model_material>();
-        if (mesh->mMaterialIndex >= 0) {
-            auto material = m_scene->mMaterials[mesh->mMaterialIndex];
+    unsigned int process_material(const aiMesh* mesh) {
+        if (mesh->mMaterialIndex >= m_scene->mNumMaterials) {
+            std::cout << "Invalid material index: " << mesh->mMaterialIndex << std::endl;
+            return 0;
+        }
+        return mesh->mMaterialIndex;
+    }
 
+    void load_materials() {
+        for (unsigned int i = 0; i < m_scene->mNumMaterials; i++) {
+            auto material = m_scene->mMaterials[i];
+            auto model_material = std::make_shared<Model_material>();
             // 加载基础属性
             model_material->ka = process_vec3(AI_MATKEY_COLOR_AMBIENT, material);
             model_material->kd = process_vec3(AI_MATKEY_COLOR_DIFFUSE, material);
             model_material->ks = process_vec3(AI_MATKEY_COLOR_SPECULAR, material);
             model_material->ke = process_vec3(AI_MATKEY_COLOR_EMISSIVE, material);
-            model_material->ns = process_float(AI_MATKEY_SHININESS, material);
-            model_material->d = process_float(AI_MATKEY_OPACITY, material);
-            model_material->ni = process_float(AI_MATKEY_REFRACTI, material);
-            model_material->illum = process_int(AI_MATKEY_SHADING_MODEL, material);
+            model_material->shininess = process_float(AI_MATKEY_SHININESS, material);
+            model_material->alpha = process_float(AI_MATKEY_OPACITY, material);
+            model_material->ior = process_float(AI_MATKEY_REFRACTI, material);
 
             // 加载纹理
-            model_material->map_Kd = load_texture(material, aiTextureType_DIFFUSE, 0, Image_format::RGB_ALPHA);
-            model_material->map_Ks = load_texture(material, aiTextureType_SPECULAR, 0, Image_format::RGB_ALPHA);
-            model_material->map_norm = load_texture(material, aiTextureType_NORMALS, 0, Image_format::RGB_ALPHA);
-            model_material->map_Bump = load_texture(material, aiTextureType_HEIGHT, 0, Image_format::RGB_ALPHA);
-            model_material->map_d = load_texture(material, aiTextureType_OPACITY, 0, Image_format::RGB_ALPHA);
-            
-        }
+            model_material->map_albedo = load_texture(material, aiTextureType_DIFFUSE, 0, Image_format::RGB_ALPHA);
+            model_material->map_specular = load_texture(material, aiTextureType_SPECULAR, 0, Image_format::RGB_ALPHA);
+            model_material->map_normal = load_texture(material, aiTextureType_NORMALS, 0, Image_format::RGB_ALPHA);
+            model_material->map_height = load_texture(material, aiTextureType_HEIGHT, 0, Image_format::RGB_ALPHA);
+            model_material->map_alpha = load_texture(material, aiTextureType_OPACITY, 0, Image_format::RGB_ALPHA);
 
-        return model_material;
+            m_materials.push_back(model_material);
+        }
     }
 
 public:
+
     std::shared_ptr<Model_node> load() override {
+        load_materials();
         m_root = process_node(m_scene->mRootNode, nullptr);
         return m_root;
+    }
+
+    bool is_loaded() const {
+        return m_root != nullptr;
+    }
+
+    static std::shared_ptr<Model_assimp> create(const std::string& path) {
+        return std::make_shared<Model_assimp>(path);
     }
 
 };

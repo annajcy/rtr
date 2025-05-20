@@ -180,6 +180,27 @@ public:
         return m_model_matrix = parent_matrix * transform;
     }
 
+    void set_local_model_matrix(const glm::mat4& local_model_matrix) {
+        glm::vec3 scale = glm::vec3(
+            glm::length(glm::vec3(local_model_matrix[0])),
+            glm::length(glm::vec3(local_model_matrix[1])),
+            glm::length(glm::vec3(local_model_matrix[2]))
+        );
+
+        glm::mat3 rotation_matrix = glm::mat3(local_model_matrix);
+        rotation_matrix[0] /= scale.x;
+        rotation_matrix[1] /= scale.y;
+        rotation_matrix[2] /= scale.z;
+        glm::quat rotation = glm::quat_cast(rotation_matrix);
+        glm::vec3 position = glm::vec3(local_model_matrix[3]);
+        
+        set_position(position);
+        set_rotation(rotation);
+        set_scale(scale);
+
+        m_is_dirty = true;
+    }
+
     void set_dirty() { 
         if (m_is_dirty) {
             return;	

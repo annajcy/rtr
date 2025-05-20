@@ -2,7 +2,7 @@
 
 #include "engine/runtime/function/render/object/shader.h"
 #include "engine/runtime/function/render/object/texture.h"
-#include "engine/runtime/function/render/core/render_object.h"
+#include "engine/runtime/function/render/core/render_resource.h"
 
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
@@ -22,7 +22,7 @@ enum class Material_type {
     TEST
 };
 
-class Material : public Render_object {
+class Material : public Render_resource {
     
 protected:
     Material_type m_material_type{};
@@ -32,7 +32,7 @@ public:
     Material(
         Material_type material_type, 
         const std::shared_ptr<Shader>& shader
-    ) : Render_object(Render_object_type::MATERIAL),
+    ) : Render_resource(Render_resource_type::MATERIAL),
         m_material_type(material_type),
         m_shader(shader) {}
 

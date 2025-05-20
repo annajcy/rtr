@@ -1,6 +1,8 @@
 #pragma once
 #include "engine/runtime/global/base.h" 
+#include "engine/runtime/resource/hash.h"
 #include "engine/runtime/resource/resource_base.h"
+#include <memory>
 
 namespace rtr {
 
@@ -14,7 +16,6 @@ enum class Image_format {
     RGB_ALPHA,
     GRAY_ALPHA
 };
-    
 
 inline unsigned int stbi_image_format(Image_format format) {
     switch (format) {
@@ -32,6 +33,9 @@ inline unsigned int stbi_image_format(Image_format format) {
 }
 
 class Image {
+public:
+    inline static Resource_manager<Hash, Image> s_images{};
+
 protected:
     int m_width{};
     int m_height{};
@@ -76,7 +80,14 @@ public:
         const std::string& path,
         bool flip_y = true
     ) {
-        return std::make_shared<Image>(format, path, flip_y);
+        auto hash = Hash::from_string(path);
+        if (s_images.has(hash)) {
+            return s_images.get(hash);
+        }
+
+        auto image = std::make_shared<Image>(format, path, flip_y);
+        s_images.add(hash, image);
+        return image;
     }
 
     static std::shared_ptr<Image> create(
@@ -85,7 +96,33 @@ public:
         unsigned int data_size,
         bool flip_y = true
     ) {
-        return std::make_shared<Image>(format, data, data_size, flip_y);
+        auto hash = Hash::from_raw_data(data, data_size);
+        if (s_images.has(hash)) {
+            return s_images.get(hash);
+        }
+
+        auto image = std::make_shared<Image>(format, data, data_size, flip_y);
+        s_images.add(hash, image);
+        return image;
+    }
+
+    static std::shared_ptr<Image> get_image_from_cache(
+        Hash hash
+    ) {
+        if (s_images.has(hash)) {
+            return s_images.get(hash);
+        }
+        return nullptr;
+    }
+
+    static void remove_image_from_cache(
+        Hash hash
+    ) {
+        s_images.remove(hash);
+    }
+
+    static void clear_image_cache() {
+        s_images.clear();
     }
 
 };
