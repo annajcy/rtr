@@ -1,0 +1,171 @@
+@startuml
+
+
+abstract class Render_object {
+  + Render_object_type type
+}
+
+interface "RHI_linker<RHIType>" as RHI_linker {
+  + link(RHI_device device)
+}
+
+package "Attribute Buffers" <<Rectangle>> {
+  abstract class Attribute_base {
+    + Buffer_usage usage
+    + Buffer_data_type dataType
+    + {abstract} data_ptr()
+    + {abstract} data_size()
+  }
+  Attribute_base --|> RHI_linker : <RHI_buffer>
+
+  abstract class Vertex_attribute_base {
+    + Buffer_iterate_type iterateType
+    + {abstract} unit_count()
+    + link(RHI_device device) : creates RHI_vertex_buffer
+  }
+  Vertex_attribute_base --|> Attribute_base
+
+  class "Vertex_attribute<T, N>" as Vertex_attribute_T {
+    - std::vector<T> data
+  }
+  Vertex_attribute_T --|> Vertex_attribute_base
+
+  class Element_atrribute {
+    - std::vector<uint> indexData
+    + link(RHI_device device) : creates RHI_element_buffer
+  }
+  Element_atrribute --|> Attribute_base
+}
+
+package "Memory Buffers" <<Rectangle>> {
+  abstract class Memory_buffer {
+    + Buffer_type type
+    + Buffer_usage usage
+    + {abstract} pull_from_rhi()
+    + {abstract} push_to_rhi()
+    + link(RHI_device device) : creates RHI_memory_buffer
+  }
+  Memory_buffer --|> Render_object
+  Memory_buffer --|> RHI_linker : <RHI_buffer>
+
+  class "Uniform_buffer<T>" as Uniform_buffer_T {}
+  Uniform_buffer_T --|> Memory_buffer
+  class "Uniform_buffer_array<T>" as Uniform_buffer_array_T {}
+  Uniform_buffer_array_T --|> Memory_buffer
+  class "Storage_buffer<T>" as Storage_buffer_T {}
+  Storage_buffer_T --|> Memory_buffer
+  class "Storage_buffer_array<T>" as Storage_buffer_array_T {}
+  Storage_buffer_array_T --|> Memory_buffer
+}
+
+package "Geometry" <<Rectangle>> {
+  class Geometry {
+    + link(RHI_device device) : creates RHI_geometry
+    + {static} create_box()
+    + {static} create_sphere()
+  }
+  Geometry --|> Render_object
+  Geometry --|> RHI_linker : <RHI_geometry>
+  Geometry *-- "*" Vertex_attribute_base : vertexAttributes
+  Geometry *-- "1" Element_atrribute : elementAttribute
+}
+
+package "Shaders" <<Rectangle>> {
+  enum Shader_feature {}
+  class Shader_feature_dependency_graph {}
+
+  class Shader_code {
+    + link(RHI_device device) : creates RHI_shader_code
+  }
+  Shader_code --|> Render_object
+  Shader_code --|> RHI_linker : <RHI_shader_code>
+
+  class Shader_program {
+    + link(RHI_device device) : creates RHI_shader_program
+  }
+  Shader_program --|> Render_object
+  Shader_program --|> RHI_linker : <RHI_shader_program>
+  Shader_program *-- "*" Shader_code : "shader stages"
+
+  class Shader {
+    + {static} g_shader_cache
+    + get_shader_variant(features) : Shader_program
+    + {static} get_shader_code_from_url()
+  }
+  Shader --|> Render_object
+  Shader ..> Shader_feature : uses
+  Shader ..> Shader_feature_dependency_graph : uses
+  Shader ..> Shader_program : creates & manages variants
+
+  class Phong_shader {}
+  Phong_shader --|> Shader
+  class Skybox_shader {} 
+  Skybox_shader --|> Shader
+  class Skybox_cubemap_shader {}
+  Skybox_cubemap_shader --|> Skybox_shader
+  class Skybox_spherical_shader {}
+  Skybox_spherical_shader --|> Skybox_shader
+}
+
+package "Materials" <<Rectangle>> {
+  abstract class Material {
+    # shared_ptr<Shader> m_shader
+    + {abstract} get_shader_feature_set()
+    + get_shader_program() : Shader_program
+    + {abstract} get_texture_map()
+  }
+  Material --|> Render_object
+  Material o-- "1" Shader
+
+  class Skybox_material {}
+  Skybox_material --|> Material
+  class Skybox_spherical_material {}
+  Skybox_spherical_material --|> Skybox_material
+  Skybox_spherical_material ..> Skybox_spherical_shader : uses
+  class Skybox_cubemap_material {}
+  Skybox_cubemap_material --|> Skybox_material
+  Skybox_cubemap_material ..> Skybox_cubemap_shader : uses
+}
+
+package "Textures" <<Rectangle>> {
+  abstract class Texture {
+    + Texture_type type
+    + int m_mipmap_levels
+    + link(RHI_device device) : ensures RHI_texture
+  }
+  Texture --|> Render_object
+  Texture --|> RHI_linker : <RHI_texture>
+
+  class Texture_2D {
+    + link(RHI_device device) : creates RHI_texture_2D
+  }
+  Texture_2D --|> Texture
+  class Texture_2D_array {}
+  Texture_2D_array --|> Texture
+  class Texture_cubemap {}
+  Texture_cubemap --|> Texture
+}
+
+package "Frame Buffer" <<Rectangle>> {
+  class Frame_buffer {
+    + link(RHI_device device) : creates RHI_frame_buffer
+  }
+  Frame_buffer --|> Render_object
+  Frame_buffer --|> RHI_linker : <RHI_frame_buffer>
+  Frame_buffer o-- "*" Texture : "color attachments"
+  Frame_buffer o-- "0..1" Texture : "depth attachment"
+}
+
+package "Skybox" <<Rectangle>> {
+  class Skybox {
+    - shared_ptr<Geometry> m_geometry
+    - shared_ptr<Material> m_material
+  }
+  Skybox *-- "1" Geometry
+  Skybox *-- "1" Material : < Skybox_material
+  Skybox ..> Texture_2D : (uses if spherical)
+  Skybox ..> Texture_cubemap : (uses if cubemap)
+}
+
+hide empty members
+@enduml

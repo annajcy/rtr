@@ -1,0 +1,100 @@
+@startuml
+
+package "RHI_resources" {
+    class "RHI_linker<T>" as Linker {
+        + GetOrCreateresource() : T*
+        + LinkResource(nativeResource : T*)
+        + IsLinked() : bool
+    }
+
+    class "RHI_buffer" as Buffer implements RHIResource {
+        - type : BufferType ' VERTEX, INDEX, UNIFORM
+        - usage : BufferUsage ' STATIC, DYNAMIC
+        - size : size_t
+        + UploadData(data, size, offset)
+        + MapMemory()
+        + UnmapMemory()
+    }
+
+    class "RHI_texture" as Texture implements RHIResource {
+        - type : TextureType ' TEX_2D, CUBEMAP, TEX_2D_ARRAY
+        - format : TextureFormat
+        - dimensions : Vec3i
+        - mipLevels : int
+        - samplingParams : SamplerState
+        + UploadImageData(level, data)
+        + Bind(slot : int)
+    }
+
+    class "RHI_shader_code" as ShaderCode implements RHIResource {
+        - stage : ShaderStage ' VERTEX, FRAGMENT, COMPUTE
+        - code : byte[] or string
+        + LoadFromString(source : string)
+        + LoadFromFile(path : string)
+    }
+    
+
+    class "RHI_shader_program" as ShaderProgram implements RHIResource {
+        - linkedShaders : map<ShaderStage, RHI_shader_code>
+        + AttachShader(shaderCode : RHI_shader_code)
+        + LinkProgram()
+        + SetUniform(name : string, value)
+        + Bind()
+    }
+
+
+    class "RHI_geometry" as Geometry implements RHIResource {
+        - vertexBuffers : list<RHI_buffer>
+        - indexBuffer : RHI_buffer (optional)
+        + AddVertexBuffer(buffer : RHI_buffer)
+        + SetIndexBuffer(buffer : RHI_buffer)
+        + Bind()
+        + Draw()
+    }
+
+
+    class "RHI_frame_buffer" as FrameBuffer implements RHIResource {
+        - colorAttachments : map<int, RHI_texture>
+        - depthAttachment : RHI_texture (optional)
+        - stencilAttachment : RHI_texture (optional)
+        + AttachColorTexture(slot : int, texture : RHI_texture)
+        + AttachDepthStencilTexture(texture : RHI_texture)
+        + Bind()
+        + Unbind()
+    }
+
+    class "RHI_pipeline_state" as PipelineState implements RHIResource {
+        - depthTest : DepthState
+        - blendState : BlendState
+        - cullFaceState : CullFaceState
+        - stencilState : StencilState
+        - polygonOffset : PolygonOffsetState
+        + SetDepthTest(func : DepthFunc)
+        + SetBlending(func : BlendFunc)
+        + Apply()
+    }
+    ' --- Relationships ---
+    Linker ..> RHIResource : "manages/links <T>"
+
+    Geometry o-- "*" Buffer : "uses (vertex buffers)"
+    Geometry o-- "0..1" Buffer : "uses (index buffer)"
+
+    ShaderProgram o-- "*" ShaderCode : "composed of"
+
+    FrameBuffer o-- "*" Texture : "uses (attachments)"
+
+
+    ' --- Relationships to external (conceptual) entities ---
+    package "Frontend" {
+      class "FrontendObject" as FO
+    }
+    FO ..> Linker : "uses to manage"
+
+    ' These resources would be created by RHI_device
+    package "RHI_functions" {
+        interface "RHI_device" as Device
+    }
+    Device ..> RHIResource : "creates"
+
+}
+@enduml

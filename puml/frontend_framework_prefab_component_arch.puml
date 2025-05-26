@@ -1,0 +1,78 @@
+@startuml
+skinparam componentStyle uml2
+hide empty members
+
+  interface Component {
+    + Tick(context: Logic_tick_context)
+  }
+
+  class Logic_tick_context {
+    + CameraViewMatrix
+    + CameraProjectionMatrix
+    + CameraPosition
+    + LightData[]
+    + RenderableMeshData[]
+    + ShadowViewProjectionMatrix[]
+    + UserInput
+  }
+
+  class Node_component implements Component {
+    - node: Node
+    + GetPosition()
+    + GetRotation()
+    + GetScale()
+    + GetModelMatrix()
+    + SetParent(parent_node_component)
+  }
+
+
+  class Camera_component implements Component {
+    - viewMatrix
+    - projectionMatrix
+    - position
+    + SetActive()
+  }
+
+
+  class Camera_control_component implements Component {
+    - targetCamera: Camera_component
+    + ProcessInput(input)
+  }
+
+
+  class Light_component implements Component {
+    - type: LightType (Directional, Point, Spot)
+    - color: Color
+    - intensity: float
+    + GetLightData()
+  }
+
+
+  class Mesh_renderer_component implements Component {
+    - geometry: Geometry
+    - material: Material
+    + GetRenderData()
+  }
+
+
+  class Shadow_caster_component implements Component {
+    - shadowMapViewProjectionMatrix
+    - shadowMapResource
+    + GenerateShadowMap()
+  }
+
+
+
+  Mesh_renderer_component ..> Node_component : "uses for model matrix"
+  Light_component ..> Node_component : "uses for position/direction"
+  Camera_component ..> Node_component : "uses for position/direction"
+
+  Camera_control_component ..> Camera_component : "controls"
+  Camera_control_component ..> Logic_tick_context : "reads input from"
+
+  Camera_component ..> Logic_tick_context : "writes View/Proj Matrix, Position"
+  Light_component ..> Logic_tick_context : "writes Light Parameters"
+  Mesh_renderer_component ..> Logic_tick_context : "writes Render Data (Model Matrix, Material, Geometry)"
+  Shadow_caster_component ..> Logic_tick_context : "writes Shadow View/Proj Matrix"
+  Shadow_caster_component ..> Light_component : "cooperates with (for shadow camera setup)"
+@enduml

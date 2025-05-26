@@ -1,0 +1,82 @@
+@startuml
+
+' Abstract Base Class
+abstract class Model {
+  # m_root : std::shared_ptr<Model_node>
+  # m_materials : std::vector<std::shared_ptr<Model_material>>
+  + {abstract} load(const std::string& path) : std::shared_ptr<Model_node>
+}
+
+' Concrete Implementation Class
+class Model_assimp extends Model {
+  - importer : Assimp::Importer
+  + Model_assimp()
+  + load(const std::string& path) : std::shared_ptr<Model_node>
+  - processNode(assimpNode, assimpScene) : std::shared_ptr<Model_node>
+  - processMesh(assimpMesh, assimpScene) : Model_mesh
+  - loadMaterialTextures(assimpMaterial, type) : std::vector<std::shared_ptr<Image>>
+  - processMaterials(assimpScene) : void
+}
+
+' Model Data Structures
+class Model_node {
+  - m_meshes : std::vector<Model_mesh>
+  - m_children : std::vector<std::shared_ptr<Model_node>>
+  - m_localTransform : Matrix4x4
+  + addMesh(mesh : Model_mesh) : void
+  + addChild(child : std::shared_ptr<Model_node>) : void
+  + getLocalTransform() : Matrix4x4
+}
+
+class Model_mesh {
+  - m_geometry : std::shared_ptr<Model_geometry>
+  - m_materialIndex : unsigned int
+  + Model_mesh(geometry : std::shared_ptr<Model_geometry>, materialIdx : unsigned int)
+  + getGeometry() : std::shared_ptr<Model_geometry>
+  + getMaterialIndex() : unsigned int
+}
+
+class Model_geometry {
+  - m_positions : std::vector<Vector3>
+  - m_texCoords : std::vector<Vector2>
+  - m_normals : std::vector<Vector3>
+  - m_tangents : std::vector<Vector3>
+  - m_indices : std::vector<unsigned int>
+  + getPositions() : const std::vector<Vector3>&
+  + getTexCoords() : const std::vector<Vector2>&
+  + getNormals() : const std::vector<Vector3>&
+  + getTangents() : const std::vector<Vector3>&
+  + getIndices() : const std::vector<unsigned int>&
+}
+
+class Model_material {
+  - m_ambientColor : Color
+  - m_diffuseColor : Color
+  - m_specularColor : Color
+  - m_shininess : float
+  - m_opacity : float
+  - m_textures : std::map<TextureType, std::shared_ptr<Image>>
+  + getTexture(type : TextureType) : std::shared_ptr<Image>
+}
+
+' Resource Layer (simplified)
+class Image {
+  + {static} create(const std::string& filePath) : std::shared_ptr<Image>
+}
+
+
+' Relationships
+Model --|> Model_node : uses (root node) >
+Model --o Model_material : has many >
+
+
+Model_node o-- "*" Model_mesh : contains
+Model_node o-- "*" Model_node : has children (recursive) >
+
+Model_mesh *-- "1" Model_geometry : aggregates >
+Model_mesh ..> Model_material : references (via index)
+
+Model_material o-- "*" Image : holds (textures) >
+Model_assimp ..> Image : uses (Image::create)
+
+@enduml

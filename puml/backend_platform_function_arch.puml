@@ -1,0 +1,70 @@
+@startuml
+
+allow_mixing
+
+package "RHI_functions" {
+    interface "RHI_device" as Device {
+        + CreateBuffer()
+        + CreateTexture()
+        + CreateShader()
+        + CreateFrameBuffer()
+        + CreateRenderer()
+        + GetAPIType()
+        + CheckError()
+    }
+
+    interface "RHI_window" as Window {
+        + CreateWindow()
+        + HandleEvents()
+        + SwapBuffers()
+    }
+
+    interface "RHI_imgui" as Imgui {
+        + Initialize()
+        + NewFrame()
+        + RenderDrawData()
+    }
+
+    interface "RHI_compute_task" as ComputeTask {
+        + SetComputeShader()
+        + Dispatch()
+        + Wait()
+    }
+
+    interface "RHI_renderer" as Renderer {
+        + SetShaderProgram()
+        + SetVertexBuffer()
+        + SetIndexBuffer()
+        + SetFrameBuffer()
+        + Clear()
+        + Draw()
+        + DrawInstanced()
+    }
+
+    ' --- Relationships ---
+    ' RHI_device is central
+    Device ..> Window : "Provides rendering context to"
+    Device ..> Renderer : "Creates/Manages"
+    Device ..> ComputeTask : "Executes on"
+    Device ..> Imgui : "Provides rendering backend for"
+
+    ' RHI_renderer uses resources created by RHI_device
+    ' (Implied, not drawing every resource creation)
+    Renderer -> Device : "Uses (GPU resources)"
+
+    ' RHI_imgui renders onto a window and uses the renderer/device
+    Imgui ..> Window : "Renders to"
+    Imgui ..> Renderer : "Uses for drawing"
+
+    ' RHI_compute_task might be independent or part of a renderer's broader scope
+    ' Keeping it more directly tied to device for now based on text.
+
+    ' Application layer would use these components
+    actor Application
+    Application --> Device
+    Application --> Window
+    Application --> Renderer
+    Application --> Imgui
+    Application --> ComputeTask
+}
+@enduml

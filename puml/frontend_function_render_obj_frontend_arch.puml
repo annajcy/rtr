@@ -1,0 +1,72 @@
+@startuml
+
+left to right direction
+
+class "Render_object" as RO {}
+
+interface "RHI_linker<RHIType>" as RHI_L
+
+package "Attribute Buffers" as Pkg_AB {
+
+}
+
+package "Memory Buffers" as Pkg_MB {
+
+}
+
+Pkg_MB ..|> RO
+Pkg_MB ..|> RHI_L
+
+package "Geometry" as Pkg_G {
+
+}
+
+Pkg_G ..|> RO
+Pkg_G ..|> RHI_L
+Pkg_G *-- Pkg_AB : consumes >
+
+package "Shaders" as Pkg_S {
+  
+}
+Pkg_S ..|> RO  
+Pkg_S ..|> RHI_L 
+
+package "Textures" as Pkg_T {
+ 
+}
+Pkg_T ..|> RO
+Pkg_T ..|> RHI_L
+
+package "Materials" as Pkg_M {
+  
+}
+Pkg_M ..|> RO
+Pkg_M *-- Pkg_S : uses shader programs from >
+Pkg_M *-- Pkg_T : applies textures from >
+
+package "Frame Buffer" as Pkg_FB {
+  
+}
+Pkg_FB ..|> RO
+Pkg_FB ..|> RHI_L
+Pkg_FB *-- Pkg_T : "uses textures as attachments" >
+
+package "Skybox" as Pkg_Sky {
+  
+}
+Pkg_Sky *-- Pkg_G : uses geometry for shape >
+Pkg_Sky *-- Pkg_M : uses material for appearance >
+
+' System Context (derived from the initial description of Render_object)
+package "Rendering System Core" as Pkg_RenderSystem {
+    node "Render_Pipeline" as RP {
+
+    }
+    node "Render_Pass" as RPass {
+
+    }
+}
+RP ..> RO : "manages global list of"
+RPass ..> RO : "receives & uses"
+
+@enduml
