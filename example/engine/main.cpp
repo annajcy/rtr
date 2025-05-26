@@ -79,9 +79,16 @@ int main() {
         )
     );
 
-   auto bag = Model_assimp::create(
+//    auto bag = Model_assimp::create(
+//         File_ser::get_instance()->get_absolute_path(
+//             "assets/model/backpack/backpack.obj"
+//         )
+//     );
+//     bag->load();
+
+    auto bag = Model_assimp::create(
         File_ser::get_instance()->get_absolute_path(
-            "assets/model/backpack/backpack.obj"
+            "assets/model/mary/Marry.obj"
         )
     );
     bag->load();
@@ -144,7 +151,7 @@ int main() {
         scene->add_game_object(go);
     }
 
-    bag_root_go->get_component<Node_component>()->node()->set_position(glm::vec3(2, 3, 0));
+    bag_root_go->get_component<Node_component>()->node()->set_position(glm::vec3(0, -1, 0));
     auto bag_rot = bag_root_go->add_component<Rotate_component>();
     bag_rot->speed() = 0.01f;
 
@@ -158,28 +165,30 @@ int main() {
     
     auto camera_control_component = camera_game_object->add_component<Trackball_camera_control_component>();
 
-    auto sphere = scene->add_game_object(Game_object::create("go1"));
-    auto sphere_node = sphere->add_component<Node_component>()->node();
-    sphere_node->set_position(glm::vec3(-2, 0, 0));
+    // auto sphere = scene->add_game_object(Game_object::create("go1"));
+    // auto sphere_node = sphere->add_component<Node_component>()->node();
+    // sphere_node->set_position(glm::vec3(-2, 0, 0));
 
-    auto sphere_mesh_renderer = sphere->add_component<Mesh_renderer_component>()->mesh_renderer();
-    sphere_mesh_renderer->geometry() = Geometry::create_sphere();
-    sphere_mesh_renderer->material() = go_material;
+    // auto sphere_mesh_renderer = sphere->add_component<Mesh_renderer_component>()->mesh_renderer();
+    // sphere_mesh_renderer->geometry() = Geometry::create_sphere();
+    // sphere_mesh_renderer->material() = go_material;
 
-    auto box = scene->add_game_object(Game_object::create("go2"));
-    auto box_node = box->add_component<Node_component>()->node();
-    box_node->set_position(glm::vec3(0, 0, 0));
+    // auto box = scene->add_game_object(Game_object::create("go2"));
+    // auto box_node = box->add_component<Node_component>()->node();
+    // box_node->set_position(glm::vec3(0, 0, 0));
 
-    auto rotate_component = box->add_component<Rotate_component>();
-    rotate_component->speed() = 0.1f;
+    // auto rotate_component = box->add_component<Rotate_component>();
+    // rotate_component->speed() = 0.1f;
 
-    auto ping_pong_component = box->add_component<Ping_pong_component>();
-    ping_pong_component->position() = glm::vec3(0, 1, 0);
-    ping_pong_component->speed() = 0.002f;
+    // auto ping_pong_component = box->add_component<Ping_pong_component>();
+    // ping_pong_component->position() = glm::vec3(0, 1, 0);
+    // ping_pong_component->speed() = 0.002f;
 
-    auto box_mesh_renderer = box->add_component<Mesh_renderer_component>()->mesh_renderer();
-    box_mesh_renderer->geometry() = Geometry::create_box();
-    box_mesh_renderer->material() = go_material;
+    // auto box_mesh_renderer = box->add_component<Mesh_renderer_component>()->mesh_renderer();
+    // box_mesh_renderer->geometry() = Geometry::create_box();
+    // box_mesh_renderer->material() = go_material;
+
+    //box_node->add_child(sphere_node, true);
 
     auto plane = scene->add_game_object(Game_object::create("plane"));
     auto plane_node = plane->add_component<Node_component>()->node();
@@ -228,8 +237,6 @@ int main() {
     auto sl1 = sl1_game_object->add_component<Spot_light_component>()->spot_light();
     sl1->color() = glm::vec3(1, 1, 0);
     sl1->intensity() = 0.5f;
-    
-    box_node->add_child(sphere_node, true);
 
     editor->get_panel<editor::Parallax_settings_panel>("parallax settings")->set_parallax_settings(parallax_settings);
     editor->get_panel<editor::Phong_material_settings_panel>("phong material settings")->set_phong_material_settings(phong_material_settings);

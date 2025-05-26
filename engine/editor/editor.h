@@ -60,7 +60,7 @@ public:
         m_imgui->slider_float("light size", &m_shadow_settings->light_size, 0.1, 2.0);
         m_imgui->slider_float("pcf radius", &m_shadow_settings->pcf_radius, 0.0, 1.0);
         m_imgui->slider_float("pcf tightness", &m_shadow_settings->pcf_tightness, 0.1, 10.0);
-        m_imgui->slider_int("pcf samples", &m_shadow_settings->pcf_sample_count, 1.0, 20.0);
+        m_imgui->slider_int("pcf samples", &m_shadow_settings->pcf_sample_count, 1.0, 32.0);
     }
 
     static std::shared_ptr<Shadow_settings_panel> create(
