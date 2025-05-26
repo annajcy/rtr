@@ -6,7 +6,7 @@
 #include "engine/runtime/function/render/core/render_pass.h"
 #include "engine/runtime/function/render/core/render_resource.h"
 #include "engine/runtime/function/render/core/render_struct.h"
-#include "engine/runtime/resource/resource_base.h"
+#include "engine/runtime/resource/resource_manager.h"
 #include "glm/fwd.hpp"
 #include <memory>
 
