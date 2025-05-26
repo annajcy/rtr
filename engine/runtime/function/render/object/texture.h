@@ -6,7 +6,7 @@
 #include "engine/runtime/resource/guid.h"
 #include "engine/runtime/resource/hash.h"
 #include "engine/runtime/resource/loader/image_loader.h"
-#include "engine/runtime/resource/resource_base.h"
+#include "engine/runtime/resource/resource_manager.h"
 #include <memory>
 #include <unordered_map>
 
