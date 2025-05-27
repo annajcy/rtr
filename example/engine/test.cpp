@@ -32,8 +32,7 @@ int main() {
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
     auto runtime = Engine_runtime::create(engine_runtime_descriptor);
-    auto editor = editor::Editor::create(runtime);
-
+    
     auto world = World::create("world1");
     runtime->world() = world;
 
@@ -121,7 +120,7 @@ int main() {
     camera_node->look_at_point(glm::vec3(0, 0, 0));
 
     auto camera_component = camera_game_object->add_component<Perspective_camera_component>();
-    camera_component->add_resize_callback(runtime->rhi_window());
+    camera_component->add_resize_callback(runtime->rhi_global_resource().window);
     
     auto camera_control_component = camera_game_object->add_component<Trackball_camera_control_component>();
 
@@ -233,10 +232,18 @@ int main() {
         }
     }
 
+    auto editor = editor::Editor::create(
+        runtime, 
+        {
+            editor::Shadow_settings_panel::create("shadow settings"),
+            editor::Phong_material_settings_panel::create("phong material settings"),
+            editor::Parallax_settings_panel::create("parallax settings"),
+            editor::FPS_panel::create("fps")
+    });
+    
     editor->get_panel<editor::Parallax_settings_panel>("parallax settings")->set_parallax_settings(parallax_settings);
     editor->get_panel<editor::Phong_material_settings_panel>("phong material settings")->set_phong_material_settings(phong_material_settings);
     editor->get_panel<editor::Shadow_settings_panel>("shadow settings")->set_shadow_settings(shadow_settings);
-
     editor->run();
 
     return 0;

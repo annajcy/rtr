@@ -9,8 +9,9 @@
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 #include "engine/runtime/framework/core/world.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
-#include "engine/runtime/platform/rhi/rhi_window.h"
+#include "engine/runtime/platform/rhi/rhi_renderer.h"
 #include "engine/runtime/resource/file_service.h"
+#include <memory>
 
 namespace rtr {
 
@@ -18,6 +19,8 @@ struct Engine_runtime_descriptor {
     int width{800};
     int height{600};
     std::string title{"RTR Engine"};
+    API_type api_type{API_type::OPENGL};
+    Clear_state clear_state{Clear_state::enabled()};
 };
 
 class Engine_runtime {
@@ -28,8 +31,7 @@ private:
     int m_render_swap_data_index = 0;
     int m_logic_swap_data_index = 1;
 
-    std::shared_ptr<RHI_device> m_rhi_device{};
-    std::shared_ptr<RHI_window> m_rhi_window{};
+    RHI_global_resource m_rhi_global_resource{};
     
     std::shared_ptr<World> m_world{};
     std::shared_ptr<Timer> m_timer{};
@@ -41,7 +43,13 @@ public:
 
     Engine_runtime(const Engine_runtime_descriptor& descriptor) {
 
-        auto device = RHI_device_OpenGL::create();
+        std::shared_ptr<RHI_device> device{};
+
+        if (descriptor.api_type == API_type::OPENGL) {
+            device = RHI_device_OpenGL::create();
+        } else {
+            throw std::runtime_error("Unsupported API type");
+        }
 
         auto window = device->create_window(
             descriptor.width, 
@@ -49,26 +57,26 @@ public:
             descriptor.title
         );
 
-        auto input_system = Input_system::create(window);
-        auto render_system = Render_system::create(device, window);
+        m_rhi_global_resource.device = device;
+        m_rhi_global_resource.window = window;
+        m_rhi_global_resource.renderer = device->create_renderer(descriptor.clear_state);
+        m_rhi_global_resource.screen_buffer = device->create_screen_buffer(window);
+        m_rhi_global_resource.memory_binder = device->create_memory_buffer_binder();
+        m_rhi_global_resource.pipeline_state = device->create_pipeline_state();
+        m_rhi_global_resource.texture_builder = device->create_texture_builder();
+
+        auto input_system = Input_system::create(m_rhi_global_resource.window);
+        auto render_system = Render_system::create(m_rhi_global_resource);
         
-        m_rhi_device = device;
-        m_rhi_window = window;
         m_input_system = input_system;
         m_render_system = render_system;
 
         m_timer = std::make_shared<Timer>();
         m_timer->start();
 
-        auto test_render_pipeline = Forward_render_pipeline::create(render_system->global_render_resource());
-        render_system->set_render_pipeline(test_render_pipeline);
-
         File_ser::get_instance()->set_root("/home/jinceyang/Desktop/rtr");
         Log_sys::get_instance()->log(Logging_system::Level::info, "Engine Runtime Created");
     }
-
-    std::shared_ptr<RHI_device>& rhi_device() { return m_rhi_device; }
-    std::shared_ptr<RHI_window>& rhi_window() { return m_rhi_window; }
     
     std::shared_ptr<Input_system>& input_system() { return m_input_system; }
     std::shared_ptr<Render_system>& render_system() { return m_render_system; }
@@ -83,7 +91,9 @@ public:
         Log_sys::get_instance()->log(Logging_system::Level::info, "Engine Runtime Destroyed");
     }
 
-    bool is_active() const { return m_rhi_window->is_active(); }
+    bool is_active() const { 
+        return m_rhi_global_resource.window->is_active(); 
+    }
 
     void run() {
         while (is_active()) {
@@ -108,7 +118,7 @@ public:
     }
 
     void tick(float delta_time) {
-        rhi_window()->on_frame_begin();
+        m_rhi_global_resource.window->on_frame_begin();
 
         world()->tick(Logic_tick_context{
             m_input_system->state(),
@@ -124,8 +134,16 @@ public:
             delta_time
         });
 
-        rhi_device()->check_error();
-        rhi_window()->on_frame_end();
+        m_rhi_global_resource.device->check_error();
+        m_rhi_global_resource.window->on_frame_end();
+    }
+
+    RHI_global_resource& rhi_global_resource() {
+        return m_rhi_global_resource;
+    }
+
+    const RHI_global_resource& rhi_global_resource() const {
+        return m_rhi_global_resource;
     }
     
 };

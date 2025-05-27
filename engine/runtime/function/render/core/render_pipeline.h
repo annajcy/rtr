@@ -14,11 +14,11 @@ namespace rtr {
 
 class Render_pipeline {
 protected:
-    RHI_global_render_resource& m_rhi_global_render_resource;
+    RHI_global_resource& m_rhi_global_render_resource;
     Resource_manager<std::string, Render_resource> m_render_resource_manager{};
 
 public:
-    Render_pipeline(RHI_global_render_resource& global_render_resource) : 
+    Render_pipeline(RHI_global_resource& global_render_resource) : 
     m_rhi_global_render_resource(global_render_resource) {}
 
     virtual ~Render_pipeline() {}
@@ -50,7 +50,7 @@ private:
     
 public:
     Forward_render_pipeline (
-        RHI_global_render_resource& global_render_resource
+        RHI_global_resource& global_render_resource
     ) : Render_pipeline(global_render_resource) {
         init_ubo();
         init_render_passes();
@@ -213,7 +213,7 @@ public:
         m_postprocess_pass->excute();
     }
 
-    static std::shared_ptr<Forward_render_pipeline> create(RHI_global_render_resource& global_render_resource) {
+    static std::shared_ptr<Forward_render_pipeline> create(RHI_global_resource& global_render_resource) {
         return std::make_shared<Forward_render_pipeline>(global_render_resource);
     }
 

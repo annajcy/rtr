@@ -1,7 +1,6 @@
 #pragma once
 
 #include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
-#include "engine/runtime/framework/component/node/node.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 #include "engine/runtime/framework/core/game_object.h"
 #include "engine/runtime/function/render/object/attribute_buffer.h"
@@ -9,7 +8,6 @@
 #include "engine/runtime/function/render/object/material.h"
 #include "engine/runtime/function/render/object/shader.h"
 #include "engine/runtime/function/render/object/texture.h"
-#include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "engine/runtime/resource/loader/model_loader.h"
 #include <memory>
 #include <string>

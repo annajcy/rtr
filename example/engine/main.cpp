@@ -2,6 +2,7 @@
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
 #include "engine/editor/editor.h"
 #include "engine/runtime/framework/plugin/model_loader.h"
+#include "engine/runtime/function/render/core/render_pipeline.h"
 #include "engine/runtime/function/render/object/material.h"
 #include "engine/runtime/function/render/object/shader.h"
 #include "engine/runtime/function/render/object/texture.h"
@@ -39,8 +40,10 @@ int main() {
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
     auto runtime = Engine_runtime::create(engine_runtime_descriptor);
-    auto editor = editor::Editor::create(runtime);
-
+    runtime->render_system()->set_render_pipeline(Forward_render_pipeline::create(
+        runtime->rhi_global_resource()
+    ));
+    
     auto world = World::create("world1");
     runtime->world() = world;
 
@@ -161,7 +164,7 @@ int main() {
     camera_node->look_at_point(glm::vec3(0, 0, 0));
 
     auto camera_component = camera_game_object->add_component<Perspective_camera_component>();
-    camera_component->add_resize_callback(runtime->rhi_window());
+    camera_component->add_resize_callback(runtime->rhi_global_resource().window);
     
     auto camera_control_component = camera_game_object->add_component<Trackball_camera_control_component>();
 
@@ -238,10 +241,18 @@ int main() {
     sl1->color() = glm::vec3(1, 1, 0);
     sl1->intensity() = 0.5f;
 
+    auto editor = editor::Editor::create(
+        runtime, 
+        {
+            editor::Shadow_settings_panel::create("shadow settings"),
+            editor::Phong_material_settings_panel::create("phong material settings"),
+            editor::Parallax_settings_panel::create("parallax settings"),
+            editor::FPS_panel::create("fps")
+    });
+
     editor->get_panel<editor::Parallax_settings_panel>("parallax settings")->set_parallax_settings(parallax_settings);
     editor->get_panel<editor::Phong_material_settings_panel>("phong material settings")->set_phong_material_settings(phong_material_settings);
     editor->get_panel<editor::Shadow_settings_panel>("shadow settings")->set_shadow_settings(shadow_settings);
-
     editor->run();
 
     return 0;

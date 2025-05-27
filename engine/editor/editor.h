@@ -23,11 +23,14 @@ protected:
 
 public:
     Panel(
-        const std::string& name,
-        const std::shared_ptr<RHI_imgui>& imgui
-    ) : m_name(name), m_imgui(imgui){}
+        const std::string& name
+    ) : m_name(name) {}
 
     void render() {
+        if (!m_imgui) {
+            std::cout << "imgui instance is not initialized, panel will not be rendered" << std::endl;
+            return;
+        }
         if (!m_is_open) return;
         m_imgui->begin_render(m_name);
         draw_panel();
@@ -39,6 +42,7 @@ public:
     virtual ~Panel() = default;
 
     std::string name() const { return m_name; }
+    void set_imgui(const std::shared_ptr<RHI_imgui>& imgui) { m_imgui = imgui; }
 };
 
 class Shadow_settings_panel : public Panel {
@@ -46,9 +50,8 @@ protected:
     std::shared_ptr<Shadow_settings> m_shadow_settings{};
 public:
     Shadow_settings_panel(
-        const std::string& name,
-        const std::shared_ptr<RHI_imgui>& imgui
-    ) : Panel(name, imgui) {}
+        const std::string& name
+    ) : Panel(name) {}
 
     void set_shadow_settings(const std::shared_ptr<Shadow_settings>& shadow_settings) {
         m_shadow_settings = shadow_settings;
@@ -64,10 +67,9 @@ public:
     }
 
     static std::shared_ptr<Shadow_settings_panel> create(
-        const std::string& name,
-        const std::shared_ptr<RHI_imgui>& imgui
+        const std::string& name
     ) {
-        return std::make_shared<Shadow_settings_panel>(name, imgui);
+        return std::make_shared<Shadow_settings_panel>(name);
     }
 };
 
@@ -76,9 +78,8 @@ protected:
     std::shared_ptr<Phong_material_settings> m_phong_material_settings{};
 public:
     Phong_material_settings_panel(
-        const std::string& name,
-        const std::shared_ptr<RHI_imgui>& imgui
-    ) : Panel(name, imgui) {}
+        const std::string& name
+    ) : Panel(name) {}
 
     void set_phong_material_settings(const std::shared_ptr<Phong_material_settings>& phong_material_settings) {
         m_phong_material_settings = phong_material_settings;
@@ -92,10 +93,9 @@ public:
     }
 
     static std::shared_ptr<Phong_material_settings_panel> create(
-        const std::string& name,
-        const std::shared_ptr<RHI_imgui>& imgui
+        const std::string& name
     ) {
-        return std::make_shared<Phong_material_settings_panel>(name, imgui);
+        return std::make_shared<Phong_material_settings_panel>(name);
     }
 };
 
@@ -105,9 +105,8 @@ protected:
 
 public:
     Parallax_settings_panel(
-        const std::string& name,
-        const std::shared_ptr<RHI_imgui>& imgui
-    ) : Panel(name, imgui) {}
+        const std::string& name
+    ) : Panel(name) {}
 
     void set_parallax_settings(const std::shared_ptr<Parallax_settings>& parallax_settings) {
         m_parallax_settings = parallax_settings;
@@ -120,10 +119,9 @@ public:
     }
 
     static std::shared_ptr<Parallax_settings_panel> create(
-        const std::string& name,
-        const std::shared_ptr<RHI_imgui>& imgui
+        const std::string& name
     ) {
-        return std::make_shared<Parallax_settings_panel>(name, imgui);
+        return std::make_shared<Parallax_settings_panel>(name);
     }
 };
 
@@ -131,19 +129,17 @@ class FPS_panel : public Panel {
 
 public:
     FPS_panel(
-        const std::string& name,
-        const std::shared_ptr<RHI_imgui>& imgui
-    ) : Panel(name, imgui) {}
+        const std::string& name
+    ) : Panel(name) {}
 
     virtual void draw_panel() override {
         m_imgui->text("fps: %f", std::to_string(m_imgui->frame_rate()));
     }
 
     static std::shared_ptr<FPS_panel> create(
-        const std::string& name,
-        const std::shared_ptr<RHI_imgui>& imgui
+        const std::string& name
     ) {
-        return std::make_shared<FPS_panel>(name, imgui);
+        return std::make_shared<FPS_panel>(name);
     }
 };
 
@@ -157,18 +153,19 @@ private:
 
 public:
 
-    Editor(const std::shared_ptr<Engine_runtime>& engine_runtime) : 
-    m_engine_runtime(engine_runtime),
-    m_imgui(engine_runtime->rhi_window()->imgui()) {
+    Editor(
+        const std::shared_ptr<Engine_runtime>& engine_runtime,
+        const std::vector<std::shared_ptr<Panel>>& panels
+    ) : m_engine_runtime(engine_runtime),
+        m_imgui(engine_runtime->rhi_global_resource().window->imgui()) {
 
-        add_panel(Shadow_settings_panel::create("shadow settings", m_imgui));
-        add_panel(Phong_material_settings_panel::create("phong material settings", m_imgui));
-        add_panel(Parallax_settings_panel::create("parallax settings", m_imgui));
-        add_panel(FPS_panel::create("fps", m_imgui));
-
+        for (auto& panel : panels) {
+            add_panel(panel);
+        }
     }
 
     void add_panel(const std::shared_ptr<Panel>& panel) {
+        panel->set_imgui(m_imgui);
         m_panel_map[panel->name()] = panel;
     }
 
@@ -204,8 +201,10 @@ public:
         }
     }
 
-    static std::shared_ptr<Editor> create(const std::shared_ptr<Engine_runtime>& engine_runtime) {
-        return std::make_shared<Editor>(engine_runtime);
+    static std::shared_ptr<Editor> create(
+        const std::shared_ptr<Engine_runtime>& engine_runtime,
+        const std::vector<std::shared_ptr<Panel>>& panels) {
+        return std::make_shared<Editor>(engine_runtime, panels);
     }
     
 };
