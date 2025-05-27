@@ -78,9 +78,7 @@ private:
         Material_type material_type = Material_type::PHONG
     ) {
         if (material_type == Material_type::PHONG) {
-            auto material = Phong_material::create(
-                Phong_shader::create()
-            );
+            auto material = Phong_material::create();
 
             auto phong_material_settings = Phong_material_settings::create();
             phong_material_settings->ka = model_material->ka;

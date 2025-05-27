@@ -18,16 +18,12 @@ public:
         m_skybox_geometry = Geometry::create_box();
         if (texture->texture_type() == Texture_type::TEXTURE_2D) {
             auto texture_2d = std::dynamic_pointer_cast<Texture_2D>(texture);
-            auto mat = Skybox_spherical_material::create(
-                Skybox_spherical_shader::create()
-            );
+            auto mat = Skybox_spherical_material::create();
             mat->spherical_map = texture_2d;
             m_skybox_material = mat;
         } else {
             auto texture_cubemap = std::dynamic_pointer_cast<Texture_cubemap>(texture);
-            auto mat = Skybox_cubemap_material::create(
-                Skybox_cubemap_shader::create()
-            );
+            auto mat = Skybox_cubemap_material::create();
             mat->cube_map = texture_cubemap;
             m_skybox_material = mat;
         }

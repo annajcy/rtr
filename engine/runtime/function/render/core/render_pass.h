@@ -57,7 +57,7 @@ public:
         RHI_global_resource& rhi_global_resource
     ) : Render_pass(rhi_global_resource), 
         m_shadow_caster_material(
-            Shadow_caster_material::create(Shadow_caster_shader::create())
+            Shadow_caster_material::create()
         ) {}
 
     ~Shadow_pass() {}
@@ -249,7 +249,7 @@ public:
     Postprocess_pass(
         RHI_global_resource& rhi_global_resource
     ) : Render_pass(rhi_global_resource) {
-        m_gamma_material = Gamma_material::create(Gamma_shader::create());
+        m_gamma_material = Gamma_material::create();
         
         m_screen_geometry = Geometry::create_screen_plane();
         m_screen_geometry->link(m_rhi_global_resource.device);

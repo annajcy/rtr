@@ -83,16 +83,16 @@ int main() {
     auto plane_texture_settings = Phong_texture_settings::create();
     plane_texture_settings->albedo_map = Texture_2D::create_image(plane_main_tex);
 
-    auto phong_shader = Phong_shader::create();
+    auto phong_shader = Phong_material::phong_shader();
     phong_shader->generate_all_shader_variants();
 
-    auto go_material = Phong_material::create(phong_shader);
+    auto go_material = Phong_material::create();
     go_material->phong_material_settings = phong_material_settings;
     go_material->phong_texture_settings = go_texture_settings;
     go_material->parallax_settings = parallax_settings;
     go_material->shadow_settings = shadow_settings;
 
-    auto plane_material = Phong_material::create(phong_shader);
+    auto plane_material = Phong_material::create();
     plane_material->phong_texture_settings = plane_texture_settings;
     plane_material->phong_material_settings = phong_material_settings;
     plane_material->parallax_settings = parallax_settings;
