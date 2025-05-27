@@ -56,15 +56,10 @@ int main() {
     ubo_data[3] = {4.0f, 3.0f, {}};
 
     auto ubos = Uniform_buffer_array<UniformData>::create(ubo_data);
-    ubos->link(device);
-
-    auto uniform_buffer = ubos->rhi_resource();
+    auto uniform_buffer = ubos->rhi(device);
 
     auto sb = Storage_buffer_array<float>::create(initial_data);
-
-    sb->link(device);
-
-    auto storage_buffer = sb->rhi_resource();
+    auto storage_buffer = sb->rhi(device);
 
     auto cs = Shader_code::create(Shader_type::COMPUTE, compute_shader_source);
 
@@ -76,9 +71,7 @@ int main() {
         {"scales", Uniform_entry_array<float>::create(scales, 4)}
     });
 
-    csp->link(device);
-
-    auto compute_program = csp->rhi_resource();
+    auto compute_program = csp->rhi(device);
     
     auto memory_binder = device->create_memory_buffer_binder();
     memory_binder->bind_memory_buffer(uniform_buffer, 0);

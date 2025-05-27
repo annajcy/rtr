@@ -37,25 +37,28 @@ public:
         m_shader_code_type(type) {}
         
     ~Shader_code() = default;
+    
     const std::string& code() const { return m_code; }
+
     Shader_type shader_code_type() const { return m_shader_code_type; }
+
     static std::shared_ptr<Shader_code> create(Shader_type type, const std::string& code) {
         return std::make_shared<Shader_code>(type, code);
     }
 
     virtual void link(const std::shared_ptr<RHI_device>& device) override {
-        m_rhi_resource = device->create_shader_code(m_shader_code_type, m_code);
+        m_rhi = device->create_shader_code(m_shader_code_type, m_code);
     }
 
-    static std::string get_shader_code_from_url(const std::string& url) {
+    static std::string load_shader_code(const std::string& url) {
         std::unordered_set<std::string> processed_files{};
-        return load_shader_code_with_includes(
+        return dfs(
             url, 
             processed_files
         );
     }
 
-    static std::string load_shader_code_with_includes(
+    static std::string dfs(
         const std::string& file_path,
         std::unordered_set<std::string>& processed
     ) {
@@ -87,7 +90,7 @@ public:
             if (std::regex_match(line, match, include_pattern)) {
                 // 获取相对路径并递归加载
                 fs::path include_path = full_path.parent_path() / match[1].str();
-                buffer << load_shader_code_with_includes(include_path.string(), processed) << "\n";
+                buffer << dfs(include_path.string(), processed) << "\n";
             } else {
                 buffer << line << "\n";
             }
@@ -123,11 +126,10 @@ public:
 
         std::unordered_map<Shader_type, std::shared_ptr<RHI_shader_code>> rhi_shader_codes{};
         for (const auto& [type, code] : m_shader_codes) {
-            if (!code->is_linked()) code->link(device);
-            rhi_shader_codes[type] = code->rhi_resource();
+            rhi_shader_codes[type] = code->rhi(device);
         }
 
-        m_rhi_resource = device->create_shader_program(
+        m_rhi = device->create_shader_program(
             rhi_shader_codes,
             m_uniforms
         );
@@ -369,10 +371,10 @@ public:
     }
 };
 
-enum class Disabled_shader_feature {};
+enum class None_shader_feature {};
 
 template<>
-class Shader<Disabled_shader_feature> : public Shader_base {
+class Shader<None_shader_feature> : public Shader_base {
 private:
     std::shared_ptr<Shader_program> m_shader_program; 
     std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> m_main_shader_uniforms;
@@ -451,10 +453,10 @@ public:
         "phong_shader", 
         std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
             {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, 
-                Shader_code::get_shader_code_from_url(
+                Shader_code::load_shader_code(
                     File_ser::get_instance()->get_absolute_path("assets/shader/phong.vert")))},
             {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, 
-                Shader_code::get_shader_code_from_url(
+                Shader_code::load_shader_code(
                     File_ser::get_instance()->get_absolute_path("assets/shader/phong.frag")))}
         }, 
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
@@ -495,16 +497,16 @@ public:
     }
 };
 
-class Skybox_cubemap_shader : public Shader<Disabled_shader_feature> {
+class Skybox_cubemap_shader : public Shader<None_shader_feature> {
 public:
     Skybox_cubemap_shader() : Shader(
         "skybox_cubemap_shader",
         std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
             {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, 
-                Shader_code::get_shader_code_from_url(
+                Shader_code::load_shader_code(
                     File_ser::get_instance()->get_absolute_path("assets/shader/skybox_cubemap.vert")))},
             {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, 
-                Shader_code::get_shader_code_from_url(
+                Shader_code::load_shader_code(
                     File_ser::get_instance()->get_absolute_path("assets/shader/skybox_cubemap.frag")))}
         },
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {}
@@ -516,16 +518,16 @@ public:
     }
 };
 
-class Skybox_spherical_shader : public Shader<Disabled_shader_feature> {
+class Skybox_spherical_shader : public Shader<None_shader_feature> {
 public:
     Skybox_spherical_shader() : Shader(
         "skybox_spherical_shader",
         std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
             {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, 
-                Shader_code::get_shader_code_from_url(
+                Shader_code::load_shader_code(
                     File_ser::get_instance()->get_absolute_path("assets/shader/skybox_spherical.vert")))},
             {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, 
-                Shader_code::get_shader_code_from_url(
+                Shader_code::load_shader_code(
                     File_ser::get_instance()->get_absolute_path("assets/shader/skybox_spherical.frag")))}
         },
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {}
@@ -537,16 +539,16 @@ public:
     }
 };
 
-class Gamma_shader : public Shader<Disabled_shader_feature> {
+class Gamma_shader : public Shader<None_shader_feature> {
 public:
     Gamma_shader() : Shader(
         "gamma_shader",
         std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
             {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, 
-                Shader_code::get_shader_code_from_url(
+                Shader_code::load_shader_code(
                     File_ser::get_instance()->get_absolute_path("assets/shader/gamma.vert")))},
             {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, 
-                Shader_code::get_shader_code_from_url(
+                Shader_code::load_shader_code(
                     File_ser::get_instance()->get_absolute_path("assets/shader/gamma.frag")))}
         },
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {}
@@ -558,17 +560,17 @@ public:
     }
 };
 
-class Shadow_caster_shader : public Shader<Disabled_shader_feature> {
+class Shadow_caster_shader : public Shader<None_shader_feature> {
 public:
     Shadow_caster_shader() : Shader(
         "shadow_caster_shader",
         std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
             {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, 
-                Shader_code::get_shader_code_from_url(
+                Shader_code::load_shader_code(
                     File_ser::get_instance()->get_absolute_path("assets/shader/shadow_caster.vert")))},
             {Shader_type::FRAGMENT, 
                 Shader_code::create(Shader_type::FRAGMENT, 
-                    Shader_code::get_shader_code_from_url(
+                    Shader_code::load_shader_code(
                         File_ser::get_instance()->get_absolute_path("assets/shader/shadow_caster.frag")))}
         },
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {

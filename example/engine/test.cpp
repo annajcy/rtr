@@ -86,6 +86,8 @@ int main() {
     auto phong_shader = Phong_material::phong_shader();
     phong_shader->generate_all_shader_variants();
 
+    phong_shader->link_all_shader_variants(runtime->rhi_global_resource().device);
+
     auto go_material = Phong_material::create();
     go_material->phong_material_settings = phong_material_settings;
     go_material->phong_texture_settings = go_texture_settings;

@@ -50,7 +50,7 @@ public:
     }
 
     void link(const std::shared_ptr<RHI_device>& device) override {
-        m_rhi_resource = device->create_memory_buffer(
+        m_rhi = device->create_memory_buffer(
             m_type,  
             m_usage, 
             sizeof(T), 
@@ -59,16 +59,16 @@ public:
     }
 
     void push_to_rhi() override {
-        if (m_rhi_resource) {
-            m_rhi_resource->map_buffer([this](void* data) {
+        if (m_rhi) {
+            m_rhi->map_buffer([this](void* data) {
                 memcpy(data, &m_data, sizeof(T));
             }, RHI_buffer_access_flags::write_only());
         }
     }
 
     void pull_from_rhi () override {
-        if (m_rhi_resource) {
-            m_rhi_resource->map_buffer([this](void* data) {
+        if (m_rhi) {
+            m_rhi->map_buffer([this](void* data) {
                 memcpy(&m_data, data, sizeof(T));
             }, RHI_buffer_access_flags::read_only());
         }
@@ -95,7 +95,7 @@ public:
     void set_data(const std::vector<T>& data) { m_data = data; }
 
     void link(const std::shared_ptr<RHI_device>& device) override {
-        m_rhi_resource = device->create_memory_buffer(
+        m_rhi = device->create_memory_buffer(
             m_type,  
             m_usage, 
             sizeof(T) * m_data.size(), 
@@ -104,16 +104,16 @@ public:
     }
 
     void push_to_rhi() override {
-        if (m_rhi_resource) {
-            m_rhi_resource->map_buffer([this](void* data) {
+        if (m_rhi) {
+            m_rhi->map_buffer([this](void* data) {
                 memcpy(data, m_data.data(), sizeof(T) * m_data.size());
             }, RHI_buffer_access_flags::write_only());
         }
     }
 
     void pull_from_rhi() override {
-        if (m_rhi_resource) {
-            m_rhi_resource->map_buffer([this](void* data) {
+        if (m_rhi) {
+            m_rhi->map_buffer([this](void* data) {
                 memcpy(m_data.data(), data, sizeof(T) * m_data.size());
             }, RHI_buffer_access_flags::read_only());
         }
@@ -141,7 +141,7 @@ public:
     void set_data(const T& data) { m_data = data; }
 
     void link(const std::shared_ptr<RHI_device>& device) override {
-        m_rhi_resource = device->create_memory_buffer(
+        m_rhi = device->create_memory_buffer(
             m_type,  
             m_usage, 
             sizeof(T), 
@@ -150,16 +150,16 @@ public:
     }
 
     void push_to_rhi() override {
-        if (m_rhi_resource) {
-            m_rhi_resource->map_buffer([this](void* data) {
+        if (m_rhi) {
+            m_rhi->map_buffer([this](void* data) {
                 memcpy(data, &m_data, sizeof(T));
             }, RHI_buffer_access_flags::write_only());
         };
     }
 
     void pull_from_rhi() override {
-        if (m_rhi_resource) {
-            m_rhi_resource->map_buffer([this](void* data) {
+        if (m_rhi) {
+            m_rhi->map_buffer([this](void* data) {
                 memcpy(&m_data, data, sizeof(T));
             }, RHI_buffer_access_flags::read_only());
         }
@@ -185,7 +185,7 @@ public:
     const std::vector<T>&data() const { return m_data; }
     void set_data(const std::vector<T>& data) { m_data = data; }
     void link(const std::shared_ptr<RHI_device>& device) override {
-        m_rhi_resource = device->create_memory_buffer(
+        m_rhi = device->create_memory_buffer(
             m_type,
             m_usage,
             sizeof(T) * m_data.size(),
@@ -194,8 +194,8 @@ public:
     }
 
     void push_to_rhi() override {
-        if (m_rhi_resource) {
-            m_rhi_resource->map_buffer([this](void* data) {
+        if (m_rhi) {
+            m_rhi->map_buffer([this](void* data) {
                 memcpy(data, m_data.data(), sizeof(T) * m_data.size());
             }, RHI_buffer_access_flags::write_only());
         }
@@ -203,8 +203,8 @@ public:
     }
 
     void pull_from_rhi() override {
-        if (m_rhi_resource) {
-            m_rhi_resource->map_buffer([this](void* data) {
+        if (m_rhi) {
+            m_rhi->map_buffer([this](void* data) {
                 memcpy(m_data.data(), data, sizeof(T) * m_data.size());
             }, RHI_buffer_access_flags::read_only());
         }

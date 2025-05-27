@@ -92,7 +92,7 @@ public:
 
     void link(const std::shared_ptr<RHI_device>& device) override {
 
-        m_rhi_resource = device->create_texture_2D(
+        m_rhi = device->create_texture_2D(
             m_width,
             m_height,
             m_mipmap_levels,
@@ -108,7 +108,7 @@ public:
         
         auto texture_builder = device->create_texture_builder();
         texture_builder->build_texture_2D(
-            m_rhi_resource, 
+            m_rhi, 
             Image_data{
                 m_image->width(),
                 m_image->height(),
@@ -291,7 +291,7 @@ public:
 
     void link(const std::shared_ptr<RHI_device>& device) override {
         
-        m_rhi_resource = device->create_texture_2D_array(
+        m_rhi = device->create_texture_2D_array(
             m_width,
             m_height,
             m_mipmap_levels,
@@ -319,7 +319,7 @@ public:
         }
 
         texture_builder->build_texture_2D_array(
-            m_rhi_resource, 
+            m_rhi, 
             images_data
         );
     }
@@ -497,7 +497,7 @@ public:
     int height() const { return m_height; }
     void link(const std::shared_ptr<RHI_device>& device) override {
 
-        m_rhi_resource = device->create_texture_cubemap(
+        m_rhi = device->create_texture_cubemap(
             m_width,
             m_height,
             m_mipmap_levels,
@@ -523,7 +523,7 @@ public:
         }
 
         auto texture_builder = device->create_texture_builder();
-        texture_builder->build_texture_cubemap(m_rhi_resource, images);
+        texture_builder->build_texture_cubemap(m_rhi, images);
     }
 
     static std::shared_ptr<Texture_cubemap> create(

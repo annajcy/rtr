@@ -95,8 +95,8 @@ int main() {
         Element_atrribute::create(indices)
     );
 
-    geo->link(device);
-    auto geometry = geo->rhi_resource();
+
+    auto geometry = geo->rhi(device);
 
     auto sc0 = Shader_code::create(Shader_type::VERTEX, vertex_shader_source);
     auto sc1 = Shader_code::create(Shader_type::FRAGMENT, fragment_shader_source);
@@ -106,8 +106,8 @@ int main() {
         {Shader_type::FRAGMENT, sc1}
     },  std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {});
     
-    sp->link(device);
-    auto shader_program = sp->rhi_resource();
+
+    auto shader_program = sp->rhi(device);
 
     auto ca0 = Texture_2D::create_color_attachemnt(
         window->width(),
@@ -134,8 +134,8 @@ int main() {
         da  
     );
 
-    fb->link(device);
-    auto frame_buffer = fb->rhi_resource();
+
+    auto frame_buffer = fb->rhi(device);
 
     auto screen_vertex_shader_code = Shader_code::create(Shader_type::VERTEX, vertex_shader_source1);
     auto screen_fragment_shader_code = Shader_code::create(Shader_type::FRAGMENT, fragment_shader_source1);
@@ -148,12 +148,11 @@ int main() {
         {"texture1", Uniform_entry<int>::create(1)}
     });
 
-    screen_shader_program->link(device);
-    auto shader_program1 = screen_shader_program->rhi_resource();
+    auto shader_program1 = screen_shader_program->rhi(device);
 
     auto sg = Geometry::create_plane();
-    sg->link(device);
-    auto screen_geometry = sg->rhi_resource();
+
+    auto screen_geometry = sg->rhi(device);
 
     Clear_state clear_state = Clear_state::enabled();
     clear_state.color_clear_value = glm::vec4(0.1, 0.5, 0.3, 1.0);
@@ -173,8 +172,8 @@ int main() {
             frame_buffer
         );
 
-        ca0->rhi_resource()->bind_to_unit(0);
-        ca1->rhi_resource()->bind_to_unit(1);
+        ca0->rhi(device)->bind_to_unit(0);
+        ca1->rhi(device)->bind_to_unit(1);
     
         renderer->clear(screen_frame_buffer);
 

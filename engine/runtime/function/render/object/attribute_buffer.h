@@ -61,7 +61,7 @@ public:
     Buffer_iterate_type iterate_type() const { return m_iterate_type; }
 
     void link(const std::shared_ptr<RHI_device>& device) override {
-        m_rhi_resource = device->create_vertex_buffer(
+        m_rhi = device->create_vertex_buffer(
             usage(), 
             type(), 
             iterate_type(), 
@@ -95,7 +95,7 @@ public:
     const void* data_ptr() const override { return reinterpret_cast<const void*>(m_data.data()); }
 
     void link(const std::shared_ptr<RHI_device>& device) override {
-        m_rhi_resource = device->create_element_buffer(
+        m_rhi = device->create_element_buffer(
             usage(),
             data_count(),
             data_size(),

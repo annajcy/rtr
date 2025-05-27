@@ -45,17 +45,14 @@ public:
         auto get_rhi_buffers = [&](const std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>>& attributes) {
             std::unordered_map<unsigned int, std::shared_ptr<RHI_buffer>> rhi_buffers{};
             for (const auto& [position, attribute] : attributes) {
-                if (!attribute->is_linked()) attribute->link(device);
-                rhi_buffers.insert({position, attribute->rhi_resource()});
+                rhi_buffers.insert({position, attribute->rhi(device)});
             }
             return rhi_buffers;
         };
 
-        if (!m_element_attribute->is_linked()) m_element_attribute->link(device);
-
-        m_rhi_resource = device->create_geometry(
+        m_rhi = device->create_geometry(
             get_rhi_buffers(m_vertex_attributes),
-            m_element_attribute->rhi_resource()
+            m_element_attribute->rhi(device)
         );
     }
 

@@ -14,12 +14,12 @@ namespace rtr {
 
 class Render_pipeline {
 protected:
-    RHI_global_resource& m_rhi_global_render_resource;
+    RHI_global_resource& m_rhi_global_resource;
     Resource_manager<std::string, Render_resource> m_render_resource_manager{};
 
 public:
     Render_pipeline(RHI_global_resource& global_render_resource) : 
-    m_rhi_global_render_resource(global_render_resource) {}
+    m_rhi_global_resource(global_render_resource) {}
 
     virtual ~Render_pipeline() {}
 
@@ -61,21 +61,18 @@ public:
     void update_render_resource(const Render_tick_context& tick_context) override {
 
         auto color_attachment = Texture_2D::create_color_attachemnt(
-            m_rhi_global_render_resource.window->width(), 
-            m_rhi_global_render_resource.window->height()
+            m_rhi_global_resource.window->width(), 
+            m_rhi_global_resource.window->height()
         );
-        color_attachment->link(m_rhi_global_render_resource.device);
 
         auto depth_stencil_attachment = Texture_2D::create_depth_stencil_attachemnt(
-            m_rhi_global_render_resource.window->width(),
-            m_rhi_global_render_resource.window->height()
+            m_rhi_global_resource.window->width(),
+            m_rhi_global_resource.window->height()
         );
-        depth_stencil_attachment->link(m_rhi_global_render_resource.device);
 
         auto dl_shadow_map = tick_context.render_swap_data.dl_shadow_casters.shadow_map;
        
-        if (!dl_shadow_map->is_linked()) dl_shadow_map->link(m_rhi_global_render_resource.device);
-        dl_shadow_map->rhi_resource()->set_border_color(glm::vec4(1.0f));
+        dl_shadow_map->rhi(m_rhi_global_resource.device)->set_border_color(glm::vec4(1.0f));
 
         m_render_resource_manager.add("main_color_attachment", color_attachment);
         m_render_resource_manager.add("main_depth_attachment", depth_stencil_attachment);
@@ -84,24 +81,19 @@ public:
 
     void init_ubo() override {
         m_camera_ubo = Uniform_buffer<Camera_ubo>::create(Camera_ubo{});
-        if (!m_camera_ubo->is_linked()) m_camera_ubo->link(m_rhi_global_render_resource.device);
-        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_camera_ubo->rhi_resource(), 0);
+        m_rhi_global_resource.memory_binder->bind_memory_buffer(m_camera_ubo->rhi(m_rhi_global_resource.device), 0);
 
         m_directional_light_ubo_array = Uniform_buffer<Directional_light_ubo_array>::create(Directional_light_ubo_array{});
-        if (!m_directional_light_ubo_array->is_linked()) m_directional_light_ubo_array->link(m_rhi_global_render_resource.device);
-        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_directional_light_ubo_array->rhi_resource(), 1);
+        m_rhi_global_resource.memory_binder->bind_memory_buffer(m_directional_light_ubo_array->rhi(m_rhi_global_resource.device), 1);
 
         m_point_light_ubo_array = Uniform_buffer<Point_light_ubo_array>::create(Point_light_ubo_array{});
-        if (!m_point_light_ubo_array->is_linked()) m_point_light_ubo_array->link(m_rhi_global_render_resource.device);
-        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_point_light_ubo_array->rhi_resource(), 2);
+        m_rhi_global_resource.memory_binder->bind_memory_buffer(m_point_light_ubo_array->rhi(m_rhi_global_resource.device), 2);
         
         m_spot_light_ubo_array = Uniform_buffer<Spot_light_ubo_array>::create(Spot_light_ubo_array{});
-        if (!m_spot_light_ubo_array->is_linked()) m_spot_light_ubo_array->link(m_rhi_global_render_resource.device);
-        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_spot_light_ubo_array->rhi_resource(), 3);
+        m_rhi_global_resource.memory_binder->bind_memory_buffer(m_spot_light_ubo_array->rhi(m_rhi_global_resource.device), 3);
 
         m_dl_shadow_camera_ubo = Uniform_buffer<Orthographic_camera_ubo>::create(Orthographic_camera_ubo{});
-        if (!m_dl_shadow_camera_ubo->is_linked()) m_dl_shadow_camera_ubo->link(m_rhi_global_render_resource.device);
-        m_rhi_global_render_resource.memory_binder->bind_memory_buffer(m_dl_shadow_camera_ubo->rhi_resource(), 4);
+        m_rhi_global_resource.memory_binder->bind_memory_buffer(m_dl_shadow_camera_ubo->rhi(m_rhi_global_resource.device), 4);
     }
 
     void update_ubo(const Render_tick_context& tick_context) override {
@@ -177,9 +169,9 @@ public:
     }
 
     void init_render_passes() override {
-        m_shadow_pass = Shadow_pass::create(m_rhi_global_render_resource);
-        m_main_pass = Main_pass::create(m_rhi_global_render_resource);
-        m_postprocess_pass = Postprocess_pass::create(m_rhi_global_render_resource);
+        m_shadow_pass = Shadow_pass::create(m_rhi_global_resource);
+        m_main_pass = Main_pass::create(m_rhi_global_resource);
+        m_postprocess_pass = Postprocess_pass::create(m_rhi_global_resource);
     }
 
     void update_render_pass(const Render_tick_context& tick_context) override {

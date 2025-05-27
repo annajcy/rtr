@@ -23,6 +23,7 @@
 #include "engine/runtime/framework/core/scene.h"
 #include "engine/runtime/framework/core/world.h"
 
+#include "engine/runtime/global/base.h"
 #include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "engine/runtime/resource/file_service.h"
 #include "engine/runtime/resource/loader/image_loader.h"
@@ -118,6 +119,9 @@ int main() {
 
     auto phong_shader = Phong_material::phong_shader();
     phong_shader->generate_all_shader_variants();
+
+    phong_shader->link_all_shader_variants(runtime->rhi_global_resource().device);
+
 
     auto go_material = Phong_material::create();
     go_material->phong_material_settings = phong_material_settings;

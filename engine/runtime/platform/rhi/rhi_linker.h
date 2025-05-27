@@ -8,22 +8,27 @@ namespace rtr {
 template <typename T>
 class RHI_linker {
 protected:
-    std::shared_ptr<T> m_rhi_resource{};
+    std::shared_ptr<T> m_rhi{};
 
 public:
 
     RHI_linker() {}
     virtual ~RHI_linker() {}
 
-    virtual void link(const std::shared_ptr<RHI_device>& device) = 0; 
+    
 
-    const std::shared_ptr<T>& rhi_resource() const {
-        return m_rhi_resource;
+    std::shared_ptr<T>& rhi(const std::shared_ptr<RHI_device>& device) {
+        if (!m_rhi) {
+            link(device);
+        }
+        return m_rhi;
     }
 
     bool is_linked() const {
-        return m_rhi_resource != nullptr;
+        return m_rhi != nullptr;
     }
+
+    virtual void link(const std::shared_ptr<RHI_device>& device) = 0; 
 };
 
 };

@@ -89,8 +89,8 @@ int main() {
         },  
         Element_atrribute::create(indices)
     );
-    geo->link(device);
-    auto geometry = geo->rhi_resource();
+
+    auto geometry = geo->rhi(device);
 
     // 深度写入着色器
     auto sc0 = Shader_code::create(Shader_type::VERTEX, vertex_shader_source);
@@ -99,13 +99,12 @@ int main() {
         {Shader_type::VERTEX, sc0},
         {Shader_type::FRAGMENT, sc1}
     }, {});
-    sp->link(device);
-    auto depth_shader = sp->rhi_resource();
+    
+    auto depth_shader = sp->rhi(device);
 
     // 深度附件配置
     auto dpa = Texture_2D::create_depth_attachemnt(window->width(), window->height());
-    if (!dpa->is_linked()) dpa->link(device);
-    dpa->rhi_resource()->set_border_color(glm::vec4(1.0));
+    dpa->rhi(device)->set_border_color(glm::vec4(1.0));
 
     // 帧缓冲配置（仅使用深度附件）
     auto fb = Frame_buffer::create(
@@ -114,8 +113,8 @@ int main() {
         std::vector<std::shared_ptr<Texture>>{},  // 无颜色附件
         dpa
     );
-    fb->link(device);
-    auto frame_buffer = fb->rhi_resource();
+
+    auto frame_buffer = fb->rhi(device);
 
     auto tex_builder = device->create_texture_builder();
     
@@ -125,8 +124,8 @@ int main() {
         1
     );
     
-    if (!tex_depth_arr->is_linked()) tex_depth_arr->link(device);
-    auto texture_array_dep = tex_depth_arr->rhi_resource();
+   
+    auto texture_array_dep = tex_depth_arr->rhi(device);
     //texture_array_dep->bind_to_unit(3);
 
     // 后处理着色器
@@ -139,12 +138,11 @@ int main() {
       //  {"depth_texture", Uniform_entry<int>::create(0)},
         {"depth_arr_texture", Uniform_entry<int>::create(3)}
     });
-    screen_sp->link(device);
-    auto screen_shader = screen_sp->rhi_resource();
+
+    auto screen_shader = screen_sp->rhi(device);
 
     auto sg = Geometry::create_plane();
-    sg->link(device);
-    auto screen_geometry = sg->rhi_resource();
+    auto screen_geometry = sg->rhi(device);
 
     // 配置渲染状态
     Clear_state clear_state = Clear_state::enabled();
@@ -165,7 +163,7 @@ int main() {
         // 第二阶段：显示深度缓冲
         //dpa->rhi_resource()->bind_to_unit(0);
         tex_builder->build_texture_2D_array(texture_array_dep, std::vector<std::shared_ptr<RHI_texture>>{
-            dpa->rhi_resource()
+            dpa->rhi(device)
         });
 
         texture_array_dep->bind_to_unit(3);

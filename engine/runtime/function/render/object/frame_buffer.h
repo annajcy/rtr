@@ -40,21 +40,14 @@ public:
         std::vector<std::shared_ptr<RHI_texture>> rhi_color_attachments{};
 
         for (const auto& color_attachment : m_color_attachments) {
-            if (!color_attachment->is_linked()) {
-                color_attachment->link(device);
-            }
-            rhi_color_attachments.push_back(color_attachment->rhi_resource());
-        }
-
-        if (!m_depth_attachment->is_linked()) {
-            m_depth_attachment->link(device);
+            rhi_color_attachments.push_back(color_attachment->rhi(device));
         }
         
-        m_rhi_resource = device->create_frame_buffer(
+        m_rhi = device->create_frame_buffer(
             m_width, 
             m_height,
             rhi_color_attachments, 
-            m_depth_attachment->rhi_resource()
+            m_depth_attachment->rhi(device)
         );
         
     }
