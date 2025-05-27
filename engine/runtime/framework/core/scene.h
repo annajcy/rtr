@@ -2,7 +2,9 @@
 
 #include "engine/runtime/context/swap_struct.h"
 #include "engine/runtime/framework/core/game_object.h"
+#include "engine/runtime/framework/plugin/model_loader.h"
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace rtr {
@@ -38,6 +40,25 @@ public:
         return game_object;
     }
 
+    std::shared_ptr<Game_object> add_model(
+        const std::string& name,
+        const std::shared_ptr<Model>& model 
+    ) {
+        std::vector<std::shared_ptr<Game_object>> gos{};
+
+        auto root_go = Model_loader::load_model(
+            name,
+            model,
+            gos
+        );
+
+        for (auto& go : gos) {
+            add_game_object(go);
+        }
+
+        return root_go;
+    }
+
     const std::vector<std::shared_ptr<Game_object>>& game_objects() const { return m_game_objects; }
     
     std::shared_ptr<Game_object> get_game_object(const std::string& name) {
@@ -48,7 +69,6 @@ public:
         }
         return nullptr;
     }
-
 
     void remove_game_object(const std::string& name) {
         for (auto it = m_game_objects.begin(); it != m_game_objects.end(); ++it) {

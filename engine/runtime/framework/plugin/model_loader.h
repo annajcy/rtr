@@ -8,13 +8,12 @@
 #include "engine/runtime/function/render/object/material.h"
 #include "engine/runtime/function/render/object/shader.h"
 #include "engine/runtime/function/render/object/texture.h"
-#include "engine/runtime/resource/loader/model_loader.h"
+#include "engine/runtime/resource/loader/model.h"
 #include <memory>
 #include <string>
 #include <vector>
 
 namespace rtr {
-
 
 class Model_loader {
 public:

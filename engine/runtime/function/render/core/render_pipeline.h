@@ -71,7 +71,6 @@ public:
         );
 
         auto dl_shadow_map = tick_context.render_swap_data.dl_shadow_casters.shadow_map;
-       
         dl_shadow_map->rhi(m_rhi_global_resource.device)->set_border_color(glm::vec4(1.0f));
 
         m_render_resource_manager.add("main_color_attachment", color_attachment);

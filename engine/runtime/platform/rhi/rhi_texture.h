@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/resource/loader/image_loader.h"
+#include "engine/runtime/resource/loader/image.h"
 #include "glm/ext/vector_float4.hpp"
 #include <memory>
 #include <vector>

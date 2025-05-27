@@ -85,8 +85,11 @@ target_link_libraries(rhi_compute ${COMMON_LIBS})
 add_executable(main ${SOURCES} example/engine/main.cpp)
 target_link_libraries(main ${COMMON_LIBS})
 
-add_executable(test ${SOURCES} example/engine/test.cpp)
-target_link_libraries(test ${COMMON_LIBS})
+add_executable(sponza ${SOURCES} example/engine/sponza.cpp)
+target_link_libraries(sponza ${COMMON_LIBS})
+
+add_executable(cubes ${SOURCES} example/engine/cubes.cpp)
+target_link_libraries(cubes ${COMMON_LIBS})
 
 
 

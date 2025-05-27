@@ -15,10 +15,8 @@ public:
     RHI_linker() {}
     virtual ~RHI_linker() {}
 
-    
-
     std::shared_ptr<T>& rhi(const std::shared_ptr<RHI_device>& device) {
-        if (!m_rhi) {
+        if (!is_linked()) {
             link(device);
         }
         return m_rhi;

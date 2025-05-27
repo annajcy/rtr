@@ -5,7 +5,7 @@
 #include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "engine/runtime/resource/guid.h"
 #include "engine/runtime/resource/hash.h"
-#include "engine/runtime/resource/loader/image_loader.h"
+#include "engine/runtime/resource/loader/image.h"
 #include "engine/runtime/resource/resource_manager.h"
 #include <memory>
 #include <unordered_map>

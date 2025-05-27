@@ -1,7 +1,7 @@
 
-#include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
+
 #include "engine/editor/editor.h"
-#include "engine/runtime/framework/plugin/model_loader.h"
+
 #include "engine/runtime/function/render/core/render_pipeline.h"
 #include "engine/runtime/function/render/object/material.h"
 #include "engine/runtime/function/render/object/shader.h"
@@ -11,6 +11,7 @@
 
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
+#include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
 
 #include "engine/runtime/framework/component/light/light_component.h"
 #include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
@@ -23,11 +24,13 @@
 #include "engine/runtime/framework/core/scene.h"
 #include "engine/runtime/framework/core/world.h"
 
+#include "engine/runtime/framework/plugin/model_loader.h"
+
 #include "engine/runtime/global/base.h"
 #include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "engine/runtime/resource/file_service.h"
-#include "engine/runtime/resource/loader/image_loader.h"
-#include "engine/runtime/resource/loader/model_loader.h"
+#include "engine/runtime/resource/loader/image.h"
+#include "engine/runtime/resource/loader/model.h"
 #include "engine/runtime/runtime.h"
 
 #include "glm/fwd.hpp"
@@ -83,19 +86,35 @@ int main() {
         )
     );
 
-//    auto bag = Model_assimp::create(
-//         File_ser::get_instance()->get_absolute_path(
-//             "assets/model/backpack/backpack.obj"
-//         )
-//     );
-//     bag->load();
+    // auto bag = Model_assimp::create(
+    //     File_ser::get_instance()->get_absolute_path(
+    //         "assets/model/backpack/backpack.obj"
+    //     )
+    // );
+    
+    // auto bag = Model_assimp::create(
+    //     File_ser::get_instance()->get_absolute_path(
+    //         "assets/model/mary/Marry.obj"
+    //     )
+    // );
+
+    // auto bag = Model_assimp::create(
+    //     File_ser::get_instance()->get_absolute_path(
+    //         "assets/model/sponza/sponza.obj"
+    //     )
+    // );
+
+    // auto bag = Model_assimp::create(
+    //     File_ser::get_instance()->get_absolute_path(
+    //         "assets/model/grass/grass.fbx"
+    //     )
+    // );
 
     auto bag = Model_assimp::create(
         File_ser::get_instance()->get_absolute_path(
-            "assets/model/mary/Marry.obj"
+            "assets/model/bunny/bunny.obj"
         )
     );
-    bag->load();
 
     std::vector<std::shared_ptr<Game_object>> bag_gos;
 
@@ -119,9 +138,6 @@ int main() {
 
     auto phong_shader = Phong_material::phong_shader();
     phong_shader->generate_all_shader_variants();
-
-    phong_shader->link_all_shader_variants(runtime->rhi_global_resource().device);
-
 
     auto go_material = Phong_material::create();
     go_material->phong_material_settings = phong_material_settings;
@@ -164,8 +180,9 @@ int main() {
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
     auto camera_node = camera_game_object->add_component<Node_component>()->node();
-    camera_node->set_position(glm::vec3(0, 0, 8));
+    camera_node->set_position(glm::vec3(0, 1, 5));
     camera_node->look_at_point(glm::vec3(0, 0, 0));
+    camera_node->rotate(180, camera_node->front());
 
     auto camera_component = camera_game_object->add_component<Perspective_camera_component>();
     camera_component->add_resize_callback(runtime->rhi_global_resource().window);
