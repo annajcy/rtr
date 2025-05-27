@@ -48,44 +48,10 @@ int main() {
     auto world = World::create("world1");
     runtime->world() = world;
 
-    auto bk_image = Image::create(
-        Image_format::RGB_ALPHA, 
-        File_ser::get_instance()->get_absolute_path(
-            "assets/image/skybox/spherical/bk.jpg"
-        )
-    );
-    
-    auto height_map = Image::create(
-        Image_format::RGB_ALPHA,
-        File_ser::get_instance()->get_absolute_path(
-            "assets/image/bricks/disp.jpg"
-        )
-    );
-
-    auto normal_map = Image::create(
-        Image_format::RGB_ALPHA,
-        File_ser::get_instance()->get_absolute_path(
-            "assets/image/bricks/bricks_normal.jpg"
-        )
-    );
-
-    auto main_tex = Image::create(
-        Image_format::RGB_ALPHA, 
-        File_ser::get_instance()->get_absolute_path(
-            "assets/image/bricks/bricks.jpg"
-        )
-    );
-
-    auto plane_main_tex = Image::create(
-        Image_format::RGB_ALPHA, 
-        File_ser::get_instance()->get_absolute_path(
-            "assets/image/grass/grass.jpg"
-        )
-    );
-
     auto sponza = Model_assimp::create(
         File_ser::get_instance()->get_absolute_path(
             "assets/model/sponza/sponza.obj"
+            //"assets/model/mary/Marry.obj"
         )
     );
     
@@ -105,15 +71,15 @@ int main() {
 
     auto sponza_root_go = scene->add_model("sponza", sponza);
 
-    sponza_root_go->get_component<Node_component>()->node()->set_position(glm::vec3(0, -1, 0));
-    auto sponza_rot = sponza_root_go->add_component<Rotate_component>();
-    sponza_rot->speed() = 0.01f;
+    sponza_root_go->get_component<Node_component>()->node()->set_scale(glm::vec3(0.0005f));
+    // auto sponza_rot = sponza_root_go->add_component<Rotate_component>();
+    // sponza_rot->speed() = 0.01f;
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
     auto camera_node = camera_game_object->add_component<Node_component>()->node();
-    camera_node->set_position(glm::vec3(0, 1, 5));
+    camera_node->set_position(glm::vec3(0, 0, 5));
     camera_node->look_at_point(glm::vec3(0, 0, 0));
-    camera_node->rotate(180, camera_node->front());
+    //camera_node->rotate(180, camera_node->front());
 
     auto camera_component = camera_game_object->add_component<Perspective_camera_component>();
     camera_component->add_resize_callback(runtime->rhi_global_resource().window);

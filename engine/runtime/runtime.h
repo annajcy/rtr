@@ -118,6 +118,7 @@ public:
     }
 
     void tick(float delta_time) {
+
         m_rhi_global_resource.window->on_frame_begin();
 
         world()->tick(Logic_tick_context{

@@ -92,11 +92,11 @@ int main() {
     //     )
     // );
     
-    // auto bag = Model_assimp::create(
-    //     File_ser::get_instance()->get_absolute_path(
-    //         "assets/model/mary/Marry.obj"
-    //     )
-    // );
+    auto bag = Model_assimp::create(
+        File_ser::get_instance()->get_absolute_path(
+            "assets/model/mary/Marry.obj"
+        )
+    );
 
     // auto bag = Model_assimp::create(
     //     File_ser::get_instance()->get_absolute_path(
@@ -110,11 +110,11 @@ int main() {
     //     )
     // );
 
-    auto bag = Model_assimp::create(
-        File_ser::get_instance()->get_absolute_path(
-            "assets/model/bunny/bunny.obj"
-        )
-    );
+    // auto bag = Model_assimp::create(
+    //     File_ser::get_instance()->get_absolute_path(
+    //         "assets/model/bunny/bunny.obj"
+    //     )
+    // );
 
     std::vector<std::shared_ptr<Game_object>> bag_gos;
 
@@ -174,7 +174,9 @@ int main() {
         scene->add_game_object(go);
     }
 
-    bag_root_go->get_component<Node_component>()->node()->set_position(glm::vec3(0, -1, 0));
+    auto bag_root_go_node = bag_root_go->get_component<Node_component>()->node();
+    bag_root_go_node->set_position(glm::vec3(0, -1, 0));
+    //bag_root_go_node->set_scale(glm::vec3(7.0f));
     auto bag_rot = bag_root_go->add_component<Rotate_component>();
     bag_rot->speed() = 0.01f;
 

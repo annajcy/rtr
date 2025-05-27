@@ -53,6 +53,11 @@ public:
         stbi_set_flip_vertically_on_load(flip_y);
         m_data = stbi_load_from_memory(data, data_size, &m_width, &m_height, &m_channels, stbi_image_format(format));
         m_data_size = m_width * m_height * m_channels * sizeof(unsigned char);
+        if (!m_data) {
+            std::cout << "Failed to load image from memory" << std::endl;
+        } else {
+            std::cout << "Loaded image from memory" << std::endl;
+        }
     }
 
     Image(
@@ -63,6 +68,11 @@ public:
         stbi_set_flip_vertically_on_load(flip_y);
         m_data = stbi_load(path.c_str(), &m_width, &m_height, &m_channels, stbi_image_format(format));
         m_data_size = m_width * m_height * m_channels * sizeof(unsigned char);
+        if (!m_data) {
+            std::cout << "Failed to load image from path: " + path << std::endl;
+        } else {
+            std::cout << "Loaded image from path: " << path << std::endl;
+        }
     }
 
     ~Image() {
@@ -86,6 +96,9 @@ public:
         }
 
         auto image = std::make_shared<Image>(format, path, flip_y);
+        if (!image->data_ptr()) {
+            return nullptr;
+        }
         s_images.add(hash, image);
         return image;
     }
@@ -102,22 +115,21 @@ public:
         }
 
         auto image = std::make_shared<Image>(format, data, data_size, flip_y);
+        if (!image->data_ptr()) {
+            return nullptr;
+        }
         s_images.add(hash, image);
         return image;
     }
 
-    static std::shared_ptr<Image> get_image_from_cache(
-        Hash hash
-    ) {
+    static std::shared_ptr<Image> get_image_from_cache(Hash hash) {
         if (s_images.has(hash)) {
             return s_images.get(hash);
         }
         return nullptr;
     }
 
-    static void remove_image_from_cache(
-        Hash hash
-    ) {
+    static void remove_image_from_cache(Hash hash) {
         s_images.remove(hash);
     }
 

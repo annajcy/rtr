@@ -181,7 +181,7 @@ public:
         for (auto& swap_object : m_context.render_swap_objects) {
             auto shader = swap_object.material->get_shader_program();
             auto geometry = swap_object.geometry;
-    
+
             auto texture_map = swap_object.material->get_texture_map();
             for (auto &[location, tex] : texture_map) {
                 tex->rhi(m_rhi_global_resource.device)->bind_to_unit(location);

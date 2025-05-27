@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/runtime/function/render/core/render_resource.h"
+
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "engine/runtime/resource/guid.h"
@@ -64,7 +65,13 @@ public:
         filters
     ),  m_image(image),
         m_width(image->width()),
-        m_height(image->height()) {}
+        m_height(image->height()) {
+            if (!m_image) {
+                throw std::runtime_error(
+                    "Texture2D::Texture2D: m_image is nullptr"
+                );
+            }
+        }
 
     Texture_2D(
         int width, 

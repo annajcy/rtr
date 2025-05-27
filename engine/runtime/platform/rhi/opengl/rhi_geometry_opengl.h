@@ -54,9 +54,7 @@ public:
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, gl_vbo->buffer_id()); 
-
         glEnableVertexAttribArray(location);
-        
         glVertexAttribPointer(
             location, 
             gl_vbo->unit_data_count(), 
@@ -66,9 +64,7 @@ public:
             (void*)0
         );
 
-        gl_check_error();
-        glVertexAttribDivisor(location, gl_vbo->iterate_type() == Buffer_iterate_type::PER_INSTANCE ? 1 : 0);
-        
+        glVertexAttribDivisor(location, gl_vbo->iterate_type() == Buffer_iterate_type::PER_INSTANCE ? 1 : 0);        
         glBindBuffer(GL_ARRAY_BUFFER, 0);  
     }
 
