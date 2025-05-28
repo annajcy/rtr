@@ -1,5 +1,5 @@
-#include "engine/runtime/function/render/object/memory_buffer.h"
-#include "engine/runtime/function/render/object/shader.h"
+#include "engine/runtime/function/render/render_frontend/memory_buffer.h"
+#include "engine/runtime/function/render/render_frontend/shader.h"
 
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 #include <memory>

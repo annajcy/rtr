@@ -99,6 +99,7 @@ public:
         if (!image->data_ptr()) {
             return nullptr;
         }
+
         s_images.add(hash, image);
         return image;
     }
@@ -118,6 +119,7 @@ public:
         if (!image->data_ptr()) {
             return nullptr;
         }
+
         s_images.add(hash, image);
         return image;
     }
@@ -126,6 +128,7 @@ public:
         if (s_images.has(hash)) {
             return s_images.get(hash);
         }
+        
         return nullptr;
     }
 

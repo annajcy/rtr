@@ -2,11 +2,10 @@
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
 
 #include "engine/editor/editor.h"
-#include "engine/runtime/function/render/object/material.h"
-#include "engine/runtime/function/render/object/shader.h"
-#include "engine/runtime/function/render/object/texture.h"
-#include "engine/runtime/function/render/object/skybox.h"
-#include "engine/runtime/function/render/object/geometry.h"
+#include "engine/runtime/function/render/render_material/material.h"
+#include "engine/runtime/function/render/render_frontend/texture.h"
+#include "engine/runtime/function/render/render_utils/skybox.h"
+#include "engine/runtime/function/render/render_frontend/geometry.h"
 
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
@@ -21,6 +20,8 @@
 #include "engine/runtime/resource/file_service.h"
 #include "engine/runtime/resource/loader/image.h"
 #include "engine/runtime/runtime.h"
+
+#include "engine/runtime/function/render/render_pipeline/forward_render_pipeline.h"
 
 #include "glm/fwd.hpp"
 #include <memory>

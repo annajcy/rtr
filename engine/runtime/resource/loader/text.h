@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/runtime/global/base.h" 
-#include "engine/runtime/resource/resource_base.h"
+#include "engine/runtime/resource/resource_manager.h"
 #include <memory>
 
 namespace rtr {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
-#include "engine/runtime/function/render/object/material.h"
+#include "engine/runtime/function/render/render_material/material.h"
 #include "engine/runtime/platform/rhi/rhi_imgui.h"
 #include "engine/runtime/runtime.h"
 
@@ -22,9 +22,7 @@ protected:
     bool m_is_open{true};
 
 public:
-    Panel(
-        const std::string& name
-    ) : m_name(name) {}
+    Panel(const std::string& name) : m_name(name) {}
 
     void render() {
         if (!m_imgui) {
@@ -104,9 +102,7 @@ protected:
     std::shared_ptr<Parallax_settings> m_parallax_settings{};
 
 public:
-    Parallax_settings_panel(
-        const std::string& name
-    ) : Panel(name) {}
+    Parallax_settings_panel(const std::string& name) : Panel(name) {}
 
     void set_parallax_settings(const std::shared_ptr<Parallax_settings>& parallax_settings) {
         m_parallax_settings = parallax_settings;

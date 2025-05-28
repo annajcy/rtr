@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/runtime/framework/component/camera/camera.h"
-#include "engine/runtime/function/render/object/texture.h"
+#include "engine/runtime/function/render/render_frontend/texture.h"
 #include <memory>
 
 namespace rtr {

@@ -73,12 +73,12 @@ public:
     
 };
 
-class Element_atrribute : public Attribute_base {
+class Element_attribute : public Attribute_base {
 private:
     std::vector<unsigned int> m_data{};
 
 public:
-    Element_atrribute(
+    Element_attribute(
         const std::vector<unsigned int>& data,
         Buffer_usage usage = Buffer_usage::STATIC
     ) : Attribute_base(
@@ -86,7 +86,7 @@ public:
         usage),
         m_data(data) {}
 
-    ~Element_atrribute() = default;
+    ~Element_attribute() = default;
     const std::vector<unsigned int>& data() const { return m_data; }
     unsigned int data_count() const override { return m_data.size(); }
     unsigned int data_size() const override { return m_data.size() * sizeof(unsigned int); }
@@ -103,11 +103,11 @@ public:
         );
     }
 
-    static std::shared_ptr<Element_atrribute> create(
+    static std::shared_ptr<Element_attribute> create(
         const std::vector<unsigned int>& data,
         Buffer_usage usage = Buffer_usage::STATIC
     ) {
-        return std::make_shared<Element_atrribute>(data, usage);
+        return std::make_shared<Element_attribute>(data, usage);
     }
 };
 

@@ -2,12 +2,13 @@
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
 #include "engine/editor/editor.h"
 #include "engine/runtime/framework/plugin/model_loader.h"
-#include "engine/runtime/function/render/core/render_pipeline.h"
-#include "engine/runtime/function/render/object/material.h"
-#include "engine/runtime/function/render/object/shader.h"
-#include "engine/runtime/function/render/object/texture.h"
-#include "engine/runtime/function/render/object/skybox.h"
-#include "engine/runtime/function/render/object/geometry.h"
+#include "engine/runtime/function/render/render_material/material.h"
+#include "engine/runtime/function/render/render_pipeline/render_pipeline.h"
+#include "engine/runtime/function/render/render_material/material.h"
+#include "engine/runtime/function/render/render_frontend/shader.h"
+#include "engine/runtime/function/render/render_frontend/texture.h"
+#include "engine/runtime/function/render/render_utils/skybox.h"
+#include "engine/runtime/function/render/render_frontend/geometry.h"
 
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
@@ -29,6 +30,8 @@
 #include "engine/runtime/resource/loader/image.h"
 #include "engine/runtime/resource/loader/model.h"
 #include "engine/runtime/runtime.h"
+
+#include "engine/runtime/function/render/render_pipeline/forward_render_pipeline.h"
 
 #include "glm/fwd.hpp"
 #include <memory>
@@ -69,7 +72,7 @@ int main() {
             {Texture_cubemap_face::TOP, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/top.jpg", false)}
     })));
 
-    auto sponza_root_go = scene->add_model("sponza", sponza);
+    auto sponza_root_go = scene->add_model<Phong_material>("sponza", sponza);
 
     sponza_root_go->get_component<Node_component>()->node()->set_scale(glm::vec3(0.0005f));
     // auto sponza_rot = sponza_root_go->add_component<Rotate_component>();
@@ -88,7 +91,7 @@ int main() {
 
     auto dl_game_object = scene->add_game_object(Game_object::create("dl"));
     auto dl_node = dl_game_object->add_component<Node_component>()->node();
-    dl_node->look_at_direction(glm::vec3(1, -1, 1));
+    dl_node->look_at_direction(glm::vec3(0, -1, 0));
     dl_node->set_position(glm::vec3(0, 3, 0));
     auto dl = dl_game_object->add_component<Directional_light_component>();
     auto dl_shadow_caster = dl_game_object->add_component<Directional_light_shadow_caster_component>();

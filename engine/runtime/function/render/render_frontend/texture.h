@@ -1,13 +1,10 @@
 #pragma once
 
-#include "engine/runtime/function/render/core/render_resource.h"
+#include "engine/runtime/function/render/render_resource.h"
 
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_texture.h"
-#include "engine/runtime/resource/guid.h"
-#include "engine/runtime/resource/hash.h"
 #include "engine/runtime/resource/loader/image.h"
-#include "engine/runtime/resource/resource_manager.h"
 #include <memory>
 #include <unordered_map>
 
@@ -65,13 +62,7 @@ public:
         filters
     ),  m_image(image),
         m_width(image->width()),
-        m_height(image->height()) {
-            if (!m_image) {
-                throw std::runtime_error(
-                    "Texture2D::Texture2D: m_image is nullptr"
-                );
-            }
-        }
+        m_height(image->height()) {}
 
     Texture_2D(
         int width, 
@@ -109,7 +100,6 @@ public:
         );
 
         if (!m_image) {
-            //std::cout << "Texture2D::link: m_image is nullptr" << std::endl;
             return;
         }
         
@@ -309,7 +299,6 @@ public:
         );
 
         if (m_images.size() == 0) {
-            //std::cout << "Texture2DArray::link: m_images is empty" << std::endl;
             return;
         }
 
@@ -342,6 +331,7 @@ public:
             std::cout << "Texture2DArray::create failed: images is empty" << std::endl;
             return nullptr;
         }
+
         return std::make_shared<Texture_2D_array>(
             images,
             mipmap_levels,
@@ -514,7 +504,6 @@ public:
         );
 
         if (m_images.size() != 6) {
-            //std::cout << "Texture_cubemap::link: number of m_images is not vaild" << std::endl;
             return;
         }
 
@@ -544,6 +533,7 @@ public:
             std::cout << "Texture_cubemap::create failed: number of m_images is not vaild" << std::endl;
             return nullptr;
         }
+        
         return std::make_shared<Texture_cubemap>(
             images,
             mipmap_levels,

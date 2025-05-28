@@ -40,13 +40,14 @@ public:
         return game_object;
     }
 
+    template<typename T>
     std::shared_ptr<Game_object> add_model(
         const std::string& name,
         const std::shared_ptr<Model>& model 
     ) {
         std::vector<std::shared_ptr<Game_object>> gos{};
 
-        auto root_go = Model_loader::load_model(
+        auto root_go = Model_loader<T>::load_model(
             name,
             model,
             gos

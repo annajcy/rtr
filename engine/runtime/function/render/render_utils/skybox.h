@@ -1,9 +1,9 @@
 #pragma once
 
-#include "engine/runtime/function/render/object/geometry.h"
-#include "engine/runtime/function/render/object/material.h"
-#include "engine/runtime/function/render/object/shader.h"
-#include "engine/runtime/function/render/object/texture.h"
+#include "engine/runtime/function/render/render_frontend/geometry.h"
+#include "engine/runtime/function/render/render_frontend/texture.h"
+#include "engine/runtime/function/render/render_material/skybox/skybox_cubemap_material.h"
+#include "engine/runtime/function/render/render_material/skybox/skybox_spherical_material.h"
 
 namespace rtr {
 

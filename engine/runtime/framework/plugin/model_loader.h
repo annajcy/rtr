@@ -3,11 +3,11 @@
 #include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 #include "engine/runtime/framework/core/game_object.h"
-#include "engine/runtime/function/render/object/attribute_buffer.h"
-#include "engine/runtime/function/render/object/geometry.h"
-#include "engine/runtime/function/render/object/material.h"
-#include "engine/runtime/function/render/object/shader.h"
-#include "engine/runtime/function/render/object/texture.h"
+#include "engine/runtime/function/render/render_frontend/attribute_buffer.h"
+#include "engine/runtime/function/render/render_frontend/geometry.h"
+#include "engine/runtime/function/render/render_material/material.h"
+#include "engine/runtime/function/render/render_frontend/texture.h"
+#include "engine/runtime/function/render/render_material/shading/phong_material.h"
 #include "engine/runtime/resource/loader/model.h"
 #include <memory>
 #include <string>
@@ -15,6 +15,39 @@
 
 namespace rtr {
 
+template<typename T>
+inline std::shared_ptr<T> convert_material_(const std::shared_ptr<Model_material>& model_material) {
+    return nullptr;
+}
+
+template<>
+inline std::shared_ptr<Phong_material> convert_material_<Phong_material>(const std::shared_ptr<Model_material>& model_material) {
+    auto material = Phong_material::create();
+
+    auto phong_material_settings = Phong_material_settings::create();
+    phong_material_settings->ka = model_material->ka;
+    phong_material_settings->kd = model_material->kd;
+    phong_material_settings->ks = model_material->ks;
+    phong_material_settings->shininess = model_material->shininess;
+
+    auto phong_texture_settings = Phong_texture_settings::create();
+    phong_texture_settings->albedo_map = Texture_2D::create_image(model_material->map_albedo);
+    phong_texture_settings->normal_map = Texture_2D::create_image(model_material->map_normal);
+    phong_texture_settings->height_map = Texture_2D::create_image(model_material->map_height);
+    phong_texture_settings->specular_map = Texture_2D::create_image(model_material->map_specular);
+    phong_texture_settings->alpha_map = Texture_2D::create_image(model_material->map_alpha);
+
+    auto parallax_settings = Parallax_settings::create();
+
+    material->phong_texture_settings = phong_texture_settings;
+    material->phong_material_settings = phong_material_settings;
+    material->parallax_settings = parallax_settings;
+    material->shadow_settings = Shadow_settings::create();
+
+    return material;
+}
+
+template<typename T>
 class Model_loader {
 public:
     static std::vector<std::shared_ptr<Material>> load_materials(
@@ -22,7 +55,7 @@ public:
     ) {
         std::vector<std::shared_ptr<Material>> materials{};
         for (const auto& material : model->materials()) {
-            materials.push_back(convert_material(material));
+            materials.push_back(Model_loader<T>::convert_material(material));
         }
         return materials;
     }
@@ -46,63 +79,34 @@ public:
 
 private:
 
-    static std::shared_ptr<Geometry> convert_geomerty(
+    static std::shared_ptr<Geometry> convert_geometry(
         const std::shared_ptr<Model_geometry>& model_geometry
     ) {
-        auto vertex_atrribute = std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> {};
+        auto vertex_attribute = std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> {};
         auto positions = Position_attribute::create(model_geometry->positions);
-        vertex_atrribute.insert({0, positions});
+        vertex_attribute.insert({0, positions});
 
         if (model_geometry->has_uvs()) {
             auto uvs = UV_attribute::create(model_geometry->uvs);
-            vertex_atrribute.insert({1, uvs});
+            vertex_attribute.insert({1, uvs});
         }
 
         if (model_geometry->has_normals()) {
             auto normals = Normal_attribute::create(model_geometry->normals);
-            vertex_atrribute.insert({2, normals});
+            vertex_attribute.insert({2, normals});
         }
 
         if (model_geometry->has_tangents()) {
             auto tangents = Tangent_attribute::create(model_geometry->tangents);
-            vertex_atrribute.insert({3, tangents});
+            vertex_attribute.insert({3, tangents});
         }
 
-        auto element_attribute = Element_atrribute::create(model_geometry->indices);
-        return Geometry::create(vertex_atrribute, element_attribute);
+        auto element_attribute = Element_attribute::create(model_geometry->indices);
+        return Geometry::create(vertex_attribute, element_attribute);
     }
 
-    static std::shared_ptr<Material> convert_material(
-        const std::shared_ptr<Model_material>& model_material,
-        Material_type material_type = Material_type::PHONG
-    ) {
-        if (material_type == Material_type::PHONG) {
-            auto material = Phong_material::create();
-
-            auto phong_material_settings = Phong_material_settings::create();
-            phong_material_settings->ka = model_material->ka;
-            phong_material_settings->kd = model_material->kd;
-            phong_material_settings->ks = model_material->ks;
-            phong_material_settings->shininess = model_material->shininess;
-            
-            auto phong_texture_settings = Phong_texture_settings::create();
-            phong_texture_settings->albedo_map = Texture_2D::create_image(model_material->map_albedo);
-            phong_texture_settings->normal_map = Texture_2D::create_image(model_material->map_normal);
-            phong_texture_settings->height_map = Texture_2D::create_image(model_material->map_height);
-            phong_texture_settings->specular_map = Texture_2D::create_image(model_material->map_specular);
-            phong_texture_settings->alpha_map = Texture_2D::create_image(model_material->map_alpha);
-
-            auto parallax_settings = Parallax_settings::create();
-
-            material->phong_texture_settings = phong_texture_settings;
-            material->phong_material_settings = phong_material_settings;
-            material->parallax_settings = parallax_settings;
-            material->shadow_settings = Shadow_settings::create();
-
-            return material;
-        }
-        
-        return nullptr;
+    static std::shared_ptr<Material> convert_material(const std::shared_ptr<Model_material>& model_material) {
+        return convert_material_<T>(model_material);
     }
 
     static std::shared_ptr<Game_object> dfs(
@@ -124,7 +128,7 @@ private:
             auto mesh_renderer = mesh_game_object->add_component<Mesh_renderer_component>()->mesh_renderer();
             // init mesh renderer
             mesh_renderer->material() = materials[mesh->material_index];
-            mesh_renderer->geometry() = convert_geomerty(mesh->geometry);
+            mesh_renderer->geometry() = convert_geometry(mesh->geometry);
 
             game_objects.push_back(mesh_game_object);
         }
@@ -142,8 +146,5 @@ private:
     }
 
 };
-
-
-
 
 };

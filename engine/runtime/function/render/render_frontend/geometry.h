@@ -1,7 +1,6 @@
 #pragma once
 
-#include "engine/runtime/function/render/core/render_resource.h"
-#include "engine/runtime/function/render/object/attribute_buffer.h"
+#include "engine/runtime/function/render/render_frontend/attribute_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_buffer.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
@@ -11,25 +10,24 @@
 
 namespace rtr {
 
-class Geometry : public RHI_linker<RHI_geometry>, public Render_resource {
+class Geometry : public RHI_linker<RHI_geometry> {
 protected:
     std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> m_vertex_attributes{};
-    std::shared_ptr<Element_atrribute> m_element_attribute{};
+    std::shared_ptr<Element_attribute> m_element_attribute{};
 
 public:
     Geometry(
         const std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>>& vertex_attributes,
-        const std::shared_ptr<Element_atrribute> & element_attribute
-    ) : Render_resource(Render_resource_type::GEOMETRY), 
-        m_vertex_attributes(vertex_attributes), 
+        const std::shared_ptr<Element_attribute> & element_attribute
+    ) : m_vertex_attributes(vertex_attributes), 
         m_element_attribute(element_attribute) {}
 
     ~Geometry() = default;
 
     const std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>>& attributes() const { return m_vertex_attributes; }
     std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>>& attributes() { return m_vertex_attributes; }
-    const std::shared_ptr<Element_atrribute>& element_attribute() const { return m_element_attribute; }
-    std::shared_ptr<Element_atrribute>& element_attribute() { return m_element_attribute; }
+    const std::shared_ptr<Element_attribute>& element_attribute() const { return m_element_attribute; }
+    std::shared_ptr<Element_attribute>& element_attribute() { return m_element_attribute; }
 
     const std::shared_ptr<Vertex_attribute_base>& attribute(unsigned int position) const {
         auto it = m_vertex_attributes.find(position);
@@ -73,7 +71,7 @@ public:
 
     static std::shared_ptr<Geometry> create(
         const std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>>& vertex_attributes,
-        const std::shared_ptr<Element_atrribute> & element_attribute
+        const std::shared_ptr<Element_attribute> & element_attribute
     ) {
         return std::make_shared<Geometry>(
             vertex_attributes,
@@ -163,7 +161,7 @@ public:
             })}
         };
 
-        auto element_attribute = std::make_shared<Element_atrribute>(std::vector<unsigned int>{
+        auto element_attribute = std::make_shared<Element_attribute>(std::vector<unsigned int>{
             0, 1, 2, 2, 3, 0,   // Front face
             4, 5, 6, 6, 7, 4,   // Back face
             8, 9, 10, 10, 11, 8,  // Top face
@@ -210,7 +208,7 @@ public:
             
         };
 
-        auto element_attribute = std::make_shared<Element_atrribute>(std::vector<unsigned int>{
+        auto element_attribute = std::make_shared<Element_attribute>(std::vector<unsigned int>{
             0, 1, 2,
             2, 3, 0
         });
@@ -236,7 +234,7 @@ public:
             })}
         };
 
-        auto element_attribute = std::make_shared<Element_atrribute>(std::vector<unsigned int>{
+        auto element_attribute = std::make_shared<Element_attribute>(std::vector<unsigned int>{
             0, 1, 2,
             0, 2, 3
         });
@@ -357,7 +355,7 @@ public:
             {3, std::make_shared<Tangent_attribute>(tangents)}
         };
 
-        auto element_attribute = std::make_shared<Element_atrribute>(indices);
+        auto element_attribute = std::make_shared<Element_attribute>(indices);
         return std::make_shared<Geometry>(vertex_attributes, element_attribute);
     }
 

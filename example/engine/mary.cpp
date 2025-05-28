@@ -2,12 +2,13 @@
 
 #include "engine/editor/editor.h"
 
-#include "engine/runtime/function/render/core/render_pipeline.h"
-#include "engine/runtime/function/render/object/material.h"
-#include "engine/runtime/function/render/object/shader.h"
-#include "engine/runtime/function/render/object/texture.h"
-#include "engine/runtime/function/render/object/skybox.h"
-#include "engine/runtime/function/render/object/geometry.h"
+#include "engine/runtime/function/render/render_material/material.h"
+#include "engine/runtime/function/render/render_pipeline/render_pipeline.h"
+#include "engine/runtime/function/render/render_material/material.h"
+#include "engine/runtime/function/render/render_frontend/shader.h"
+#include "engine/runtime/function/render/render_frontend/texture.h"
+#include "engine/runtime/function/render/render_utils/skybox.h"
+#include "engine/runtime/function/render/render_frontend/geometry.h"
 
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
@@ -26,12 +27,13 @@
 
 #include "engine/runtime/framework/plugin/model_loader.h"
 
-#include "engine/runtime/global/base.h"
 #include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "engine/runtime/resource/file_service.h"
 #include "engine/runtime/resource/loader/image.h"
 #include "engine/runtime/resource/loader/model.h"
 #include "engine/runtime/runtime.h"
+
+#include "engine/runtime/function/render/render_pipeline/forward_render_pipeline.h"
 
 #include "glm/fwd.hpp"
 #include <memory>
@@ -118,7 +120,7 @@ int main() {
 
     std::vector<std::shared_ptr<Game_object>> bag_gos;
 
-    auto bag_root_go = Model_loader::load_model(
+    auto bag_root_go = Model_loader<Phong_material>::load_model(
         "bag",
         bag,
         bag_gos

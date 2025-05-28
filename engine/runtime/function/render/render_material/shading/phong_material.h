@@ -1,8 +1,7 @@
 #pragma once
 
-#include "engine/runtime/function/render/object/shader.h"
-#include "engine/runtime/function/render/object/texture.h"
-#include "engine/runtime/function/render/core/render_resource.h"
+#include "engine/runtime/function/render/render_material/material.h"
+#include "engine/runtime/function/render/render_frontend/texture.h"
 
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
@@ -10,37 +9,89 @@
 #include <memory>
 #include <unordered_map>
 
+#include "engine/runtime/resource/file_service.h"
+
 namespace rtr {
 
-enum class Material_type {
-    PHONG,
-    SKYBOX_CUBEMAP,
-    SKYBOX_SPHERICAL,
-    GAMMA,
-    SHADOW_CASTER
+enum class Phong_shader_feature {
+    SHADOWS,
+    ALBEDO_MAP,
+    ALPHA_MAP,
+    NORMAL_MAP,
+    HEIGHT_MAP,
+    SPECULAR_MAP,
+    MAX_FEATURES,
 };
 
-class Material : public Render_resource {
-    
-protected:
-    Material_type m_material_type{};
+template<>
+inline constexpr const char* shader_feature_to_defines<Phong_shader_feature>(Phong_shader_feature feature) {
+    switch (feature) {
+        case Phong_shader_feature::SHADOWS:
+            return "ENABLE_SHADOWS";
+        case Phong_shader_feature::ALBEDO_MAP:
+            return "ENABLE_ALBEDO_MAP";
+        case Phong_shader_feature::ALPHA_MAP:
+            return "ENABLE_ALPHA_MAP";
+        case Phong_shader_feature::NORMAL_MAP:
+            return "ENABLE_NORMAL_MAP";
+        case Phong_shader_feature::HEIGHT_MAP:
+            return "ENABLE_HEIGHT_MAP";
+        case Phong_shader_feature::SPECULAR_MAP:
+            return "ENABLE_SPECULAR_MAP";
+        default:
+            return "UNKNOWN";
+    }
+}
 
+class Phong_shader : public Shader<Phong_shader_feature> {
 public:
-    Material(
-        Material_type material_type
-    ) : Render_resource(Render_resource_type::MATERIAL),
-        m_material_type(material_type){}
+    Phong_shader() : Shader(
+        "phong_shader", 
+        std::unordered_map<Shader_type, std::shared_ptr<Shader_code>> {
+            {Shader_type::VERTEX, Shader_code::create(Shader_type::VERTEX, 
+                Shader_code::load_shader_code(
+                    File_ser::get_instance()->get_absolute_path("assets/shader/phong.vert")))},
+            {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, 
+                Shader_code::load_shader_code(
+                    File_ser::get_instance()->get_absolute_path("assets/shader/phong.frag")))}
+        }, 
+        std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+            {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},
+            {"transparency", Uniform_entry<float>::create(1.0f)},
+            {"ka", Uniform_entry<glm::vec3>::create(glm::vec3(0.1, 0.1, 0.1))},
+            {"kd", Uniform_entry<glm::vec3>::create(glm::vec3(0.5, 0.5, 0.5))},
+            {"ks", Uniform_entry<glm::vec3>::create(glm::vec3(1.0, 1.0, 1.0))},
+            {"shininess", Uniform_entry<float>::create(32.0f)}
+        },
+        std::unordered_map<Phong_shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> {
+            {
+                Phong_shader_feature::HEIGHT_MAP, 
+                std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+                    {"parallax_scale", Uniform_entry<float>::create(0.05f)},
+                    {"parallax_layer_count", Uniform_entry<float>::create(10.0f)}
+                }
+            },
+            {
+                Phong_shader_feature::SHADOWS,
+                std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
+                    {"shadow_bias", Uniform_entry<float>::create(1.0f)},
+                    {"light_size", Uniform_entry<float>::create(0)},
+                    {"pcf_radius", Uniform_entry<float>::create(5)},
+                    {"pcf_tightness", Uniform_entry<float>::create(100)},
+                    {"pcf_sample_count", Uniform_entry<int>::create(100)},
+                }
+            }
+        },
+        std::unordered_map<Phong_shader_feature, std::unordered_set<Phong_shader_feature>> {
+            {Phong_shader_feature::HEIGHT_MAP, {Phong_shader_feature::NORMAL_MAP}}
+        }
+    ) {}
 
-    virtual ~Material() = default;
-
-    Material_type material_type() const { return m_material_type; }
-
-    virtual std::shared_ptr<Shader_program> get_shader_program() = 0;
-    virtual std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() = 0;
-    virtual Pipeline_state get_pipeline_state() const = 0;
-    virtual void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) = 0;
+    ~Phong_shader() = default;
+    static std::shared_ptr<Phong_shader> create() {
+        return std::make_shared<Phong_shader>();
+    }
 };
-
 
 struct Shadow_settings {
     bool enable_csm{false};
@@ -206,168 +257,7 @@ public:
         }
         return s_phong_shader;
     }
-
-    
-};
-
-class Skybox_cubemap_material : public Material {
-public:
-    inline static std::shared_ptr<Skybox_cubemap_shader> s_skybox_cubemap_shader{};
-    
-    std::shared_ptr<Texture> cube_map{};
-
-    Skybox_cubemap_material() : Material(Material_type::SKYBOX_CUBEMAP) {}
-    ~Skybox_cubemap_material() = default;
-
-    std::shared_ptr<Shader_program> get_shader_program() override {
-        return skybox_cubemap_shader()->get_shader_program();
-    }
-
-    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) override {}
-
-    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
-        if (cube_map) {
-            return {
-                {0, cube_map}
-            };
-        }
-        return {};
-    }
-
-    Pipeline_state get_pipeline_state() const override {
-        return Pipeline_state::skybox_pipeline_state();
-    }
-
-    static std::shared_ptr<Skybox_cubemap_material> create() {
-        return std::make_shared<Skybox_cubemap_material>();
-    }
-
-    static std::shared_ptr<Skybox_cubemap_shader> skybox_cubemap_shader() {
-        if (!s_skybox_cubemap_shader) {
-            s_skybox_cubemap_shader = Skybox_cubemap_shader::create();
-        }
-        return s_skybox_cubemap_shader;
-    }
-};
-
-class Skybox_spherical_material : public Material {
-public:
-    inline static std::shared_ptr<Skybox_spherical_shader> s_skybox_spherical_shader{};
-    std::shared_ptr<Texture> spherical_map{};
-
-    Skybox_spherical_material() : Material(Material_type::SKYBOX_SPHERICAL) {}
-
-    ~Skybox_spherical_material() = default;
-
-    std::shared_ptr<Shader_program> get_shader_program() override { return skybox_spherical_shader()->get_shader_program(); }
-
-    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
-        if (spherical_map) {
-            return {
-                {0, spherical_map}
-            };
-        }
-        return {};
-    }
-
-    Pipeline_state get_pipeline_state() const override {
-        return Pipeline_state::skybox_pipeline_state();
-    }
-
-    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) override {}
-
-    static std::shared_ptr<Skybox_spherical_material> create() {
-        return std::make_shared<Skybox_spherical_material>();
-    }
-
-    static std::shared_ptr<Skybox_spherical_shader> skybox_spherical_shader() {
-        if (!s_skybox_spherical_shader) {
-            s_skybox_spherical_shader = Skybox_spherical_shader::create();
-        }
-        return s_skybox_spherical_shader;
-    }
-
-};
-
-class Gamma_material : public Material {
-protected:
-    inline static std::shared_ptr<Gamma_shader> s_gamma_shader{};
-public:
-    std::shared_ptr<Texture> screen_map{};
-
-    Gamma_material() : Material(Material_type::GAMMA) {}
-
-    ~Gamma_material() = default;
-
-    Pipeline_state get_pipeline_state() const override {
-        return Pipeline_state::opaque_pipeline_state();
-    }
-
-    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) override {}
-
-    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
-        if (screen_map) {
-            return {
-                {0, screen_map}
-            };
-        }
-        return {};
-    }
-
-    std::shared_ptr<Shader_program> get_shader_program() override {
-        return gamma_shader()->get_shader_program();
-    }
-
-    static std::shared_ptr<Gamma_material> create() {
-        return std::make_shared<Gamma_material>();
-    }
-
-    static std::shared_ptr<Gamma_shader> gamma_shader() {
-        if (!s_gamma_shader) {
-            s_gamma_shader = Gamma_shader::create();
-        }
-        return s_gamma_shader;
-    }
-
-    
-};
-
-class Shadow_caster_material : public Material {
-protected:
-    inline static std::shared_ptr<Shadow_caster_shader> s_shadow_caster_shader{};
-
-public:
-    Shadow_caster_material() : Material(
-        Material_type::SHADOW_CASTER
-    ) {}
-    
-    ~Shadow_caster_material() = default;
-
-    Pipeline_state get_pipeline_state() const override {
-        return Pipeline_state::shadow_pipeline_state();
-    }
-
-    std::shared_ptr<Shader_program> get_shader_program() override {
-        return shadow_caster_shader()->get_shader_program();
-    }
-
-    std::unordered_map<unsigned int, std::shared_ptr<Texture>> get_texture_map() override {
-        return {};
-    }
-
-    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) override {}
-
-    static std::shared_ptr<Shadow_caster_material> create() {
-        return std::make_shared<Shadow_caster_material>();
-    }
-
-    static std::shared_ptr<Shadow_caster_shader> shadow_caster_shader() {
-        if (!s_shadow_caster_shader) {
-            s_shadow_caster_shader = Shadow_caster_shader::create();
-        }
-        return s_shadow_caster_shader;
-    }
-
+  
 };
 
 }

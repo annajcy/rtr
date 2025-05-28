@@ -1,39 +1,19 @@
 #pragma once
 
 #include "engine/runtime/context/engine_tick_context.h"
-#include "engine/runtime/function/render/object/memory_buffer.h"
-#include "engine/runtime/function/render/object/texture.h"
-#include "engine/runtime/function/render/core/render_pass.h"
-#include "engine/runtime/function/render/core/render_resource.h"
-#include "engine/runtime/function/render/core/render_struct.h"
+#include "engine/runtime/function/render/render_frontend/memory_buffer.h"
+#include "engine/runtime/function/render/render_frontend/texture.h"
+#include "engine/runtime/function/render/render_pass/main_pass.h"
+#include "engine/runtime/function/render/render_pass/postprocess_pass.h"
+#include "engine/runtime/function/render/render_pass/shadow_pass.h"
+#include "engine/runtime/function/render/render_pipeline/render_pipeline.h"
+#include "engine/runtime/function/render/render_struct/camera_render_struct.h"
+#include "engine/runtime/function/render/render_struct/light_render_struct.h"
 #include "engine/runtime/resource/resource_manager.h"
 #include "glm/fwd.hpp"
 #include <memory>
 
 namespace rtr {
-
-class Render_pipeline {
-protected:
-    RHI_global_resource& m_rhi_global_resource;
-    Resource_manager<std::string, Render_resource> m_render_resource_manager{};
-
-public:
-    Render_pipeline(RHI_global_resource& global_render_resource) : 
-    m_rhi_global_resource(global_render_resource) {}
-
-    virtual ~Render_pipeline() {}
-
-    virtual void execute(const Render_tick_context& tick_context) = 0;
-   
-    virtual void init_ubo() = 0;
-    virtual void update_ubo(const Render_tick_context& tick_context) = 0;
-
-    virtual void init_render_passes() = 0;
-    virtual void update_render_pass(const Render_tick_context& tick_context) = 0;
-
-    virtual void update_render_resource(const Render_tick_context& tick_context) = 0;
-};
-
 
 class Forward_render_pipeline : public Render_pipeline {
 private:
@@ -50,8 +30,8 @@ private:
     
 public:
     Forward_render_pipeline (
-        RHI_global_resource& global_render_resource
-    ) : Render_pipeline(global_render_resource) {
+        RHI_global_resource& rhi_global_resource
+    ) : Render_pipeline(rhi_global_resource) {
         init_ubo();
         init_render_passes();
     }
@@ -204,8 +184,8 @@ public:
         m_postprocess_pass->excute();
     }
 
-    static std::shared_ptr<Forward_render_pipeline> create(RHI_global_resource& global_render_resource) {
-        return std::make_shared<Forward_render_pipeline>(global_render_resource);
+    static std::shared_ptr<Forward_render_pipeline> create(RHI_global_resource& rhi_global_resource) {
+        return std::make_shared<Forward_render_pipeline>(rhi_global_resource);
     }
 
 };

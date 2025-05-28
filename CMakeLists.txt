@@ -82,8 +82,8 @@ target_link_libraries(rhi_frame_buffer_depth ${COMMON_LIBS})
 add_executable(rhi_compute ${SOURCES} example/rhi/compute.cpp)
 target_link_libraries(rhi_compute ${COMMON_LIBS})
 
-add_executable(main ${SOURCES} example/engine/main.cpp)
-target_link_libraries(main ${COMMON_LIBS})
+add_executable(mary ${SOURCES} example/engine/mary.cpp)
+target_link_libraries(mary ${COMMON_LIBS})
 
 add_executable(sponza ${SOURCES} example/engine/sponza.cpp)
 target_link_libraries(sponza ${COMMON_LIBS})

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "engine/runtime/framework/component/node/node.h"
-#include "engine/runtime/function/render/object/geometry.h"
-#include "engine/runtime/function/render/object/material.h"
+#include "engine/runtime/function/render/render_frontend/geometry.h"
+#include "engine/runtime/function/render/render_material/material.h"
 
 namespace rtr {
 

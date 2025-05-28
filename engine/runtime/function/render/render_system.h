@@ -1,10 +1,7 @@
 #pragma once
 
-#include "engine/runtime/function/render/core/render_pipeline.h"
+#include "engine/runtime/function/render/render_pipeline/render_pipeline.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
-#include "engine/runtime/platform/rhi/rhi_renderer.h"
-#include "engine/runtime/platform/rhi/rhi_window.h"
-
 #include <memory>
 
 namespace rtr {

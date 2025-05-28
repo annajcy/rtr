@@ -1,7 +1,7 @@
-#include "engine/runtime/function/render/object/frame_buffer.h"
-#include "engine/runtime/function/render/object/shader.h"
-#include "engine/runtime/function/render/object/texture.h"
-#include "engine/runtime/function/render/object/geometry.h"
+#include "engine/runtime/function/render/render_frontend/frame_buffer.h"
+#include "engine/runtime/function/render/render_frontend/shader.h"
+#include "engine/runtime/function/render/render_frontend/texture.h"
+#include "engine/runtime/function/render/render_frontend/geometry.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include <memory>
@@ -87,7 +87,7 @@ int main() {
         std::unordered_map<unsigned int, std::shared_ptr<Vertex_attribute_base>> {
             {0, Vertex_attribute<float, 3>::create(vertices)}
         },  
-        Element_atrribute::create(indices)
+        Element_attribute::create(indices)
     );
 
     auto geometry = geo->rhi(device);

@@ -6,7 +6,6 @@
 #include "engine/runtime/framework/component/light/light_component.h"
 #include "engine/runtime/framework/component/node/node.h"
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster.h"
-#include "engine/runtime/function/render/object/texture.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
