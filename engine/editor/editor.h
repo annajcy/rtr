@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/editor/panel/panel.h"
 #include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
 #include "engine/runtime/function/render/render_material/material.h"
 #include "engine/runtime/platform/rhi/rhi_imgui.h"
@@ -14,130 +15,6 @@
 namespace rtr {
 
 namespace editor {
-
-class Panel {
-protected:
-    std::shared_ptr<RHI_imgui> m_imgui{};
-    std::string m_name{};
-    bool m_is_open{true};
-
-public:
-    Panel(const std::string& name) : m_name(name) {}
-
-    void render() {
-        if (!m_imgui) {
-            std::cout << "imgui instance is not initialized, panel will not be rendered" << std::endl;
-            return;
-        }
-        if (!m_is_open) return;
-        m_imgui->begin_render(m_name);
-        draw_panel();
-        m_imgui->end_render(); 
-    }
-
-    virtual void draw_panel() = 0;
-
-    virtual ~Panel() = default;
-
-    std::string name() const { return m_name; }
-    void set_imgui(const std::shared_ptr<RHI_imgui>& imgui) { m_imgui = imgui; }
-};
-
-class Shadow_settings_panel : public Panel {
-protected:
-    std::shared_ptr<Shadow_settings> m_shadow_settings{};
-public:
-    Shadow_settings_panel(
-        const std::string& name
-    ) : Panel(name) {}
-
-    void set_shadow_settings(const std::shared_ptr<Shadow_settings>& shadow_settings) {
-        m_shadow_settings = shadow_settings;
-    }
-
-    virtual void draw_panel() override {
-        if (!m_shadow_settings) return;
-        m_imgui->slider_float("shadow bias", &m_shadow_settings->shadow_bias, 0.0, 0.1);
-        m_imgui->slider_float("light size", &m_shadow_settings->light_size, 0.1, 2.0);
-        m_imgui->slider_float("pcf radius", &m_shadow_settings->pcf_radius, 0.0, 1.0);
-        m_imgui->slider_float("pcf tightness", &m_shadow_settings->pcf_tightness, 0.1, 10.0);
-        m_imgui->slider_int("pcf samples", &m_shadow_settings->pcf_sample_count, 1.0, 32.0);
-    }
-
-    static std::shared_ptr<Shadow_settings_panel> create(
-        const std::string& name
-    ) {
-        return std::make_shared<Shadow_settings_panel>(name);
-    }
-};
-
-class Phong_material_settings_panel : public Panel {
-protected:
-    std::shared_ptr<Phong_material_settings> m_phong_material_settings{};
-public:
-    Phong_material_settings_panel(
-        const std::string& name
-    ) : Panel(name) {}
-
-    void set_phong_material_settings(const std::shared_ptr<Phong_material_settings>& phong_material_settings) {
-        m_phong_material_settings = phong_material_settings;
-    }
-    virtual void draw_panel() override {
-        if (!m_phong_material_settings) return;
-        m_imgui->color_edit("ambient", glm::value_ptr(m_phong_material_settings->ka));
-        m_imgui->color_edit("diffuse", glm::value_ptr(m_phong_material_settings->kd));
-        m_imgui->color_edit("specular", glm::value_ptr(m_phong_material_settings->ks));
-        m_imgui->slider_float("shininess", &m_phong_material_settings->shininess, 1.0, 64.0);
-    }
-
-    static std::shared_ptr<Phong_material_settings_panel> create(
-        const std::string& name
-    ) {
-        return std::make_shared<Phong_material_settings_panel>(name);
-    }
-};
-
-class Parallax_settings_panel : public Panel {
-protected:
-    std::shared_ptr<Parallax_settings> m_parallax_settings{};
-
-public:
-    Parallax_settings_panel(const std::string& name) : Panel(name) {}
-
-    void set_parallax_settings(const std::shared_ptr<Parallax_settings>& parallax_settings) {
-        m_parallax_settings = parallax_settings;
-    }
-
-    virtual void draw_panel() override {
-        if (!m_parallax_settings) return;
-        m_imgui->slider_float("parallax scale", &m_parallax_settings->parallax_scale, 0.0, 1.0);
-        m_imgui->slider_float("parallax layer count", &m_parallax_settings->parallax_layer_count, 0.0, 20.0);
-    }
-
-    static std::shared_ptr<Parallax_settings_panel> create(
-        const std::string& name
-    ) {
-        return std::make_shared<Parallax_settings_panel>(name);
-    }
-};
-
-class FPS_panel : public Panel {
-
-public:
-    FPS_panel(
-        const std::string& name
-    ) : Panel(name) {}
-
-    virtual void draw_panel() override {
-        m_imgui->text("fps: %f", std::to_string(m_imgui->frame_rate()));
-    }
-
-    static std::shared_ptr<FPS_panel> create(
-        const std::string& name
-    ) {
-        return std::make_shared<FPS_panel>(name);
-    }
-};
 
 class Editor {
 

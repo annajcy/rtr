@@ -1,4 +1,7 @@
-
+#include "engine/editor/panel/parallax_setting_panel.h"
+#include "engine/editor/panel/phong_material_setting_panel.h"
+#include "engine/editor/panel/shadow_setting_panel.h"
+#include "engine/editor/panel/fps_panel.h"
 
 #include "engine/editor/editor.h"
 

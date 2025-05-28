@@ -1,3 +1,4 @@
+#include "engine/editor/panel/fps_panel.h"
 
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
 #include "engine/editor/editor.h"

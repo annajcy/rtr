@@ -1,3 +1,8 @@
+#include "engine/editor/panel/parallax_setting_panel.h"
+#include "engine/editor/panel/phong_material_setting_panel.h"
+#include "engine/editor/panel/shadow_setting_panel.h"
+#include "engine/editor/panel/fps_panel.h"
+
 #include "engine/runtime/framework/component/custom/ping_pong_component.h"
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
 
