@@ -26,7 +26,7 @@
 #include "engine/runtime/resource/loader/image.h"
 #include "engine/runtime/runtime.h"
 
-#include "engine/runtime/function/render/pipeline/forward_render_pipeline.h"
+#include "engine/runtime/function/render/pipeline/forward_pipeline.h"
 
 #include "glm/fwd.hpp"
 #include <memory>

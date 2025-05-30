@@ -67,3 +67,4 @@ Thumbs.db
 
 *.engine_cpp
 *.diagram.cpp
+*.gen.txt
