@@ -4,16 +4,16 @@
 
 namespace rtr {
     
-class Render_pass {
+class Base_pass {
 protected:
     RHI_global_resource& m_rhi_global_resource;
 
 public:
-    Render_pass(
+    Base_pass(
         RHI_global_resource& rhi_global_resource
     ) : m_rhi_global_resource(rhi_global_resource) {}
 
-    virtual ~Render_pass() {}
+    virtual ~Base_pass() {}
     virtual void excute() = 0;
 };
 

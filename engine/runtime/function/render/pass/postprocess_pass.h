@@ -1,16 +1,16 @@
 #pragma once
 
-#include "engine/runtime/function/render/render_frontend/frame_buffer.h"
-#include "engine/runtime/function/render/render_frontend/geometry.h"
-#include "engine/runtime/function/render/render_material/postprocess/gamma_material.h"
-#include "engine/runtime/function/render/render_frontend/texture.h"
-#include "engine/runtime/function/render/render_pass/render_pass.h"
+#include "engine/runtime/function/render/frontend/frame_buffer.h"
+#include "engine/runtime/function/render/frontend/geometry.h"
+#include "engine/runtime/function/render/material/postprocess/gamma_material.h"
+#include "engine/runtime/function/render/frontend/texture.h"
+#include "engine/runtime/function/render/pass/base_pass.h"
 
 #include <memory>
 
 namespace rtr {
     
-class Postprocess_pass : public Render_pass {
+class Postprocess_pass : public Base_pass {
 public:
 
     struct Execution_context {};
@@ -37,7 +37,7 @@ protected:
 public:
     Postprocess_pass(
         RHI_global_resource& rhi_global_resource
-    ) : Render_pass(rhi_global_resource) {
+    ) : Base_pass(rhi_global_resource) {
         m_gamma_material = Gamma_material::create();
         m_screen_geometry = Geometry::create_screen_plane();
     }

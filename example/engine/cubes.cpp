@@ -7,10 +7,10 @@
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
 
 #include "engine/editor/editor.h"
-#include "engine/runtime/function/render/render_material/material.h"
-#include "engine/runtime/function/render/render_frontend/texture.h"
-#include "engine/runtime/function/render/render_utils/skybox.h"
-#include "engine/runtime/function/render/render_frontend/geometry.h"
+#include "engine/runtime/function/render/material/material.h"
+#include "engine/runtime/function/render/frontend/texture.h"
+#include "engine/runtime/function/render/utils/skybox.h"
+#include "engine/runtime/function/render/frontend/geometry.h"
 
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control_component.h"
@@ -26,7 +26,7 @@
 #include "engine/runtime/resource/loader/image.h"
 #include "engine/runtime/runtime.h"
 
-#include "engine/runtime/function/render/render_pipeline/forward_render_pipeline.h"
+#include "engine/runtime/function/render/pipeline/forward_render_pipeline.h"
 
 #include "glm/fwd.hpp"
 #include <memory>
@@ -38,7 +38,7 @@ int main() {
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
     auto runtime = Engine_runtime::create(engine_runtime_descriptor);
-    runtime->render_system()->set_render_pipeline(Forward_render_pipeline::create(
+    runtime->render_system()->set_render_pipeline(Forward_pipeline::create(
         runtime->rhi_global_resource()
     ));
     

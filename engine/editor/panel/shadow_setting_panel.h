@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/editor/panel/panel.h"
-#include "engine/runtime/function/render/render_material/shading/phong_material.h"
+#include "engine/editor/panel/base_panel.h"
+#include "engine/runtime/function/render/material/shading/phong_material.h"
 
 #include <memory>
 #include <string>
@@ -10,13 +10,13 @@ namespace rtr {
 
 namespace editor {
 
-class Shadow_settings_panel : public Panel {
+class Shadow_settings_panel : public Base_panel {
 protected:
     std::shared_ptr<Shadow_settings> m_shadow_settings{};
 public:
     Shadow_settings_panel(
         const std::string& name
-    ) : Panel(name) {}
+    ) : Base_panel(name) {}
 
     void set_shadow_settings(const std::shared_ptr<Shadow_settings>& shadow_settings) {
         m_shadow_settings = shadow_settings;

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "engine/runtime/context/swap_struct.h"
-#include "engine/runtime/function/render/render_frontend/frame_buffer.h"
-#include "engine/runtime/function/render/render_frontend/texture.h"
-#include "engine/runtime/function/render/render_pass/render_pass.h"
-#include "engine/runtime/function/render/render_utils/skybox.h"
+#include "engine/runtime/function/render/frontend/frame_buffer.h"
+#include "engine/runtime/function/render/frontend/texture.h"
+#include "engine/runtime/function/render/pass/base_pass.h"
+#include "engine/runtime/function/render/utils/skybox.h"
 
 #include <memory>
 #include <string>
@@ -12,7 +12,7 @@
 
 namespace rtr {
     
-class Main_pass : public Render_pass {
+class Main_pass : public Base_pass {
 public:
 
     struct Execution_context {
@@ -40,7 +40,7 @@ protected:
 public:
     Main_pass(
         RHI_global_resource& rhi_global_resource
-    ) : Render_pass(rhi_global_resource) {}
+    ) : Base_pass(rhi_global_resource) {}
 
     ~Main_pass() {}
 

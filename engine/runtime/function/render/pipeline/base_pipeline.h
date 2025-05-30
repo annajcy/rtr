@@ -6,16 +6,16 @@
 
 namespace rtr {
 
-class Render_pipeline {
+class Base_pipeline {
 protected:
     RHI_global_resource& m_rhi_global_resource;
     Resource_manager<std::string, Render_resource> m_render_resource_manager{};
 
 public:
-    Render_pipeline(RHI_global_resource& rhi_global_resource) : 
+    Base_pipeline(RHI_global_resource& rhi_global_resource) : 
     m_rhi_global_resource(rhi_global_resource) {}
 
-    virtual ~Render_pipeline() {}
+    virtual ~Base_pipeline() {}
 
     virtual void execute(const Render_tick_context& tick_context) = 0;
    

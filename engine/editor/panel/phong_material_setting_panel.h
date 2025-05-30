@@ -1,8 +1,8 @@
 #pragma once
 
-#include "engine/editor/panel/panel.h"
+#include "engine/editor/panel/base_panel.h"
 
-#include "engine/runtime/function/render/render_material/shading/phong_material.h"
+#include "engine/runtime/function/render/material/shading/phong_material.h"
 #include "glm/gtc/type_ptr.hpp"
 #include <memory>
 #include <string>
@@ -11,13 +11,13 @@ namespace rtr {
 
 namespace editor {
 
-class Phong_material_settings_panel : public Panel {
+class Phong_material_settings_panel : public Base_panel {
 protected:
     std::shared_ptr<Phong_material_settings> m_phong_material_settings{};
 public:
     Phong_material_settings_panel(
         const std::string& name
-    ) : Panel(name) {}
+    ) : Base_panel(name) {}
 
     void set_phong_material_settings(const std::shared_ptr<Phong_material_settings>& phong_material_settings) {
         m_phong_material_settings = phong_material_settings;

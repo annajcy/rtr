@@ -1,7 +1,6 @@
 #pragma once
 
 #include "engine/runtime/function/render/render_resource.h"
-
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_texture.h"
 #include "engine/runtime/resource/loader/image.h"

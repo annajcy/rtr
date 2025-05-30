@@ -1,21 +1,21 @@
 #pragma once
 
 #include "engine/runtime/context/engine_tick_context.h"
-#include "engine/runtime/function/render/render_frontend/memory_buffer.h"
-#include "engine/runtime/function/render/render_frontend/texture.h"
-#include "engine/runtime/function/render/render_pass/main_pass.h"
-#include "engine/runtime/function/render/render_pass/postprocess_pass.h"
-#include "engine/runtime/function/render/render_pass/shadow_pass.h"
-#include "engine/runtime/function/render/render_pipeline/render_pipeline.h"
-#include "engine/runtime/function/render/render_struct/camera_render_struct.h"
-#include "engine/runtime/function/render/render_struct/light_render_struct.h"
+#include "engine/runtime/function/render/frontend/memory_buffer.h"
+#include "engine/runtime/function/render/frontend/texture.h"
+#include "engine/runtime/function/render/pass/main_pass.h"
+#include "engine/runtime/function/render/pass/postprocess_pass.h"
+#include "engine/runtime/function/render/pass/shadow_pass.h"
+#include "engine/runtime/function/render/pipeline/base_pipeline.h"
+#include "engine/runtime/function/render/struct/camera_render_struct.h"
+#include "engine/runtime/function/render/struct/light_render_struct.h"
 #include "engine/runtime/resource/resource_manager.h"
 #include "glm/fwd.hpp"
 #include <memory>
 
 namespace rtr {
 
-class Forward_render_pipeline : public Render_pipeline {
+class Forward_pipeline : public Base_pipeline {
 private:
 
     std::shared_ptr<Uniform_buffer<Camera_ubo>> m_camera_ubo{};
@@ -29,14 +29,14 @@ private:
     std::shared_ptr<Shadow_pass> m_shadow_pass{};
     
 public:
-    Forward_render_pipeline (
+    Forward_pipeline (
         RHI_global_resource& rhi_global_resource
-    ) : Render_pipeline(rhi_global_resource) {
+    ) : Base_pipeline(rhi_global_resource) {
         init_ubo();
         init_render_passes();
     }
 
-    ~Forward_render_pipeline() {}
+    ~Forward_pipeline() {}
 
     void update_render_resource(const Render_tick_context& tick_context) override {
 
@@ -184,8 +184,8 @@ public:
         m_postprocess_pass->excute();
     }
 
-    static std::shared_ptr<Forward_render_pipeline> create(RHI_global_resource& rhi_global_resource) {
-        return std::make_shared<Forward_render_pipeline>(rhi_global_resource);
+    static std::shared_ptr<Forward_pipeline> create(RHI_global_resource& rhi_global_resource) {
+        return std::make_shared<Forward_pipeline>(rhi_global_resource);
     }
 
 };

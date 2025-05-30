@@ -1,7 +1,7 @@
-#include "engine/runtime/function/render/render_frontend/frame_buffer.h"
-#include "engine/runtime/function/render/render_frontend/shader.h"
-#include "engine/runtime/function/render/render_frontend/texture.h"
-#include "engine/runtime/function/render/render_frontend/geometry.h"
+#include "engine/runtime/function/render/frontend/frame_buffer.h"
+#include "engine/runtime/function/render/frontend/shader.h"
+#include "engine/runtime/function/render/frontend/texture.h"
+#include "engine/runtime/function/render/frontend/geometry.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include <memory>

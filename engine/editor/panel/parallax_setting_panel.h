@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/editor/panel/panel.h"
-#include "engine/runtime/function/render/render_material/shading/phong_material.h"
+#include "engine/editor/panel/base_panel.h"
+#include "engine/runtime/function/render/material/shading/phong_material.h"
 
 #include <memory>
 #include <string>
@@ -10,12 +10,12 @@ namespace rtr {
 
 namespace editor {
 
-class Parallax_settings_panel : public Panel {
+class Parallax_settings_panel : public Base_panel {
 protected:
     std::shared_ptr<Parallax_settings> m_parallax_settings{};
 
 public:
-    Parallax_settings_panel(const std::string& name) : Panel(name) {}
+    Parallax_settings_panel(const std::string& name) : Base_panel(name) {}
 
     void set_parallax_settings(const std::shared_ptr<Parallax_settings>& parallax_settings) {
         m_parallax_settings = parallax_settings;

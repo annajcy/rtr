@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/function/render/render_pipeline/render_pipeline.h"
+#include "engine/runtime/function/render/pipeline/base_pipeline.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include <memory>
 
@@ -10,7 +10,7 @@ class Render_system {
 
 protected:
     RHI_global_resource m_global_resource{};
-    std::shared_ptr<Render_pipeline> m_render_pipeline{};
+    std::shared_ptr<Base_pipeline> m_render_pipeline{};
 
 public:
     Render_system(
@@ -34,7 +34,7 @@ public:
         return m_global_resource;
     }
 
-    void set_render_pipeline(const std::shared_ptr<Render_pipeline>& pipeline) {
+    void set_render_pipeline(const std::shared_ptr<Base_pipeline>& pipeline) {
         m_render_pipeline = pipeline;
     }
 

@@ -3,11 +3,11 @@
 #include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 #include "engine/runtime/framework/core/game_object.h"
-#include "engine/runtime/function/render/render_frontend/attribute_buffer.h"
-#include "engine/runtime/function/render/render_frontend/geometry.h"
-#include "engine/runtime/function/render/render_material/material.h"
-#include "engine/runtime/function/render/render_frontend/texture.h"
-#include "engine/runtime/function/render/render_material/shading/phong_material.h"
+#include "engine/runtime/function/render/frontend/attribute_buffer.h"
+#include "engine/runtime/function/render/frontend/geometry.h"
+#include "engine/runtime/function/render/material/material.h"
+#include "engine/runtime/function/render/frontend/texture.h"
+#include "engine/runtime/function/render/material/shading/phong_material.h"
 #include "engine/runtime/resource/loader/model.h"
 #include <memory>
 #include <string>

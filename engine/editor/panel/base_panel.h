@@ -10,14 +10,14 @@ namespace rtr {
 
 namespace editor {
 
-class Panel {
+class Base_panel {
 protected:
     std::shared_ptr<RHI_imgui> m_imgui{};
     std::string m_name{};
     bool m_is_open{true};
 
 public:
-    Panel(const std::string& name) : m_name(name) {}
+    Base_panel(const std::string& name) : m_name(name) {}
 
     void render() {
         if (!m_imgui) {
@@ -32,7 +32,7 @@ public:
 
     virtual void draw_panel() = 0;
 
-    virtual ~Panel() = default;
+    virtual ~Base_panel() = default;
 
     std::string name() const { return m_name; }
     void set_imgui(const std::shared_ptr<RHI_imgui>& imgui) { m_imgui = imgui; }

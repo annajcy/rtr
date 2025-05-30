@@ -1,12 +1,10 @@
 #pragma once
 
-#include "engine/editor/panel/panel.h"
-#include "engine/runtime/framework/component/mesh_renderer/mesh_renderer_component.h"
-#include "engine/runtime/function/render/render_material/material.h"
+#include "engine/editor/panel/base_panel.h"
 #include "engine/runtime/platform/rhi/rhi_imgui.h"
 #include "engine/runtime/runtime.h"
 
-#include "glm/gtc/type_ptr.hpp"
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -22,13 +20,13 @@ private:
     std::shared_ptr<Engine_runtime> m_engine_runtime{};
     std::shared_ptr<RHI_imgui> m_imgui{};
 
-    std::unordered_map<std::string, std::shared_ptr<Panel>> m_panel_map{};
+    std::unordered_map<std::string, std::shared_ptr<Base_panel>> m_panel_map{};
 
 public:
 
     Editor(
         const std::shared_ptr<Engine_runtime>& engine_runtime,
-        const std::vector<std::shared_ptr<Panel>>& panels
+        const std::vector<std::shared_ptr<Base_panel>>& panels
     ) : m_engine_runtime(engine_runtime),
         m_imgui(engine_runtime->rhi_global_resource().window->imgui()) {
 
@@ -37,7 +35,7 @@ public:
         }
     }
 
-    void add_panel(const std::shared_ptr<Panel>& panel) {
+    void add_panel(const std::shared_ptr<Base_panel>& panel) {
         panel->set_imgui(m_imgui);
         m_panel_map[panel->name()] = panel;
     }
@@ -76,7 +74,7 @@ public:
 
     static std::shared_ptr<Editor> create(
         const std::shared_ptr<Engine_runtime>& engine_runtime,
-        const std::vector<std::shared_ptr<Panel>>& panels) {
+        const std::vector<std::shared_ptr<Base_panel>>& panels) {
         return std::make_shared<Editor>(engine_runtime, panels);
     }
     

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/runtime/function/render/render_material/material.h"
-#include "engine/runtime/function/render/render_frontend/texture.h"
+#include "engine/runtime/function/render/material/material.h"
+#include "engine/runtime/function/render/frontend/texture.h"
 
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
@@ -11,6 +11,7 @@
 #include "engine/runtime/resource/file_service.h"
 
 namespace rtr {
+    
 class Gamma_shader : public Shader<None_shader_feature> {
 public:
     Gamma_shader() : Shader(
