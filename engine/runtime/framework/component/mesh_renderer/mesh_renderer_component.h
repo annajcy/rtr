@@ -1,6 +1,7 @@
 #pragma once
 
-#include "engine/runtime/context/swap_struct.h"
+#include "engine/runtime/context/swap/renderable_object.h"
+#include "engine/runtime/context/tick_context/logic_tick_context.h"
 #include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/framework/component/mesh_renderer/mesh_renderer.h"
 #include "engine/runtime/framework/component/node/node_component.h"
@@ -36,7 +37,7 @@ public:
 
     void tick(const Logic_tick_context& tick_context) override {
         auto& data = tick_context.logic_swap_data;
-        data.render_objects.push_back(Swap_object{
+        data.render_objects.push_back(Swap_renderable_object{
             .material = m_mesh_renderer->material(),
             .geometry = m_mesh_renderer->geometry(),
             .model_matrix = m_mesh_renderer->node()->model_matrix(),

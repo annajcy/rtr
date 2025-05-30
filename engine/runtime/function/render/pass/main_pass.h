@@ -1,6 +1,7 @@
 #pragma once
 
-#include "engine/runtime/context/swap_struct.h"
+
+#include "engine/runtime/context/swap/renderable_object.h"
 #include "engine/runtime/function/render/frontend/frame_buffer.h"
 #include "engine/runtime/function/render/frontend/texture.h"
 #include "engine/runtime/function/render/pass/base_pass.h"
@@ -17,7 +18,7 @@ public:
 
     struct Execution_context {
         std::shared_ptr<Skybox> skybox{};
-        std::vector<Swap_object> render_swap_objects{};
+        std::vector<Swap_renderable_object> render_swap_objects{};
     };
 
     struct Resource_flow {

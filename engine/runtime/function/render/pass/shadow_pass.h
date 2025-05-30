@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/context/swap_struct.h"
+#include "engine/runtime/context/swap/renderable_object.h"
 #include "engine/runtime/function/render/frontend/frame_buffer.h"
 #include "engine/runtime/function/render/material/shadow/shadow_caster_material.h"
 #include "engine/runtime/function/render/frontend/texture.h"
@@ -16,7 +16,7 @@ class Shadow_pass : public Base_pass {
 public:
 
     struct Execution_context {
-        std::vector<Swap_shadow_caster_object> shadow_caster_swap_objects{};
+        std::vector<Swap_shadow_caster_renderable_object> shadow_caster_swap_objects{};
     };
 
     struct Resource_flow {

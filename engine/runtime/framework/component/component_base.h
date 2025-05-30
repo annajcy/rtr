@@ -1,6 +1,7 @@
 #pragma once
 
-#include "engine/runtime/context/engine_tick_context.h"
+
+#include "engine/runtime/context/tick_context/logic_tick_context.h"
 #include <memory>
 #include <vector>
 

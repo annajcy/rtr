@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/runtime/context/swap_struct.h"
+
 #include "engine/runtime/framework/component/camera/camera.h"
 #include "engine/runtime/framework/component/component_base.h"
 #include "engine/runtime/framework/component/light/light.h"

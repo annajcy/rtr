@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/runtime/context/engine_tick_context.h"
-#include "engine/runtime/context/swap_struct.h"
+#include "engine/runtime/context/tick_context/render_tick_context.h"
+#include "engine/runtime/context/tick_context/logic_tick_context.h"
 #include "engine/runtime/function/input/input_system.h"
 #include "engine/runtime/function/render/render_system.h"
 #include "engine/runtime/global/logger.h"
