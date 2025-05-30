@@ -1,19 +1,19 @@
 #pragma once
 
-#include "engine/runtime/framework/component/component_base.h"
+#include "engine/runtime/framework/component/component.h"
 #include "engine/runtime/framework/component/node/node.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 #include <cmath>
 
 namespace rtr {
-class Ping_pong_component : public Component_base {
+class Ping_pong_component : public Base_component {
 protected:
     glm::vec3 m_position{};
     float m_speed{1.0f};
     float m_amplitude{1.0f};
     std::shared_ptr<Node> m_node{};
 public:
-    Ping_pong_component() : Component_base(Component_type::CUSTOM) {}
+    Ping_pong_component() : Base_component(Component_type::CUSTOM) {}
     ~Ping_pong_component() = default;
     void on_add_to_game_object() override {
         m_node = get_component<Node_component>()->node();

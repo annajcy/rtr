@@ -2,18 +2,18 @@
 
 #include "engine/runtime/framework/component/camera/camera_component.h"
 #include "engine/runtime/framework/component/camera/camera_control.h"
-#include "engine/runtime/framework/component/component_base.h"
+#include "engine/runtime/framework/component/component.h"
 #include <memory>
 
 namespace rtr {
 
-class Camera_control_component : public Component_base {
+class Camera_control_component : public Base_component {
 
 protected:
     std::shared_ptr<Camera_control> m_camera_control{};
 
 public:
-    Camera_control_component() : Component_base(Component_type::CAMERA_CONTROL) {}
+    Camera_control_component() : Base_component(Component_type::CAMERA_CONTROL) {}
     virtual ~Camera_control_component() = default;
 
     void tick(const Logic_tick_context& tick_context) override {

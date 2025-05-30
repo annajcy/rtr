@@ -16,12 +16,12 @@
 namespace rtr {
 
 template<typename T>
-inline std::shared_ptr<T> convert_material_(const std::shared_ptr<Model_material>& model_material) {
+inline std::shared_ptr<T> convert_material_v(const std::shared_ptr<Model_material>& model_material) {
     return nullptr;
 }
 
 template<>
-inline std::shared_ptr<Phong_material> convert_material_<Phong_material>(const std::shared_ptr<Model_material>& model_material) {
+inline std::shared_ptr<Phong_material> convert_material_v<Phong_material>(const std::shared_ptr<Model_material>& model_material) {
     auto material = Phong_material::create();
 
     auto phong_material_settings = Phong_material_settings::create();
@@ -106,7 +106,7 @@ private:
     }
 
     static std::shared_ptr<Material> convert_material(const std::shared_ptr<Model_material>& model_material) {
-        return convert_material_<T>(model_material);
+        return convert_material_v<T>(model_material);
     }
 
     static std::shared_ptr<Game_object> dfs(

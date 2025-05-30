@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/runtime/framework/component/camera/camera.h"
-#include "engine/runtime/framework/component/component_base.h"
+#include "engine/runtime/framework/component/component.h"
 #include "engine/runtime/framework/component/light/light.h"
 #include "engine/runtime/framework/component/light/light_component.h"
 #include "engine/runtime/framework/component/node/node.h"
@@ -17,14 +17,14 @@
 
 namespace rtr {
 
-class Directional_light_shadow_caster_component : public Component_base {
+class Directional_light_shadow_caster_component : public Base_component {
 protected:
     std::shared_ptr<Directional_light> m_directional_light{};
     std::shared_ptr<Directional_light_shadow_caster> m_shadow_caster{};
     float m_camera_orthographic_size{};
 
 public:
-    Directional_light_shadow_caster_component() : Component_base(Component_type::SHADOW_CASTER) {
+    Directional_light_shadow_caster_component() : Base_component(Component_type::SHADOW_CASTER) {
         m_shadow_caster = Directional_light_shadow_caster::create(
             Orthographic_camera::create(Node::create()) 
         );
@@ -80,7 +80,7 @@ public:
     }
 };
     
-class CSM_shadow_caster_component : public Component_base {
+class CSM_shadow_caster_component : public Base_component {
 protected:
     std::shared_ptr<Directional_light> m_directional_light{};
     std::shared_ptr<Perspective_camera> m_main_camera{};
@@ -89,7 +89,7 @@ protected:
 
 public:
     CSM_shadow_caster_component() : 
-    Component_base(Component_type::SHADOW_CASTER) {
+    Base_component(Component_type::SHADOW_CASTER) {
         m_shadow_casters.resize(m_csm_layers);
         for (int i = 0; i < m_shadow_casters.size(); i ++) {
             m_shadow_casters[i] = Directional_light_shadow_caster::create(

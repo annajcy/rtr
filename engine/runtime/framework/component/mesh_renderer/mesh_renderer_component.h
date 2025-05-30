@@ -2,13 +2,13 @@
 
 #include "engine/runtime/context/swap/renderable_object.h"
 #include "engine/runtime/context/tick_context/logic_tick_context.h"
-#include "engine/runtime/framework/component/component_base.h"
+#include "engine/runtime/framework/component/component.h"
 #include "engine/runtime/framework/component/mesh_renderer/mesh_renderer.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 #include <memory>
 
 namespace rtr {
-class Mesh_renderer_component : public Component_base {
+class Mesh_renderer_component : public Base_component {
 
 protected:
     std::shared_ptr<Mesh_renderer> m_mesh_renderer{};
@@ -16,7 +16,7 @@ protected:
 
 public:
 
-    Mesh_renderer_component() : Component_base(Component_type::MESH_RENDERER) {}
+    Mesh_renderer_component() : Base_component(Component_type::MESH_RENDERER) {}
 
     virtual ~Mesh_renderer_component() = default;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/framework/component/component_base.h"
+#include "engine/runtime/framework/component/component.h"
 #include "engine/runtime/framework/component/light/light.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 #include "glm/fwd.hpp"
@@ -8,13 +8,13 @@
 
 namespace rtr {
 
-class Light_component : public Component_base {
+class Light_component : public Base_component {
 
 protected:
     std::shared_ptr<Light> m_light{};
 
 public:
-    Light_component() : Component_base(Component_type::LIGHT) {}
+    Light_component() : Base_component(Component_type::LIGHT) {}
 
     virtual ~Light_component() = default;
     const std::shared_ptr<Light>& light() const { return m_light; }

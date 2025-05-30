@@ -1,19 +1,18 @@
 #pragma once
 
-
 #include "engine/runtime/framework/component/node/node.h"
 #include "engine/runtime/framework/component/node/node_component.h"
 
 namespace rtr {
 
-class Rotate_component : public Component_base {
+class Rotate_component : public Base_component {
 protected:
     glm::vec3 m_axis{0.0f, 1.0f, 0.0f};
     float m_speed{1.0f};
     std::shared_ptr<Node> m_node{};
 
 public:
-    Rotate_component() : Component_base(Component_type::CUSTOM) {}
+    Rotate_component() : Base_component(Component_type::CUSTOM) {}
     ~Rotate_component() = default;
 
     void on_add_to_game_object() override {

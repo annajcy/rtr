@@ -1,18 +1,18 @@
 #pragma once
 
-#include "engine/runtime/framework/component/component_base.h"
+#include "engine/runtime/framework/component/component.h"
 #include "engine/runtime/framework/component/node/node.h"
 #include <memory>
 
 namespace rtr {
 
-class Node_component : public std::enable_shared_from_this<Node_component>, public Component_base {
+class Node_component : public std::enable_shared_from_this<Node_component>, public Base_component {
 
 protected:
     std::shared_ptr<Node> m_node{};
 
 public:
-    Node_component() : Component_base(Component_type::NODE) {}
+    Node_component() : Base_component(Component_type::NODE) {}
 
   	~Node_component() {}
 

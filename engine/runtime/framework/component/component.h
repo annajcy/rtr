@@ -17,16 +17,16 @@ enum class Component_type {
     CUSTOM
 };
 
-class Component_base;
+class Base_component;
 
 class Component_list : public std::enable_shared_from_this<Component_list> {
 
 protected:
-    std::vector<std::shared_ptr<Component_base>> m_components{};
+    std::vector<std::shared_ptr<Base_component>> m_components{};
 
 public:
 
-    void add_component(const std::shared_ptr<Component_base>& component) {
+    void add_component(const std::shared_ptr<Base_component>& component) {
         m_components.push_back(component);
     }
 
@@ -70,17 +70,17 @@ public:
         return false;
     }
 
-    const std::vector<std::shared_ptr<Component_base>>& components() const { return m_components; }
+    const std::vector<std::shared_ptr<Base_component>>& components() const { return m_components; }
 
     void sort_components(
-        std::function<bool(const std::shared_ptr<Component_base>& a, const std::shared_ptr<Component_base>& b)> compare
+        std::function<bool(const std::shared_ptr<Base_component>& a, const std::shared_ptr<Base_component>& b)> compare
     ) {
         std::sort(m_components.begin(), m_components.end(), compare);
     }
 
 };
 
-class Component_base {
+class Base_component {
 
 protected:
     Component_type m_component_type{};
@@ -89,9 +89,9 @@ protected:
     std::weak_ptr<Component_list> m_component_list{};
 
 public:
-    Component_base() : m_component_type(Component_type::CUSTOM) {}
-    Component_base(Component_type type) : m_component_type(type) {}
-    virtual ~Component_base() = default;
+    Base_component() : m_component_type(Component_type::CUSTOM) {}
+    Base_component(Component_type type) : m_component_type(type) {}
+    virtual ~Base_component() = default;
     virtual void tick(const Logic_tick_context& tick_context) = 0;
     virtual void on_add_to_game_object() {}
     Component_type component_type() const { return m_component_type; }

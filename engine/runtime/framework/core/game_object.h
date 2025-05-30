@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/framework/component/component_base.h"
+#include "engine/runtime/framework/component/component.h"
 #include <memory>
 
 namespace rtr {
@@ -61,7 +61,7 @@ public:
     }
 
     void sort_components() {
-        m_component_list->sort_components([](const std::shared_ptr<Component_base>& a, const std::shared_ptr<Component_base>& b) {
+        m_component_list->sort_components([](const std::shared_ptr<Base_component>& a, const std::shared_ptr<Base_component>& b) {
             return a->priority() < b->priority();
         });
     }
