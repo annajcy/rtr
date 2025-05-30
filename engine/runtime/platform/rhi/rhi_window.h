@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include "engine/runtime/global/event.h"
-#include "engine/runtime/global/logger.h"
+#include "engine/runtime/tool/event.h"
+#include "engine/runtime/tool/logger.h"
 #include "engine/runtime/platform/rhi/rhi_imgui.h"
 #include <memory>
 

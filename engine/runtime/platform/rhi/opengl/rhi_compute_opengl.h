@@ -1,6 +1,5 @@
 #pragma once
 
-#include "engine/runtime/global/base.h" 
 
 #include "../rhi_compute.h"
 #include "../rhi_shader_program.h"

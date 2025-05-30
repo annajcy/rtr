@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/global/singleton.h"
+#include "engine/runtime/tool/singleton.h"
 #include <filesystem>
 #include <fstream>
 #include <memory>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/global/singleton.h"
+#include "engine/runtime/tool/singleton.h"
 #include "spdlog/logger.h"
 #include <spdlog/async.h>
 #include <spdlog/sinks/stdout_color_sinks.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/global/logger.h"
+#include "engine/runtime/tool/logger.h"
 #include "engine/runtime/platform/rhi/rhi_device.h"
 #include "engine/runtime/platform/rhi/rhi_linker.h"
 #include "engine/runtime/platform/rhi/rhi_shader_code.h"

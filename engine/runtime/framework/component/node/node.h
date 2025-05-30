@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/global/math.h"
+#include "engine/runtime/tool/math.h"
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"

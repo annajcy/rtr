@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/global/math.h"
+#include "engine/runtime/tool/math.h"
 
 #include <memory>
 

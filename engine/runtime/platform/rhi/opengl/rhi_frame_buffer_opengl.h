@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/runtime/global/base.h" 
+#include "engine/runtime/tool/base.h" 
 #include "rhi_texture_opengl.h"
 #include "../rhi_frame_buffer.h"
 #include "../rhi_texture.h"
