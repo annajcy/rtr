@@ -5,6 +5,8 @@
 #include "../rhi_frame_buffer.h"
 #include "../rhi_texture.h"
 #include <memory>
+#include <stdexcept>
+#include <string>
 
 namespace rtr {
 
@@ -40,15 +42,13 @@ public:
         int max_color_attachments{};
         glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &max_color_attachments);
         if (color_attachments.size() > static_cast<size_t>(max_color_attachments)) {
-            std::cerr << "Color attachments exceed limit: " 
-                      << max_color_attachments << std::endl;
-            return;
+            throw std::runtime_error("Color attachments exceed limit: " + std::to_string(max_color_attachments));
         }
 
         glCreateFramebuffers(1, &m_frame_buffer_id);
         attach();
         if (!is_valid()) {
-            std::cerr << "ERROR::FRAMEBUFFER:: Initialization failed" << std::endl;
+            throw std::runtime_error("ERROR::FRAMEBUFFER:: Initialization failed");
         }
     } 
 
@@ -61,22 +61,19 @@ public:
     void attach() {
         // 附加颜色附件
         for (size_t i = 0; i < m_color_attachments.size(); ++i) {
-            auto color_attachment = std::dynamic_pointer_cast<RHI_texture_2D_OpenGL>(m_color_attachments[i]);
-            
-            if (!color_attachment) {
-                std::cerr << "Invalid color attachment: not a RHI_texture_2D_OpenGL" << std::endl;
-                return;
-            }
-
-            if (glIsTexture(color_attachment->texture_id())) {
-                glNamedFramebufferTexture(
-                    m_frame_buffer_id,
-                    GL_COLOR_ATTACHMENT0 + i,
-                    color_attachment->texture_id(),
-                    0
-                );
+            if (auto color_attachment = std::dynamic_pointer_cast<RHI_texture_2D_OpenGL>(m_color_attachments[i])) {
+                if (glIsTexture(color_attachment->texture_id())) {
+                    glNamedFramebufferTexture(
+                        m_frame_buffer_id,
+                        GL_COLOR_ATTACHMENT0 + i,
+                        color_attachment->texture_id(),
+                        0
+                    );
+                } else {
+                    throw std::runtime_error("Invalid color attachment texture ID");
+                }
             } else {
-                std::cerr << "Invalid color attachment texture ID: "  << std::endl;
+                throw std::runtime_error("Invalid color attachment: not a RHI_texture_2D_OpenGL");
             }
         }
 
@@ -90,10 +87,10 @@ public:
                     0
                 );
             } else {
-                std::cerr << "Invalid depth attachment texture " << std::endl;
+                throw std::runtime_error("Invalid depth attachment texture ID");
             }
         } else {
-            std::cerr << "Invalid depth attachment: not a RHI_texture_2D_OpenGL" << std::endl;
+            throw std::runtime_error("Invalid depth attachment: not a RHI_texture_2D_OpenGL");
         }
 
         // 设置绘制目标
@@ -116,7 +113,6 @@ public:
     bool is_valid() const override {
         unsigned int status = glCheckNamedFramebufferStatus(m_frame_buffer_id, GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
-            // 输出具体错误原因（如GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT）
             log_framebuffer_error(status);
             return false;
         }

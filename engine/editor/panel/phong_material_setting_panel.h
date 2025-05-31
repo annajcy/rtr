@@ -13,13 +13,13 @@ namespace editor {
 
 class Phong_material_settings_panel : public Base_panel {
 protected:
-    std::shared_ptr<Phong_material_settings> m_phong_material_settings{};
+    std::shared_ptr<Phong_material_setting> m_phong_material_settings{};
 public:
     Phong_material_settings_panel(
         const std::string& name
     ) : Base_panel(name) {}
 
-    void set_phong_material_settings(const std::shared_ptr<Phong_material_settings>& phong_material_settings) {
+    void set_phong_material_settings(const std::shared_ptr<Phong_material_setting>& phong_material_settings) {
         m_phong_material_settings = phong_material_settings;
     }
     virtual void draw_panel() override {

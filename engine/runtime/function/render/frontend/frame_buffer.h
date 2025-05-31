@@ -42,13 +42,18 @@ public:
         for (const auto& color_attachment : m_color_attachments) {
             rhi_color_attachments.push_back(color_attachment->rhi(device));
         }
-        
-        m_rhi = device->create_frame_buffer(
-            m_width, 
-            m_height,
-            rhi_color_attachments, 
-            m_depth_attachment->rhi(device)
-        );
+
+
+        if (auto rhi_depth_attachment = m_depth_attachment->rhi(device)) {
+            m_rhi = device->create_frame_buffer(
+                m_width, 
+                m_height,
+                rhi_color_attachments, 
+                rhi_depth_attachment
+            );
+        } else {
+            throw std::runtime_error("Depth attachment is not valid.");
+        }
         
     }
 

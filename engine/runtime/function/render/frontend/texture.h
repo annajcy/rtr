@@ -156,7 +156,7 @@ public:
 
     static std::shared_ptr<Texture_2D> create_image(
         const std::shared_ptr<Image>& image,
-        Texture_internal_format internal_format = Texture_internal_format::SRGB_ALPHA
+        Texture_internal_format internal_format = Texture_internal_format::SRGB_ALPHA_8F
     ) {
         return create(
             image,
@@ -173,7 +173,7 @@ public:
         );
     }
 
-    static std::shared_ptr<Texture_2D> create_color_attachemnt(
+    static std::shared_ptr<Texture_2D> create_color_attachemnt_rgba(
         int width,
         int height
     ) {
@@ -181,7 +181,49 @@ public:
             width,
             height,
             1,
-            Texture_internal_format::RGB_ALPHA,
+            Texture_internal_format::RGB_ALPHA_8F,
+            std::unordered_map<Texture_wrap_target, Texture_wrap>{
+                {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
+                {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
+            },
+            std::unordered_map<Texture_filter_target, Texture_filter>{
+                {Texture_filter_target::MIN, Texture_filter::LINEAR},
+                {Texture_filter_target::MAG, Texture_filter::LINEAR}
+            }
+        );
+    }
+
+
+    static std::shared_ptr<Texture_2D> create_color_attachemnt_rgb(
+        int width,
+        int height
+    ) {
+        return create(
+            width,
+            height,
+            1,
+            Texture_internal_format::RGB_8F,
+            std::unordered_map<Texture_wrap_target, Texture_wrap>{
+                {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
+                {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
+            },
+            std::unordered_map<Texture_filter_target, Texture_filter>{
+                {Texture_filter_target::MIN, Texture_filter::LINEAR},
+                {Texture_filter_target::MAG, Texture_filter::LINEAR}
+            }
+        );
+    }
+
+
+    static std::shared_ptr<Texture_2D> create_color_attachemnt_rg(
+        int width,
+        int height
+    ) {
+        return create(
+            width,
+            height,
+            1,
+            Texture_internal_format::RG_32F,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
@@ -221,7 +263,7 @@ public:
             width,
             height,
             1,
-            Texture_internal_format::DEPTH_STENCIL_24_8,
+            Texture_internal_format::DEPTH_STENCIL_24F_8F,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
@@ -233,6 +275,7 @@ public:
             }
         );
     }
+
 };
 
 class Texture_2D_array : public Texture {
@@ -366,7 +409,7 @@ public:
         return create(
             images,
             4,
-            Texture_internal_format::SRGB_ALPHA,
+            Texture_internal_format::SRGB_ALPHA_8F,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
@@ -410,7 +453,7 @@ public:
             height,
             layer_count,
             1,
-            Texture_internal_format::RGB_ALPHA,
+            Texture_internal_format::RGB_ALPHA_8F,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
@@ -432,7 +475,7 @@ public:
             height,
             layer_count,
             1,
-            Texture_internal_format::DEPTH_STENCIL_24_8,
+            Texture_internal_format::DEPTH_STENCIL_24F_8F,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
@@ -566,7 +609,7 @@ public:
         return create(
             images,
             1,
-            Texture_internal_format::SRGB_ALPHA,
+            Texture_internal_format::SRGB_ALPHA_8F,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE},
@@ -587,7 +630,7 @@ public:
             width,
             height,
             1,
-            Texture_internal_format::RGB_ALPHA,
+            Texture_internal_format::RGB_ALPHA_8F,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE},
@@ -629,7 +672,7 @@ public:
             width,
             height,
             1,
-            Texture_internal_format::DEPTH_STENCIL_24_8,
+            Texture_internal_format::DEPTH_STENCIL_24F_8F,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE},

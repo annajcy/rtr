@@ -12,12 +12,12 @@ namespace editor {
 
 class Parallax_settings_panel : public Base_panel {
 protected:
-    std::shared_ptr<Parallax_settings> m_parallax_settings{};
+    std::shared_ptr<Parallax_setting> m_parallax_settings{};
 
 public:
     Parallax_settings_panel(const std::string& name) : Base_panel(name) {}
 
-    void set_parallax_settings(const std::shared_ptr<Parallax_settings>& parallax_settings) {
+    void set_parallax_settings(const std::shared_ptr<Parallax_setting>& parallax_settings) {
         m_parallax_settings = parallax_settings;
     }
 

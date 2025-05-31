@@ -134,7 +134,7 @@ public:
             width,
             height,
             1,
-            Texture_internal_format::RGB_ALPHA,
+            Texture_internal_format::RGB_ALPHA_8F,
             {
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
@@ -154,7 +154,7 @@ public:
             width,
             height,
             1,
-            Texture_internal_format::DEPTH_STENCIL_24_8,
+            Texture_internal_format::DEPTH_STENCIL_24F_8F,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}

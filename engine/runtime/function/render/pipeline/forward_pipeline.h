@@ -3,6 +3,7 @@
 #include "engine/runtime/context/tick_context/render_tick_context.h"
 #include "engine/runtime/function/render/frontend/memory_buffer.h"
 #include "engine/runtime/function/render/frontend/texture.h"
+#include "engine/runtime/function/render/material/shading/shading_setting.h"
 #include "engine/runtime/function/render/pass/main_pass.h"
 #include "engine/runtime/function/render/pass/postprocess_pass.h"
 #include "engine/runtime/function/render/pass/shadow_pass.h"
@@ -18,6 +19,9 @@ namespace rtr {
 class Forward_pipeline : public Base_pipeline {
 private:
 
+    std::shared_ptr<Shadow_setting> m_shadow_setting{};
+    std::shared_ptr<Parallax_setting> m_parallax_setting{};
+
     std::shared_ptr<Uniform_buffer<Camera_ubo>> m_camera_ubo{};
     std::shared_ptr<Uniform_buffer<Directional_light_ubo_array>> m_directional_light_ubo_array{};
     std::shared_ptr<Uniform_buffer<Point_light_ubo_array>> m_point_light_ubo_array{};
@@ -31,16 +35,26 @@ private:
 public:
     Forward_pipeline (
         RHI_global_resource& rhi_global_resource
-    ) : Base_pipeline(rhi_global_resource) {
+    ) : Base_pipeline(rhi_global_resource), 
+        m_shadow_setting(Shadow_setting::create()),
+        m_parallax_setting(Parallax_setting::create()) {
         init_ubo();
         init_render_passes();
     }
 
     ~Forward_pipeline() {}
 
+    std::shared_ptr<Shadow_setting> shadow_setting() {
+        return m_shadow_setting;
+    }
+
+    std::shared_ptr<Parallax_setting> parallax_setting() {
+        return m_parallax_setting;
+    }
+
     void update_render_resource(const Render_tick_context& tick_context) override {
 
-        auto color_attachment = Texture_2D::create_color_attachemnt(
+        auto color_attachment = Texture_2D::create_color_attachemnt_rgba(
             m_rhi_global_resource.window->width(), 
             m_rhi_global_resource.window->height()
         );

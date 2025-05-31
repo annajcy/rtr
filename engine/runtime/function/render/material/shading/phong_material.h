@@ -3,6 +3,7 @@
 #include "engine/runtime/function/render/material/material.h"
 #include "engine/runtime/function/render/frontend/texture.h"
 
+#include "engine/runtime/function/render/material/shading/shading_setting.h"
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
 #include "glm/fwd.hpp"
@@ -93,37 +94,14 @@ public:
     }
 };
 
-struct Shadow_settings {
-    bool enable_csm{false};
-    float shadow_bias{0.005f};
-    float light_size{0.7f};
-    float pcf_radius{0.75f};
-    float pcf_tightness{1.2f};
-    int pcf_sample_count{18};
-
-    Shadow_settings() = default;
-
-    static std::shared_ptr<Shadow_settings> create() {
-        return std::make_shared<Shadow_settings>();
-    }
-
-    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) {
-        shader_program->modify_uniform("shadow_bias", shadow_bias);
-        shader_program->modify_uniform("light_size", light_size);
-        shader_program->modify_uniform("pcf_radius", pcf_radius);
-        shader_program->modify_uniform("pcf_tightness", pcf_tightness);
-        shader_program->modify_uniform("pcf_sample_count", pcf_sample_count);
-    }
-};
-
-struct Phong_material_settings {
+struct Phong_material_setting {
     float transparency{1.0f};
     glm::vec3 ka = glm::vec3(0.1f);    
     glm::vec3 kd = glm::vec3(0.7f);
     glm::vec3 ks = glm::vec3(0.5f);    
     float shininess = 32.0f;    
-    static std::shared_ptr<Phong_material_settings> create() {
-        return std::make_shared<Phong_material_settings>();
+    static std::shared_ptr<Phong_material_setting> create() {
+        return std::make_shared<Phong_material_setting>();
     }
 
     void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) {
@@ -135,27 +113,15 @@ struct Phong_material_settings {
     }
 };
 
-struct Parallax_settings {
-    float parallax_scale = 0.05f;
-    float parallax_layer_count = 10.0f;
-    static std::shared_ptr<Parallax_settings> create() {
-        return std::make_shared<Parallax_settings>();
-    }
-    void modify_shader_uniform(const std::shared_ptr<RHI_shader_program>& shader_program) {
-        shader_program->modify_uniform("parallax_scale", parallax_scale);
-        shader_program->modify_uniform("parallax_layer_count", parallax_layer_count);
-    }
-};
-
-struct Phong_texture_settings {
+struct Phong_texture_setting {
     std::shared_ptr<Texture> albedo_map{};
     std::shared_ptr<Texture> specular_map{};
     std::shared_ptr<Texture> normal_map{};
     std::shared_ptr<Texture> alpha_map{};
     std::shared_ptr<Texture> height_map{};
 
-    static std::shared_ptr<Phong_texture_settings> create() {
-        return std::make_shared<Phong_texture_settings>();
+    static std::shared_ptr<Phong_texture_setting> create() {
+        return std::make_shared<Phong_texture_setting>();
     }
 };
 
@@ -165,10 +131,10 @@ protected:
     inline static std::shared_ptr<Phong_shader> s_phong_shader{};
 
 public:
-    std::shared_ptr<Shadow_settings> shadow_settings{};
-    std::shared_ptr<Phong_texture_settings> phong_texture_settings{};
-    std::shared_ptr<Phong_material_settings> phong_material_settings{};
-    std::shared_ptr<Parallax_settings> parallax_settings{};
+    std::shared_ptr<Shadow_setting> shadow_settings{};
+    std::shared_ptr<Phong_texture_setting> phong_texture_settings{};
+    std::shared_ptr<Phong_material_setting> phong_material_settings{};
+    std::shared_ptr<Parallax_setting> parallax_settings{};
     
     Phong_material() : Material(Material_type::PHONG) {}
     ~Phong_material() = default;

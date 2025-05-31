@@ -109,12 +109,12 @@ int main() {
 
     auto shader_program = sp->rhi(device);
 
-    auto ca0 = Texture_2D::create_color_attachemnt(
+    auto ca0 = Texture_2D::create_color_attachemnt_rgba(
         window->width(),
         window->height()
     );
 
-    auto ca1 = Texture_2D::create_color_attachemnt(
+    auto ca1 = Texture_2D::create_color_attachemnt_rgba(
         window->width(),
         window->height()
     );

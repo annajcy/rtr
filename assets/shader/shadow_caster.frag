@@ -1,6 +1,9 @@
 // shadow_caster.frag
 
+layout(location = 0) out vec2 frag_out_moments;
+
 void main() {
-    // 直接将深度写入到深度缓冲区
-    gl_FragDepth = gl_FragCoord.z;
+    // gl_FragCoord.z is the depth value in [0, 1] range
+    float depth = gl_FragCoord.z;
+    frag_out_moments = vec2(depth, depth * depth);
 }

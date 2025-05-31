@@ -24,25 +24,25 @@ template<>
 inline std::shared_ptr<Phong_material> convert_material_v<Phong_material>(const std::shared_ptr<Model_material>& model_material) {
     auto material = Phong_material::create();
 
-    auto phong_material_settings = Phong_material_settings::create();
+    auto phong_material_settings = Phong_material_setting::create();
     phong_material_settings->ka = model_material->ka;
     phong_material_settings->kd = model_material->kd;
     phong_material_settings->ks = model_material->ks;
     phong_material_settings->shininess = model_material->shininess;
 
-    auto phong_texture_settings = Phong_texture_settings::create();
+    auto phong_texture_settings = Phong_texture_setting::create();
     phong_texture_settings->albedo_map = Texture_2D::create_image(model_material->map_albedo);
     phong_texture_settings->normal_map = Texture_2D::create_image(model_material->map_normal);
     phong_texture_settings->height_map = Texture_2D::create_image(model_material->map_height);
     phong_texture_settings->specular_map = Texture_2D::create_image(model_material->map_specular);
     phong_texture_settings->alpha_map = Texture_2D::create_image(model_material->map_alpha);
 
-    auto parallax_settings = Parallax_settings::create();
+    auto parallax_settings = Parallax_setting::create();
 
     material->phong_texture_settings = phong_texture_settings;
     material->phong_material_settings = phong_material_settings;
     material->parallax_settings = parallax_settings;
-    material->shadow_settings = Shadow_settings::create();
+    material->shadow_settings = Shadow_setting::create();
 
     return material;
 }

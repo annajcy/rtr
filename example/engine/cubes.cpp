@@ -80,16 +80,16 @@ int main() {
         )
     );
 
-    auto phong_material_settings = Phong_material_settings::create();
-    auto parallax_settings = Parallax_settings::create();
-    auto shadow_settings = Shadow_settings::create();
+    auto phong_material_settings = Phong_material_setting::create();
+    auto parallax_settings = Parallax_setting::create();
+    auto shadow_settings = Shadow_setting::create();
 
-    auto go_texture_settings = Phong_texture_settings::create();
+    auto go_texture_settings = Phong_texture_setting::create();
     go_texture_settings->albedo_map = Texture_2D::create_image(main_tex);
     go_texture_settings->normal_map = Texture_2D::create_image(normal_map);
     go_texture_settings->height_map = Texture_2D::create_image(height_map);
 
-    auto plane_texture_settings = Phong_texture_settings::create();
+    auto plane_texture_settings = Phong_texture_setting::create();
     plane_texture_settings->albedo_map = Texture_2D::create_image(plane_main_tex);
 
     auto phong_shader = Phong_material::phong_shader();
@@ -173,7 +173,7 @@ int main() {
     dl_node->set_position(glm::vec3(0, 3, 0));
     auto dl = dl_game_object->add_component<Directional_light_component>();
     auto dl_shadow_caster = dl_game_object->add_component<Directional_light_shadow_caster_component>();
-    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_depth_attachemnt(2048, 2048);
+    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_color_attachemnt_rgba(2048, 2048);
 
     auto pl0_game_object = scene->add_game_object(Game_object::create("pl0"));
     auto pl0_node = pl0_game_object->add_component<Node_component>()->node();

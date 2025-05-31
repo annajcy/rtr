@@ -27,25 +27,39 @@ inline constexpr unsigned int gl_texture_type(Texture_type type) {
 
 inline constexpr unsigned int gl_texture_internal_format(Texture_internal_format format) {
     switch (format) {
-        case Texture_internal_format::RGB:
-            return GL_RGB8;  // 添加位数
-        case Texture_internal_format::RGB_ALPHA:
+        case Texture_internal_format::R_8F:
+            return GL_R8;
+        case Texture_internal_format::R_16F:
+            return GL_R16F;
+        case Texture_internal_format::R_32F:
+            return GL_R32F;
+        case Texture_internal_format::RG_8F:
+            return GL_RG8;  
+        case Texture_internal_format::RG_16F:
+            return GL_RG16F; 
+        case Texture_internal_format::RG_32F:
+            return GL_RG32F; 
+        case Texture_internal_format::RGB_8F:
+            return GL_RGB8; 
+        case Texture_internal_format::RGB_16F:
+            return GL_RGB16F; 
+        case Texture_internal_format::RGB_32F:
+            return GL_RGB32F; 
+        case Texture_internal_format::RGB_ALPHA_8F:
             return GL_RGBA8;
         case Texture_internal_format::RGB_ALPHA_16F:
             return GL_RGBA16F;
         case Texture_internal_format::RGB_ALPHA_32F:
             return GL_RGBA32F;
-        case Texture_internal_format::DEPTH_STENCIL:
-            return GL_DEPTH24_STENCIL8; // 更明确的深度格式
-        case rtr::Texture_internal_format::DEPTH:
+        case rtr::Texture_internal_format::DEPTH_24F:
             return GL_DEPTH_COMPONENT24;
         case Texture_internal_format::DEPTH_32F:
             return GL_DEPTH_COMPONENT32F;
-        case Texture_internal_format::SRGB_ALPHA:
+        case Texture_internal_format::SRGB_ALPHA_8F:
             return GL_SRGB8_ALPHA8;  // 添加位数
-        case Texture_internal_format::SRGB:
+        case Texture_internal_format::SRGB_8F:
             return GL_SRGB8;         // 添加位数
-        case Texture_internal_format::DEPTH_STENCIL_24_8:
+        case Texture_internal_format::DEPTH_STENCIL_24F_8F:
             return GL_DEPTH24_STENCIL8;
         default:
             return GL_RGB8;  // 默认也带位数
@@ -310,7 +324,7 @@ public:
 
     Image_data get_image_data() override {
         
-        if (m_internal_format == Texture_internal_format::SRGB_ALPHA) {
+        if (m_internal_format == Texture_internal_format::SRGB_ALPHA_8F) {
             auto data = new unsigned char[m_width * m_height * 4];
 
             glGetTextureImage(
@@ -453,7 +467,7 @@ public:
         };
 
         for (const auto& face : faces) {
-            if (m_internal_format == Texture_internal_format::SRGB_ALPHA) {
+            if (m_internal_format == Texture_internal_format::SRGB_ALPHA_8F) {
                 auto data = new unsigned char[m_width * m_height * 4];
                 glGetTextureSubImage(
                     m_texture_id,
@@ -602,7 +616,7 @@ public:
     std::vector<Image_data> get_image_data() override {
         std::vector<Image_data> images{};
         for (size_t i = 0; i < m_layer_count; i++) {
-            if (m_internal_format == Texture_internal_format::SRGB_ALPHA) {
+            if (m_internal_format == Texture_internal_format::SRGB_ALPHA_8F) {
                 auto data = new unsigned char[m_width * m_height * 4];
                 glGetTextureSubImage(
                     m_texture_id,

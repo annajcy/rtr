@@ -6,6 +6,7 @@
 #include "engine/runtime/function/render/frontend/texture.h"
 #include "engine/runtime/function/render/pass/base_pass.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
@@ -50,12 +51,15 @@ public:
     void set_resource_flow(const Resource_flow& flow) {
         m_resource_flow = flow;
 
-        auto depth_attachment = m_resource_flow.shadow_map_out;
+        auto shadow_attachment = m_resource_flow.shadow_map_out;
+        auto rhi_shadow_attachment = shadow_attachment->rhi(m_rhi_global_resource.device);
+        auto width = rhi_shadow_attachment->width();
+        auto height = rhi_shadow_attachment->height();
+
         m_frame_buffer = Frame_buffer::create(
-            depth_attachment->rhi(m_rhi_global_resource.device)->width(), 
-            depth_attachment->rhi(m_rhi_global_resource.device)->height(),
-            std::vector<std::shared_ptr<Texture>> {}, 
-            depth_attachment
+            width, height,
+            std::vector<std::shared_ptr<Texture>> { shadow_attachment }, 
+            Texture_2D::create_depth_attachemnt(width, height)
         );
     }
 

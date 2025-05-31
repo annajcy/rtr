@@ -114,12 +114,12 @@ int main() {
 
     auto shader_program = sp->rhi(device);
 
-    auto ca0 = Texture_2D::create_color_attachemnt(
+    auto ca0 = Texture_2D::create_color_attachemnt_rgba(
         window->width(),
         window->height()
     );
 
-    auto ca1 = Texture_2D::create_color_attachemnt(
+    auto ca1 = Texture_2D::create_color_attachemnt_rgba(
         window->width(),
         window->height()
     );
@@ -145,7 +145,7 @@ int main() {
         window->width(),
         window->height(),
         4,
-        Texture_internal_format::RGB_ALPHA,
+        Texture_internal_format::RGB_ALPHA_8F,
         std::unordered_map<Texture_wrap_target, Texture_wrap> {
             {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
             {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}

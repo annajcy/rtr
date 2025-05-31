@@ -22,16 +22,14 @@ enum class Texture_type {
 };
 
 enum class Texture_internal_format {
-    RGB,
-    RGB_ALPHA,
-    RGB_ALPHA_16F,
-    RGB_ALPHA_32F,
-    DEPTH_STENCIL,
-    DEPTH_STENCIL_24_8,
-    DEPTH,
-    DEPTH_32F,
-    SRGB_ALPHA,
-    SRGB
+    R_8F, R_16F, R_32F,
+    RG_8F, RG_16F, RG_32F,
+    RGB_8F, RGB_16F, RGB_32F,
+    RGB_ALPHA_8F, RGB_ALPHA_16F, RGB_ALPHA_32F,
+    DEPTH_STENCIL_24F_8F,
+    DEPTH_24F, DEPTH_32F,
+    SRGB_ALPHA_8F,
+    SRGB_8F
 };
 
 enum class Texture_external_format {

@@ -38,9 +38,10 @@ int main() {
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
     auto runtime = Engine_runtime::create(engine_runtime_descriptor);
-    runtime->render_system()->set_render_pipeline(Forward_pipeline::create(
+    auto forward_pipeline = Forward_pipeline::create(
         runtime->rhi_global_resource()
-    ));
+    );
+    runtime->render_system()->set_render_pipeline(forward_pipeline);
     
     auto world = World::create("world1");
     runtime->world() = world;
@@ -118,16 +119,16 @@ int main() {
         bag_gos
     );
 
-    auto phong_material_settings = Phong_material_settings::create();
-    auto parallax_settings = Parallax_settings::create();
-    auto shadow_settings = Shadow_settings::create();
+    auto parallax_settings = forward_pipeline->parallax_setting();
+    auto shadow_settings = forward_pipeline->shadow_setting();
 
-    auto go_texture_settings = Phong_texture_settings::create();
+    auto phong_material_settings = Phong_material_setting::create();
+    auto go_texture_settings = Phong_texture_setting::create();
     go_texture_settings->albedo_map = Texture_2D::create_image(main_tex);
-    go_texture_settings->normal_map = Texture_2D::create_image(normal_map, Texture_internal_format::RGB_ALPHA);
-    go_texture_settings->height_map = Texture_2D::create_image(height_map, Texture_internal_format::RGB_ALPHA);
+    go_texture_settings->normal_map = Texture_2D::create_image(normal_map, Texture_internal_format::RGB_ALPHA_8F);
+    go_texture_settings->height_map = Texture_2D::create_image(height_map, Texture_internal_format::RGB_ALPHA_8F);
 
-    auto plane_texture_settings = Phong_texture_settings::create();
+    auto plane_texture_settings = Phong_texture_setting::create();
     plane_texture_settings->albedo_map = Texture_2D::create_image(plane_main_tex);
 
     auto phong_shader = Phong_material::phong_shader();
@@ -185,13 +186,13 @@ int main() {
     
     auto camera_control_component = camera_game_object->add_component<Trackball_camera_control_component>();
 
-    // auto sphere = scene->add_game_object(Game_object::create("go1"));
-    // auto sphere_node = sphere->add_component<Node_component>()->node();
-    // sphere_node->set_position(glm::vec3(-2, 0, 0));
+    auto sphere = scene->add_game_object(Game_object::create("go1"));
+    auto sphere_node = sphere->add_component<Node_component>()->node();
+    sphere_node->set_position(glm::vec3(-2, 0, 0));
 
-    // auto sphere_mesh_renderer = sphere->add_component<Mesh_renderer_component>()->mesh_renderer();
-    // sphere_mesh_renderer->geometry() = Geometry::create_sphere();
-    // sphere_mesh_renderer->material() = go_material;
+    auto sphere_mesh_renderer = sphere->add_component<Mesh_renderer_component>()->mesh_renderer();
+    sphere_mesh_renderer->geometry() = Geometry::create_sphere();
+    sphere_mesh_renderer->material() = go_material;
 
     // auto box = scene->add_game_object(Game_object::create("go2"));
     // auto box_node = box->add_component<Node_component>()->node();
@@ -225,7 +226,7 @@ int main() {
     dl_node->set_position(glm::vec3(0, 3, 0));
     auto dl = dl_game_object->add_component<Directional_light_component>();
     auto dl_shadow_caster = dl_game_object->add_component<Directional_light_shadow_caster_component>();
-    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_depth_attachemnt(2048, 2048);
+    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_color_attachemnt_rg(2048, 2048);
     dl_shadow_caster->camera_orthographic_size() = 17.0f;
 
     auto pl0_game_object = scene->add_game_object(Game_object::create("pl0"));
@@ -267,9 +268,10 @@ int main() {
             editor::FPS_panel::create("fps")
     });
 
+    editor->get_panel<editor::Shadow_settings_panel>("shadow settings")->set_shadow_settings(shadow_settings);
     editor->get_panel<editor::Parallax_settings_panel>("parallax settings")->set_parallax_settings(parallax_settings);
     editor->get_panel<editor::Phong_material_settings_panel>("phong material settings")->set_phong_material_settings(phong_material_settings);
-    editor->get_panel<editor::Shadow_settings_panel>("shadow settings")->set_shadow_settings(shadow_settings);
+    
     editor->run();
 
     return 0;
