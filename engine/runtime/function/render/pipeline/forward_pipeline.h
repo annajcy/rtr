@@ -3,7 +3,7 @@
 #include "engine/runtime/context/tick_context/render_tick_context.h"
 #include "engine/runtime/function/render/frontend/memory_buffer.h"
 #include "engine/runtime/function/render/frontend/texture.h"
-#include "engine/runtime/function/render/material/shading/shading_setting.h"
+#include "engine/runtime/function/render/material/setting.h"
 #include "engine/runtime/function/render/pass/main_pass.h"
 #include "engine/runtime/function/render/pass/postprocess_pass.h"
 #include "engine/runtime/function/render/pass/shadow_pass.h"

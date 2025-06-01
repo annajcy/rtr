@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/editor/panel/base_panel.h"
-#include "engine/runtime/function/render/material/shading/phong_material.h"
+#include "engine/runtime/function/render/material/setting.h"
 
 #include <memory>
 #include <string>

@@ -38,9 +38,10 @@ int main() {
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
     auto runtime = Engine_runtime::create(engine_runtime_descriptor);
-    runtime->render_system()->set_render_pipeline(Forward_pipeline::create(
+    auto forward_pipeline = Forward_pipeline::create(
         runtime->rhi_global_resource()
-    ));
+    );
+    runtime->render_system()->set_render_pipeline(forward_pipeline);
     
     auto world = World::create("world1");
     runtime->world() = world;
@@ -67,7 +68,6 @@ int main() {
     })));
 
     auto sponza_root_go = scene->add_model<Phong_material>("sponza", sponza);
-
     sponza_root_go->get_component<Node_component>()->node()->set_scale(glm::vec3(0.0005f));
     // auto sponza_rot = sponza_root_go->add_component<Rotate_component>();
     // sponza_rot->speed() = 0.01f;
@@ -89,7 +89,7 @@ int main() {
     dl_node->set_position(glm::vec3(0, 3, 0));
     auto dl = dl_game_object->add_component<Directional_light_component>();
     auto dl_shadow_caster = dl_game_object->add_component<Directional_light_shadow_caster_component>();
-    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_depth_attachemnt(2048, 2048);
+    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_color_attachemnt_rg(2048, 2048);
     dl_shadow_caster->camera_orthographic_size() = 17.0f;
 
     auto editor = editor::Editor::create(

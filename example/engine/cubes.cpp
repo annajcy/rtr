@@ -38,9 +38,10 @@ int main() {
 
     Engine_runtime_descriptor engine_runtime_descriptor{};
     auto runtime = Engine_runtime::create(engine_runtime_descriptor);
-    runtime->render_system()->set_render_pipeline(Forward_pipeline::create(
+    auto forward_pipeline = Forward_pipeline::create(
         runtime->rhi_global_resource()
-    ));
+    );
+    runtime->render_system()->set_render_pipeline(forward_pipeline);
     
     auto world = World::create("world1");
     runtime->world() = world;
@@ -81,8 +82,9 @@ int main() {
     );
 
     auto phong_material_settings = Phong_material_setting::create();
-    auto parallax_settings = Parallax_setting::create();
-    auto shadow_settings = Shadow_setting::create();
+    
+    auto parallax_settings = forward_pipeline->parallax_setting();
+    auto shadow_settings = forward_pipeline->shadow_setting();
 
     auto go_texture_settings = Phong_texture_setting::create();
     go_texture_settings->albedo_map = Texture_2D::create_image(main_tex);
@@ -173,7 +175,7 @@ int main() {
     dl_node->set_position(glm::vec3(0, 3, 0));
     auto dl = dl_game_object->add_component<Directional_light_component>();
     auto dl_shadow_caster = dl_game_object->add_component<Directional_light_shadow_caster_component>();
-    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_color_attachemnt_rgba(2048, 2048);
+    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_color_attachemnt_rg(2048, 2048);
 
     auto pl0_game_object = scene->add_game_object(Game_object::create("pl0"));
     auto pl0_node = pl0_game_object->add_component<Node_component>()->node();
