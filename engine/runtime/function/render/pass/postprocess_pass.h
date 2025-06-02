@@ -29,7 +29,7 @@ protected:
     std::shared_ptr<Gamma_material> m_gamma_material{};
     std::shared_ptr<Geometry> m_screen_geometry{};
 
-    Resource_flow m_resource_input{};
+    Resource_flow m_resource_flow{};
     Execution_context m_context{};
 
     std::shared_ptr<Frame_buffer> m_frame_buffer{};
@@ -44,9 +44,9 @@ public:
 
     ~Postprocess_pass() {}
 
-    void set_resource_flow(const Resource_flow& input) {
-        m_resource_input = input;
-        m_gamma_material->screen_map = m_resource_input.texture_in;
+    void set_resource_flow(const Resource_flow& flow) {
+        m_resource_flow = flow;
+        m_gamma_material->screen_map = m_resource_flow.texture_in;
     }
 
     void set_context(const Execution_context& context) {

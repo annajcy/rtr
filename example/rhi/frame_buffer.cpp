@@ -1,7 +1,7 @@
 #include "engine/runtime/function/render/frontend/frame_buffer.h"
 #include "engine/runtime/function/render/frontend/shader.h"
 #include "engine/runtime/function/render/frontend/texture.h"
-#include "engine/runtime/tool/base.h" 
+#include "engine/runtime/platform/rhi/opengl/rhi_error_opengl.h"
 #include "engine/runtime/function/render/frontend/geometry.h"
 #include "engine/runtime/platform/rhi/opengl/rhi_device_opengl.h"
 #include <memory>
@@ -23,15 +23,24 @@ void main()
 // 修改片段着色器支持多目标输出
 const char* fragment_shader_source = R"(
 #version 460 core
-layout(location = 0) out vec4 FragColor0;  // 第一个颜色附件
-layout(location = 1) out vec4 FragColor1;  // 第二个颜色附件
+layout(location = 0) out vec4 FragColor0;
+layout(location = 1) out vec4 FragColor1;
+
+in vec2 v_texCoords; // 你需要从顶点着色器传递纹理坐标
 
 void main()
 {
-    FragColor0 = vec4(1.0, 0.5, 0.2, 1.0); // 红色通道为主
-    FragColor1 = vec4(0.2, 0.5, 1.0, 1.0); // 蓝色通道为主
+    // 根据纹理坐标生成一些变化图案
+    // FragColor0 = vec4(v_texCoords.x, v_texCoords.y, 0.5, 1.0);
+
+    // 或者一个简单的棋盘格
+    float pattern = mod(floor(gl_FragCoord.x / 16.0) + floor(gl_FragCoord.y / 16.0), 2.0);
+    FragColor0 = vec4(pattern, pattern, pattern, 1.0);
+
+    FragColor1 = vec4(0.2, 0.5, 1.0, 1.0); // 第二个可以保持不变或也修改
 }
 )";
+    
 
 const char* vertex_shader_source1 = R"(
 #version 460 core
@@ -58,8 +67,8 @@ uniform sampler2D texture1;  // 第二个颜色缓冲
 
 void main()
 {
-    vec4 color0 = texture(texture0, TexCoords);
-    vec4 color1 = texture(texture1, TexCoords);
+    vec4 color0 = textureLod(texture0, TexCoords, 2);
+    vec4 color1 = texture(texture1, TexCoords, 2);
     FragColor = mix(color0, color1, 0.5); // 混合两个缓冲区
 }
 )";
@@ -111,12 +120,14 @@ int main() {
 
     auto ca0 = Texture_2D::create_color_attachemnt_rgba(
         window->width(),
-        window->height()
+        window->height(),
+        4
     );
 
     auto ca1 = Texture_2D::create_color_attachemnt_rgba(
         window->width(),
-        window->height()
+        window->height(),
+        4
     );
 
     auto da = Texture_2D::create_depth_attachemnt(
@@ -136,7 +147,6 @@ int main() {
 
 
     auto frame_buffer = fb->rhi(device);
-
     auto screen_vertex_shader_code = Shader_code::create(Shader_type::VERTEX, vertex_shader_source1);
     auto screen_fragment_shader_code = Shader_code::create(Shader_type::FRAGMENT, fragment_shader_source1);
 
@@ -174,6 +184,12 @@ int main() {
 
         ca0->rhi(device)->bind_to_unit(0);
         ca1->rhi(device)->bind_to_unit(1);
+
+        ca0->rhi(device)->generate_mipmap();
+        ca1->rhi(device)->generate_mipmap();
+
+
+        gl_check_error();
     
         renderer->clear(screen_frame_buffer);
 
@@ -188,5 +204,4 @@ int main() {
     
     return 0;
 }
-
 

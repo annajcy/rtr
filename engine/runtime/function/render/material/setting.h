@@ -9,12 +9,11 @@ namespace rtr {
 // Global shading settings
 
 struct Shadow_setting {
-    bool enable_csm{false};
     float shadow_bias{0.005f};
-    float light_size{0.7f};
-    float pcf_radius{0.02f};
+    float light_size{0.5f};
+    float pcf_radius{0.2f};
     float pcf_tightness{1.2f};
-    int pcf_sample_count{18};
+    int pcf_sample_count{1};
 
     Shadow_setting() = default;
 

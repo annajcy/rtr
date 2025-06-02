@@ -54,7 +54,12 @@ public:
                     File_ser::get_instance()->get_absolute_path("assets/shader/phong.vert")))},
             {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, 
                 Shader_code::load_shader_code(
-                    File_ser::get_instance()->get_absolute_path("assets/shader/phong.frag")))}
+                    File_ser::get_instance()->get_absolute_path(
+                        //"assets/shader/phong_vsm.frag"
+                        //"assets/shader/phong_vssm.frag"
+                        "assets/shader/phong_pcf.frag"
+                        //"assets/shader/phong_pcss.frag"
+                    )))}
         }, 
         std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> {
             {"model", Uniform_entry<glm::mat4>::create(glm::mat4(1.0))},

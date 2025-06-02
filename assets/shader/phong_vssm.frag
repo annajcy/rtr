@@ -2,6 +2,7 @@
 #define PI2 6.283185307179586
 #define PI_HALF 1.5707963267948966
 #define PI_QUARTER 0.7853981633974483
+#define e 2.718281828459045
 
 #define MAX_DIRECTIONAL_LIGHT 2
 #define MAX_SPOT_LIGHT 8
@@ -130,7 +131,6 @@ layout(binding = 4) uniform sampler2D height_map;
 uniform float parallax_scale;
 uniform float parallax_layer_count;
 
-// ... (parallax functions - unchanged) ...
 vec2 parallax_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tbn, float scale) {
     view_dir = normalize(transpose(tbn) * view_dir);
     view_dir.xy /= -view_dir.z;
@@ -191,7 +191,7 @@ vec2 parallax_occlusion_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tb
 #ifdef ENABLE_SHADOWS
 
 // Shadow map sampler (now samples RG for depth and depth^2)
-layout(binding = 5) uniform sampler2D dl_shadow_map; // Assumed to be an RG texture
+layout(binding = 5) uniform sampler2D dl_shadow_map; 
 
 struct Orthographic_camera {
     mat4 view;
@@ -220,15 +220,15 @@ uniform float light_size;
 
 float vsm(
     sampler2D shadow_map_sampler,
-    vec2 initial_uv,             
+    vec2 uv,             
     float receiver_depth,
     float shadow_kernal_size
 ) {
-    if (initial_uv.x < 0.0 || initial_uv.x > 1.0 || initial_uv.y < 0.0 || initial_uv.y > 1.0 || receiver_depth >= 1.0) {
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 || receiver_depth >= 1.0) {
         return 1.0; // Outside shadow map or behind far plane - fully lit
     }
 
-    vec2 blurred_moments = textureLod(shadow_map_sampler, initial_uv, shadow_kernal_size * (SHADOW_MAP_LOD_LEVELS - 1)).rg;
+    vec2 blurred_moments = textureLod(shadow_map_sampler, uv, shadow_kernal_size * (SHADOW_MAP_LOD_LEVELS - 1)).rg;
 
     // E[depth], E[depth^2]
     float E_depth = blurred_moments.x;
@@ -252,6 +252,88 @@ float vsm(
     p_max = smoothstep(vsm_light_bleed_reduction, 1.0, p_max);
     
     return p_max; // p_max is visibility (1.0 = lit, 0.0 = occluded)
+}
+
+float get_search_radius(
+    float receiver_depth,
+    float light_size
+) {
+    return (receiver_depth - light_camera.near) / receiver_depth * 
+            light_size / (light_camera.right - light_camera.left);
+}
+
+float get_blocker_depth(
+    sampler2D shadow_map_sampler,
+    vec2 uv,
+    float receiver_depth,
+    float shadow_kernal_size
+) {
+
+    float avg_depth = textureLod(shadow_map_sampler, uv, shadow_kernal_size * (SHADOW_MAP_LOD_LEVELS - 1)).r;
+
+    float n1_div_n = vsm(
+        shadow_map_sampler,
+        uv,
+        receiver_depth,
+        shadow_kernal_size
+    );
+
+    float n2_div_n = 1.0 - n1_div_n; // Probability of being occluded
+    float blocker_depth = (avg_depth - n1_div_n * receiver_depth) / (n2_div_n); 
+    return blocker_depth;
+}
+
+float get_penumbra(
+    float receiver_depth,
+    float blocker_depth,
+    float light_size
+) {
+    return (receiver_depth - blocker_depth) / receiver_depth * 
+            light_size / (light_camera.right - light_camera.left);
+}
+
+float vssm(
+    sampler2D shadow_map_sampler,
+    vec2 uv,
+    float receiver_depth,
+    float light_size
+) {
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 || receiver_depth >= 1.0) {
+        return 1.0; // Outside shadow map or behind far plane - fully lit
+    }
+
+    float search_radius = get_search_radius(
+        receiver_depth,
+        light_size
+    );
+
+    float blocker_depth = get_blocker_depth(
+        shadow_map_sampler,
+        uv,
+        receiver_depth,
+        clamp(search_radius, 0.0, 1.0)
+    );
+
+    if (blocker_depth < 0.0) {
+        return 1.0; // No blocker found, fully lit
+    }
+
+    float penumbra = get_penumbra(
+        receiver_depth,
+        blocker_depth,
+        light_size
+    );
+
+    // float scale = 1000.0;
+    // float offset = 0.0;
+    penumbra = clamp(penumbra, 0.0, 1.0);
+
+    return vsm(
+        shadow_map_sampler,
+        uv,
+        receiver_depth,
+        penumbra
+    );
 }
 
 #endif // ENABLE_SHADOWS
@@ -418,12 +500,19 @@ void main() {
         float NdotL = dot(normalized_normal, -light_dir_for_bias); 
         float bias = max(shadow_bias * (1.0 - NdotL), 0.0005); // shadow_bias is a uniform like 0.005
 
-        shadow_visibility = vsm(
+        shadow_visibility = vssm(
             dl_shadow_map,
             shadow_map_uv,
             receiver_depth - bias,
             light_size
         );
+
+        // shadow_visibility = vsm(
+        //     dl_shadow_map,
+        //     shadow_map_uv,
+        //     receiver_depth - bias,
+        //     light_size
+        // );
     }
 
     frag_color = vec4(ambient + shadow_visibility * (diffuse + specular), alpha);

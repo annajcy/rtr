@@ -156,11 +156,12 @@ public:
 
     static std::shared_ptr<Texture_2D> create_image(
         const std::shared_ptr<Image>& image,
-        Texture_internal_format internal_format = Texture_internal_format::SRGB_ALPHA_8F
+        Texture_internal_format internal_format = Texture_internal_format::SRGB_ALPHA_8F,
+        int mipmap_levels = 4
     ) {
         return create(
             image,
-            4,
+            mipmap_levels,
             internal_format,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
@@ -175,19 +176,20 @@ public:
 
     static std::shared_ptr<Texture_2D> create_color_attachemnt_rgba(
         int width,
-        int height
+        int height,
+        int mipmap_levels = 1
     ) {
         return create(
             width,
             height,
-            1,
+            mipmap_levels,
             Texture_internal_format::RGB_ALPHA_8F,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
             },
             std::unordered_map<Texture_filter_target, Texture_filter>{
-                {Texture_filter_target::MIN, Texture_filter::LINEAR},
+                {Texture_filter_target::MIN, Texture_filter::LINEAR_MIPMAP_LINEAR},
                 {Texture_filter_target::MAG, Texture_filter::LINEAR}
             }
         );
@@ -196,19 +198,20 @@ public:
 
     static std::shared_ptr<Texture_2D> create_color_attachemnt_rgb(
         int width,
-        int height
+        int height,
+        int mipmap_levels = 1
     ) {
         return create(
             width,
             height,
-            1,
+            mipmap_levels,
             Texture_internal_format::RGB_8F,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
             },
             std::unordered_map<Texture_filter_target, Texture_filter>{
-                {Texture_filter_target::MIN, Texture_filter::LINEAR},
+                {Texture_filter_target::MIN, Texture_filter::LINEAR_MIPMAP_LINEAR},
                 {Texture_filter_target::MAG, Texture_filter::LINEAR}
             }
         );
@@ -217,19 +220,20 @@ public:
 
     static std::shared_ptr<Texture_2D> create_color_attachemnt_rg(
         int width,
-        int height
+        int height,
+        int mipmap_levels = 1
     ) {
         return create(
             width,
             height,
-            1,
+            mipmap_levels,
             Texture_internal_format::RG_32F,
             std::unordered_map<Texture_wrap_target, Texture_wrap>{
                 {Texture_wrap_target::U, Texture_wrap::CLAMP_TO_EDGE},
                 {Texture_wrap_target::V, Texture_wrap::CLAMP_TO_EDGE}
             },
             std::unordered_map<Texture_filter_target, Texture_filter>{
-                {Texture_filter_target::MIN, Texture_filter::LINEAR},
+                {Texture_filter_target::MIN, Texture_filter::LINEAR_MIPMAP_LINEAR},
                 {Texture_filter_target::MAG, Texture_filter::LINEAR}
             }
         );

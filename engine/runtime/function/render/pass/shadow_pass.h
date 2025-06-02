@@ -24,9 +24,7 @@ public:
         std::shared_ptr<Texture> shadow_map_out{};
     };
 
-    static std::shared_ptr<Shadow_pass> create(
-        RHI_global_resource& rhi_global_resource
-    ) {
+    static std::shared_ptr<Shadow_pass> create(RHI_global_resource& rhi_global_resource) {
         return std::make_shared<Shadow_pass>(rhi_global_resource);
     }
 

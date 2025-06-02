@@ -7,8 +7,10 @@
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
 
 #include "engine/editor/editor.h"
+#include "engine/runtime/framework/plugin/model_loader.h"
 #include "engine/runtime/function/render/material/material.h"
 #include "engine/runtime/function/render/frontend/texture.h"
+#include "engine/runtime/function/render/material/shading/phong_material.h"
 #include "engine/runtime/function/render/utils/skybox.h"
 #include "engine/runtime/function/render/frontend/geometry.h"
 
@@ -67,7 +69,11 @@ int main() {
             {Texture_cubemap_face::TOP, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/top.jpg", false)}
     })));
 
-    auto sponza_root_go = scene->add_model<Phong_material>("sponza", sponza);
+    auto sponza_root_go = scene->add_model("sponza", sponza, Model_loader<Phong_material>::create(
+        forward_pipeline->shadow_setting(), 
+        forward_pipeline->parallax_setting())
+    );
+    
     sponza_root_go->get_component<Node_component>()->node()->set_scale(glm::vec3(0.0005f));
     // auto sponza_rot = sponza_root_go->add_component<Rotate_component>();
     // sponza_rot->speed() = 0.01f;

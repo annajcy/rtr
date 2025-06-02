@@ -7,8 +7,10 @@
 #include "engine/runtime/framework/component/shadow_caster/shadow_caster_component.h"
 
 #include "engine/editor/editor.h"
+#include "engine/runtime/framework/plugin/model_loader.h"
 #include "engine/runtime/function/render/material/material.h"
 #include "engine/runtime/function/render/frontend/texture.h"
+#include "engine/runtime/function/render/material/shading/phong_material.h"
 #include "engine/runtime/function/render/utils/skybox.h"
 #include "engine/runtime/function/render/frontend/geometry.h"
 
@@ -80,43 +82,12 @@ int main() {
             "assets/image/grass/grass.jpg"
         )
     );
-
-    // auto bag = Model_assimp::create(
-    //     File_ser::get_instance()->get_absolute_path(
-    //         "assets/model/backpack/backpack.obj"
-    //     )
-    // );
     
-    auto bag = Model_assimp::create(
+    auto mary = Model_assimp::create(
         File_ser::get_instance()->get_absolute_path(
             "assets/model/mary/Marry.obj"
+            //"assets/model/backpack/backpack.obj"
         )
-    );
-
-    // auto bag = Model_assimp::create(
-    //     File_ser::get_instance()->get_absolute_path(
-    //         "assets/model/sponza/sponza.obj"
-    //     )
-    // );
-
-    // auto bag = Model_assimp::create(
-    //     File_ser::get_instance()->get_absolute_path(
-    //         "assets/model/grass/grass.fbx"
-    //     )
-    // );
-
-    // auto bag = Model_assimp::create(
-    //     File_ser::get_instance()->get_absolute_path(
-    //         "assets/model/bunny/bunny.obj"
-    //     )
-    // );
-
-    std::vector<std::shared_ptr<Game_object>> bag_gos;
-
-    auto bag_root_go = Model_loader<Phong_material>::load_model(
-        "bag",
-        bag,
-        bag_gos
     );
 
     auto parallax_settings = forward_pipeline->parallax_setting();
@@ -149,10 +120,8 @@ int main() {
     auto scene = world->add_scene(Scene::create("scene1"));
     world->set_current_scene(scene);
 
-    // auto spherical = Skybox::create(Texture_image::create(bk_image));
-    // scene->set_skybox(spherical);
-
-    auto cubemap = Skybox::create(
+    //scene->set_skybox(Skybox::create(Texture_2D::create_image(bk_image)));
+    scene->set_skybox(Skybox::create(
         Texture_cubemap::create_image(
         std::unordered_map<Texture_cubemap_face, std::shared_ptr<Image>>{
             {Texture_cubemap_face::BACK, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/back.jpg", false)},
@@ -161,13 +130,12 @@ int main() {
             {Texture_cubemap_face::LEFT, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/left.jpg", false)},
             {Texture_cubemap_face::RIGHT, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/right.jpg", false)},
             {Texture_cubemap_face::TOP, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/top.jpg", false)}
-    }));
+    })));
 
-    scene->set_skybox(cubemap);
-
-    for (auto& go : bag_gos) {
-        scene->add_game_object(go);
-    }
+    auto bag_root_go = scene->add_model("mary", mary, Model_loader<Phong_material>::create(
+        forward_pipeline->shadow_setting(),
+        forward_pipeline->parallax_setting()
+    ));
 
     auto bag_root_go_node = bag_root_go->get_component<Node_component>()->node();
     bag_root_go_node->set_position(glm::vec3(0, -1, 0));
@@ -188,28 +156,11 @@ int main() {
 
     auto sphere = scene->add_game_object(Game_object::create("go1"));
     auto sphere_node = sphere->add_component<Node_component>()->node();
-    sphere_node->set_position(glm::vec3(-2, 0, 0));
+    sphere_node->set_position(glm::vec3(-3, 0, 0));
 
     auto sphere_mesh_renderer = sphere->add_component<Mesh_renderer_component>()->mesh_renderer();
     sphere_mesh_renderer->geometry() = Geometry::create_sphere();
     sphere_mesh_renderer->material() = go_material;
-
-    // auto box = scene->add_game_object(Game_object::create("go2"));
-    // auto box_node = box->add_component<Node_component>()->node();
-    // box_node->set_position(glm::vec3(0, 0, 0));
-
-    // auto rotate_component = box->add_component<Rotate_component>();
-    // rotate_component->speed() = 0.1f;
-
-    // auto ping_pong_component = box->add_component<Ping_pong_component>();
-    // ping_pong_component->position() = glm::vec3(0, 1, 0);
-    // ping_pong_component->speed() = 0.002f;
-
-    // auto box_mesh_renderer = box->add_component<Mesh_renderer_component>()->mesh_renderer();
-    // box_mesh_renderer->geometry() = Geometry::create_box();
-    // box_mesh_renderer->material() = go_material;
-
-    //box_node->add_child(sphere_node, true);
 
     auto plane = scene->add_game_object(Game_object::create("plane"));
     auto plane_node = plane->add_component<Node_component>()->node();
@@ -226,30 +177,11 @@ int main() {
     dl_node->set_position(glm::vec3(0, 3, 0));
     auto dl = dl_game_object->add_component<Directional_light_component>();
     auto dl_shadow_caster = dl_game_object->add_component<Directional_light_shadow_caster_component>();
-    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_color_attachemnt_rg(2048, 2048);
+    dl_shadow_caster->shadow_caster()->shadow_map() = Texture_2D::create_color_attachemnt_rg(
+        2048, 2048, 
+        6
+    );
     dl_shadow_caster->camera_orthographic_size() = 17.0f;
-
-    auto pl0_game_object = scene->add_game_object(Game_object::create("pl0"));
-    auto pl0_node = pl0_game_object->add_component<Node_component>()->node();
-    pl0_node->set_position(glm::vec3(1, 0, 0));
-    auto pl0 = pl0_game_object->add_component<Point_light_component>()->point_light();
-    pl0->color() = glm::vec3(0, 1, 0);
-
-    auto pl1_game_object = scene->add_game_object(Game_object::create("pl1"));
-    auto pl1_node = pl1_game_object->add_component<Node_component>()->node();
-    pl1_node->set_position(glm::vec3(-1, 0, 0));
-    auto pl1 = pl1_game_object->add_component<Point_light_component>()->point_light();
-    pl1->color() = glm::vec3(0, 0, 1);
-
-    auto sl0_game_object = scene->add_game_object(Game_object::create("sl0"));
-    auto sl0_node = sl0_game_object->add_component<Node_component>()->node();
-    sl0_node->set_position(glm::vec3(0, 0, 1.0));
-    sl0_node->look_at_direction(glm::vec3(0, 0, -1));
-    auto sl0 = sl0_game_object->add_component<Spot_light_component>()->spot_light();
-    sl0->inner_angle() = 15.0f;
-    sl0->outer_angle() = 20.0f;
-    sl0->color() = glm::vec3(1, 1, 0);
-    sl0->intensity() = 0.5f;
 
     auto sl1_game_object = scene->add_game_object(Game_object::create("sl1"));
     auto sl1_node = sl1_game_object->add_component<Node_component>()->node();

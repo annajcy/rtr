@@ -2,6 +2,7 @@
 
 #include "engine/runtime/framework/core/game_object.h"
 #include "engine/runtime/framework/plugin/model_loader.h"
+#include "engine/runtime/function/render/material/shading/phong_material.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -39,23 +40,20 @@ public:
         return game_object;
     }
 
-    template<typename T>
     std::shared_ptr<Game_object> add_model(
         const std::string& name,
-        const std::shared_ptr<Model>& model 
+        const std::shared_ptr<Model>& model,
+        const std::shared_ptr<Base_model_loader>& model_loader
     ) {
         std::vector<std::shared_ptr<Game_object>> gos{};
-
-        auto root_go = Model_loader<T>::load_model(
+        auto root_go = model_loader->load_model(
             name,
             model,
             gos
         );
-
         for (auto& go : gos) {
             add_game_object(go);
         }
-
         return root_go;
     }
 

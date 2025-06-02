@@ -2,6 +2,7 @@
 
 #include "engine/runtime/context/tick_context/render_tick_context.h"
 #include "engine/runtime/function/render/frontend/memory_buffer.h"
+#include "engine/runtime/function/render/frontend/shader.h"
 #include "engine/runtime/function/render/frontend/texture.h"
 #include "engine/runtime/function/render/material/setting.h"
 #include "engine/runtime/function/render/pass/main_pass.h"
@@ -10,6 +11,7 @@
 #include "engine/runtime/function/render/pipeline/base_pipeline.h"
 #include "engine/runtime/function/render/struct/camera_render_struct.h"
 #include "engine/runtime/function/render/struct/light_render_struct.h"
+#include "engine/runtime/platform/rhi/rhi_shader_code.h"
 #include "engine/runtime/resource/resource_manager.h"
 #include "glm/fwd.hpp"
 #include <memory>
@@ -54,22 +56,15 @@ public:
 
     void update_render_resource(const Render_tick_context& tick_context) override {
 
-        auto color_attachment = Texture_2D::create_color_attachemnt_rgba(
+        m_render_resource_manager.add("main_color_attachment", Texture_2D::create_color_attachemnt_rgba(
             m_rhi_global_resource.window->width(), 
             m_rhi_global_resource.window->height()
-        );
-
-        auto depth_stencil_attachment = Texture_2D::create_depth_stencil_attachemnt(
-            m_rhi_global_resource.window->width(),
-            m_rhi_global_resource.window->height()
-        );
+        ));
 
         auto dl_shadow_map = tick_context.render_swap_data.dl_shadow_casters.shadow_map;
-        dl_shadow_map->rhi(m_rhi_global_resource.device)->set_border_color(glm::vec4(1.0f));
-
-        m_render_resource_manager.add("main_color_attachment", color_attachment);
-        m_render_resource_manager.add("main_depth_attachment", depth_stencil_attachment);
-        m_render_resource_manager.add("shadow map", dl_shadow_map);
+        auto dl_shadow_map_rhi = dl_shadow_map->rhi(m_rhi_global_resource.device);
+        dl_shadow_map_rhi->set_border_color(glm::vec4(1.0f));
+        m_render_resource_manager.add("shadow_map", dl_shadow_map);
     }
 
     void init_ubo() override {
@@ -170,7 +165,7 @@ public:
     void update_render_pass(const Render_tick_context& tick_context) override {
 
         m_shadow_pass->set_resource_flow(Shadow_pass::Resource_flow{
-            .shadow_map_out = m_render_resource_manager.get<Texture_2D>("shadow map")
+            .shadow_map_out = m_render_resource_manager.get<Texture_2D>("shadow_map")
         });
         m_shadow_pass->set_context(Shadow_pass::Execution_context{
             .shadow_caster_swap_objects = tick_context.render_swap_data.get_shadow_casters(),
@@ -178,8 +173,7 @@ public:
 
         m_main_pass->set_resource_flow(Main_pass::Resource_flow{
             .color_attachment_out = m_render_resource_manager.get<Texture_2D>("main_color_attachment"),
-            .depth_attachment_out = m_render_resource_manager.get<Texture_2D>("main_depth_attachment"),
-            .shadow_map_in = m_render_resource_manager.get<Texture_2D>("shadow map")
+            .shadow_map_in = m_render_resource_manager.get<Texture_2D>("shadow_map")
         });
         m_main_pass->set_context(Main_pass::Execution_context{
             .skybox = tick_context.render_swap_data.skybox,

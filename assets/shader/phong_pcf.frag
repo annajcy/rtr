@@ -7,7 +7,7 @@
 #define MAX_SPOT_LIGHT 8
 #define MAX_POINT_LIGHT 8
 
-#define MAX_SAMPLE_COUNT 128 // Keep this for PCF-style blurring of moments
+#define MAX_SAMPLE_COUNT 64
 
 in vec2 v_uv;
 in vec3 v_frag_position;
@@ -190,8 +190,8 @@ vec2 parallax_occlusion_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tb
 
 #ifdef ENABLE_SHADOWS
 
-// Shadow map sampler (now samples RG for depth and depth^2)
-layout(binding = 5) uniform sampler2D dl_shadow_map; // Assumed to be an RG texture
+// Shadow map sampler (now samples R for depth)
+layout(binding = 5) uniform sampler2D dl_shadow_map; // Assumed to be an R texture (e.g., R32F or DEPTH_COMPONENT)
 
 struct Orthographic_camera {
     mat4 view;
@@ -211,166 +211,60 @@ layout(std140, binding = 4) uniform Light_camera_ubo {
     Orthographic_camera light_camera;
 };
 
-uniform float shadow_bias; // Standard bias
-uniform float vsm_min_variance = 0.00002; // Minimum variance to prevent division by zero and reduce light bleeding
-uniform float vsm_light_bleed_reduction = 0.15; // Controls how much to reduce light bleeding, adjust as needed
+uniform float shadow_bias;
 
-uniform float pcf_radius = 0.005; // Radius for blurring moments, in UV space. Adjust based on shadow map size.
-uniform int pcf_sample_count = 16; // Base number of samples for blurring moments (for reference radius)
-uniform float pcf_tightness = 0.8; // For Poisson disk sample distribution
+uniform float pcf_radius; // Formerly light_size, now scales PCF sample offsets. e.g. 1.0
+uniform int pcf_sample_count; // e.g., 1 for 3x3, 2 for 5x5 kernel
 
-// NEW: Constants for dynamic sample count adjustment. These could also be uniforms.
-const float REFERENCE_PCF_RADIUS = 0.005; // The pcf_radius at which pcf_sample_count is nominal.
-const int MINIMUM_DYNAMIC_PCF_SAMPLES = 4; // Minimum samples to use when blurring dynamically.
-
-// Poisson disk sampling (can be reused for blurring moments)
-float rand_2to1(vec2 uv) {
-    const highp float a = 12.9898, b = 78.233, c = 43758.5453;
-    highp float dt = dot(uv.xy, vec2(a, b)), sn = mod(dt, PI);
-    return fract(sin(sn) * c);
-}
-
-void generate_poisson_disk_samples(
-    vec2 uv_seed,
-    int sample_count, // Effective number of samples to generate
-    float tightness,
-    out vec2 samples[MAX_SAMPLE_COUNT] // Always MAX_SAMPLE_COUNT size
-) {
-    float angle = rand_2to1(uv_seed) * PI2;
-    // Ensure sample_count used for radius_step is not zero
-    int effective_sample_count_for_dist = max(1, min(sample_count, MAX_SAMPLE_COUNT));
-    float radius_step = 1.0 / float(effective_sample_count_for_dist);
-    float current_radius_norm = radius_step;
-    float angle_increment = (1.0 - 0.6180339887) * PI2;
-
-    for (int i = 0; i < min(sample_count, MAX_SAMPLE_COUNT); i++) { // Loop up to the requested sample_count (or MAX_SAMPLE_COUNT)
-        float r = pow(current_radius_norm, tightness);
-        samples[i] = vec2(cos(angle) * r, sin(angle) * r);
-        angle += angle_increment;
-        current_radius_norm += radius_step;
-    }
-}
-
-// Helper function to determine the effective number of samples for PCF/VSM blurring
-int get_dynamic_pcf_sample_count(
-    int base_sample_count,      // User-defined sample count (e.g., from pcf_sample_count uniform)
-    float current_radius,       // Current pcf_radius
-    float reference_radius,     // Radius at which base_sample_count is considered nominal
-    int min_dynamic_samples,    // Minimum samples to use if dynamic adjustment is active
-    int max_samples_global      // Absolute maximum samples (MAX_SAMPLE_COUNT)
-) {
-    if (base_sample_count <= 1) { // If user explicitly wants no blur (0) or a single tap (1)
-        return base_sample_count;
-    }
-    // Prevent division by zero or extremely small reference_radius leading to huge sample counts
-    if (reference_radius < 0.0001) {
-        return clamp(base_sample_count, min_dynamic_samples, max_samples_global);
-    }
-
-    float radius_ratio = current_radius / reference_radius;
-    // Scale quadratically with radius to try and maintain sample density over the blur area
-    float desired_float_samples = float(base_sample_count) * radius_ratio * radius_ratio;
-
-    int dynamic_samples = int(desired_float_samples);
-
-    // Clamp to [min_dynamic_samples, max_samples_global]
-    return clamp(dynamic_samples, min_dynamic_samples, max_samples_global);
-}
-
-
-float calculate_pcf_shadow_visibility(
-    sampler2D shadow_map_sampler, // This is pcf_depth_shadow_map
-    vec2 initial_uv,
-    float receiver_depth,        // Current fragment's depth from light [0,1]
-    float bias
-) {
-    if (initial_uv.x < 0.0 || initial_uv.x > 1.0 || initial_uv.y < 0.0 || initial_uv.y > 1.0 || receiver_depth >= 1.0) {
-        return 1.0; // Not in shadow map range
-    }
-
-    // Get dynamically adjusted sample count
-    int num_actual_pcf_samples = get_dynamic_pcf_sample_count(
-        pcf_sample_count, pcf_radius, REFERENCE_PCF_RADIUS, MINIMUM_DYNAMIC_PCF_SAMPLES, MAX_SAMPLE_COUNT
-    );
-
-    if (num_actual_pcf_samples <= 0) {
-        return 1.0; // No samples, fully lit
-    }
-
-    float shadow = 0.0;
-
-    if (num_actual_pcf_samples == 1) {
-        // Single sample, no poisson disk needed, sample at the center
-        float occluder_depth = texture(shadow_map_sampler, clamp(initial_uv, 0.0, 1.0)).r;
-        if (receiver_depth - bias > occluder_depth) {
-            shadow = 1.0;
-        }
-    } else {
-        vec2 poisson_samples[MAX_SAMPLE_COUNT]; // Fixed size array
-        generate_poisson_disk_samples(initial_uv, num_actual_pcf_samples, pcf_tightness, poisson_samples);
-
-        for (int i = 0; i < num_actual_pcf_samples; i++) { // Iterate up to the determined sample count
-            vec2 sample_uv = initial_uv + poisson_samples[i] * pcf_radius;
-            float occluder_depth = texture(shadow_map_sampler, clamp(sample_uv, 0.0, 1.0)).r;
-            if (receiver_depth - bias > occluder_depth) {
-                shadow += 1.0;
-            }
-        }
-        shadow /= float(num_actual_pcf_samples); // Average occlusion
-    }
-
-    return 1.0 - shadow; // Visibility = 1.0 - average_occlusion
-}
-
-// Calculates the shadow visibility using VSM with PCF-style moment blurring
-float calculate_vsm_shadow_visibility(
+float pcf(
     sampler2D shadow_map_sampler,
-    vec2 initial_uv,              // UV in shadow map for the current fragment
-    float receiver_depth,         // Current fragment's depth from light [0,1]
-    float bias
+    vec2 uv,
+    float receiver_depth_biased
 ) {
-    if (initial_uv.x < 0.0 || initial_uv.x > 1.0 || initial_uv.y < 0.0 || initial_uv.y > 1.0 || receiver_depth >= 1.0) {
-        return 1.0; // Outside shadow map or behind far plane - fully lit
+    // Initial boundary check for the central point
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 || receiver_depth_biased >= 1.0) {
+        return 1.0; // Outside shadow map bounds or beyond far plane - fully lit
     }
 
-    // Get dynamically adjusted sample count for blurring moments
-    int num_blur_samples = get_dynamic_pcf_sample_count(
-        pcf_sample_count, pcf_radius, REFERENCE_PCF_RADIUS, MINIMUM_DYNAMIC_PCF_SAMPLES, MAX_SAMPLE_COUNT
-    );
+    vec2 shadow_map_texel_size = 1.0 / vec2(textureSize(dl_shadow_map, 0)); 
+    float visibility = 0.0;
+    float num_samples_taken = 0.0;
 
-    vec2 blurred_moments;
-    if (num_blur_samples <= 1) { // No blurring or single sample (includes num_blur_samples = 0 or 1)
-        blurred_moments = texture(shadow_map_sampler, initial_uv).rg;
-    } else {
-        blurred_moments = vec2(0.0, 0.0);
-        vec2 poisson_samples[MAX_SAMPLE_COUNT]; // Fixed size array
-        generate_poisson_disk_samples(initial_uv, num_blur_samples, pcf_tightness, poisson_samples);
+    // Iterate over a kernel defined by pcf_sample_count
+    // Example: pcf_sample_count = 1 results in a 3x3 kernel
+    for (int y = -pcf_sample_count; y <= pcf_sample_count; ++y) {
+        for (int x = -pcf_sample_count; x <= pcf_sample_count; ++x) {
+            // Calculate offset for the current sample
+            // Offset is in texel units, scaled by pcf_radius
+            vec2 texel_offset = vec2(x, y) * pcf_radius;
+            // Convert texel offset to UV offset using actual texel size
+            vec2 uv_offset = texel_offset * shadow_map_texel_size;
+            vec2 sample_uv = uv + uv_offset;
 
-        for (int i = 0; i < num_blur_samples; i++) { // Iterate up to the determined sample count
-            vec2 sample_uv = initial_uv + poisson_samples[i] * pcf_radius;
-            blurred_moments += texture(shadow_map_sampler, clamp(sample_uv, 0.0, 1.0)).rg;
+            // Check if the sample UV is within the shadow map bounds [0, 1]
+            // Using GL_CLAMP_TO_BORDER with a border color of 1.0 for the shadow map sampler
+            // can simplify this, as out-of-bounds samples would automatically return max depth (fully lit).
+            // Otherwise, manual check is needed:
+            if (sample_uv.x >= 0.0 && sample_uv.x <= 1.0 && sample_uv.y >= 0.0 && sample_uv.y <= 1.0) {
+                float occluder_depth = textureLod(shadow_map_sampler, sample_uv, 0).r; // Sample depth from shadow map (.r component)
+                // Compare receiver depth with occluder depth
+                // If receiver is not occluded by this sample (i.e., closer or at same depth), it's lit for this sample.
+                if (receiver_depth_biased <= occluder_depth) {
+                    visibility += 1.0;
+                }
+            } else {
+                // Sample is outside shadow map; treat as lit for this sample
+                visibility += 1.0;
+            }
+            num_samples_taken += 1.0;
         }
-        blurred_moments /= float(num_blur_samples);
     }
 
-    float E_depth = blurred_moments.x;
-    float E_depth_sq = blurred_moments.y;
-
-    float biased_receiver_depth = receiver_depth - bias;
-
-    if (biased_receiver_depth <= E_depth) {
-        return 1.0; // Fully lit
+    if (num_samples_taken == 0.0) { // Should only happen if pcf_sample_count < 0 (which is invalid)
+        return 1.0; // Avoid division by zero, return fully lit
     }
 
-    float variance = E_depth_sq - (E_depth * E_depth);
-    variance = max(variance, vsm_min_variance);
-
-    float d = biased_receiver_depth - E_depth;
-    float p_max = variance / (variance + d * d);
-
-    p_max = smoothstep(vsm_light_bleed_reduction, 1.0, p_max);
-    
-    return p_max;
+    return visibility / num_samples_taken; // Average visibility
 }
 
 #endif // ENABLE_SHADOWS
@@ -402,7 +296,7 @@ void main() {
 #ifdef ENABLE_NORMAL_MAP
     vec3 normal_map_normal = texture(normal_map, uv).rgb * 2.0 - vec3(1.0);
     vec3 normal = normalize(v_tbn * normal_map_normal);
-    vec3 normalized_normal = normalize(normal); // Already normalized, but explicit for clarity.
+    vec3 normalized_normal = normalize(normal); // Ensure normalized
 #else
     vec3 normalized_normal = normalize(v_normal);
 #endif
@@ -410,7 +304,7 @@ void main() {
 #ifdef ENABLE_ALBEDO_MAP
     vec4 albedo = texture(albedo_map, uv);
 #else
-    vec4 albedo = vec4((normalized_normal + 1.0) / 2.0, 1.0); // Default albedo
+    vec4 albedo = vec4((normalized_normal + 1.0) / 2.0, 1.0);
 #endif
 
 #ifdef ENABLE_SPECULAR_MAP
@@ -447,40 +341,34 @@ void main() {
         vec3 light_vector = spl_lights[i].position - v_frag_position;
         vec3 light_dir = normalize(light_vector);
         float spot_effect = calculate_spot_intensity(light_dir, spl_lights[i].direction, spl_lights[i].inner_angle_cos, spl_lights[i].outer_angle_cos);
-        // Consider adding distance attenuation for spotlights if not already implicitly handled
         diffuse += calculate_diffuse(normalized_normal, light_dir, spl_lights[i].intensity, spl_lights[i].color, albedo.rgb, kd) * spot_effect;
         specular += calculate_specular(normalized_normal, view_direction, light_dir, spl_lights[i].intensity, spl_lights[i].color, albedo.rgb, specular_mask, shininess, ks) * spot_effect;
     }
 
 
 #ifdef ENABLE_SHADOWS
-    float shadow_visibility = 1.0;
+    float shadow_visibility = 1.0; // Default to fully lit
 
-    if (dl_count > 0) { // Assuming shadow for the first directional light
+    if (dl_count > 0) { // Assuming shadows only from the first directional light for simplicity
         vec4 world_position = vec4(v_frag_position, 1.0);
         vec4 light_camera_clip_space_pos = light_camera.projection * light_camera.view * world_position;
         vec3 light_camera_ndc = light_camera_clip_space_pos.xyz / light_camera_clip_space_pos.w;
         vec2 shadow_map_uv = light_camera_ndc.xy * 0.5 + 0.5;
-        float receiver_depth_from_light = light_camera_ndc.z * 0.5 + 0.5;
+        float receiver_depth = light_camera_ndc.z * 0.5 + 0.5;
 
-        // Assuming light_camera.camera_direction is the normalized direction of light propagation
-        float NdotL = dot(normalized_normal, normalize(light_camera.camera_direction)); // Or use normalize(-dl_lights[0].direction) if more direct
-        float dynamic_bias = max(shadow_bias * (1.0 - NdotL), 0.0005); // Slope-scale bias
+        // Normal-based bias (Slope-scale bias)
+        // Ensure light_camera.camera_direction is the direction the light's camera is looking.
+        // So, -light_camera.camera_direction is the direction of light rays.
+        vec3 light_dir_for_bias = normalize(light_camera.camera_direction); // Direction the light camera is oriented
+        float NdotL = dot(normalized_normal, -light_dir_for_bias); // N.L where L is light direction vector
+        float bias = max(shadow_bias * (1.0 - NdotL), 0.0005); // shadow_bias is a uniform, e.g., 0.005
 
-        // Choose one of the shadow calculation methods:
-        shadow_visibility = calculate_vsm_shadow_visibility(
+
+        shadow_visibility = pcf(
             dl_shadow_map,
             shadow_map_uv,
-            receiver_depth_from_light,
-            dynamic_bias // Use dynamic_bias instead of fixed shadow_bias
+            receiver_depth - bias
         );
-        // Or for standard PCF:
-        // shadow_visibility = calculate_pcf_shadow_visibility(
-        //     dl_shadow_map, // Note: PCF expects a standard depth map (R channel), not moments (RG)
-        //     shadow_map_uv,
-        //     receiver_depth_from_light,
-        //     dynamic_bias
-        // );
     }
 
     frag_color = vec4(ambient + shadow_visibility * (diffuse + specular), alpha);

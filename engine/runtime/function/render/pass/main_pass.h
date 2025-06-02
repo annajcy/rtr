@@ -23,7 +23,6 @@ public:
 
     struct Resource_flow {
         std::shared_ptr<Texture> color_attachment_out{};
-        std::shared_ptr<Texture> depth_attachment_out{};
         std::shared_ptr<Texture> shadow_map_in{};
     };
 
@@ -47,17 +46,19 @@ public:
 
     void set_resource_flow(const Resource_flow& flow) {
         m_resource_flow = flow;
+        
         int width = m_rhi_global_resource.window->width();
         int height = m_rhi_global_resource.window->height();
 
         auto color_attachment = m_resource_flow.color_attachment_out;
-        auto depth_attachment = m_resource_flow.depth_attachment_out;
 
         m_frame_buffer = Frame_buffer::create(
             width, height, 
             std::vector<std::shared_ptr<Texture>> {
                 color_attachment,
-            }, depth_attachment
+            }, Texture_2D::create_depth_attachemnt(
+                width, height
+            )
         );
     }
 
@@ -89,8 +90,9 @@ public:
             );
         }
 
+        m_resource_flow.shadow_map_in->rhi(m_rhi_global_resource.device)->generate_mipmap();
         m_resource_flow.shadow_map_in->rhi(m_rhi_global_resource.device)->bind_to_unit(5);
-
+        
         for (auto& swap_object : m_context.render_swap_objects) {
             auto shader = swap_object.material->get_shader_program();
             auto geometry = swap_object.geometry;
