@@ -5,9 +5,7 @@
 #include <memory>
 
 namespace rtr {
-
-// Global shading settings
-
+    
 struct Shadow_setting {
     float shadow_bias{0.005f};
     float light_size{0.5f};
@@ -42,14 +40,16 @@ struct Parallax_setting {
     }
 };
 
-// Phong material settings
 
+// Phong material settings
 struct Phong_material_setting {
+
     float transparency{1.0f};
     glm::vec3 ka = glm::vec3(0.1f);    
     glm::vec3 kd = glm::vec3(0.7f);
     glm::vec3 ks = glm::vec3(0.5f);    
-    float shininess = 32.0f;    
+    float shininess {32.0f};
+
     static std::shared_ptr<Phong_material_setting> create() {
         return std::make_shared<Phong_material_setting>();
     }

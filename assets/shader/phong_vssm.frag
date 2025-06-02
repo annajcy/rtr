@@ -391,9 +391,6 @@ void main() {
 
     ambient += ka * albedo.rgb;
 
-    // Calculate lighting (Directional, Point, Spot)
-    // ... (Your existing lighting loops for dl_count, pl_count, spl_count remain the same) ...
-    // Example for directional light (repeat for point and spot)
     for (int i = 0; i < dl_count; i++) {
         vec3 light_dir = normalize(-dl_lights[i].direction);
 
