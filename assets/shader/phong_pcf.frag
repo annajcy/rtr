@@ -210,29 +210,6 @@ layout(std140, binding = 4) uniform Light_camera_ubo {
     Orthographic_camera light_camera;
 };
 
-#ifdef ENABLE_CSM_SHADOWS
-
-#define MAX_CSM_COUNT 8
-
-layout(std140, binding = 5) uniform CSM_shadow_ubo {
-    int csm_layer_count;
-    Orthographic_camera csm_cameras[MAX_CSM_COUNT];
-    float csm_splits_near[MAX_CSM_COUNT];
-    float csm_splits_far[MAX_CSM_COUNT];
-}
-
-layout(binding = 6) uniform sampler2DArray csm_shadow_map;
-
-int get_csm_layer(float depth) {
-    for (int i = 0; i < csm_layer_count; i++) {
-        if (depth < csm_splits_far[i]) {
-            return i;
-        }
-    }
-    return csm_layer_count - 1;
-}
-
-#endif
 
 uniform float shadow_bias;
 uniform float light_size;
@@ -307,23 +284,11 @@ void get_sampled_depth(
     out float sampled_depth[MAX_SAMPLE_COUNT]
 ) {
     for (int i = 0; i < sample_count; i++) {
-        float shadow_map_depth = texture(shadow_map, sampled_uv[i]).r;
+        float shadow_map_depth = textureLod(shadow_map, sampled_uv[i], 0).r;
         sampled_depth[i] = shadow_map_depth;
     }
 }
 
-void get_sampled_depth_tex_array(
-    sampler2DArray shadow_map,
-    int layer,
-    int sample_count,
-    in vec2 sampled_uv[MAX_SAMPLE_COUNT],
-    out float sampled_depth[MAX_SAMPLE_COUNT]
-) {
-    for (int i = 0; i < sample_count; i++) {
-        float shadow_map_depth = texture(shadow_map, vec3(sampled_uv[i], layer)).r;
-        sampled_depth[i] = shadow_map_depth;
-    }
-}
 
 float find_blocker_depth(
     float light_projected_depth,
