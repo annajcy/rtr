@@ -87,10 +87,12 @@ public:
                     {"pcf_sample_count", Uniform_entry<int>::create(100)},
                 }
             }
-        },
-        std::unordered_map<Phong_shader_feature, std::unordered_set<Phong_shader_feature>> {
-            {Phong_shader_feature::HEIGHT_MAP, {Phong_shader_feature::NORMAL_MAP}}
-        }
+        }, Shader_feature_dependency_graph_v(
+            std::unordered_map<Phong_shader_feature, std::unordered_set<Phong_shader_feature>> {
+                {Phong_shader_feature::HEIGHT_MAP, {Phong_shader_feature::NORMAL_MAP}},
+            },
+            std::unordered_map<Phong_shader_feature, std::unordered_set<Phong_shader_feature>> {}
+        )
     ) {}
 
     ~Phong_shader() = default;

@@ -7,6 +7,7 @@
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace rtr {
 
@@ -30,27 +31,48 @@ template<typename Shader_feature>
 class Shader_feature_dependency_graph {
 private:
     std::unordered_map<Shader_feature, std::unordered_set<Shader_feature>> m_dependencies{};
+    std::unordered_map<Shader_feature, std::unordered_set<Shader_feature>> m_exclusions{};
 
 public:
     Shader_feature_dependency_graph() = default;
 
-    Shader_feature_dependency_graph(std::initializer_list<std::pair<Shader_feature, Shader_feature>> dependencies) {
-        for (const auto& [feature, dependency] : dependencies) {
-            add_dependency(feature, dependency);
+    Shader_feature_dependency_graph(
+        std::unordered_map<Shader_feature, std::unordered_set<Shader_feature>> dependencies,
+        std::unordered_map<Shader_feature, std::unordered_set<Shader_feature>> exclusions
+    ) {
+        for (const auto& [feature, deps] : dependencies) {
+            for (const auto& dep : deps) {
+                add_dependency(feature, dep);
+            }
+        }
+
+        for (const auto& [feature, excls] : exclusions) {
+            for (const auto& exc : excls) {
+                add_exclusion(feature, exc);
+            }
         }
     }
 
-    Shader_feature_dependency_graph(const Shader_feature_dependency_graph&) = delete;
-    Shader_feature_dependency_graph& operator=(const Shader_feature_dependency_graph&) = delete;
     ~Shader_feature_dependency_graph() = default;
 
     void add_dependency(Shader_feature feature, Shader_feature dependency) {
         m_dependencies[feature].insert(dependency);
     }
 
+    void add_exclusion(Shader_feature feature, Shader_feature exclusion) {
+        m_exclusions[feature].insert(exclusion);
+    }
+
     bool is_dependent(Shader_feature feature, Shader_feature dependency) const {
         if (auto it = m_dependencies.find(feature); it != m_dependencies.end()) {
             return it->second.find(dependency) != it->second.end();
+        }
+        return false;
+    }
+
+    bool is_excluded(Shader_feature feature, Shader_feature exclusion) const {
+        if (auto it = m_exclusions.find(feature); it != m_exclusions.end()) {
+            return it->second.find(exclusion) != it->second.end();
         }
         return false;
     }
@@ -61,6 +83,13 @@ public:
         }
         return {};
     }  
+
+    std::unordered_set<Shader_feature> get_exclusions(Shader_feature feature) const {
+        if (auto it = m_exclusions.find(feature); it!= m_exclusions.end()) {
+            return it->second;
+        }
+        return {};
+    }
 
     std::unordered_set<Shader_feature> get_all_dependencies(Shader_feature feature) const {
         std::unordered_set<Shader_feature> dependencies{};
@@ -75,6 +104,20 @@ public:
         dfs(feature);
         return dependencies;
     }
+
+    std::unordered_set<Shader_feature> get_all_exclusions(Shader_feature feature) const {
+        std::unordered_set<Shader_feature> exclusions{};
+        std::function<void(Shader_feature)> dfs = [&](Shader_feature feature) {
+            for (const auto& exc : get_exclusions(feature)) {
+                if (exclusions.find(exc) == exclusions.end()) {
+                    exclusions.insert(exc);
+                    dfs(exc);
+                }
+            }
+        };
+        dfs(feature);
+        return exclusions;
+    }
 };
 
 template<typename Shader_feature>
@@ -86,7 +129,7 @@ template<typename Shader_feature>
 class Shader : public Shader_base {
 public:
     using Shader_feature_set = std::bitset<static_cast<size_t>(Shader_feature::MAX_FEATURES)>;
-    using Shader_feature_dependency_graph = Shader_feature_dependency_graph<Shader_feature>;
+    using Shader_feature_dependency_graph_v = Shader_feature_dependency_graph<Shader_feature>;
 
     static Shader_feature_set get_shader_feature_set(const std::vector<Shader_feature>& feature_list) {
         Shader_feature_set feature_set{};
@@ -100,7 +143,7 @@ protected:
     std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> m_main_shader_uniforms{};
     std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> m_feature_specific_shader_uniforms{};
     std::unordered_map<Shader_feature_set, std::shared_ptr<Shader_program>> m_variant_shader_programs{};
-    Shader_feature_dependency_graph m_feature_dependency_graph{};
+    Shader_feature_dependency_graph_v m_feature_dependency_graph{};
 
 public:
     Shader(
@@ -108,17 +151,11 @@ public:
         const std::unordered_map<Shader_type, std::shared_ptr<Shader_code>>& main_shader_codes,
         const std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>> main_shader_uniforms,
         const std::unordered_map<Shader_feature, std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>> feature_specific_shader_uniforms,
-        const std::unordered_map<Shader_feature, std::unordered_set<Shader_feature>>& feature_dependencies
+        const Shader_feature_dependency_graph_v& feature_dependency_graph
     ) : Shader_base(name, main_shader_codes),
         m_main_shader_uniforms(main_shader_uniforms),
-        m_feature_specific_shader_uniforms(feature_specific_shader_uniforms){ 
-
-        for (const auto& [feature, dependencies] : feature_dependencies) {
-            for (const auto& dependency : dependencies) {
-                m_feature_dependency_graph.add_dependency(feature, dependency);
-            }
-        }
-    }
+        m_feature_specific_shader_uniforms(feature_specific_shader_uniforms), 
+        m_feature_dependency_graph(feature_dependency_graph) {}
 
     virtual ~Shader() = default;
 
@@ -214,6 +251,15 @@ public:
                     return; // 如果依赖的特征未启用，则返回
                 }
             }
+
+            auto exclusions = m_feature_dependency_graph.get_all_exclusions(static_cast<Shader_feature>(u));
+            for (const auto& exc : exclusions) {
+                if (current.test(static_cast<size_t>(exc))) {
+                    return; // 如果有冲突的特征启用，则返回
+                }
+            }
+
+            // 启用该位
             current.set(u);
             dfs(u + 1, current, permutations);
         };
@@ -251,8 +297,7 @@ public:
         const std::unordered_map<Shader_type, std::shared_ptr<Shader_code>>& main_shader_codes,
         const std::unordered_map<std::string, std::shared_ptr<Uniform_entry_base>>& main_shader_uniforms
     ) : Shader_base(shader_name, main_shader_codes),
-        m_main_shader_uniforms(main_shader_uniforms) {
-    }
+        m_main_shader_uniforms(main_shader_uniforms) {}
 
     virtual ~Shader() = default;
 

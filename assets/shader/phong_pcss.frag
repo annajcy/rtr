@@ -1,3 +1,4 @@
+
 #define PI 3.141592653589793
 #define PI2 6.283185307179586
 #define PI_HALF 1.5707963267948966
@@ -6,8 +7,6 @@
 #define MAX_DIRECTIONAL_LIGHT 2
 #define MAX_SPOT_LIGHT 8
 #define MAX_POINT_LIGHT 8
-
-#define MAX_SAMPLE_COUNT 64
 
 in vec2 v_uv;
 in vec3 v_frag_position;
@@ -67,10 +66,10 @@ layout(std140, binding = 3) uniform Spot_light_array_ubo {
 };
 
 vec3 calculate_diffuse(
-    vec3 normal,
-    vec3 light_dir,
-    float intensity,
-    vec3 light_color,
+    vec3 normal, 
+    vec3 light_dir, 
+    float intensity, 
+    vec3 light_color, 
     vec3 albedo,
     vec3 kd
 ) {
@@ -79,12 +78,12 @@ vec3 calculate_diffuse(
 }
 
 vec3 calculate_specular(
-    vec3 normal,
-    vec3 view_dir,
-    vec3 light_dir,
-    float intensity,
-    vec3 light_color,
-    vec3 albedo,
+    vec3 normal, 
+    vec3 view_dir, 
+    vec3 light_dir, 
+    float intensity, 
+    vec3 light_color, 
+    vec3 albedo, 
     vec3 spec_mask,
     float shininess,
     vec3 ks
@@ -101,11 +100,12 @@ float calculate_spot_intensity(vec3 light_dir, vec3 spot_dir, float inner_cos, f
 }
 
 uniform float transparency;
-uniform vec3 ka;
-uniform vec3 kd;
-uniform vec3 ks;
-uniform float shininess;
+uniform vec3 ka;     
+uniform vec3 kd;     
+uniform vec3 ks;    
+uniform float shininess;  
 
+// 纹理采样器
 #ifdef ENABLE_ALBEDO_MAP
 layout(binding = 0) uniform sampler2D albedo_map;
 #endif
@@ -130,9 +130,8 @@ layout(binding = 4) uniform sampler2D height_map;
 uniform float parallax_scale;
 uniform float parallax_layer_count;
 
-// ... (parallax functions - unchanged) ...
 vec2 parallax_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tbn, float scale) {
-    view_dir = normalize(transpose(tbn) * view_dir);
+	view_dir = normalize(transpose(tbn) * view_dir);
     view_dir.xy /= -view_dir.z;
 
     vec2 offset = view_dir.xy * texture(height_map, uv).r * scale;
@@ -140,7 +139,7 @@ vec2 parallax_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tbn, float s
 }
 
 vec2 parallax_steep_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tbn, float scale, float layer_count) {
-    view_dir = normalize(transpose(tbn) * view_dir);
+	view_dir = normalize(transpose(tbn) * view_dir);
     view_dir.xy /= -view_dir.z;
 
     float layer_depth = 1.0 / layer_count;
@@ -160,7 +159,7 @@ vec2 parallax_steep_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tbn, f
 }
 
 vec2 parallax_occlusion_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tbn, float scale, float layer_count) {
-    view_dir = normalize(transpose(tbn) * view_dir);
+	view_dir = normalize(transpose(tbn) * view_dir);
     view_dir.xy /= -view_dir.z;
 
     float layer_depth = 1.0 / layer_count;
@@ -187,11 +186,11 @@ vec2 parallax_occlusion_uv(vec2 uv, vec3 view_dir, sampler2D height_map, mat3 tb
 }
 #endif
 
-
 #ifdef ENABLE_SHADOWS
 
-// Shadow map sampler (now samples R for depth)
-layout(binding = 5) uniform sampler2D dl_shadow_map; // Assumed to be an R texture (e.g., R32F or DEPTH_COMPONENT)
+#define MAX_SAMPLE_COUNT 32
+
+layout(binding = 5) uniform sampler2D dl_shadow_map;
 
 struct Orthographic_camera {
     mat4 view;
@@ -213,171 +212,144 @@ layout(std140, binding = 4) uniform Light_camera_ubo {
 
 uniform float shadow_bias;
 uniform float light_size;
-uniform float pcf_radius; // Formerly light_size, now scales PCF sample offsets. e.g. 1.0
-uniform int pcf_sample_count; // e.g., 1 for 3x3, 2 for 5x5 kernel
+uniform float pcf_radius;
+uniform float pcf_tightness;
+uniform int pcf_sample_count;
 
-float pcf(
-    sampler2D shadow_map_sampler,
-    vec2 uv,
-    float receiver_depth_biased, // This is receiver_depth - bias
-    vec2 shadow_map_texel_size   // Calculated as 1.0 / textureSize(shadow_map_sampler, 0)
-) {
-    // Initial boundary check for the central point
-    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 || receiver_depth_biased >= 1.0) {
-        return 1.0; // Outside shadow map bounds or beyond far plane - fully lit
-    }
-
-    float visibility = 0.0;
-    float num_samples_taken = 0.0;
-
-    // Iterate over a kernel defined by pcf_sample_count
-    // Example: pcf_sample_count = 1 results in a 3x3 kernel
-    for (int y = -pcf_sample_count; y <= pcf_sample_count; ++y) {
-        for (int x = -pcf_sample_count; x <= pcf_sample_count; ++x) {
-            // Calculate offset for the current sample
-            // Offset is in texel units, scaled by pcf_radius
-            vec2 texel_offset = vec2(x, y) * pcf_radius;
-            // Convert texel offset to UV offset using actual texel size
-            vec2 uv_offset = texel_offset * shadow_map_texel_size;
-            vec2 sample_uv = uv + uv_offset;
-
-            // Check if the sample UV is within the shadow map bounds [0, 1]
-            // Using GL_CLAMP_TO_BORDER with a border color of 1.0 for the shadow map sampler
-            // can simplify this, as out-of-bounds samples would automatically return max depth (fully lit).
-            // Otherwise, manual check is needed:
-            if (sample_uv.x >= 0.0 && sample_uv.x <= 1.0 && sample_uv.y >= 0.0 && sample_uv.y <= 1.0) {
-                float occluder_depth = textureLod(shadow_map_sampler, sample_uv, 0).r; // Sample depth from shadow map (.r component)
-                // Compare receiver depth with occluder depth
-                // If receiver is not occluded by this sample (i.e., closer or at same depth), it's lit for this sample.
-                if (receiver_depth_biased <= occluder_depth) {
-                    visibility += 1.0;
-                }
-            } else {
-                // Sample is outside shadow map; treat as lit for this sample
-                visibility += 1.0;
-            }
-            num_samples_taken += 1.0;
-        }
-    }
-
-    if (num_samples_taken == 0.0) { // Should only happen if pcf_sample_count < 0 (which is invalid)
-        return 1.0; // Avoid division by zero, return fully lit
-    }
-
-    return visibility / num_samples_taken; // Average visibility
+float rand_2to1(vec2 uv) { 
+    const highp float a = 12.9898, b = 78.233, c = 43758.5453;
+    highp float dt = dot(uv.xy, vec2(a, b)), sn = mod(dt, PI);
+    return fract(sin(sn) * c);
 }
 
-float get_blocker_search_radius(
-    float receiver_depth, // Depth of the receiver in light space
-    float light_size,     // Size of the light (e.g., light radius)
-    float light_far       // Far plane of the light camera
+void generate_poisson_disk_samples(
+    vec2 uv_seed,
+    int sample_count,
+    float tightness,
+    out vec2 samples[MAX_SAMPLE_COUNT]
 ) {
-    // Calculate the distance from the receiver to the far plane
-    float distance_to_far_plane = light_far - receiver_depth;
-    // Calculate the radius of the search area based on the light size and distance to the far plane
-    return light_size * distance_to_far_plane / light_far;
+    float angle = rand_2to1(uv_seed) * PI2;
+    float radius = 1.0 / float(sample_count);
+    float radius_increment = radius;
+    float angle_increment = (1.0 - 0.6180339887) * PI2;
+
+    sample_count = min(sample_count, MAX_SAMPLE_COUNT); // 限制样本数量
+
+    for (int i = 0; i < sample_count; i++) {
+        float x = cos(angle) * pow(radius, tightness);
+        float y = sin(angle) * pow(radius, tightness);
+        samples[i] = vec2(x, y);
+        angle += angle_increment;
+        radius += radius_increment;
+    }
 }
 
-float get_avg_blocker_depth(
-    sampler2D shadow_map_sampler,
-    vec2 uv,
-    float receiver_depth_biased, // This is receiver_depth - bias
-    vec2 shadow_map_texel_size   // Calculated as 1.0 / textureSize(shadow_map_sampler, 0)
+void get_sampled_uv(
+    vec2 main_uv,
+    float tightness,
+    float sample_radius,
+    int sample_count,
+    out vec2 sampled_uv[MAX_SAMPLE_COUNT]
 ) {
-    // Initial boundary check for the central point
-    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 || receiver_depth_biased >= 1.0) {
-        return 1.0; // Outside shadow map bounds or beyond far plane - fully lit
+
+    vec2 poisson_disk_samples[MAX_SAMPLE_COUNT];
+    generate_poisson_disk_samples(
+        main_uv,
+        sample_count,
+        tightness,
+        poisson_disk_samples
+    );
+
+    for (int i = 0; i < sample_count; i++) {
+        vec2 uv = main_uv + poisson_disk_samples[i] * sample_radius;
+        sampled_uv[i] = uv;
     }
+}
+
+float get_search_radius(
+    float light_space_depth,
+    float near_plane,
+    float light_size,
+    float frustum_size
+) {
+    return (light_space_depth - near_plane) / light_space_depth * 
+            light_size / frustum_size;
+}
+
+void get_sampled_depth(
+    sampler2D shadow_map,
+    int sample_count,
+    in vec2 sampled_uv[MAX_SAMPLE_COUNT],
+    out float sampled_depth[MAX_SAMPLE_COUNT]
+) {
+    for (int i = 0; i < sample_count; i++) {
+        float shadow_map_depth = textureLod(shadow_map, sampled_uv[i], 0).r;
+        sampled_depth[i] = shadow_map_depth;
+    }
+}
+
+float find_blocker_depth(
+    float light_projected_depth,
+    float bias,
+    int sample_count,
+    in float sampled_depth[MAX_SAMPLE_COUNT]
+) {
+    int blocker_count = 0;
     float blocker_depth_sum = 0.0;
-    float blocker_depth_count = 0.0;
-
-    // Iterate over a kernel defined by pcf_sample_count
-    // Example: pcf_sample_count = 1 results in a 3x3 kernel
-    for (int y = -pcf_sample_count; y <= pcf_sample_count; ++y) {
-        for (int x = -pcf_sample_count; x <= pcf_sample_count; ++x) {
-            // Calculate offset for the current sample
-            // Offset is in texel units, scaled by pcf_radius
-            vec2 texel_offset = vec2(x, y) * pcf_radius;
-            // Convert texel offset to UV offset using actual texel size
-            vec2 uv_offset = texel_offset * shadow_map_texel_size;
-            vec2 sample_uv = uv + uv_offset;
-           
-            if (sample_uv.x >= 0.0 && sample_uv.x <= 1.0 && sample_uv.y >= 0.0 && sample_uv.y <= 1.0) {
-                float occluder_depth = textureLod(shadow_map_sampler, sample_uv, 0).r; // Sample depth from shadow map (.r component)
-                // Compare receiver depth with occluder depth
-                if (receiver_depth_biased <= occluder_depth) {
-                    blocker_depth_sum += occluder_depth;
-                    blocker_depth_count += 1.0;
-                }
-            } 
-
-            if (blocker_depth_count == 0.0) { 
-                return -1.0; 
-            }
-
-            return blocker_depth_sum / blocker_depth_count;
+    
+    for (int i = 0; i < sample_count; i++) {
+        if(light_projected_depth - bias > sampled_depth[i]) {
+            blocker_depth_sum += sampled_depth[i];
+            blocker_count ++;
         }
     }
+    
+    if (blocker_count == 0) return -1.0;
+    return blocker_depth_sum / float(blocker_count);
 }
 
-float get_penumbra(
+float get_penumbra_radius(
     float receiver_depth,
     float blocker_depth,
-    float light_size
+    float light_size,
+    float frustum_size
 ) {
     return (receiver_depth - blocker_depth) / receiver_depth * 
-            light_size / (light_camera.right - light_camera.left);
+            light_size / frustum_size;
 }
 
-float pcss(
-    sampler2D shadow_map_sampler,
-    vec2 uv,
-    float receiver_depth_biased, // This is receiver_depth - bias
-    vec2 shadow_map_texel_size   // Calculated as 1.0 / textureSize(shadow_map_sampler, 0)
+
+float pcf(
+    float light_projected_depth,
+    float bias,
+    int sample_count,
+    in float sampled_depth[MAX_SAMPLE_COUNT]
 ) {
-    float avg_blocker_depth = get_avg_blocker_depth(
-        shadow_map_sampler,
-        uv,
-        receiver_depth_biased,
-        shadow_map_texel_size
-    );
 
-    if (avg_blocker_depth == -1.0) {
-        return 1.0;
+    float sum = 0.0;
+    sample_count = min(sample_count, MAX_SAMPLE_COUNT);
+    for (int i = 0; i < sample_count; i++) {
+        if (light_projected_depth - bias > sampled_depth[i]) {
+            sum += 1.0;
+        }
     }
-
-    // Calculate the penumbra size based on the average blocker depth
-    float penumbra = get_penumbra(
-        receiver_depth_biased,
-        avg_blocker_depth,
-        light_size
-    );
-
-    // Adjust the PCF radius based on the penumbra size
-    float adjusted_radius = penumbra * pcf_radius;
-    // Perform PCF with the adjusted radius
-    return pcf(
-        shadow_map_sampler,
-        uv,
-        receiver_depth_biased,
-        shadow_map_texel_size
-    );
-
+    return sum / float(sample_count);
 }
 
-#endif // ENABLE_SHADOWS
-
+#endif
 
 void main() {
     vec3 camera_position = main_camera.camera_position;
+    vec3 camera_direction = main_camera.camera_direction;
+
     vec3 view_direction = normalize(camera_position - v_frag_position);
 
 #ifdef ENABLE_HEIGHT_MAP
     vec2 uv = parallax_occlusion_uv(
-        v_uv,
-        -view_direction,
-        height_map,
-        v_tbn,
+        v_uv, 
+        -view_direction, 
+        height_map, 
+        v_tbn, 
         parallax_scale,
         parallax_layer_count
     );
@@ -394,7 +366,7 @@ void main() {
 #ifdef ENABLE_NORMAL_MAP
     vec3 normal_map_normal = texture(normal_map, uv).rgb * 2.0 - vec3(1.0);
     vec3 normal = normalize(v_tbn * normal_map_normal);
-    vec3 normalized_normal = normalize(normal); // Ensure normalized
+    vec3 normalized_normal = normalize(normal);
 #else
     vec3 normalized_normal = normalize(v_normal);
 #endif
@@ -417,68 +389,187 @@ void main() {
 
     ambient += ka * albedo.rgb;
 
-    // Directional lights
+    // 计算方向光
     for (int i = 0; i < dl_count; i++) {
         vec3 light_dir = normalize(-dl_lights[i].direction);
-        diffuse += calculate_diffuse(normalized_normal, light_dir, dl_lights[i].intensity, dl_lights[i].color, albedo.rgb, kd);
-        specular += calculate_specular(normalized_normal, view_direction, light_dir, dl_lights[i].intensity, dl_lights[i].color, albedo.rgb, specular_mask, shininess, ks);
-    }
+        
+        diffuse += calculate_diffuse(
+            normalized_normal, 
+            light_dir, 
+            dl_lights[i].intensity, 
+            dl_lights[i].color, 
+            albedo.rgb,
+            kd
+        );
 
-    // Point lights
-    for (int i = 0; i < pl_count; i++) {
-        vec3 light_vector = pl_lights[i].position - v_frag_position;
-        float distance = length(light_vector);
-        vec3 light_dir = normalize(light_vector);
-        float attenuation = 1.0 / (pl_lights[i].attenuation.x + pl_lights[i].attenuation.y * distance + pl_lights[i].attenuation.z * distance * distance);
-        diffuse += calculate_diffuse(normalized_normal, light_dir, pl_lights[i].intensity, pl_lights[i].color, albedo.rgb, kd) * attenuation;
-        specular += calculate_specular(normalized_normal, view_direction, light_dir, pl_lights[i].intensity, pl_lights[i].color, albedo.rgb, specular_mask, shininess, ks) * attenuation;
-    }
-
-    // Spot lights
-    for (int i = 0; i < spl_count; i++) {
-        vec3 light_vector = spl_lights[i].position - v_frag_position;
-        vec3 light_dir = normalize(light_vector);
-        float spot_effect = calculate_spot_intensity(light_dir, spl_lights[i].direction, spl_lights[i].inner_angle_cos, spl_lights[i].outer_angle_cos);
-        diffuse += calculate_diffuse(normalized_normal, light_dir, spl_lights[i].intensity, spl_lights[i].color, albedo.rgb, kd) * spot_effect;
-        specular += calculate_specular(normalized_normal, view_direction, light_dir, spl_lights[i].intensity, spl_lights[i].color, albedo.rgb, specular_mask, shininess, ks) * spot_effect;
-    }
-
-
-#ifdef ENABLE_SHADOWS
-    float shadow_visibility = 1.0; // Default to fully lit
-
-    if (dl_count > 0) { // Assuming shadows only from the first directional light for simplicity
-        vec4 world_position = vec4(v_frag_position, 1.0);
-        vec4 light_camera_clip_space_pos = light_camera.projection * light_camera.view * world_position;
-        vec3 light_camera_ndc = light_camera_clip_space_pos.xyz / light_camera_clip_space_pos.w;
-        vec2 shadow_map_uv = light_camera_ndc.xy * 0.5 + 0.5;
-        float receiver_depth = light_camera_ndc.z * 0.5 + 0.5;
-
-        // Normal-based bias (Slope-scale bias)
-        // Ensure light_camera.camera_direction is the direction the light's camera is looking.
-        // So, -light_camera.camera_direction is the direction of light rays.
-        vec3 light_dir_for_bias = normalize(light_camera.camera_direction); // Direction the light camera is oriented
-        float NdotL = dot(normalized_normal, -light_dir_for_bias); // N.L where L is light direction vector
-        float bias = max(shadow_bias * (1.0 - NdotL), 0.0005); // shadow_bias is a uniform, e.g., 0.005
-
-        // Calculate texel size for PCF sampling
-        vec2 shadow_map_texel_size = 1.0 / vec2(textureSize(dl_shadow_map, 0));
-
-        shadow_visibility = pcf(
-            dl_shadow_map,
-            shadow_map_uv,
-            receiver_depth - bias, // Apply bias to receiver depth before comparison
-            shadow_map_texel_size
+        specular += calculate_specular(
+            normalized_normal, 
+            view_direction, 
+            light_dir, 
+            dl_lights[i].intensity, 
+            dl_lights[i].color, 
+            albedo.rgb, 
+            specular_mask,
+            shininess,
+            ks
         );
     }
 
-    frag_color = vec4(ambient + shadow_visibility * (diffuse + specular), alpha);
+    // 计算点光源
+    for (int i = 0; i < pl_count; i++) {
+        vec3 light_dir = normalize(pl_lights[i].position - v_frag_position);
+        float distance = length(pl_lights[i].position - v_frag_position);
+        float attenuation = 1.0 / 
+            (pl_lights[i].attenuation.x + 
+            pl_lights[i].attenuation.y * distance + 
+            pl_lights[i].attenuation.z * distance * distance);
+        
+        diffuse += calculate_diffuse(
+            normalized_normal, 
+            light_dir, 
+            pl_lights[i].intensity, 
+            pl_lights[i].color, 
+            albedo.rgb,
+            kd
+        ) * attenuation;
 
-#else // No shadows
-    frag_color = vec4(ambient + diffuse + specular, alpha);
-#endif // ENABLE_SHADOWS
-
-    if (alpha < 0.01) {
-        discard;
+        specular += calculate_specular(
+            normalized_normal, 
+            view_direction, 
+            light_dir, 
+            pl_lights[i].intensity, 
+            pl_lights[i].color, 
+            albedo.rgb, 
+            specular_mask,
+            shininess,
+            ks
+        ) * attenuation;
     }
+
+    // 计算聚光灯
+    for (int i = 0; i < spl_count; i++) {
+        vec3 light_dir = normalize(spl_lights[i].position - v_frag_position);
+        float intensity = calculate_spot_intensity(
+            light_dir, 
+            spl_lights[i].direction, 
+            spl_lights[i].inner_angle_cos, 
+            spl_lights[i].outer_angle_cos
+        );
+        
+        diffuse += calculate_diffuse(
+            normalized_normal, 
+            light_dir, 
+            spl_lights[i].intensity, 
+            spl_lights[i].color, 
+            albedo.rgb,
+            kd
+        ) * intensity;
+
+        specular += calculate_specular(
+            normalized_normal, 
+            view_direction, 
+            light_dir, 
+            spl_lights[i].intensity, 
+            spl_lights[i].color, 
+            albedo.rgb, 
+            specular_mask,
+            shininess,
+            ks
+        ) * intensity;
+    }
+
+#ifdef ENABLE_SHADOWS
+
+    vec4 world_position = vec4(v_frag_position, 1.0);
+    vec4 light_camera_clip_space_position = light_camera.projection * light_camera.view * world_position;
+    vec3 light_camera_ndc = light_camera_clip_space_position.xyz / light_camera_clip_space_position.w;
+    vec3 projected_position = light_camera_ndc * 0.5 + 0.5;
+
+    vec3 light_camera_direction = light_camera.camera_direction; // 正确获取光源方向
+    float bias = max(0.005, shadow_bias * (1.0 - dot(normalized_normal, -light_camera_direction)));
+
+    vec3 light_space_position = vec3(light_camera.view * world_position);
+
+    float light_space_depth = -light_space_position.z;
+    float receiver_depth = projected_position.z;
+    float near_plane = light_camera.near;
+    float frustum_size = light_camera.right - light_camera.left;
+    
+    float search_radius = get_search_radius(
+        light_space_depth,
+        near_plane,
+        light_size,
+        frustum_size
+    );
+
+    vec2 sampled_blocked_depth_uv[MAX_SAMPLE_COUNT];
+    get_sampled_uv(
+        projected_position.xy,
+        pcf_tightness,
+        search_radius,
+        pcf_sample_count,
+        sampled_blocked_depth_uv
+    );
+
+    float sampled_blocked_depth[MAX_SAMPLE_COUNT];
+    get_sampled_depth(
+        dl_shadow_map,
+        pcf_sample_count,
+        sampled_blocked_depth_uv,
+        sampled_blocked_depth
+    );
+
+    float blocker_depth = find_blocker_depth(
+        receiver_depth,
+        bias,
+        pcf_sample_count,
+        sampled_blocked_depth
+    );
+
+    float shadow = 0.0;
+    if (blocker_depth != -1.0) {
+
+        float penumbra_radius = get_penumbra_radius(
+            receiver_depth,
+            blocker_depth,
+            light_size,
+            frustum_size
+        );
+
+        vec2 sampled_uv[MAX_SAMPLE_COUNT];
+        get_sampled_uv(
+            projected_position.xy,
+            pcf_tightness,
+            penumbra_radius * pcf_radius,
+            pcf_sample_count,
+            sampled_uv
+        );
+
+        float sampled_depth[MAX_SAMPLE_COUNT];
+        get_sampled_depth(
+            dl_shadow_map,
+            pcf_sample_count,
+            sampled_uv,
+            sampled_depth
+        );
+
+        shadow = pcf(
+            receiver_depth,
+            bias,
+            pcf_sample_count,
+            sampled_depth
+        );
+
+    } 
+
+    frag_color = vec4(ambient + (1.0 - shadow) * (diffuse + specular), alpha);
+
+
+#else
+
+    frag_color = vec4(ambient + diffuse + specular, alpha);
+
+#endif
+
 }
+

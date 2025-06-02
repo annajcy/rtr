@@ -26,9 +26,9 @@ public:
         if (!m_shadow_settings) return;
         m_imgui->slider_float("shadow bias", &m_shadow_settings->shadow_bias, 0.0, 0.1);
         m_imgui->slider_float("light size", &m_shadow_settings->light_size, 0.1, 5.0);
-        m_imgui->slider_float("pcf radius", &m_shadow_settings->pcf_radius, 0.0, 2.0);
+        m_imgui->slider_float("pcf radius", &m_shadow_settings->pcf_radius, 0.0, 1.0);
         m_imgui->slider_float("pcf tightness", &m_shadow_settings->pcf_tightness, 0.1, 10.0);
-        m_imgui->slider_int("pcf samples", &m_shadow_settings->pcf_sample_count, 1.0, 3.0);
+        m_imgui->slider_int("pcf samples", &m_shadow_settings->pcf_sample_count, 1.0, 32.0);
     }
 
     static std::shared_ptr<Shadow_settings_panel> create(
