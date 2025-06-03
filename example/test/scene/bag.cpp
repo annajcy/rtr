@@ -83,7 +83,7 @@ int main() {
         )
     );
     
-    auto mary = Model_assimp::create(
+    auto bag = Model_assimp::create(
         File_ser::get_instance()->get_absolute_path(
             //"assets/model/mary/Marry.obj"
             "assets/model/backpack/backpack.obj"
@@ -132,16 +132,16 @@ int main() {
             {Texture_cubemap_face::TOP, Image::create(Image_format::RGB_ALPHA, "assets/image/skybox/cubemap/top.jpg", false)}
     })));
 
-    // auto bag_root_go = scene->add_model("mary", mary, Model_loader<Phong_material>::create(
-    //     forward_pipeline->shadow_setting(),
-    //     forward_pipeline->parallax_setting()
-    // ));
+    auto bag_root_go = scene->add_model("bag", bag, Model_loader<Phong_material>::create(
+        forward_pipeline->shadow_setting(),
+        forward_pipeline->parallax_setting()
+    ));
 
-    // auto bag_root_go_node = bag_root_go->get_component<Node_component>()->node();
-    // bag_root_go_node->set_position(glm::vec3(0, 2, 0));
-    // //bag_root_go_node->set_scale(glm::vec3(7.0f));
-    // auto bag_rot = bag_root_go->add_component<Rotate_component>();
-    // bag_rot->speed() = 0.01f;
+    auto bag_root_go_node = bag_root_go->get_component<Node_component>()->node();
+    bag_root_go_node->set_position(glm::vec3(0, 0, 0));
+    //bag_root_go_node->set_scale(glm::vec3(7.0f));
+    auto bag_rot = bag_root_go->add_component<Rotate_component>();
+    bag_rot->speed() = 0.01f;
 
     auto camera_game_object = scene->add_game_object(Game_object::create("camera"));
     auto camera_node = camera_game_object->add_component<Node_component>()->node();

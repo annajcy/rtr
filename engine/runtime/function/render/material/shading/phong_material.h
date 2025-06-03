@@ -55,9 +55,9 @@ public:
             {Shader_type::FRAGMENT, Shader_code::create(Shader_type::FRAGMENT, 
                 Shader_code::load_shader_code(
                     File_ser::get_instance()->get_absolute_path(
-                        //"assets/shader/phong_vsm.frag"
+                        "assets/shader/phong_vsm.frag"
                         //"assets/shader/phong_vssm.frag"
-                        "assets/shader/phong_pcf.frag"
+                        //"assets/shader/phong_pcf.frag"
                         //"assets/shader/phong_pcss.frag"
                     )))}
         }, 
