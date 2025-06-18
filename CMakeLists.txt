@@ -26,14 +26,8 @@ add_subdirectory(ext/assimp)
 include_directories(build/ext/assimp/include)
 include_directories(ext/assimp/include)
 
-add_subdirectory(ext/glad)
-include_directories(ext/glad/include)
-
-add_subdirectory(ext/stb_image)
-include_directories(ext/stb_image/include)
-
-add_subdirectory(ext/imgui)
-include_directories(ext/imgui/include)
+add_subdirectory(ext/glbinding)
+include_directories(ext/glbinding/source)
 
 add_subdirectory(ext/spdlog)
 include_directories(ext/spdlog/include)
@@ -43,9 +37,6 @@ include_directories(ext/glfw/include)
 
 add_subdirectory(ext/glm)
 include_directories(ext/glm)
-
-add_subdirectory(ext/mirrow)
-include_directories(ext/mirrow/include)
 
 include_directories(ext/tinyobjectloader)
 
