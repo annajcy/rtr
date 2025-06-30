@@ -2,6 +2,7 @@
 
 #include "engine/runtime/tool/math.h"
 
+#include <functional>
 #include <memory>
 
 namespace rtr {

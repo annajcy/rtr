@@ -5,7 +5,9 @@
 
 #include "engine/runtime/platform/rhi/rhi_pipeline_state.h"
 #include "engine/runtime/platform/rhi/rhi_shader_program.h"
+#include <bitset>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -121,7 +123,7 @@ public:
 };
 
 template<typename Shader_feature>
-inline constexpr const char* shader_feature_to_defines(Shader_feature feature) {
+inline const char* shader_feature_to_defines(Shader_feature feature) {
     throw std::runtime_error("shader_feature_to_defines not implemented for this Shader_feature type");
 }
 

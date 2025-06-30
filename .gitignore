@@ -9,8 +9,13 @@
 
 # 忽略构建目录（如 CMake 的 build 目录）
 build/
+build-*/
 cmake-build-debug/
 cmake-build-release/
+
+# FetchContent 缓存目录
+_deps/
+.cmake/
 
 # 忽略 CMake 生成的缓存文件
 CMakeFiles/
