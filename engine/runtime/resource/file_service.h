@@ -53,7 +53,7 @@ public:
 
     bool add_text_file(const std::string& relative_path, const std::string& content) {
         auto full_path = m_root_path / relative_path;
-        if (exists(full_path)) return false;
+        if (exists(full_path.string())) return false;
         
         std::ofstream file(full_path);
         if (file.is_open()) {
@@ -131,7 +131,7 @@ private:
     std::shared_ptr<File_node> build_tree_recursive(const std::filesystem::path& current_path) const {
         auto node = std::make_shared<File_node>();
         node->name = current_path.filename().string();
-        node->is_directory = is_directory(current_path);
+        node->is_directory = is_directory(current_path.string());
 
         if (node->is_directory) {
             for (const auto& entry : std::filesystem::directory_iterator(current_path)) {

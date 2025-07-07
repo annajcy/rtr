@@ -3,9 +3,14 @@ project(rtr)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+
+set(BUILD_SHARED_LIBS OFF)
 
 # 启用 FetchContent 模块
 include(FetchContent)
+
+add_compile_options("-Wno-error" "-Wno-nontrivial-memcall" "-Wno-deprecated-non-prototype" "-Wno-deprecated-literal-operator" "-Wno-deprecated-declarations")
 
 # FetchContent 优化配置
 set(FETCHCONTENT_QUIET OFF)
@@ -35,7 +40,6 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/assimp/assimp.git
     GIT_TAG v5.3.1
 )
-set(ASSIMP_BUILD_ZLIB OFF CACHE BOOL "Enable Assimp's built-in zlib" FORCE)
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "Disable Assimp's tests" FORCE)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "Disable Assimp's tools" FORCE)
 set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "Disable Assimp's samples" FORCE)
@@ -58,7 +62,7 @@ endif()
 FetchContent_Declare(
     spdlog
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG v1.12.0
+    GIT_TAG v1.15.3
 )
 set(SPDLOG_BUILD_EXAMPLE OFF CACHE BOOL "Disable spdlog examples" FORCE)
 set(SPDLOG_BUILD_TESTS OFF CACHE BOOL "Disable spdlog tests" FORCE)
