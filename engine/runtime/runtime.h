@@ -75,7 +75,7 @@ public:
         m_timer->start();
 
         //File_ser::get_instance()->set_root("/home/jinceyang/Desktop/rtr");
-        File_ser::get_instance()->set_root(R"(C:\Users\annaj\Desktop\codebase\rtr)");
+        //File_ser::get_instance()->set_root(R"(C:\Users\annaj\Desktop\codebase\rtr)");
         Log_sys::get_instance()->log(Logging_system::Level::info, "Engine Runtime Created");
     }
     
