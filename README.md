@@ -1,7 +1,5 @@
 # RTR - Real-Time Rendering Engine
 
-![RTR](docs/image/RTR.png)
-
 A modern, component-based 3D rendering engine built with C++20 and OpenGL, designed for real-time graphics applications and educational purposes.
 
 ## ✨ Features
@@ -192,10 +190,6 @@ The project uses CMake FetchContent to automatically manage dependencies:
 - **[tinyobjloader 2.0.0rc13](https://github.com/tinyobjloader/tinyobjloader)**: OBJ file parsing
 - **[GLAD 0.1.36](https://glad.dav1d.de/)**: OpenGL loader
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
@@ -207,9 +201,7 @@ Copyright (c) 2025 Ceyang Jin
 ## 🙏 Acknowledgments
 
 - Crytek Sponza model by Frank Meinl
-- All the amazing open-source libraries that make this project possible
-
-## 📞 Contact
+- Games104 Course
 
 For questions or suggestions, please open an issue on GitHub.
 
